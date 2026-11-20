@@ -33,6 +33,20 @@ export function inlineHelpFromDefinition(def) {
   }
 }
 
+/**
+ * v1345 slice 2: help keys for a register's own (system) fields — register:<register_key>:<field_key>.
+ * The service falls back to the common register:*:<field_key> entry (S2-D1). Custom fields use
+ * their own inline help instead.
+ */
+export function registerFieldHelpKey(registerKey, fieldKey) {
+  return registerKey && fieldKey ? `register:${registerKey}:${fieldKey}` : null
+}
+
+export function registerFieldHelpKeys(register) {
+  if (!register?.register_key) return []
+  return (register.fields || []).filter((f) => !f.is_custom).map((f) => registerFieldHelpKey(register.register_key, f.field_key))
+}
+
 /** Rule 36 amount shorthand, added automatically to amount fields (G-D6). */
 export const AMOUNT_SHORTHAND_NOTE = 'Tip: type 10t for 10,000 or 3m for 3,000,000, then press Enter.'
 

@@ -187,11 +187,44 @@ Export new UI from `packages/ui/src/index.js`.
 
 ### Slice 2 — Register engine (largest field count)
 
-- [ ] Engine form/detail renderer: resolve help by `register:<register_key>:<field_key>`; one query per register (rule 66).  
-- [ ] Seed help for active register fields (batch by pack / module); owner samples ~10 per pack wave.  
-- [ ] Simulator register UI uses same keys (G-D3 / G-D19).  
-- [ ] Coverage: register SQL rows ⊆ help keys.  
-- [ ] Extend `check-field-help` to fail new register-field SQL without matching help seed (warn→tighten).
+**Facts (SQL parse, approximate — the database is authoritative):** about 4,000 register fields in 183 registers, 2,438 distinct field keys; the 105 keys used in five or more registers cover about 1,080 fields (notes 170, owner 32, business_unit 22, environment 20, due_date 19 …).
+
+| # | Decision (owner, 2026-11-20) |
+|---|---|
+| S2-D1 | **Common help + overrides.** Each common field key gets one entry `register:*:<field_key>`, used by every register with that field unless the register has its own `register:<register_key>:<field_key>` entry. Lookup: specific → common → none (no ⓘ). |
+| S2-D2 | **Wave order:** 1) the common keys (~105 entries, ~27% of register fields) → 2) Core registers → 3) FIN → 4) ICT → 5) CON → 6) NGO. Each wave: Claude drafts, owner reviews ~10 samples. |
+
+
+- [x] Engine form/detail renderer: resolve help by `register:<register_key>:<field_key>`; one query per register (rule 66).   *(Done 2026-11-20: `registerFieldHelpKeys` / `registerFieldHelpKey`; register form + record view wrapped in `FieldHelpScope`; common fallback in `fieldHelpService` (S2-D1); form labels pass required + dropdown choices.)*
+- [x] Seed help for active register fields in waves (S2-D2): **100% of register fields (4,530 of 4,530, SQL parse) once v1514 runs.**
+  - [x] Wave 1 — 105 common keys, `SQL/v1497_field_help_register_common_fields.sql` (~1,081 of ~4,039 register fields, 26.8%). SQL run 2026-11-20; owner sample review pending.
+  - [x] Wave 2 — Core registers: `SQL/v1498_field_help_core_registers.sql` — Environments (59 fields) and Policies & Compliance (26 fields) 100% covered (specific + common). SQL run 2026-11-20; owner sample review pending.
+  - [x] Wave 3 — FIN (split in six sub-waves)
+    - [x] 3a Data migration (13 registers, 330 fields): `SQL/v1499` (133 entries incl. 16 common migration keys) + `SQL/v1500` (165 entries), generated from `scripts/field-help-content/fin_migration_part1|2.mjs` by `build-sql.mjs`. SQL run 2026-11-20; owner samples pending.
+    - [x] 3b Testing (9 registers, 131 fields): `SQL/v1501` (125 entries incl. 4 common testing keys) from `fin_testing.mjs`. SQL run 2026-11-20; owner samples pending.
+    - [x] 3c Cutover, go-live, hypercare (18 registers, 268 fields): `SQL/v1502` (229 entries incl. 32 common keys) from `fin_cutover_golive.mjs`. SQL run 2026-11-20; owner samples pending.
+    - [x] 3d Readiness, change, training (~360)
+      - [x] Part 1 — change management + training (19 registers, 211 fields): `SQL/v1503` (178 entries) from `fin_change_training.mjs`. SQL run 2026-11-20.
+      - [x] Part 2 — operational readiness (10 registers, 146 fields): `SQL/v1504` (132 entries incl. 16 common keys) from `fin_readiness.mjs`. SQL run 2026-11-20.
+    - [x] 3e Core banking configuration and programme (13 registers, ~190 fields): `SQL/v1505` (124 entries + FIN Environments copies the 45 Core Environments texts) from `fin_config_programme.mjs`. SQL run 2026-11-20.
+    - [x] 3f Plan-document registers (Cutover Strategy, Cutover Plan, Dress Rehearsal Strategy, Hypercare Plan, Rollback Plan — 90 fields, found once the parser learned the register_key pattern): `SQL/v1506` (83 entries) from `fin_plan_documents.mjs`. SQL run 2026-11-20.
+    - FIN complete (all SQL run 2026-11-20).
+  - [x] Wave 4 — ICT (28 registers, 561 fields). SQL run 2026-11-20.
+    - [x] 4a Common + architecture and design (12 registers): `SQL/v1507` (184 entries incl. 41 new common keys such as `technology_stack`, `rag`, `success_criteria`, `approved_budget`) from `ict_architecture_design.mjs`.
+    - [x] 4b Category registers `ict_cat_*` (9 registers): `SQL/v1508` (248 entries) from `ict_categories.mjs`. Calculated scores (architecture score, priority score) described as averages shown as a percentage, matching their calc rules.
+    - [x] 4c Delivery overview, workstreams, milestones, roadmap, disaster recovery, runbooks, support model (7 registers): `SQL/v1509` (91 entries) from `ict_delivery_support.mjs`.
+    - Check: every ICT register field now has its own or common help (dumppack: 0 left). Register coverage (SQL parse) 3,615 of 4,530 (79.8%).
+  - [x] Wave 5 — CON (24 registers, 697 fields still without help after the common keys). SQL run 2026-11-20.
+    - [x] 5a Common + commercial, contractors, progress certificates, progress measurement, subcontractors: `SQL/v1510` (212 entries incl. 62 new common keys such as `zones`, `hold_points`, `question` / `response`, `ncr_reference`, `control_measures`) from `con_commercial.mjs`.
+    - [x] 5b Design & engineering, handover & commissioning, inspections, quality control, materials, RFIs, site instructions, permits: `SQL/v1511` (159 entries) from `con_design_quality.mjs`.
+    - [x] 5c Health & safety, management, sites, plant & equipment: `SQL/v1512` (161 entries) from `con_site_safety.mjs`.
+    - [x] 5d Plan documents (commissioning, HSE, inspection plan, ITPs, method statements, recovery plans, site logistics): `SQL/v1513` (112 entries) from `con_plans.mjs`.
+    - "Worked out for you" is said only for the 14 CON fields with a calc rule in SQL (e.g. net valuation, amount due, SPI / CPI, attendance and defect closure rates); other ratios describe the formula only.
+    - Check: dumppack 0 left for CON. Register coverage (SQL parse) 4,293 of 4,530 (94.8%).
+  - [x] Wave 6 — NGO (8 registers, 245 fields) + final gaps: `SQL/v1514` (247 entries incl. 11 common NGO keys such as `recommendations`, `audit_findings`, `country`) from `ngo_registers.mjs`. The final coverage check also found 16 fields in registers written in another SQL style — FIN Dress Rehearsal Strategy `rehearsal_schedule`, ICT Use Cases (11 fields) and ICT Requirements Specification (4) — now covered in the same file. No NGO ratio has a calc rule, so none says "worked out for you". SQL run 2026-11-20.
+- [x] Simulator register UI uses same keys (G-D3 / G-D19).   *(Done: same code in both apps; sim registers share `register_key`.)*
+- [x] Coverage: register SQL rows ⊆ help keys.   *(Done: `check-field-help --registers` (SQL parse, approximate) + exact database check at the end of `v1497`; CI prints it.)*
+- [x] Extend `check-field-help` to fail new register-field SQL without matching help seed (warn→tighten).   *(Done 2026-11-20: `--registers` now lists each register field without help and exits 1; CI (`shared.yml`, runs on `SQL/**`) already passes `--registers`. New test asserts the live SQL folder has no gaps.)*
 - [ ] ~~Register custom fields help (G-D10, P10)~~ → moved to slice 1b (mandatory, CF-D6).
 - [ ] **Owner sample gate** per pack wave (P13).
 

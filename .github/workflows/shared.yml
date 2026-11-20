@@ -64,8 +64,8 @@ jobs:
       # adopted module must have help (Stakeholders from slice 1).
       - name: Field help coverage (warn; adopted modules enforced)
         run: |
-          node --test scripts/__tests__/check-field-help.test.mjs
-          node scripts/check-field-help.mjs --module stakeholders
+          node --test scripts/__tests__/check-field-help.test.mjs scripts/__tests__/field-help-build-sql.test.mjs
+          node scripts/check-field-help.mjs --module stakeholders --registers
 
       - name: Build and test every dependent of the changed packages
         run: pnpm turbo build test --continue --filter="...[HEAD^1]"

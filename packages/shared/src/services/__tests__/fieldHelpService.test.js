@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 vi.mock('@nidus/supabase', () => ({ platformDb: {} }))
 
-const { loadFieldHelp, recordFieldHelpOpen, recordFieldHelpVote, resetFieldHelpCacheForTests } = await import('../fieldHelpService')
+const { loadFieldHelp, recordFieldHelpOpen, recordFieldHelpVote, resetFieldHelpCacheForTests, commonRegisterKey } = await import('../fieldHelpService')
 
 /** Minimal query-builder fake: records calls and returns rows per table. */
 function fakeDb(tables, log = []) {
@@ -71,6 +71,21 @@ describe('fieldHelpService (v1345)', () => {
     const select = db.log.find((l) => l.table === 'field_help' && l.op === 'select')
     expect(select.filters.map(([col]) => col)).not.toContain('form_key')
     expect(help[HELP.help_key].title).toBe('Stakeholder name')
+  })
+
+  it('register fields fall back to the common help for their field key (S2-D1)', async () => {
+    expect(commonRegisterKey('register:fin_cutover:owner')).toBe('register:*:owner')
+    expect(commonRegisterKey('register:*:owner')).toBeNull()
+    expect(commonRegisterKey('public.stakeholders.notes')).toBeNull()
+    const db = fakeDb({ field_help: [
+      { help_key: 'register:*:owner', form_key: '', title: 'Owner', purpose: 'Common owner help', examples: '- Head of Finance' },
+      { help_key: 'register:fin_cutover:notes', form_key: '', title: 'Notes', purpose: 'Cutover notes help', examples: '- x' },
+      { help_key: 'register:*:notes', form_key: '', title: 'Notes', purpose: 'Common notes help', examples: '- x' },
+    ] })
+    const help = await loadFieldHelp(['register:fin_cutover:owner', 'register:fin_cutover:notes', 'register:fin_cutover:none'], { db })
+    expect(help['register:fin_cutover:owner'].purpose).toBe('Common owner help')
+    expect(help['register:fin_cutover:notes'].purpose).toBe('Cutover notes help')
+    expect(help['register:fin_cutover:none']).toBeNull()
   })
 
   it('prefers a form override over the shared default', async () => {

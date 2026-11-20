@@ -14,6 +14,7 @@
  *
  *   node scripts/check-field-help.mjs                 # report (warn only, exit 0)
  *   node scripts/check-field-help.mjs --module stakeholders   # also: every key of that module seeded
+ *   node scripts/check-field-help.mjs --registers     # also: every register field in SQL has help (fails if not)
  *   node scripts/check-field-help.mjs --enforce       # fail on gaps outside the allow-list (phase 5)
  *   node scripts/check-field-help.mjs --write-baseline
  */
@@ -48,6 +49,44 @@ export function extractSeededKeys(sql) {
   }
   help.delete('help_key')
   return { help, aliases }
+}
+
+/**
+ * v1345 slice 2: register fields defined in SQL — [{ registerId, fieldKey }] (approximate parse of
+ * INSERT INTO local_register_fields blocks; the database is authoritative).
+ */
+export function extractRegisterFields(sql) {
+  const out = []
+  const re = /INSERT INTO (?:public\.|sim\.)?local_register_fields\s*\(([^)]*)\)\s*([\s\S]*?);\s*\n/g
+  const text = sql.replace(/\r/g, '')
+  let m
+  while ((m = re.exec(text))) {
+    const body = m[2]
+    const regInSelect = (body.match(/SELECT\s+'([0-9a-f-]{36})'::uuid/) || [])[1]
+    // Document registers pick the register by key: … WHERE lr.register_key = 'fin_cutover_plan'
+    const regByKey = (body.match(/WHERE\s+lr\.register_key\s*=\s*'([a-z0-9_]+)'/) || [])[1]
+    for (const t of body.matchAll(/\(\s*'([^']*)'\s*,\s*'([^']*)'\s*,\s*'([^']*)'/g)) {
+      const uuidFirst = /^[0-9a-f-]{36}$/.test(t[1])
+      const registerId = uuidFirst ? t[1] : (regInSelect || (regByKey ? `key:${regByKey}` : '?'))
+      const fieldKey = uuidFirst ? t[2] : t[1]
+      if (/^[a-z][a-z0-9_]*$/.test(fieldKey)) out.push({ registerId, fieldKey })
+    }
+  }
+  return out
+}
+
+/** Register fields covered by a common (register:*:key) or any specific (register:<reg>:key) help entry. */
+export function registerCoverage(registerFields, helpKeys) {
+  const unique = new Map(registerFields.map((f) => [`${f.registerId}|${f.fieldKey}`, f]))
+  const common = new Set([...helpKeys].filter((k) => k.startsWith('register:*:')).map((k) => k.slice(11)))
+  const specific = new Set([...helpKeys].filter((k) => k.startsWith('register:') && !k.startsWith('register:*:')).map((k) => k.split(':')[2]))
+  let covered = 0
+  const uncovered = []
+  for (const f of unique.values()) {
+    if (common.has(f.fieldKey) || specific.has(f.fieldKey)) covered++
+    else uncovered.push(f)
+  }
+  return { total: unique.size, covered, uncovered, percent: unique.size ? Math.round((covered / unique.size) * 1000) / 10 : 100 }
 }
 
 /** Raw <label> elements in a file that renders form fields (not yet using FieldLabelWithHelp). */
@@ -104,6 +143,17 @@ function main(argv) {
   const MODULE_PREFIX = { stakeholders: ['public.stakeholders.', 'sim.practice_stakeholder_register.'] }
   const prefixes = moduleArg ? (MODULE_PREFIX[moduleArg] || [`${moduleArg}.`]) : null
   const result = analyse({ files, sqlTexts, moduleKeysFilter: prefixes ? (k) => prefixes.some((p) => k.startsWith(p)) : null })
+  let registerFail = false
+  if (argv.includes('--registers')) {
+    const allSql = fs.readdirSync(sqlDir).filter((f) => f.endsWith('.sql')).map((f) => fs.readFileSync(path.join(sqlDir, f), 'utf8'))
+    const regFields = allSql.flatMap(extractRegisterFields)
+    const helpKeys = new Set(sqlTexts.flatMap((t) => [...extractSeededKeys(t).help]))
+    const rc = registerCoverage(regFields, helpKeys)
+    console.log(`Register fields (SQL parse, approximate): ${rc.covered} of ${rc.total} have help (${rc.percent}%).`)
+    // v1345 slice 2 done: every register field has help, so a new field without help fails CI.
+    for (const f of rc.uncovered) console.log(`  ✗ register field without help: ${f.registerId} ${f.fieldKey}`)
+    if (rc.uncovered.length) registerFail = true
+  }
 
   console.log(`Field help: ${result.usedCount} keys used, ${result.seededCount} seeded, ${result.missing.length} used without help.`)
   console.log(`Not yet adopted: ${result.notAdoptedTotal} raw <label> in ${Object.keys(result.notAdopted).length} form files. Approximate coverage ${result.coverage}%.`)
@@ -123,7 +173,7 @@ function main(argv) {
   for (const [f, n] of grown.slice(0, 25)) console.log(`  ✗ more raw labels than baseline: ${f} (${n} > ${allow.notAdopted?.[f] ?? 0})`)
   if (grown.length > 25) console.log(`  … and ${grown.length - 25} more files`)
   const moduleFail = moduleArg && result.moduleMissing.length > 0
-  if ((enforce && (newMissing.length || grown.length)) || moduleFail) return 1
+  if ((enforce && (newMissing.length || grown.length)) || moduleFail || registerFail) return 1
   if (newMissing.length || grown.length) console.log('Warning only (enforcement switches on in phase 5).')
   return 0
 }

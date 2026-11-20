@@ -48,7 +48,8 @@ import { recordPlaceholderSummary } from '@nidus/shared/utils/registerPlaceholde
 import PlaceholderBanner from '@nidus/ui/PlaceholderBanner'
 import { platformDb } from '@nidus/supabase'
 import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
-import { inlineHelpFromDefinition } from '@nidus/shared/utils/fieldHelp'
+import { inlineHelpFromDefinition, registerFieldHelpKey, registerFieldHelpKeys } from '@nidus/shared/utils/fieldHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId'
 
 export default function LocalRegisterForm() {
@@ -463,7 +464,11 @@ export default function LocalRegisterForm() {
     accountId: templateAccountId,
   })
 
+  // v1345 slice 2: help for the register's own fields (custom fields carry their own help)
+  const registerHelpKeys = registerFieldHelpKeys(register)
+
   return (
+    <FieldHelpScope helpKeys={registerHelpKeys}>
     <div className="p-4 sm:p-6 w-full space-y-6">
       <button
         type="button"
@@ -642,7 +647,7 @@ export default function LocalRegisterForm() {
             : groups.find((g) => g.value === shownTab)?.fields || []
         ).map((field) => (
           <div key={field.id} className={['multi_line', 'long_text', 'table', 'linked_records'].includes(field.field_type) ? 'md:col-span-2' : ''}>
-            <FieldLabelWithHelp helpKey={field.is_custom ? `custom:${field.definition_id}` : null} help={field.is_custom ? inlineHelpFromDefinition({ label: field.field_label, help_purpose: field.help_purpose, help_example: field.help_example, help_format: field.help_format }) : null} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <FieldLabelWithHelp helpKey={field.is_custom ? `custom:${field.definition_id}` : registerFieldHelpKey(register?.register_key, field.field_key)} help={field.is_custom ? inlineHelpFromDefinition({ label: field.field_label, help_purpose: field.help_purpose, help_example: field.help_example, help_format: field.help_format }) : null} required={!!field.is_required} options={['dropdown', 'multi_select'].includes(field.field_type) ? field.dropdown_options : undefined} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               {field.field_label} {field.is_required && '*'}
             </FieldLabelWithHelp>
             <RegisterFieldInput
@@ -710,5 +715,6 @@ export default function LocalRegisterForm() {
         onConfirm={(r) => handleSave(r)}
       />
     </div>
+    </FieldHelpScope>
   )
 }

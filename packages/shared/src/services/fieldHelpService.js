@@ -49,6 +49,15 @@ async function ensureFreshCache(db) {
   await versionCheck
 }
 
+/**
+ * v1345 slice 2 (S2-D1): register field keys are register:<register_key>:<field_key>; a register
+ * without its own entry uses the common one, register:*:<field_key>. Returns that common key, or null.
+ */
+export function commonRegisterKey(key) {
+  const m = /^register:([^:]+):(.+)$/.exec(key || '')
+  return m && m[1] !== '*' ? `register:*:${m[2]}` : null
+}
+
 const cacheId = (key, formKey, locale) => `${locale}|${formKey}|${key}`
 
 /**
@@ -81,7 +90,11 @@ export async function loadFieldHelp(keys, { formKey = '', locale = 'en', db = pl
       for (const row of data || []) aliasMap[row.alias_key] = row.help_key
     }
     const targetFor = (k) => aliasMap[k] || k
-    const targets = [...new Set(missing.map(targetFor))]
+    const targets = [...new Set(missing.flatMap((k) => {
+      const t = targetFor(k)
+      const common = commonRegisterKey(t)
+      return common ? [t, common] : [t]
+    }))]
     const { data, error } = await db
       .from('field_help')
       .select('help_key, form_key, title, purpose, examples, format_notes, extra_notes, learn_more_kind, learn_more_key, module_code, updated_at')
@@ -97,7 +110,9 @@ export async function loadFieldHelp(keys, { formKey = '', locale = 'en', db = pl
     }
     const fresh = readCache()
     for (const key of missing) {
-      const row = byKey[targetFor(key)] || null
+      const target = targetFor(key)
+      // Register fields: the register's own help, else the common help for that field key (S2-D1).
+      const row = byKey[target] || (commonRegisterKey(target) ? byKey[commonRegisterKey(target)] : null) || null
       result[key] = row
       fresh.entries[cacheId(key, formKey, locale)] = row
     }

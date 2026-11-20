@@ -19,7 +19,8 @@ import { canManageRegisterTemplates, listRegisterTemplates, saveRecordAsTemplate
 import DocumentAttachmentsPanel from '@nidus/ui/DocumentAttachmentsPanel'
 import { simDb } from '@nidus/supabase'
 import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
-import { inlineHelpFromDefinition } from '@nidus/shared/utils/fieldHelp'
+import { inlineHelpFromDefinition, registerFieldHelpKey, registerFieldHelpKeys } from '@nidus/shared/utils/fieldHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { localRegisterAttachmentPanelService } from '@nidus/shared/services/localRegisterAttachmentService'
 import { isRecordLockedForSignoff } from '@nidus/shared/services/localRegisterSignoffService'
 import { exportRegisterRecordDocument, buildRegisterRecordDocumentPdfBlob } from '@nidus/shared/services/registerDocumentExportService'
@@ -244,7 +245,11 @@ export default function LocalRegisterDetailPage() {
     linked: linked.data,
   })
 
+  // v1345 slice 2: help for the register's own fields (custom fields carry their own help)
+  const registerHelpKeys = registerFieldHelpKeys(register)
+
   return (
+    <FieldHelpScope helpKeys={registerHelpKeys}>
     <div className="p-4 sm:p-6 w-full space-y-6">
       <button
         type="button"
@@ -370,7 +375,7 @@ export default function LocalRegisterDetailPage() {
           )}
           {visibleFields.map((field) => (
             <div key={field.id} className={['multi_line', 'long_text', 'table', 'linked_records'].includes(field.field_type) ? 'md:col-span-2' : ''}>
-              <FieldLabelWithHelp as="p" helpKey={field.is_custom ? `custom:${field.definition_id}` : null} help={field.is_custom ? inlineHelpFromDefinition({ label: field.field_label, help_purpose: field.help_purpose, help_example: field.help_example, help_format: field.help_format }) : null} className="text-xs uppercase text-gray-400 mb-1">{field.field_label}</FieldLabelWithHelp>
+              <FieldLabelWithHelp as="p" helpKey={field.is_custom ? `custom:${field.definition_id}` : registerFieldHelpKey(register?.register_key, field.field_key)} help={field.is_custom ? inlineHelpFromDefinition({ label: field.field_label, help_purpose: field.help_purpose, help_example: field.help_example, help_format: field.help_format }) : null} className="text-xs uppercase text-gray-400 mb-1">{field.field_label}</FieldLabelWithHelp>
               {field.field_type === 'linked_records' ? (
                 <LinkedRecordsView
                   linked={linked.data[field.field_key] || null}
@@ -438,5 +443,6 @@ export default function LocalRegisterDetailPage() {
         />
       )}
     </div>
+    </FieldHelpScope>
   )
 }

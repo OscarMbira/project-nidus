@@ -32,3 +32,38 @@ test('reports keys used without help, resolving Simulator aliases', () => {
   assert.deepEqual(r.missing, ['public.x.missing'])
   assert.deepEqual(r.moduleMissing, [])
 })
+
+test('parses register fields from both SQL styles and measures coverage (slice 2)', async () => {
+  const { extractRegisterFields, registerCoverage } = await import('../check-field-help.mjs')
+  const styleA = `INSERT INTO public.local_register_fields (id, register_id, field_key, field_label, field_type)
+SELECT gen_random_uuid(), v.register_id::uuid, v.field_key FROM (VALUES
+  ('00000000-0000-4000-9001-000000000007', 'owner', 'Owner', 'user_picker'),
+  ('00000000-0000-4000-9001-000000000007', 'site_code', 'Site Code', 'text')
+) AS v;
+`
+  const styleB = `INSERT INTO public.local_register_fields
+  (register_id, field_key, field_label, field_type)
+SELECT '00000000-0000-4000-9002-000000000001'::uuid, v.field_key FROM (VALUES
+  ('notes', 'Notes', 'long_text')
+) AS v;
+`
+  const fields = [...extractRegisterFields(styleA), ...extractRegisterFields(styleB)]
+  assert.equal(fields.length, 3)
+  const rc = registerCoverage(fields, new Set(['register:*:owner', 'register:*:notes']))
+  assert.equal(rc.total, 3)
+  assert.equal(rc.covered, 2)
+  assert.equal(rc.percent, 66.7)
+  // The uncovered field is listed so CI can name it and fail (slice 2 tightening).
+  assert.equal(rc.uncovered.length, 1)
+})
+
+test('the live SQL folder has help for every register field', async () => {
+  const fs = await import('node:fs')
+  const path = await import('node:path')
+  const { extractRegisterFields, extractSeededKeys, registerCoverage } = await import('../check-field-help.mjs')
+  const dir = path.resolve(import.meta.dirname, '..', '..', 'SQL')
+  const texts = fs.readdirSync(dir).filter((f) => f.endsWith('.sql')).map((f) => fs.readFileSync(path.join(dir, f), 'utf8'))
+  const help = new Set(texts.filter((t) => t.includes('field_help')).flatMap((t) => [...extractSeededKeys(t).help]))
+  const rc = registerCoverage(texts.flatMap(extractRegisterFields), help)
+  assert.deepEqual(rc.uncovered.map((f) => `${f.registerId} ${f.fieldKey}`), [])
+})
