@@ -1,7 +1,9 @@
 import { CheckCircle, Calendar, User, FileText } from 'lucide-react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useState, useEffect } from 'react'
 
-export default function IssueReportClosureSection({
+function IssueReportClosureSectionBody({
   formData,
   onChange,
   errors = {},
@@ -44,10 +46,10 @@ export default function IssueReportClosureSection({
       <div className="space-y-6">
         {/* Closure Date */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.issue_reports.closure_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             <Calendar className="w-4 h-4 inline mr-1" />
             Closure Date <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="date"
             value={formData.closure_date || ''}
@@ -66,9 +68,9 @@ export default function IssueReportClosureSection({
 
         {/* Closure Outcome */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.issue_reports.closure_outcome" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Closure Outcome <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             value={formData.closure_outcome || ''}
             onChange={(e) => onChange('closure_outcome', e.target.value)}
@@ -88,10 +90,10 @@ export default function IssueReportClosureSection({
 
         {/* Closure Verified By */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.issue_reports.closure_verified_by_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
             <User className="w-4 h-4 inline mr-1" />
             Closure Verified By
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={formData.closure_verified_by_id || ''}
             onChange={(e) => onChange('closure_verified_by_id', e.target.value || null)}
@@ -113,7 +115,7 @@ export default function IssueReportClosureSection({
 
         {/* Follow-up Required */}
         <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-          <label className="flex items-center gap-2">
+          <FieldLabelWithHelp helpKey="public.issue_reports.follow_up_required" className="flex items-center gap-2">
             <input
               type="checkbox"
               checked={formData.follow_up_required || false}
@@ -124,13 +126,13 @@ export default function IssueReportClosureSection({
             <span className="text-sm font-medium text-gray-900 dark:text-white">
               Follow-up Required
             </span>
-          </label>
+          </FieldLabelWithHelp>
 
           {formData.follow_up_required && (
             <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.issue_reports.follow_up_details" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Follow-up Details
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={formData.follow_up_details || ''}
                 onChange={(e) => onChange('follow_up_details', e.target.value)}
@@ -149,7 +151,7 @@ export default function IssueReportClosureSection({
 
         {/* Lessons Learned */}
         <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-          <label className="flex items-center gap-2 mb-4">
+          <FieldLabelWithHelp helpKey="public.issue_reports.lessons_captured" className="flex items-center gap-2 mb-4">
             <input
               type="checkbox"
               checked={formData.lessons_captured || false}
@@ -161,13 +163,13 @@ export default function IssueReportClosureSection({
               <FileText className="w-4 h-4 inline mr-1" />
               Lessons Captured
             </span>
-          </label>
+          </FieldLabelWithHelp>
 
           {formData.lessons_captured && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.issue_reports.lessons_summary" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Lessons Summary
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={formData.lessons_summary || ''}
                 onChange={(e) => onChange('lessons_summary', e.target.value)}
@@ -185,5 +187,20 @@ export default function IssueReportClosureSection({
         </div>
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.issue_reports.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'closure_date', 'closure_outcome', 'closure_verified_by_id', 'follow_up_required', 'follow_up_details',
+  'lessons_captured', 'lessons_summary',
+].map((name) => `public.issue_reports.${name}`)
+
+export default function IssueReportClosureSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <IssueReportClosureSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

@@ -5,6 +5,8 @@
  */
 
 import { useState, useEffect } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import { useDraftQueue } from '../../lib/useDraftQueue'
@@ -27,7 +29,7 @@ const DEFAULT_FORM = {
   practice_project_id: '',
 }
 
-export default function PracticeStakeholderCreatePage() {
+function PracticeStakeholderCreatePageBody() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const location = useLocation()
@@ -186,16 +188,16 @@ export default function PracticeStakeholderCreatePage() {
           onPendingFile={setPendingPhoto}
         />
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name *</label>
+          <FieldLabelWithHelp helpKey="sim.practice_stakeholder_register.stakeholder_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>Name *</FieldLabelWithHelp>
           <input name="stakeholder_name" value={formData.stakeholder_name} onChange={handleChange} required className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" placeholder="Stakeholder name" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Organization</label>
+          <FieldLabelWithHelp helpKey="sim.practice_stakeholder_register.stakeholder_organization" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Organization</FieldLabelWithHelp>
           <input name="stakeholder_organization" value={formData.stakeholder_organization} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" placeholder="Organization" />
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type</label>
+            <FieldLabelWithHelp helpKey="sim.practice_stakeholder_register.stakeholder_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type</FieldLabelWithHelp>
             <select name="stakeholder_type" value={formData.stakeholder_type} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
               <option value="internal">Internal</option>
               <option value="external">External</option>
@@ -207,7 +209,7 @@ export default function PracticeStakeholderCreatePage() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
+            <FieldLabelWithHelp helpKey="sim.practice_stakeholder_register.stakeholder_status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</FieldLabelWithHelp>
             <select name="stakeholder_status" value={formData.stakeholder_status} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
               <option value="active">Active</option>
               <option value="inactive">Inactive</option>
@@ -216,11 +218,11 @@ export default function PracticeStakeholderCreatePage() {
           </div>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Project role</label>
+          <FieldLabelWithHelp helpKey="sim.practice_stakeholder_register.project_role" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Project role</FieldLabelWithHelp>
           <input name="project_role" value={formData.project_role} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" placeholder="e.g. Sponsor" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</label>
+          <FieldLabelWithHelp helpKey="sim.practice_stakeholder_register.notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</FieldLabelWithHelp>
           <textarea name="notes" value={formData.notes} onChange={handleChange} rows={2} className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" placeholder="Notes" />
         </div>
 
@@ -239,5 +241,20 @@ export default function PracticeStakeholderCreatePage() {
         </div>
       </form>
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (sim.practice_stakeholder_register.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'stakeholder_name', 'stakeholder_organization', 'stakeholder_type', 'stakeholder_status', 'project_role',
+  'notes',
+].map((name) => `sim.practice_stakeholder_register.${name}`)
+
+export default function PracticeStakeholderCreatePage(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <PracticeStakeholderCreatePageBody {...props} />
+    </FieldHelpScope>
   )
 }

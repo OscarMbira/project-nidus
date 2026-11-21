@@ -5,6 +5,8 @@
  * Route: admin/system-roles/:id/edit
  */
 import { useState, useEffect, useMemo, useCallback } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save, Loader, ShieldAlert } from 'lucide-react'
 import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesContext'
@@ -25,7 +27,7 @@ import {
 
 const SYSTEM_ROLES_PATH = '/platform/admin/system-roles'
 
-export default function SystemRoleEditPage() {
+function SystemRoleEditPageBody() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { showSuccess, modal: successModal } = useSuccessModal()
@@ -219,9 +221,9 @@ export default function SystemRoleEditPage() {
             )}
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.roles.role_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Role name (internal)
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="text"
                 value={role.role_name}
@@ -234,9 +236,9 @@ export default function SystemRoleEditPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.roles.display_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Display name *
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="text"
                 value={displayName}
@@ -247,9 +249,9 @@ export default function SystemRoleEditPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.roles.description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Description
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -259,9 +261,9 @@ export default function SystemRoleEditPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.roles.role_skills" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Required skills *
-              </label>
+              </FieldLabelWithHelp>
               <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
                 What someone in this role needs to know or be able to do. One per line. Shared with
                 every organisation using this built-in role.
@@ -279,9 +281,9 @@ export default function SystemRoleEditPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.roles.role_level" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Level (seniority — higher = more senior)
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="number"
                   value={roleLevel}
@@ -292,9 +294,9 @@ export default function SystemRoleEditPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.roles.industry_category_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Industry
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   value={industryCategoryId}
                   onChange={(e) => setIndustryCategoryId(e.target.value)}
@@ -308,7 +310,7 @@ export default function SystemRoleEditPage() {
               </div>
             </div>
 
-            <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+            <FieldLabelWithHelp helpKey="public.roles.is_governance_only" className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
               <input
                 type="checkbox"
                 checked={isGovernanceOnly}
@@ -316,7 +318,7 @@ export default function SystemRoleEditPage() {
                 className="rounded border-gray-300 dark:border-gray-600"
               />
               Oversight-only (read-only Governance Dashboard, like Board Member / Sponsor)
-            </label>
+            </FieldLabelWithHelp>
 
             <div>
               <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Sidebar menu access</p>
@@ -386,5 +388,19 @@ export default function SystemRoleEditPage() {
       </div>
       {successModal}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.roles.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'role_name', 'display_name', 'description', 'role_skills', 'role_level', 'industry_category_id', 'is_governance_only',
+].map((name) => `public.roles.${name}`)
+
+export default function SystemRoleEditPage(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <SystemRoleEditPageBody {...props} />
+    </FieldHelpScope>
   )
 }

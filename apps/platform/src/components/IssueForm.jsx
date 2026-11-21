@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { supabase } from '../services/supabaseClient'
 import { format } from 'date-fns'
 import { Save, User, Calendar, AlertTriangle, Package, X, Plus } from 'lucide-react'
@@ -26,7 +28,7 @@ function idsFromLink(many, single) {
   return single ? [String(single)] : []
 }
 
-function LinkValueList({ label, placeholder, options, values, onChange }) {
+function LinkValueList({ label, helpKey, placeholder, options, values, onChange }) {
   const [draft, setDraft] = useState('')
   const draftRef = useRef('')
 
@@ -56,7 +58,7 @@ function LinkValueList({ label, placeholder, options, values, onChange }) {
         add(draftRef.current)
       }}
     >
-      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{label}</label>
+      <FieldLabelWithHelp helpKey={helpKey} listOptions={false} className="block text-sm font-medium text-gray-700 dark:text-gray-300">{label}</FieldLabelWithHelp>
       <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden bg-white dark:bg-gray-800">
         <table className="min-w-full">
           <thead className="bg-gray-50 dark:bg-gray-700">
@@ -200,7 +202,7 @@ function buildValidationBanner(errors) {
   }
 }
 
-export default function IssueForm({
+function IssueFormBody({
   issue,
   projectId,
   issueRegisterId,
@@ -727,9 +729,9 @@ export default function IssueForm({
           <div className={`space-y-6 pt-2 ${formTab === 'details' ? '' : 'hidden'}`} role="tabpanel" aria-label="Details" aria-hidden={formTab !== 'details'}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.issues.issue_title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                     Issue Title *
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="text"
                     name="issue_title"
@@ -745,9 +747,9 @@ export default function IssueForm({
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.issues.issue_code" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Issue Code
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="text"
                     name="issue_code"
@@ -760,9 +762,9 @@ export default function IssueForm({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.issues.issue_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Description *
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   name="issue_description"
                   value={formData.issue_description}
@@ -780,9 +782,9 @@ export default function IssueForm({
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.issues.issue_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Issue Type
-                  </label>
+                  </FieldLabelWithHelp>
                   <select
                     name="issue_type"
                     value={formData.issue_type}
@@ -811,9 +813,9 @@ export default function IssueForm({
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.issues.priority" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Priority
-                  </label>
+                  </FieldLabelWithHelp>
                   <select
                     name="priority"
                     value={formData.priority}
@@ -827,9 +829,9 @@ export default function IssueForm({
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.issues.severity" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Severity
-                  </label>
+                  </FieldLabelWithHelp>
                   <select
                     name="severity"
                     value={formData.severity}
@@ -846,10 +848,10 @@ export default function IssueForm({
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.issues.date_raised" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                     <Calendar className="h-4 w-4 inline mr-1" />
                     Date Raised *
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="date"
                     name="date_raised"
@@ -860,10 +862,10 @@ export default function IssueForm({
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.issues.due_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     <Calendar className="h-4 w-4 inline mr-1" />
                     Due Date
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="date"
                     name="due_date"
@@ -873,10 +875,10 @@ export default function IssueForm({
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.issues.estimated_resolution_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     <Calendar className="h-4 w-4 inline mr-1" />
                     Estimated Resolution Date
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="date"
                     name="estimated_resolution_date"
@@ -895,9 +897,9 @@ export default function IssueForm({
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <FieldLabelWithHelp helpKey="public.issues.raised_by_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                       Raised By
-                    </label>
+                    </FieldLabelWithHelp>
                     <SelectField
                       forceSearchable
                       descriptionColumnLabel="Role"
@@ -908,9 +910,9 @@ export default function IssueForm({
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <FieldLabelWithHelp helpKey="public.issues.author_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                       Author (Documented By)
-                    </label>
+                    </FieldLabelWithHelp>
                     <SelectField
                       forceSearchable
                       descriptionColumnLabel="Role"
@@ -921,10 +923,10 @@ export default function IssueForm({
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <FieldLabelWithHelp helpKey="public.issues.owner_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                       <User className="h-4 w-4 inline mr-1" />
                       Owner (Responsible)
-                    </label>
+                    </FieldLabelWithHelp>
                     <SelectField
                       forceSearchable
                       descriptionColumnLabel="Role"
@@ -952,10 +954,10 @@ export default function IssueForm({
                     Off-Specification Details
                   </h3>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <FieldLabelWithHelp helpKey="public.issues.related_product_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                       <Package className="h-4 w-4 inline mr-1" />
                       Related Product/Deliverable
-                    </label>
+                    </FieldLabelWithHelp>
                     <select
                       name="related_product_id"
                       value={formData.related_product_id}
@@ -977,9 +979,9 @@ export default function IssueForm({
                     )}
                   </div>
                   <div className="mt-4">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <FieldLabelWithHelp helpKey="public.issues.cause_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Cause Description
-                    </label>
+                    </FieldLabelWithHelp>
                     <textarea
                       name="cause_description"
                       value={formData.cause_description}
@@ -999,9 +1001,9 @@ export default function IssueForm({
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      <FieldLabelWithHelp helpKey="public.issues.scope_impact" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Scope Impact
-                      </label>
+                      </FieldLabelWithHelp>
                       <textarea
                         name="scope_impact"
                         value={formData.scope_impact}
@@ -1012,9 +1014,9 @@ export default function IssueForm({
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      <FieldLabelWithHelp helpKey="public.issues.cost_impact" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" isAmount>
                         Cost Impact ($)
-                      </label>
+                      </FieldLabelWithHelp>
                       <input
                         type="number"
                         name="cost_impact"
@@ -1026,9 +1028,9 @@ export default function IssueForm({
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      <FieldLabelWithHelp helpKey="public.issues.schedule_impact_days" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Schedule Impact (Days)
-                      </label>
+                      </FieldLabelWithHelp>
                       <input
                         type="number"
                         name="schedule_impact_days"
@@ -1048,9 +1050,9 @@ export default function IssueForm({
                         }
                         className="h-4 w-4 text-blue-600 rounded border-gray-300"
                       />
-                      <label className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                      <FieldLabelWithHelp helpKey="public.issues.impact_description" className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                         Affects Project Baseline
-                      </label>
+                      </FieldLabelWithHelp>
                     </div>
                   </div>
                 </div>
@@ -1062,9 +1064,9 @@ export default function IssueForm({
                 </h3>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <FieldLabelWithHelp helpKey="public.issues.impact_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                       Impact Description *
-                    </label>
+                    </FieldLabelWithHelp>
                     <textarea
                       name="impact_description"
                       value={formData.impact_description}
@@ -1081,9 +1083,9 @@ export default function IssueForm({
                     )}
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <FieldLabelWithHelp helpKey="public.issues.priority_rationale" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Priority Rationale
-                    </label>
+                    </FieldLabelWithHelp>
                     <MultiLineListInput
                       viewModeId="issue-priority-rationale"
                       id="issue_priority_rationale"
@@ -1095,9 +1097,9 @@ export default function IssueForm({
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <FieldLabelWithHelp helpKey="public.issues.severity_rationale" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Severity Rationale
-                    </label>
+                    </FieldLabelWithHelp>
                     <MultiLineListInput
                       viewModeId="issue-severity-rationale"
                       id="issue_severity_rationale"
@@ -1109,9 +1111,9 @@ export default function IssueForm({
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <FieldLabelWithHelp helpKey="public.issues.urgency" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Urgency
-                    </label>
+                    </FieldLabelWithHelp>
                     <select
                       name="urgency"
                       value={formData.urgency}
@@ -1130,9 +1132,9 @@ export default function IssueForm({
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.issues.affected_areas" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Affected Areas
-                  </label>
+                  </FieldLabelWithHelp>
                   <div className="flex gap-2 mb-2">
                     <input
                       type="text"
@@ -1169,9 +1171,9 @@ export default function IssueForm({
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.issues.tags" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Tags
-                  </label>
+                  </FieldLabelWithHelp>
                   <div className="flex gap-2 mb-2">
                     <input
                       type="text"
@@ -1217,14 +1219,14 @@ export default function IssueForm({
                 </h3>
                 <div className="space-y-6">
                   <LinkValueList
-                    label="Link to Task"
+                    label="Link to Task" helpKey="public.issues.task_ids"
                     placeholder="Select a task…"
                     options={tasks.map((task) => ({ value: task.id, label: task.task_name || 'Task' }))}
                     values={formData.task_ids}
                     onChange={(task_ids) => setFormData((prev) => ({ ...prev, task_ids }))}
                   />
                   <LinkValueList
-                    label="Link to Work Package"
+                    label="Link to Work Package" helpKey="public.issues.work_package_ids"
                     placeholder="Select a work package…"
                     options={workPackages.map((wp) => ({
                       value: wp.id,
@@ -1234,14 +1236,14 @@ export default function IssueForm({
                     onChange={(work_package_ids) => setFormData((prev) => ({ ...prev, work_package_ids }))}
                   />
                   <LinkValueList
-                    label="Link to User Story"
+                    label="Link to User Story" helpKey="public.issues.user_story_ids"
                     placeholder="Select a user story…"
                     options={userStories.map((story) => ({ value: story.id, label: story.story_title || 'User story' }))}
                     values={formData.user_story_ids}
                     onChange={(user_story_ids) => setFormData((prev) => ({ ...prev, user_story_ids }))}
                   />
                   <LinkValueList
-                    label="Link to Kanban Card"
+                    label="Link to Kanban Card" helpKey="public.issues.kanban_card_ids"
                     placeholder="Select a kanban card…"
                     options={kanbanCards.map((card) => ({ value: card.id, label: card.card_title || 'Kanban card' }))}
                     values={formData.kanban_card_ids}
@@ -1363,3 +1365,19 @@ export default function IssueForm({
   )
 }
 
+// v1345 slice 4: field help for this component (public.issues.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'issue_title', 'issue_code', 'issue_description', 'issue_type', 'priority', 'severity', 'date_raised',
+  'due_date', 'estimated_resolution_date', 'raised_by_id', 'author_id', 'owner_id', 'related_product_id',
+  'cause_description', 'scope_impact', 'cost_impact', 'schedule_impact_days', 'impact_description',
+  'priority_rationale', 'severity_rationale', 'urgency', 'affected_areas', 'tags',
+].map((name) => `public.issues.${name}`)
+
+export default function IssueForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <IssueFormBody {...props} />
+    </FieldHelpScope>
+  )
+}

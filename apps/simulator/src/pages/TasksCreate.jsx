@@ -2,6 +2,8 @@
  * Create New Task — schedule essentials (v1103) + owner/role (v1104).
  */
 import { useState, useEffect, useMemo } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { format } from 'date-fns'
 import toast from 'react-hot-toast'
@@ -14,7 +16,7 @@ import { fillOwnerRolesFromInvitations } from '@nidus/shared/utils/taskOwnerInvi
 import { parseSkillsLines } from '@nidus/shared/utils/roleSkillsUtils.js'
 import SelectField from '@nidus/ui/SelectField'
 
-export default function TasksCreate() {
+function TasksCreateBody() {
   useOfflineQueue()
   const navigate = useNavigate()
   const location = useLocation()
@@ -330,9 +332,9 @@ export default function TasksCreate() {
           className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 sm:p-6 space-y-6"
         >
           <div>
-            <label htmlFor="task_name" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+            <FieldLabelWithHelp helpKey="sim.tasks.task_name" htmlFor="task_name" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2" required>
               Task Name <span className="text-red-500">*</span>
-            </label>
+            </FieldLabelWithHelp>
             <input
               type="text"
               id="task_name"
@@ -347,9 +349,9 @@ export default function TasksCreate() {
           </div>
 
           <div>
-            <label htmlFor="task_description" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+            <FieldLabelWithHelp helpKey="sim.tasks.task_description" htmlFor="task_description" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
               Task Description
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               id="task_description"
               name="task_description"
@@ -363,9 +365,9 @@ export default function TasksCreate() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label htmlFor="status_id" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+              <FieldLabelWithHelp helpKey="sim.tasks.status_id" htmlFor="status_id" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2" required>
                 Status <span className="text-red-500">*</span>
-              </label>
+              </FieldLabelWithHelp>
               <select
                 id="status_id"
                 name="status_id"
@@ -384,9 +386,9 @@ export default function TasksCreate() {
               {errors.status_id && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.status_id}</p>}
             </div>
             <div>
-              <label htmlFor="priority" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+              <FieldLabelWithHelp helpKey="sim.tasks.priority" htmlFor="priority" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                 Priority
-              </label>
+              </FieldLabelWithHelp>
               <select
                 id="priority"
                 name="priority"
@@ -404,9 +406,9 @@ export default function TasksCreate() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label htmlFor="assigned_to_user_id" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+              <FieldLabelWithHelp helpKey="sim.tasks.assigned_to_user_id" htmlFor="assigned_to_user_id" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2" listOptions={false}>
                 Task owner
-              </label>
+              </FieldLabelWithHelp>
               <SelectField
                 id="assigned_to_user_id"
                 name="assigned_to_user_id"
@@ -423,9 +425,9 @@ export default function TasksCreate() {
               />
             </div>
             <div>
-              <label htmlFor="functional_role_id" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+              <FieldLabelWithHelp helpKey="sim.tasks.functional_role_id" htmlFor="functional_role_id" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2" listOptions={false}>
                 Role
-              </label>
+              </FieldLabelWithHelp>
               <SelectField
                 id="functional_role_id"
                 name="functional_role_id"
@@ -462,9 +464,9 @@ export default function TasksCreate() {
             <h2 className="text-sm font-semibold text-gray-800 dark:text-gray-100">Schedule</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label htmlFor="planned_start_date" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                <FieldLabelWithHelp helpKey="sim.tasks.planned_start_date" htmlFor="planned_start_date" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                   Planned start
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="date"
                   id="planned_start_date"
@@ -478,9 +480,9 @@ export default function TasksCreate() {
                 )}
               </div>
               <div>
-                <label htmlFor="due_date" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                <FieldLabelWithHelp helpKey="sim.tasks.due_date" htmlFor="due_date" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                   Due / finish
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="date"
                   id="due_date"
@@ -497,9 +499,9 @@ export default function TasksCreate() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
-                <label htmlFor="estimated_hours" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                <FieldLabelWithHelp helpKey="sim.tasks.estimated_hours" htmlFor="estimated_hours" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                   Estimated hours
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="number"
                   id="estimated_hours"
@@ -513,9 +515,9 @@ export default function TasksCreate() {
                 />
               </div>
               <div>
-                <label htmlFor="estimated_duration_days" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                <FieldLabelWithHelp helpKey="sim.tasks.estimated_duration_days" htmlFor="estimated_duration_days" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                   Duration (days)
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="number"
                   id="estimated_duration_days"
@@ -528,9 +530,9 @@ export default function TasksCreate() {
                 />
               </div>
               <div>
-                <label htmlFor="percentage_complete" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                <FieldLabelWithHelp helpKey="sim.tasks.percentage_complete" htmlFor="percentage_complete" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                   % complete
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="number"
                   id="percentage_complete"
@@ -548,7 +550,7 @@ export default function TasksCreate() {
               </div>
             </div>
 
-            <label className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
+            <FieldLabelWithHelp helpKey="sim.tasks.is_milestone" className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
               <input
                 type="checkbox"
                 name="is_milestone"
@@ -557,7 +559,7 @@ export default function TasksCreate() {
                 className="rounded border-gray-300 dark:border-gray-600"
               />
               Milestone
-            </label>
+            </FieldLabelWithHelp>
           </div>
 
           {errors.submit && (
@@ -586,5 +588,29 @@ export default function TasksCreate() {
       </div>
       {modal}
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.tasks.task_name',
+  'sim.tasks.task_description',
+  'sim.tasks.status_id',
+  'sim.tasks.priority',
+  'sim.tasks.assigned_to_user_id',
+  'sim.tasks.functional_role_id',
+  'sim.tasks.planned_start_date',
+  'sim.tasks.due_date',
+  'sim.tasks.estimated_hours',
+  'sim.tasks.estimated_duration_days',
+  'sim.tasks.percentage_complete',
+  'sim.tasks.is_milestone',
+]
+
+export default function TasksCreate(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <TasksCreateBody {...props} />
+    </FieldHelpScope>
   )
 }

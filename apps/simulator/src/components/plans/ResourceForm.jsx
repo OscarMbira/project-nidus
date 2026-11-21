@@ -3,6 +3,8 @@
  */
 
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { X, Save } from 'lucide-react'
 import { SmartAmountInput } from '@nidus/ui/SmartAmountInput'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
@@ -20,7 +22,7 @@ const RESOURCE_TYPES = [
   { value: 'other', label: 'Other' }
 ]
 
-export default function ResourceForm({ resource, onSubmit, onCancel, planType }) {
+function ResourceFormBody({ resource, onSubmit, onCancel, planType }) {
   const [formData, setFormData] = useState({
     resource_type: 'human',
     resource_name: '',
@@ -87,9 +89,9 @@ export default function ResourceForm({ resource, onSubmit, onCancel, planType })
       <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.plan_resources.resource_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Resource Name <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             value={formData.resource_name}
@@ -101,9 +103,9 @@ export default function ResourceForm({ resource, onSubmit, onCancel, planType })
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.plan_resources.resource_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Resource Type
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={formData.resource_type}
             onChange={(e) => setFormData({ ...formData, resource_type: e.target.value })}
@@ -118,9 +120,9 @@ export default function ResourceForm({ resource, onSubmit, onCancel, planType })
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.plan_resources.quantity_required" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Quantity Required
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="number"
             step="0.01"
@@ -132,9 +134,9 @@ export default function ResourceForm({ resource, onSubmit, onCancel, planType })
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.plan_resources.unit_of_measure" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Unit of Measure
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             value={formData.unit_of_measure}
@@ -145,9 +147,9 @@ export default function ResourceForm({ resource, onSubmit, onCancel, planType })
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.plan_resources.cost_per_unit" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" isAmount>
             Cost per Unit
-          </label>
+          </FieldLabelWithHelp>
           <SmartAmountInput
             value={formData.cost_per_unit ? parseFloat(formData.cost_per_unit) : null}
             onChange={(value) => setFormData({ ...formData, cost_per_unit: value })}
@@ -157,9 +159,9 @@ export default function ResourceForm({ resource, onSubmit, onCancel, planType })
         </div>
 
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.plan_resources.resource_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Description
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             value={formData.resource_description}
             onChange={(e) => setFormData({ ...formData, resource_description: e.target.value })}
@@ -170,9 +172,9 @@ export default function ResourceForm({ resource, onSubmit, onCancel, planType })
         </div>
 
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.plan_resources.availability_constraints" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Availability Constraints
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             value={formData.availability_constraints}
             onChange={(e) => setFormData({ ...formData, availability_constraints: e.target.value })}
@@ -205,5 +207,24 @@ export default function ResourceForm({ resource, onSubmit, onCancel, planType })
         </button>
       </div>
     </form>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.plan_resources.resource_name',
+  'sim.plan_resources.resource_type',
+  'sim.plan_resources.quantity_required',
+  'sim.plan_resources.unit_of_measure',
+  'sim.plan_resources.cost_per_unit',
+  'sim.plan_resources.resource_description',
+  'sim.plan_resources.availability_constraints',
+]
+
+export default function ResourceForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ResourceFormBody {...props} />
+    </FieldHelpScope>
   )
 }

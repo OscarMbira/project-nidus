@@ -6,6 +6,8 @@
  */
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useNavigate, Link } from 'react-router-dom'
 import {
   Shield,
@@ -30,7 +32,7 @@ import {
 // Cache for project roles to prevent redundant API calls
 const rolesCache = new Map()
 
-export default function AssignRolesToProjects() {
+function AssignRolesToProjectsBody() {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
   const [assigning, setAssigning] = useState(false)
@@ -343,12 +345,12 @@ export default function AssignRolesToProjects() {
             <form onSubmit={handleAssignRole} className="space-y-4 sm:space-y-5 md:space-y-6">
               {/* Project Selection */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.project_assignments.project_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required listOptions={false}>
                   <span className="flex items-center">
                     <FolderKanban className="h-4 w-4 mr-2 flex-shrink-0" />
                     <span>Select Project *</span>
                   </span>
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   value={selectedProject}
                   onChange={handleProjectChange}
@@ -367,12 +369,12 @@ export default function AssignRolesToProjects() {
               {/* User Selection */}
               <div>
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <FieldLabelWithHelp helpKey="public.project_assignments.user_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300" required listOptions={false}>
                     <span className="flex items-center">
                       <Users className="h-4 w-4 mr-2 flex-shrink-0" />
                       <span>Select User *</span>
                     </span>
-                  </label>
+                  </FieldLabelWithHelp>
                   <Link
                     to="/platform/project-members"
                     className="inline-flex items-center gap-1.5 text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline"
@@ -400,12 +402,12 @@ export default function AssignRolesToProjects() {
               {/* Role Selection */}
               {selectedProject && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.project_assignments.role_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                     <span className="flex items-center">
                       <Shield className="h-4 w-4 mr-2 flex-shrink-0" />
                       <span>Select Role *</span>
                     </span>
-                  </label>
+                  </FieldLabelWithHelp>
                   <select
                     value={selectedRole}
                     onChange={(e) => setSelectedRole(e.target.value)}
@@ -458,5 +460,19 @@ export default function AssignRolesToProjects() {
         </>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.project_assignments.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'project_id', 'user_id', 'role_id',
+].map((name) => `public.project_assignments.${name}`)
+
+export default function AssignRolesToProjects(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <AssignRolesToProjectsBody {...props} />
+    </FieldHelpScope>
   )
 }

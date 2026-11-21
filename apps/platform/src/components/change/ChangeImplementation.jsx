@@ -6,6 +6,8 @@
  * columns exist for them) rather than adding new columns for two free-text facets.
  */
 import { useState, useEffect, useCallback } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Save, CheckCircle2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { platformDb } from '@nidus/supabase'
@@ -23,7 +25,7 @@ const EMPTY_FORM = {
   verification_notes: '',
 }
 
-export default function ChangeImplementation({ changeRequestId, projectId }) {
+function ChangeImplementationBody({ changeRequestId, projectId }) {
   const [record, setRecord] = useState(null)
   const [form, setForm] = useState(EMPTY_FORM)
   const [loading, setLoading] = useState(true)
@@ -118,7 +120,7 @@ export default function ChangeImplementation({ changeRequestId, projectId }) {
   return (
     <form onSubmit={handleSave} className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Actions / Implementation Plan</label>
+        <FieldLabelWithHelp helpKey="public.change_implementations.implementation_plan" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Actions / Implementation Plan</FieldLabelWithHelp>
         <textarea rows={4} value={form.implementation_plan} onChange={(e) => setForm({ ...form, implementation_plan: e.target.value })}
           placeholder="What actions are being taken to implement this change?"
           className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-sm" />
@@ -126,17 +128,17 @@ export default function ChangeImplementation({ changeRequestId, projectId }) {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Planned start</label>
+          <FieldLabelWithHelp helpKey="public.change_implementations.planned_start_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Planned start</FieldLabelWithHelp>
           <input type="date" value={form.planned_start_date} onChange={(e) => setForm({ ...form, planned_start_date: e.target.value })}
             className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-sm" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Planned end</label>
+          <FieldLabelWithHelp helpKey="public.change_implementations.planned_end_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Planned end</FieldLabelWithHelp>
           <input type="date" value={form.planned_end_date} onChange={(e) => setForm({ ...form, planned_end_date: e.target.value })}
             className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-sm" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
+          <FieldLabelWithHelp helpKey="public.change_implementations.status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</FieldLabelWithHelp>
           <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}
             className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-sm capitalize">
             {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s.replace('-', ' ')}</option>)}
@@ -145,7 +147,7 @@ export default function ChangeImplementation({ changeRequestId, projectId }) {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Baseline Updates &amp; Communication</label>
+        <FieldLabelWithHelp helpKey="public.change_implementations.notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Baseline Updates &amp; Communication</FieldLabelWithHelp>
         <textarea rows={3} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })}
           placeholder="Which baselines were updated, and how/who was notified of this change?"
           className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-sm" />
@@ -180,5 +182,19 @@ export default function ChangeImplementation({ changeRequestId, projectId }) {
         </button>
       </div>
     </form>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.change_implementations.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'implementation_plan', 'planned_start_date', 'planned_end_date', 'status', 'notes',
+].map((name) => `public.change_implementations.${name}`)
+
+export default function ChangeImplementation(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ChangeImplementationBody {...props} />
+    </FieldHelpScope>
   )
 }

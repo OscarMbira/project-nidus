@@ -2,13 +2,16 @@
  * Stage Plan Resource Section
  */
 
+import PlanListTable from '@nidus/ui/PlanListTable'
 import { useState } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { Plus } from 'lucide-react'
 import { addResource, deleteResource } from '../../services/planResourceService'
 import ResourceForm from './ResourceForm'
 import ResourceCard from './ResourceCard'
 
-export default function StagePlanResourceSection({ 
+function StagePlanResourceSectionBody({ 
   formData, 
   onChange, 
   resources, 
@@ -60,9 +63,9 @@ export default function StagePlanResourceSection({
       <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Resources</h2>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="sim.plan_resources.resource_requirements" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Resource Requirements
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={formData.resource_requirements || ''}
           onChange={(e) => onChange('resource_requirements', e.target.value)}
@@ -126,28 +129,31 @@ export default function StagePlanResourceSection({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Resource Allocation (JSON)
-        </label>
-        <textarea
-          value={formData.resource_allocation ? JSON.stringify(formData.resource_allocation, null, 2) : ''}
-          onChange={(e) => {
-            try {
-              const parsed = JSON.parse(e.target.value)
-              onChange('resource_allocation', parsed)
-            } catch {
-              // Invalid JSON, ignore
-            }
-          }}
+        <FieldLabelWithHelp helpKey="sim.stage_plans.resource_allocation" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Resource Allocation
+        </FieldLabelWithHelp>
+        <PlanListTable
+          kind="stage"
+          listKey="resource_allocation"
+          value={formData.resource_allocation}
+          onChange={(rows) => onChange('resource_allocation', rows)}
           disabled={mode === 'view'}
-          rows={4}
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono text-sm"
-          placeholder='{"work_package_1": {"resource_id": "...", "allocation": "..."}, ...}'
         />
-        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-          Enter resource allocation as JSON object
-        </p>
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.plan_resources.resource_requirements',
+  'sim.plan_resources.resource_allocation',
+]
+
+export default function StagePlanResourceSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <StagePlanResourceSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

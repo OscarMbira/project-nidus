@@ -1,8 +1,10 @@
 import { useState } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { Lightbulb, ArrowUp, Plus, X, Edit2 } from 'lucide-react'
 import { addLesson, updateLesson, deleteLesson, escalateToCorporate } from '../../../services/eprLessonsService'
 
-export default function EPRLessonsReport({ reportId, lessons, onLessonsChange, projectId, mode }) {
+function EPRLessonsReportBody({ reportId, lessons, onLessonsChange, projectId, mode }) {
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [newLesson, setNewLesson] = useState({
@@ -213,9 +215,9 @@ export default function EPRLessonsReport({ reportId, lessons, onLessonsChange, p
             <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-900">
               <div className="space-y-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <FieldLabelWithHelp helpKey="sim.end_project_report_lessons.lesson_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
                     Lesson Type *
-                  </label>
+                  </FieldLabelWithHelp>
                   <select
                     value={newLesson.lesson_type}
                     onChange={(e) => setNewLesson({ ...newLesson, lesson_type: e.target.value })}
@@ -227,9 +229,9 @@ export default function EPRLessonsReport({ reportId, lessons, onLessonsChange, p
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <FieldLabelWithHelp helpKey="sim.end_project_report_lessons.title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
                     Title *
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="text"
                     value={newLesson.title}
@@ -238,9 +240,9 @@ export default function EPRLessonsReport({ reportId, lessons, onLessonsChange, p
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <FieldLabelWithHelp helpKey="sim.end_project_report_lessons.description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
                     Description *
-                  </label>
+                  </FieldLabelWithHelp>
                   <textarea
                     value={newLesson.description}
                     onChange={(e) => setNewLesson({ ...newLesson, description: e.target.value })}
@@ -250,9 +252,9 @@ export default function EPRLessonsReport({ reportId, lessons, onLessonsChange, p
                   </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <FieldLabelWithHelp helpKey="sim.end_project_report_lessons.category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Category
-                    </label>
+                    </FieldLabelWithHelp>
                     <select
                       value={newLesson.category}
                       onChange={(e) => setNewLesson({ ...newLesson, category: e.target.value })}
@@ -270,9 +272,9 @@ export default function EPRLessonsReport({ reportId, lessons, onLessonsChange, p
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <FieldLabelWithHelp helpKey="sim.end_project_report_lessons.impact" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Impact
-                    </label>
+                    </FieldLabelWithHelp>
                     <select
                       value={newLesson.impact}
                       onChange={(e) => setNewLesson({ ...newLesson, impact: e.target.value })}
@@ -287,9 +289,9 @@ export default function EPRLessonsReport({ reportId, lessons, onLessonsChange, p
                 </div>
                 {newLesson.lesson_type === 'what_went_badly' && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <FieldLabelWithHelp helpKey="sim.end_project_report_lessons.root_cause" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Root Cause
-                    </label>
+                    </FieldLabelWithHelp>
                     <textarea
                       value={newLesson.root_cause}
                       onChange={(e) => setNewLesson({ ...newLesson, root_cause: e.target.value })}
@@ -299,9 +301,9 @@ export default function EPRLessonsReport({ reportId, lessons, onLessonsChange, p
                   </div>
                 )}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <FieldLabelWithHelp helpKey="sim.end_project_report_lessons.recommendation" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Recommendation
-                  </label>
+                  </FieldLabelWithHelp>
                   <textarea
                     value={newLesson.recommendation}
                     onChange={(e) => setNewLesson({ ...newLesson, recommendation: e.target.value })}
@@ -337,5 +339,24 @@ export default function EPRLessonsReport({ reportId, lessons, onLessonsChange, p
         </>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.end_project_report_lessons.lesson_type',
+  'sim.end_project_report_lessons.title',
+  'sim.end_project_report_lessons.description',
+  'sim.end_project_report_lessons.category',
+  'sim.end_project_report_lessons.impact',
+  'sim.end_project_report_lessons.root_cause',
+  'sim.end_project_report_lessons.recommendation',
+]
+
+export default function EPRLessonsReport(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <EPRLessonsReportBody {...props} />
+    </FieldHelpScope>
   )
 }

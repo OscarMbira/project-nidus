@@ -10,6 +10,8 @@
  */
 
 import { useState, useEffect, memo } from 'react';
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { X, Save } from 'lucide-react';
 import { saveProgramme } from '../../../services/programmeService';
 import { platformDb } from '@nidus/supabase';
@@ -188,9 +190,9 @@ const CreateProgrammeModal = memo(function CreateProgrammeModal({
           <div className="space-y-4">
             {/* Programme Name */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="public.programmes.programme_name" className="block text-sm font-medium text-gray-300 mb-1" required>
                 Programme Name *
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="text"
                 name="programme_name"
@@ -203,9 +205,9 @@ const CreateProgrammeModal = memo(function CreateProgrammeModal({
 
             {/* Programme Code */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="public.programmes.programme_code" className="block text-sm font-medium text-gray-300 mb-1">
                 Programme Code
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="text"
                 name="programme_code"
@@ -217,9 +219,9 @@ const CreateProgrammeModal = memo(function CreateProgrammeModal({
 
             {/* Description */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="public.programmes.programme_description" className="block text-sm font-medium text-gray-300 mb-1">
                 Description
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 name="programme_description"
                 value={formData.programme_description}
@@ -231,9 +233,9 @@ const CreateProgrammeModal = memo(function CreateProgrammeModal({
 
             {/* Programme Owner */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="public.programmes.programme_owner_user_id" className="block text-sm font-medium text-gray-300 mb-1" listOptions={false}>
                 Programme Owner
-              </label>
+              </FieldLabelWithHelp>
               <select
                 name="programme_owner_user_id"
                 value={formData.programme_owner_user_id}
@@ -255,9 +257,9 @@ const CreateProgrammeModal = memo(function CreateProgrammeModal({
 
             {/* Programme Manager */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="public.programmes.programme_manager_user_id" className="block text-sm font-medium text-gray-300 mb-1" listOptions={false}>
                 Programme Manager
-              </label>
+              </FieldLabelWithHelp>
               <select
                 name="programme_manager_user_id"
                 value={formData.programme_manager_user_id}
@@ -280,9 +282,9 @@ const CreateProgrammeModal = memo(function CreateProgrammeModal({
             {/* Dates */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">
+                <FieldLabelWithHelp helpKey="public.programmes.programme_start_date" className="block text-sm font-medium text-gray-300 mb-1">
                   Start Date
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="date"
                   name="programme_start_date"
@@ -292,9 +294,9 @@ const CreateProgrammeModal = memo(function CreateProgrammeModal({
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">
+                <FieldLabelWithHelp helpKey="public.programmes.programme_end_date" className="block text-sm font-medium text-gray-300 mb-1">
                   End Date
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="date"
                   name="programme_end_date"
@@ -307,9 +309,9 @@ const CreateProgrammeModal = memo(function CreateProgrammeModal({
 
             {/* Goals */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="public.programmes.goals" className="block text-sm font-medium text-gray-300 mb-1">
                 Goals
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 name="programme_goals"
                 value={formData.programme_goals}
@@ -322,9 +324,9 @@ const CreateProgrammeModal = memo(function CreateProgrammeModal({
 
             {/* Success Criteria */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="public.programmes.success_criteria" className="block text-sm font-medium text-gray-300 mb-1">
                 Success Criteria
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 name="success_criteria"
                 value={formData.success_criteria}
@@ -361,4 +363,15 @@ const CreateProgrammeModal = memo(function CreateProgrammeModal({
   );
 });
 
-export default CreateProgrammeModal;
+// v1345 slice 4: field help for this dialog (public.programmes.<column>), carried in its own scope.
+const HELP_KEYS = ['programme_name', 'programme_code', 'programme_description', 'programme_owner_user_id', 'programme_manager_user_id', 'programme_start_date', 'programme_end_date', 'goals', 'success_criteria'].map((name) => `public.programmes.${name}`)
+
+function CreateProgrammeModalWithHelp(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <CreateProgrammeModal {...props} />
+    </FieldHelpScope>
+  )
+}
+
+export default CreateProgrammeModalWithHelp;

@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { X, Loader } from 'lucide-react'
 import { getSimTeamFunctionalRoles, updateSimTeamMember } from '../../services/sim/simTeamService'
 import { useToast } from '@nidus/shared/hooks/useToast'
 
-export default function SimEditTeamMemberModal({ isOpen, onClose, practiceTeamId, member, onSuccess }) {
+function SimEditTeamMemberModalBody({ isOpen, onClose, practiceTeamId, member, onSuccess }) {
   const { showToast } = useToast()
   const [roles, setRoles] = useState([])
   const [roleMode, setRoleMode] = useState('preset')
@@ -110,7 +112,7 @@ export default function SimEditTeamMemberModal({ isOpen, onClose, practiceTeamId
               />
             )}
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Allocation %</label>
+              <FieldLabelWithHelp helpKey="sim.practice_team_members.allocation_percentage" className="text-sm font-medium text-gray-700 dark:text-gray-300">Allocation %</FieldLabelWithHelp>
               <input
                 type="number"
                 min={0}
@@ -137,5 +139,19 @@ export default function SimEditTeamMemberModal({ isOpen, onClose, practiceTeamId
         )}
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (sim.practice_team_members.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'allocation_percentage',
+].map((name) => `sim.practice_team_members.${name}`)
+
+export default function SimEditTeamMemberModal(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <SimEditTeamMemberModalBody {...props} />
+    </FieldHelpScope>
   )
 }

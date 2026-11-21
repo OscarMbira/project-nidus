@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { supabase } from '../../../services/supabaseClient';
 import { X, FileText, Target, TrendingUp, DollarSign, CheckCircle, AlertTriangle, Users, Lightbulb } from 'lucide-react';
 import { createEndProjectReport, updateEndProjectReport } from '../../../services/closingProjectService';
@@ -11,7 +13,7 @@ import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
-export default function EndProjectReportForm({ projectId, report, onClose, onSuccess }) {
+function EndProjectReportFormBody({ projectId, report, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [activeSection, setActiveSection] = useState('basic');
   const [auditUserLabels, setAuditUserLabels] = useState({});
@@ -154,9 +156,9 @@ export default function EndProjectReportForm({ projectId, report, onClose, onSuc
         return (
           <div className="space-y-6">
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+              <FieldLabelWithHelp helpKey="public.end_project_reports.report_title" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>
                 Report Title *
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="text"
                 value={formData.report_title}
@@ -169,9 +171,9 @@ export default function EndProjectReportForm({ projectId, report, onClose, onSuc
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                <FieldLabelWithHelp helpKey="public.end_project_reports.report_date" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>
                   Report Date *
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="date"
                   value={formData.report_date}
@@ -182,9 +184,9 @@ export default function EndProjectReportForm({ projectId, report, onClose, onSuc
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                <FieldLabelWithHelp helpKey="public.end_project_reports.report_status" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>
                   Report Status *
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   value={formData.report_status}
                   onChange={(e) => setFormData({ ...formData, report_status: e.target.value })}
@@ -200,9 +202,9 @@ export default function EndProjectReportForm({ projectId, report, onClose, onSuc
             </div>
 
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+              <FieldLabelWithHelp helpKey="public.end_project_reports.executive_summary" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>
                 Executive Summary *
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={formData.executive_summary}
                 onChange={(e) => setFormData({ ...formData, executive_summary: e.target.value })}
@@ -219,9 +221,9 @@ export default function EndProjectReportForm({ projectId, report, onClose, onSuc
         return (
           <div className="space-y-6">
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+              <FieldLabelWithHelp helpKey="public.end_project_reports.project_objectives_met" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>
                 Project Objectives Met *
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={formData.project_objectives_met}
                 onChange={(e) => setFormData({ ...formData, project_objectives_met: e.target.value })}
@@ -233,9 +235,9 @@ export default function EndProjectReportForm({ projectId, report, onClose, onSuc
             </div>
 
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+              <FieldLabelWithHelp helpKey="public.end_project_reports.deliverables_summary" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>
                 Deliverables Summary *
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={formData.deliverables_summary}
                 onChange={(e) => setFormData({ ...formData, deliverables_summary: e.target.value })}
@@ -265,9 +267,9 @@ export default function EndProjectReportForm({ projectId, report, onClose, onSuc
         return (
           <div className="space-y-6">
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+              <FieldLabelWithHelp helpKey="public.end_project_reports.performance_against_plan" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>
                 Performance Against Plan *
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={formData.performance_against_plan}
                 onChange={(e) => setFormData({ ...formData, performance_against_plan: e.target.value })}
@@ -279,9 +281,9 @@ export default function EndProjectReportForm({ projectId, report, onClose, onSuc
             </div>
 
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+              <FieldLabelWithHelp helpKey="public.end_project_reports.budget_summary" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>
                 Budget Summary *
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={formData.budget_summary}
                 onChange={(e) => setFormData({ ...formData, budget_summary: e.target.value })}
@@ -312,9 +314,9 @@ export default function EndProjectReportForm({ projectId, report, onClose, onSuc
         return (
           <div className="space-y-6">
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+              <FieldLabelWithHelp helpKey="public.end_project_reports.quality_summary" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>
                 Quality Summary *
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={formData.quality_summary}
                 onChange={(e) => setFormData({ ...formData, quality_summary: e.target.value })}
@@ -326,9 +328,9 @@ export default function EndProjectReportForm({ projectId, report, onClose, onSuc
             </div>
 
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+              <FieldLabelWithHelp helpKey="public.end_project_reports.risk_issue_summary" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>
                 Risk & Issue Summary *
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={formData.risk_issue_summary}
                 onChange={(e) => setFormData({ ...formData, risk_issue_summary: e.target.value })}
@@ -345,9 +347,9 @@ export default function EndProjectReportForm({ projectId, report, onClose, onSuc
         return (
           <div className="space-y-6">
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+              <FieldLabelWithHelp helpKey="public.end_project_reports.stakeholder_feedback" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>
                 Stakeholder Feedback *
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={formData.stakeholder_feedback}
                 onChange={(e) => setFormData({ ...formData, stakeholder_feedback: e.target.value })}
@@ -378,9 +380,9 @@ export default function EndProjectReportForm({ projectId, report, onClose, onSuc
         return (
           <div className="space-y-6">
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+              <FieldLabelWithHelp helpKey="public.end_project_reports.lessons_learned_summary" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>
                 Lessons Learned Summary *
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={formData.lessons_learned_summary}
                 onChange={(e) => setFormData({ ...formData, lessons_learned_summary: e.target.value })}
@@ -392,9 +394,9 @@ export default function EndProjectReportForm({ projectId, report, onClose, onSuc
             </div>
 
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+              <FieldLabelWithHelp helpKey="public.end_project_reports.recommendations" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>
                 Recommendations *
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={formData.recommendations}
                 onChange={(e) => setFormData({ ...formData, recommendations: e.target.value })}
@@ -406,9 +408,9 @@ export default function EndProjectReportForm({ projectId, report, onClose, onSuc
             </div>
 
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+              <FieldLabelWithHelp helpKey="public.end_project_reports.benefits_forecast" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>
                 Benefits Forecast *
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={formData.benefits_forecast}
                 onChange={(e) => setFormData({ ...formData, benefits_forecast: e.target.value })}
@@ -425,9 +427,9 @@ export default function EndProjectReportForm({ projectId, report, onClose, onSuc
         return (
           <div className="space-y-6">
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+              <FieldLabelWithHelp helpKey="public.end_project_reports.project_closure_id" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                 Project Closure
-              </label>
+              </FieldLabelWithHelp>
               <select
                 value={formData.project_closure_id}
                 onChange={(e) => setFormData({ ...formData, project_closure_id: e.target.value })}
@@ -443,9 +445,9 @@ export default function EndProjectReportForm({ projectId, report, onClose, onSuc
             </div>
 
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+              <FieldLabelWithHelp helpKey="public.end_project_reports.closure_recommendation" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>
                 Closure Recommendation *
-              </label>
+              </FieldLabelWithHelp>
               <select
                 value={formData.closure_recommendation}
                 onChange={(e) => setFormData({ ...formData, closure_recommendation: e.target.value })}
@@ -460,10 +462,10 @@ export default function EndProjectReportForm({ projectId, report, onClose, onSuc
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.end_project_reports.prepared_by" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   <Users className="h-4 w-4" />
                   Prepared By
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   value={formData.prepared_by}
                   onChange={(e) => setFormData({ ...formData, prepared_by: e.target.value })}
@@ -479,10 +481,10 @@ export default function EndProjectReportForm({ projectId, report, onClose, onSuc
               </div>
 
               <div>
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.end_project_reports.approved_by" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   <Users className="h-4 w-4" />
                   Approved By
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   value={formData.approved_by}
                   onChange={(e) => setFormData({ ...formData, approved_by: e.target.value })}
@@ -499,9 +501,9 @@ export default function EndProjectReportForm({ projectId, report, onClose, onSuc
             </div>
 
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+              <FieldLabelWithHelp helpKey="public.end_project_reports.approval_date" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                 Approval Date
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="date"
                 value={formData.approval_date}
@@ -598,4 +600,22 @@ export default function EndProjectReportForm({ projectId, report, onClose, onSuc
       </div>
     </div>
   );
+}
+
+// v1345 slice 4: field help for this component (public.end_project_reports.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'report_title', 'report_date', 'report_status', 'executive_summary', 'project_objectives_met',
+  'deliverables_summary', 'performance_against_plan', 'budget_summary', 'quality_summary',
+  'risk_issue_summary', 'stakeholder_feedback', 'lessons_learned_summary', 'recommendations',
+  'benefits_forecast', 'project_closure_id', 'closure_recommendation', 'prepared_by', 'approved_by',
+  'approval_date',
+].map((name) => `public.end_project_reports.${name}`)
+
+export default function EndProjectReportForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <EndProjectReportFormBody {...props} />
+    </FieldHelpScope>
+  )
 }

@@ -2,9 +2,12 @@
  * Project Plan Budget Section
  */
 
+import PlanListTable from '@nidus/ui/PlanListTable'
 import { SmartAmountInput } from '@nidus/ui/SmartAmountInput'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 
-export default function ProjectPlanBudgetSection({ formData, onChange, errors, mode }) {
+function ProjectPlanBudgetSectionBody({ formData, onChange, errors, mode }) {
   const handleContingencyChange = (field, value) => {
     if (field === 'contingency_percentage' && formData.total_budget) {
       const amount = (parseFloat(value) / 100) * parseFloat(formData.total_budget)
@@ -25,9 +28,9 @@ export default function ProjectPlanBudgetSection({ formData, onChange, errors, m
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.project_plans.total_budget" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" isAmount>
             Total Budget
-          </label>
+          </FieldLabelWithHelp>
           <div className="flex items-center">
             <select
               value={formData.budget_currency || 'USD'}
@@ -57,9 +60,9 @@ export default function ProjectPlanBudgetSection({ formData, onChange, errors, m
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.project_plans.contingency_amount" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" isAmount>
             Contingency Amount
-          </label>
+          </FieldLabelWithHelp>
           <SmartAmountInput
             value={formData.contingency_amount || null}
             onChange={(value) => handleContingencyChange('contingency_amount', value)}
@@ -70,9 +73,9 @@ export default function ProjectPlanBudgetSection({ formData, onChange, errors, m
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.project_plans.contingency_percentage" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Contingency Percentage
-          </label>
+          </FieldLabelWithHelp>
           <div className="flex items-center">
             <input
               type="number"
@@ -91,28 +94,33 @@ export default function ProjectPlanBudgetSection({ formData, onChange, errors, m
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Budget Breakdown (JSON)
-        </label>
-        <textarea
-          value={formData.budget_breakdown ? JSON.stringify(formData.budget_breakdown, null, 2) : ''}
-          onChange={(e) => {
-            try {
-              const parsed = JSON.parse(e.target.value)
-              onChange('budget_breakdown', parsed)
-            } catch {
-              // Invalid JSON, ignore
-            }
-          }}
+        <FieldLabelWithHelp helpKey="sim.project_plans.budget_breakdown" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Budget Breakdown
+        </FieldLabelWithHelp>
+        <PlanListTable
+          kind="project"
+          listKey="budget_breakdown"
+          value={formData.budget_breakdown}
+          onChange={(rows) => onChange('budget_breakdown', rows)}
           disabled={mode === 'view'}
-          rows={8}
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono text-sm"
-          placeholder='{"stage1": 10000, "stage2": 15000, ...}'
         />
-        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-          Enter budget breakdown as JSON object (e.g., by stage or category)
-        </p>
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.project_plans.total_budget',
+  'sim.project_plans.contingency_amount',
+  'sim.project_plans.contingency_percentage',
+  'sim.project_plans.budget_breakdown',
+]
+
+export default function ProjectPlanBudgetSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ProjectPlanBudgetSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

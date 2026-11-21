@@ -4,6 +4,8 @@
  */
 
 import { useState, useEffect } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Save } from 'lucide-react'
 import { platformDb } from '@nidus/supabase'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
@@ -71,7 +73,7 @@ function stakeholderTypeBadgeClass(type) {
   }
 }
 
-export default function EngagementPlanForm({ plan, stakeholderId, projectId, stakeholders = [], onSave, onCancel, readOnly = false }) {
+function EngagementPlanFormBody({ plan, stakeholderId, projectId, stakeholders = [], onSave, onCancel, readOnly = false }) {
   const [formData, setFormData] = useState({
     stakeholder_id: stakeholderId || '',
     project_id: projectId || '',
@@ -257,7 +259,7 @@ export default function EngagementPlanForm({ plan, stakeholderId, projectId, sta
         <fieldset disabled={readOnly} className="space-y-4 border-0 p-0 m-0 min-w-0 disabled:opacity-100">
         {!plan && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="engagement-plan-stakeholder">Stakeholder</label>
+            <FieldLabelWithHelp helpKey="public.stakeholder_engagement_plans.stakeholder_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="engagement-plan-stakeholder" listOptions={false}>Stakeholder</FieldLabelWithHelp>
             <SelectField
               id="engagement-plan-stakeholder"
               name="stakeholder_id"
@@ -309,20 +311,20 @@ export default function EngagementPlanForm({ plan, stakeholderId, projectId, sta
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="engagement-plan-level">Current level</label>
+                <FieldLabelWithHelp helpKey="public.stakeholder_engagement_plans.engagement_level" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="engagement-plan-level">Current level</FieldLabelWithHelp>
                 <select id="engagement-plan-level" name="engagement_level" value={formData.engagement_level} onChange={handleChange} className={fieldClass}>
                   {optionPairs(ENGAGEMENT_LEVELS, formData.engagement_level).map(([value, label]) => (<option key={value} value={value}>{label}</option>))}
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="engagement-plan-target">Desired level</label>
+                <FieldLabelWithHelp helpKey="public.stakeholder_engagement_plans.target_engagement_level" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="engagement-plan-target">Desired level</FieldLabelWithHelp>
                 <select id="engagement-plan-target" name="target_engagement_level" value={formData.target_engagement_level} onChange={handleChange} className={fieldClass}>
                   {optionPairs(ENGAGEMENT_LEVELS, formData.target_engagement_level).map(([value, label]) => (<option key={value} value={value}>{label}</option>))}
                 </select>
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="engagement-plan-impact">Scope and impact of the change</label>
+              <FieldLabelWithHelp helpKey="public.stakeholder_engagement_plans.change_scope_impact" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="engagement-plan-impact">Scope and impact of the change</FieldLabelWithHelp>
               <textarea id="engagement-plan-impact" name="change_scope_impact" value={formData.change_scope_impact} onChange={handleChange} rows={3} className={fieldClass} />
             </div>
           </>
@@ -331,19 +333,19 @@ export default function EngagementPlanForm({ plan, stakeholderId, projectId, sta
         {formTab === 'approach' && (
           <>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="engagement-plan-strategy">Engagement approach</label>
+              <FieldLabelWithHelp helpKey="public.stakeholder_engagement_plans.engagement_strategy" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="engagement-plan-strategy">Engagement approach</FieldLabelWithHelp>
               <p className="mb-1 text-xs text-gray-600 dark:text-gray-300">How you will move this stakeholder to the desired level.</p>
               <textarea id="engagement-plan-strategy" name="engagement_strategy" value={formData.engagement_strategy} onChange={handleChange} rows={4} className={fieldClass} />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="engagement-plan-method">Method</label>
+                <FieldLabelWithHelp helpKey="public.stakeholder_engagement_plans.preferred_communication_method" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="engagement-plan-method">Method</FieldLabelWithHelp>
                 <select id="engagement-plan-method" name="preferred_communication_method" value={formData.preferred_communication_method} onChange={handleChange} className={fieldClass}>
                   {optionValues(METHODS, formData.preferred_communication_method).map((method) => (<option key={method} value={method}>{method}</option>))}
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="engagement-plan-frequency">Frequency</label>
+                <FieldLabelWithHelp helpKey="public.stakeholder_engagement_plans.preferred_communication_frequency" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="engagement-plan-frequency">Frequency</FieldLabelWithHelp>
                 <select id="engagement-plan-frequency" name="preferred_communication_frequency" value={formData.preferred_communication_frequency} onChange={handleChange} className={fieldClass}>
                   {optionValues(FREQUENCIES, formData.preferred_communication_frequency).map((frequency) => (<option key={frequency} value={frequency}>{frequency}</option>))}
                 </select>
@@ -351,7 +353,7 @@ export default function EngagementPlanForm({ plan, stakeholderId, projectId, sta
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="engagement-plan-preferred_meeting_type">Preferred meeting type</label>
+                <FieldLabelWithHelp helpKey="public.stakeholder_engagement_plans.preferred_meeting_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="engagement-plan-preferred_meeting_type">Preferred meeting type</FieldLabelWithHelp>
                 <select id="engagement-plan-preferred_meeting_type" value={formData.preferred_meeting_type || ''} onChange={(e) => setOptional('preferred_meeting_type', e.target.value)} className={fieldClass}>
                   <option value="">Not set</option>
                   <option value="1-on-1">One-to-one</option>
@@ -361,7 +363,7 @@ export default function EngagementPlanForm({ plan, stakeholderId, projectId, sta
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="engagement-plan-information_sensitivity_level">Information sensitivity</label>
+                <FieldLabelWithHelp helpKey="public.stakeholder_engagement_plans.information_sensitivity_level" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="engagement-plan-information_sensitivity_level">Information sensitivity</FieldLabelWithHelp>
                 <select id="engagement-plan-information_sensitivity_level" value={formData.information_sensitivity_level || ''} onChange={(e) => setOptional('information_sensitivity_level', e.target.value)} className={fieldClass}>
                   <option value="">Not set</option>
                   <option value="public">Public</option>
@@ -372,7 +374,7 @@ export default function EngagementPlanForm({ plan, stakeholderId, projectId, sta
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="engagement-plan-information_needs">Information needs</label>
+              <FieldLabelWithHelp helpKey="public.stakeholder_engagement_plans.information_needs" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="engagement-plan-information_needs">Information needs</FieldLabelWithHelp>
               <textarea id="engagement-plan-information_needs" name="information_needs" value={formData.information_needs} onChange={handleChange} rows={3} placeholder="What this stakeholder needs to know, and when" className={fieldClass} />
             </div>
           </>
@@ -392,7 +394,7 @@ export default function EngagementPlanForm({ plan, stakeholderId, projectId, sta
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="engagement-plan-owner">Engagement owner</label>
+              <FieldLabelWithHelp helpKey="public.stakeholder_engagement_plans.relationship_owner_user_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="engagement-plan-owner" listOptions={false}>Engagement owner</FieldLabelWithHelp>
               <SelectField
                 id="engagement-plan-owner"
                 value={formData.relationship_owner_user_id}
@@ -493,7 +495,7 @@ export default function EngagementPlanForm({ plan, stakeholderId, projectId, sta
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="engagement-plan-trust_level">Trust level</label>
+                <FieldLabelWithHelp helpKey="public.stakeholder_engagement_plans.trust_level" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="engagement-plan-trust_level">Trust level</FieldLabelWithHelp>
                 <select id="engagement-plan-trust_level" value={formData.trust_level || ''} onChange={(e) => setOptional('trust_level', e.target.value)} className={fieldClass}>
                   <option value="">Not set</option>
                   <option value="high">High</option>
@@ -503,7 +505,7 @@ export default function EngagementPlanForm({ plan, stakeholderId, projectId, sta
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="engagement-plan-engagement_status">Engagement status</label>
+                <FieldLabelWithHelp helpKey="public.stakeholder_engagement_plans.engagement_status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="engagement-plan-engagement_status">Engagement status</FieldLabelWithHelp>
                 <select id="engagement-plan-engagement_status" name="engagement_status" value={formData.engagement_status || 'active'} onChange={handleChange} className={fieldClass}>
                   <option value="active">Active</option>
                   <option value="on-hold">On hold</option>
@@ -511,20 +513,20 @@ export default function EngagementPlanForm({ plan, stakeholderId, projectId, sta
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="engagement-plan-engagement_period_start">Engagement starts</label>
+                <FieldLabelWithHelp helpKey="public.stakeholder_engagement_plans.engagement_period_start" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="engagement-plan-engagement_period_start">Engagement starts</FieldLabelWithHelp>
                 <input id="engagement-plan-engagement_period_start" type="date" value={formData.engagement_period_start || ''} onChange={(e) => setOptional('engagement_period_start', e.target.value)} className={fieldClass} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="engagement-plan-engagement_period_end">Engagement ends</label>
+                <FieldLabelWithHelp helpKey="public.stakeholder_engagement_plans.engagement_period_end" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="engagement-plan-engagement_period_end">Engagement ends</FieldLabelWithHelp>
                 <input id="engagement-plan-engagement_period_end" type="date" value={formData.engagement_period_end || ''} onChange={(e) => setOptional('engagement_period_end', e.target.value)} className={fieldClass} />
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="engagement-plan-engagement_barriers">Barriers to engagement</label>
+              <FieldLabelWithHelp helpKey="public.stakeholder_engagement_plans.engagement_barriers" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="engagement-plan-engagement_barriers">Barriers to engagement</FieldLabelWithHelp>
               <textarea id="engagement-plan-engagement_barriers" name="engagement_barriers" value={formData.engagement_barriers} onChange={handleChange} rows={3} placeholder="What makes engaging this stakeholder difficult" className={fieldClass} />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="engagement-plan-mitigation_actions">Actions to overcome the barriers</label>
+              <FieldLabelWithHelp helpKey="public.stakeholder_engagement_plans.mitigation_actions" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="engagement-plan-mitigation_actions">Actions to overcome the barriers</FieldLabelWithHelp>
               <textarea id="engagement-plan-mitigation_actions" name="mitigation_actions" value={formData.mitigation_actions} onChange={handleChange} rows={3} placeholder="What the project will do about each barrier" className={fieldClass} />
             </div>
           </>
@@ -532,7 +534,7 @@ export default function EngagementPlanForm({ plan, stakeholderId, projectId, sta
 
         {formTab === 'notes' && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="engagement-plan-notes">Notes</label>
+            <FieldLabelWithHelp helpKey="public.stakeholder_engagement_plans.notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="engagement-plan-notes">Notes</FieldLabelWithHelp>
             <textarea id="engagement-plan-notes" name="notes" value={formData.notes} onChange={handleChange} rows={4} className={fieldClass} />
           </div>
         )}
@@ -549,5 +551,23 @@ export default function EngagementPlanForm({ plan, stakeholderId, projectId, sta
         </div>
       </form>
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.stakeholder_engagement_plans.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'stakeholder_id', 'engagement_level', 'target_engagement_level', 'change_scope_impact',
+  'engagement_strategy', 'preferred_communication_method', 'preferred_communication_frequency',
+  'preferred_meeting_type', 'information_sensitivity_level', 'information_needs',
+  'relationship_owner_user_id', 'trust_level', 'engagement_status', 'engagement_period_start',
+  'engagement_period_end', 'engagement_barriers', 'mitigation_actions', 'notes',
+].map((name) => `public.stakeholder_engagement_plans.${name}`)
+
+export default function EngagementPlanForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <EngagementPlanFormBody {...props} />
+    </FieldHelpScope>
   )
 }

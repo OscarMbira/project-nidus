@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { Info, Plus, Trash2, X } from 'lucide-react'
 
 // Parse newline-separated objectives into trimmed, non-empty lines
@@ -12,7 +14,7 @@ function parseObjectiveLines(value) {
  * Captures Business Justification fields for PMO project creation.
  * Supports pre-fill from mandate and named (non-registered) contact addition.
  */
-export default function BusinessJustificationSection({
+function BusinessJustificationSectionBody({
   formData,
   handleChange,
   errors,
@@ -110,9 +112,9 @@ export default function BusinessJustificationSection({
         {/* Benefit Owner — simple text field, no dropdown */}
         {showBenefits && (
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.projects.benefit_owner_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required listOptions={false}>
             Benefit Owner <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             id="benefit_owner_name"
@@ -144,9 +146,9 @@ export default function BusinessJustificationSection({
         {/* Business Objective — one item per line with add/remove/clear controls */}
         {showObjectives && (
         <div>
-          <label htmlFor="business_objective" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.projects.business_objective" htmlFor="business_objective" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Business Objective / Problem Statement <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
             Defaults from Mandate Project Objectives (4) when available — one objective per line. You can add more items or remove any that no longer apply.
           </p>
@@ -229,9 +231,9 @@ export default function BusinessJustificationSection({
         {/* Strategic Alignment */}
         {showObjectives && (
         <div>
-          <label htmlFor="strategic_alignment" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.projects.strategic_alignment" htmlFor="strategic_alignment" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Strategic Alignment <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             id="strategic_alignment"
             name="strategic_alignment"
@@ -256,9 +258,9 @@ export default function BusinessJustificationSection({
         {/* Expected Benefits Summary — multiple high-level benefits (one per line) */}
         {showBenefits && (
         <div>
-          <label htmlFor="expected_benefits_summary" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.projects.expected_benefits_summary" htmlFor="expected_benefits_summary" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Expected Benefits (High Level) <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
             Summarize the key benefits this project will deliver — one benefit per line. You can add more items or remove any that no longer apply.
           </p>
@@ -340,5 +342,21 @@ export default function BusinessJustificationSection({
 
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.projects.benefit_owner_name',
+  'sim.projects.business_objective',
+  'sim.projects.strategic_alignment',
+  'sim.projects.expected_benefits_summary',
+]
+
+export default function BusinessJustificationSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <BusinessJustificationSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

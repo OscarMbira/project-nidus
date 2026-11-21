@@ -3,12 +3,14 @@
  */
 
 import { useState } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { Plus } from 'lucide-react'
 import { addResource, deleteResource } from '../../services/planResourceService'
 import ResourceForm from './ResourceForm'
 import ResourceCard from './ResourceCard'
 
-export default function ProjectPlanResourceSection({ 
+function ProjectPlanResourceSectionBody({ 
   formData, 
   onChange, 
   resources, 
@@ -60,9 +62,9 @@ export default function ProjectPlanResourceSection({
       <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Resources</h2>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="sim.plan_resources.resource_summary" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Resource Summary
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={formData.resource_summary || ''}
           onChange={(e) => onChange('resource_summary', e.target.value)}
@@ -125,5 +127,18 @@ export default function ProjectPlanResourceSection({
         )}
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.plan_resources.resource_summary',
+]
+
+export default function ProjectPlanResourceSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ProjectPlanResourceSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

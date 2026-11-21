@@ -83,7 +83,7 @@ function LocalValueControl({ def, id, value, onChange, disabled, hideLabel = fal
     return (
       <div>
         {!hideLabel && (
-          <label htmlFor={id} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{label}</label>
+          <FieldLabelWithHelp helpKey={`local:${def.id}`} help={inlineHelpFromDefinition(def)} htmlFor={id} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{label}</FieldLabelWithHelp>
         )}
         <label className="inline-flex items-center gap-2 text-sm text-gray-800 dark:text-gray-100">
           <input
@@ -103,7 +103,7 @@ function LocalValueControl({ def, id, value, onChange, disabled, hideLabel = fal
     return (
       <div>
         {!hideLabel && (
-          <label htmlFor={id} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{label}</label>
+          <FieldLabelWithHelp helpKey={`local:${def.id}`} help={inlineHelpFromDefinition(def)} htmlFor={id} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{label}</FieldLabelWithHelp>
         )}
         <input
           id={id}
@@ -121,7 +121,7 @@ function LocalValueControl({ def, id, value, onChange, disabled, hideLabel = fal
     return (
       <div>
         {!hideLabel && (
-          <label htmlFor={id} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{label}</label>
+          <FieldLabelWithHelp helpKey={`local:${def.id}`} help={inlineHelpFromDefinition(def)} htmlFor={id} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{label}</FieldLabelWithHelp>
         )}
         <input
           id={id}
@@ -138,7 +138,7 @@ function LocalValueControl({ def, id, value, onChange, disabled, hideLabel = fal
   return (
     <div>
       {!hideLabel && (
-        <label htmlFor={id} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{label}</label>
+        <FieldLabelWithHelp helpKey={`local:${def.id}`} help={inlineHelpFromDefinition(def)} htmlFor={id} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{label}</FieldLabelWithHelp>
       )}
       <input
         id={id}
@@ -159,7 +159,7 @@ function FieldControl({ def, id, value, onChange, disabled, hideLabel = false })
     return (
       <div>
         {!hideLabel && (
-          <label htmlFor={id} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{label}</label>
+          <FieldLabelWithHelp helpKey={`sim.organisation_regional_format_settings.${def.key}`} htmlFor={id} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{label}</FieldLabelWithHelp>
         )}
         <input
           id={id}
@@ -178,7 +178,7 @@ function FieldControl({ def, id, value, onChange, disabled, hideLabel = false })
   return (
     <div>
       {!hideLabel && (
-        <label htmlFor={id} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{label}</label>
+        <FieldLabelWithHelp helpKey={`sim.organisation_regional_format_settings.${def.key}`} htmlFor={id} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{label}</FieldLabelWithHelp>
       )}
       <SelectField
         id={id}
@@ -658,7 +658,7 @@ export default function RegionalFormatFields({
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Label</label>
+                  <FieldLabelWithHelp helpKey="sim.regional_format_local_field_definitions.label" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Label</FieldLabelWithHelp>
                   <input
                     type="text"
                     value={newLabel}
@@ -670,7 +670,7 @@ export default function RegionalFormatFields({
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Key</label>
+                  <FieldLabelWithHelp helpKey="sim.regional_format_local_field_definitions.field_key" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Key</FieldLabelWithHelp>
                   <input
                     type="text"
                     value={newKey}
@@ -682,7 +682,7 @@ export default function RegionalFormatFields({
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type</label>
+                  <FieldLabelWithHelp helpKey="sim.regional_format_local_field_definitions.field_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type</FieldLabelWithHelp>
                   <SelectField
                     options={LOCAL_TYPE_OPTIONS}
                     value={newType}
@@ -691,7 +691,7 @@ export default function RegionalFormatFields({
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Default</label>
+                  <FieldLabelWithHelp helpKey="sim.regional_format_local_field_definitions.default_value" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Default</FieldLabelWithHelp>
                   {newType === 'boolean' ? (
                     <SelectField
                       options={[

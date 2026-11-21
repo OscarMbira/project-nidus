@@ -1,4 +1,6 @@
 import { TrendingUp, Clock, DollarSign, Award, Target, Shield, AlertTriangle } from 'lucide-react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 const VAR_OPTIONS = [
@@ -18,7 +20,7 @@ const VARIABLES = [
   { key: 'risk', label: 'Risk', icon: Shield }
 ]
 
-export default function HighlightReportSixVariablesSection({ formData, onChange, errors, mode }) {
+function HighlightReportSixVariablesSectionBody({ formData, onChange, errors, mode }) {
   const disabled = mode === 'view'
   const inputClass = (name) =>
     `w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 ${
@@ -50,7 +52,7 @@ export default function HighlightReportSixVariablesSection({ formData, onChange,
                 {v.label}
               </div>
               <div>
-                <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Status</label>
+                <FieldLabelWithHelp helpKey="sim.highlight_reports.six_variable_status" className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Status</FieldLabelWithHelp>
                 <select
                   value={formData[statusKey] || ''}
                   onChange={(e) => onChange(statusKey, e.target.value)}
@@ -63,7 +65,7 @@ export default function HighlightReportSixVariablesSection({ formData, onChange,
                 </select>
               </div>
               <div>
-                <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Summary</label>
+                <FieldLabelWithHelp helpKey="sim.highlight_reports.six_variable_summary" className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Summary</FieldLabelWithHelp>
                 <textarea
                   value={formData[summaryKey] || ''}
                   onChange={(e) => onChange(summaryKey, e.target.value)}
@@ -74,7 +76,7 @@ export default function HighlightReportSixVariablesSection({ formData, onChange,
                 />
               </div>
               <div>
-                <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Forecast</label>
+                <FieldLabelWithHelp helpKey="sim.highlight_reports.six_variable_forecast" className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Forecast</FieldLabelWithHelp>
                 <textarea
                   value={formData[forecastKey] || ''}
                   onChange={(e) => onChange(forecastKey, e.target.value)}
@@ -89,5 +91,18 @@ export default function HighlightReportSixVariablesSection({ formData, onChange,
         })}
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.highlight_reports.six_variable_status',
+]
+
+export default function HighlightReportSixVariablesSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <HighlightReportSixVariablesSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

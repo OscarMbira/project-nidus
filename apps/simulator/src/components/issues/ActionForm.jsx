@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { supabase } from '../../services/supabaseClient'
 import { X, Save, User, Calendar, DollarSign, Clock } from 'lucide-react'
 import { addAction, updateAction } from '../../services/issueActionService'
@@ -11,7 +13,7 @@ import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
-export default function ActionForm({ issueId, action, onSave, onCancel }) {
+function ActionFormBody({ issueId, action, onSave, onCancel }) {
   const [formData, setFormData] = useState({
     action_description: '',
     action_type: 'corrective',
@@ -174,9 +176,9 @@ export default function ActionForm({ issueId, action, onSave, onCancel }) {
           {formTab === 'details' && (
           <>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="sim.issue_actions.action_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
               Action Description *
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               name="action_description"
               value={formData.action_description}
@@ -191,9 +193,9 @@ export default function ActionForm({ issueId, action, onSave, onCancel }) {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.issue_actions.action_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Action Type *
-              </label>
+              </FieldLabelWithHelp>
               <select
                 name="action_type"
                 value={formData.action_type}
@@ -211,9 +213,9 @@ export default function ActionForm({ issueId, action, onSave, onCancel }) {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.issue_actions.status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Status
-              </label>
+              </FieldLabelWithHelp>
               <select
                 name="status"
                 value={formData.status}
@@ -231,10 +233,10 @@ export default function ActionForm({ issueId, action, onSave, onCancel }) {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.issue_actions.assigned_to_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                 <User className="h-4 w-4 inline mr-1" />
                 Assigned To
-              </label>
+              </FieldLabelWithHelp>
               <select
                 name="assigned_to_id"
                 value={formData.assigned_to_id}
@@ -250,10 +252,10 @@ export default function ActionForm({ issueId, action, onSave, onCancel }) {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.issue_actions.target_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 <Calendar className="h-4 w-4 inline mr-1" />
                 Target Date *
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="date"
                 name="target_date"
@@ -267,10 +269,10 @@ export default function ActionForm({ issueId, action, onSave, onCancel }) {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.issue_actions.estimated_effort_hours" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 <Clock className="h-4 w-4 inline mr-1" />
                 Estimated Effort (Hours)
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="number"
                 name="estimated_effort_hours"
@@ -283,10 +285,10 @@ export default function ActionForm({ issueId, action, onSave, onCancel }) {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.issue_actions.estimated_cost" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" isAmount>
                 <DollarSign className="h-4 w-4 inline mr-1" />
                 Estimated Cost ($)
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="number"
                 name="estimated_cost"
@@ -322,5 +324,24 @@ export default function ActionForm({ issueId, action, onSave, onCancel }) {
         </form>
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.issue_actions.action_description',
+  'sim.issue_actions.action_type',
+  'sim.issue_actions.status',
+  'sim.issue_actions.assigned_to_id',
+  'sim.issue_actions.target_date',
+  'sim.issue_actions.estimated_effort_hours',
+  'sim.issue_actions.estimated_cost',
+]
+
+export default function ActionForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ActionFormBody {...props} />
+    </FieldHelpScope>
   )
 }

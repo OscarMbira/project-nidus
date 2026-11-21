@@ -1,4 +1,6 @@
 import { AlertTriangle, DollarSign, Clock, Target, Package, TrendingUp } from 'lucide-react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 
 const IMPACT_VARIABLES = [
   { id: 'time', label: 'Time', icon: Clock, description: 'Impact on schedule/timeline' },
@@ -9,7 +11,7 @@ const IMPACT_VARIABLES = [
   { id: 'risk', label: 'Risk', icon: AlertTriangle, description: 'Impact on risk exposure' },
 ]
 
-export default function IssueReportImpactAnalysisSection({
+function IssueReportImpactAnalysisSectionBody({
   formData,
   onChange,
   errors = {},
@@ -38,9 +40,9 @@ export default function IssueReportImpactAnalysisSection({
             <div key={variable.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
               <div className="flex items-center gap-2 mb-2">
                 <Icon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-                <label className="text-sm font-medium text-gray-900 dark:text-white">
+                <FieldLabelWithHelp helpKey="sim.issue_reports.variable_impact" className="text-sm font-medium text-gray-900 dark:text-white">
                   {variable.label} Impact
-                </label>
+                </FieldLabelWithHelp>
                 <span className="text-xs text-gray-500 dark:text-gray-400">({variable.description})</span>
               </div>
               <textarea
@@ -71,7 +73,7 @@ export default function IssueReportImpactAnalysisSection({
 
         <div className="space-y-4">
           <div className="flex items-center gap-4">
-            <label className="flex items-center gap-2">
+            <FieldLabelWithHelp helpKey="sim.issue_reports.affects_stage_tolerances" className="flex items-center gap-2">
               <input
                 type="checkbox"
                 checked={formData.affects_stage_tolerances || false}
@@ -82,11 +84,11 @@ export default function IssueReportImpactAnalysisSection({
               <span className="text-sm font-medium text-gray-900 dark:text-white">
                 Affects Stage Tolerances
               </span>
-            </label>
+            </FieldLabelWithHelp>
           </div>
 
           <div className="flex items-center gap-4">
-            <label className="flex items-center gap-2">
+            <FieldLabelWithHelp helpKey="sim.issue_reports.affects_project_tolerances" className="flex items-center gap-2">
               <input
                 type="checkbox"
                 checked={formData.affects_project_tolerances || false}
@@ -97,14 +99,14 @@ export default function IssueReportImpactAnalysisSection({
               <span className="text-sm font-medium text-gray-900 dark:text-white">
                 Affects Project Tolerances
               </span>
-            </label>
+            </FieldLabelWithHelp>
           </div>
 
           {(formData.affects_stage_tolerances || formData.affects_project_tolerances) && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.issue_reports.tolerance_impact_details" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Tolerance Impact Details <span className="text-red-500">*</span>
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={formData.tolerance_impact_details || ''}
                 onChange={(e) => onChange('tolerance_impact_details', e.target.value)}
@@ -125,5 +127,20 @@ export default function IssueReportImpactAnalysisSection({
         </div>
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.issue_reports.affects_stage_tolerances',
+  'sim.issue_reports.affects_project_tolerances',
+  'sim.issue_reports.tolerance_impact_details',
+]
+
+export default function IssueReportImpactAnalysisSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <IssueReportImpactAnalysisSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

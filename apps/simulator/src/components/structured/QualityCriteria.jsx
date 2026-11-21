@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { supabase } from '../../services/supabaseClient'
 import { format } from 'date-fns'
 import { Plus, CheckCircle, XCircle, Clock, Save, X } from 'lucide-react'
 
-export default function QualityCriteria({ productId, projectId }) {
+function QualityCriteriaBody({ productId, projectId }) {
   const [criteria, setCriteria] = useState([])
   const [loading, setLoading] = useState(true)
   const [showAddForm, setShowAddForm] = useState(false)
@@ -164,9 +166,9 @@ export default function QualityCriteria({ productId, projectId }) {
       {showAddForm && (
         <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 space-y-3">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="sim.quality_criteria.criteria_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
               Criteria Name *
-            </label>
+            </FieldLabelWithHelp>
             <input
               type="text"
               value={newCriterion.criteria_name}
@@ -177,9 +179,9 @@ export default function QualityCriteria({ productId, projectId }) {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.quality_criteria.criteria_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Type
-              </label>
+              </FieldLabelWithHelp>
               <select
                 value={newCriterion.criteria_type}
                 onChange={(e) => setNewCriterion({ ...newCriterion, criteria_type: e.target.value })}
@@ -194,9 +196,9 @@ export default function QualityCriteria({ productId, projectId }) {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.quality_criteria.quality_standard" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Quality Standard
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="text"
                 value={newCriterion.quality_standard}
@@ -207,9 +209,9 @@ export default function QualityCriteria({ productId, projectId }) {
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="sim.quality_criteria.criteria_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Description
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               value={newCriterion.criteria_description}
               onChange={(e) => setNewCriterion({ ...newCriterion, criteria_description: e.target.value })}
@@ -298,3 +300,18 @@ export default function QualityCriteria({ productId, projectId }) {
   )
 }
 
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.quality_criteria.criteria_name',
+  'sim.quality_criteria.criteria_type',
+  'sim.quality_criteria.quality_standard',
+  'sim.quality_criteria.criteria_description',
+]
+
+export default function QualityCriteria(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <QualityCriteriaBody {...props} />
+    </FieldHelpScope>
+  )
+}

@@ -2,10 +2,13 @@
  * Project Plan Risk Section
  */
 
+import PlanListTable from '@nidus/ui/PlanListTable'
 import { useState, useEffect } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { platformDb } from '@nidus/supabase'
 
-export default function ProjectPlanRiskSection({ formData, onChange, mode, projectId }) {
+function ProjectPlanRiskSectionBody({ formData, onChange, mode, projectId }) {
   const [riskStrategies, setRiskStrategies] = useState([])
 
   useEffect(() => {
@@ -32,9 +35,9 @@ export default function ProjectPlanRiskSection({ formData, onChange, mode, proje
       <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Risk Summary</h2>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="public.project_plans.risk_management_strategy_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
           Link to Risk Management Strategy
-        </label>
+        </FieldLabelWithHelp>
         <select
           value={formData.risk_management_strategy_id || ''}
           onChange={(e) => onChange('risk_management_strategy_id', e.target.value || null)}
@@ -51,9 +54,9 @@ export default function ProjectPlanRiskSection({ formData, onChange, mode, proje
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="public.project_plans.risk_summary" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Risk Summary
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={formData.risk_summary || ''}
           onChange={(e) => onChange('risk_summary', e.target.value)}
@@ -65,28 +68,31 @@ export default function ProjectPlanRiskSection({ formData, onChange, mode, proje
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Key Risks (JSON Array)
-        </label>
-        <textarea
-          value={formData.key_risks ? JSON.stringify(formData.key_risks, null, 2) : ''}
-          onChange={(e) => {
-            try {
-              const parsed = JSON.parse(e.target.value)
-              onChange('key_risks', parsed)
-            } catch {
-              // Invalid JSON, ignore
-            }
-          }}
+        <FieldLabelWithHelp helpKey="public.project_plans.key_risks" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Key Risks
+        </FieldLabelWithHelp>
+        <PlanListTable
+          kind="project"
+          listKey="key_risks"
+          value={formData.key_risks}
+          onChange={(rows) => onChange('key_risks', rows)}
           disabled={mode === 'view'}
-          rows={6}
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono text-sm"
-          placeholder='[{"risk_id": "...", "risk_title": "..."}, ...]'
         />
-        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-          Enter key risks as JSON array (can be populated from risk register)
-        </p>
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.project_plans.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'risk_management_strategy_id', 'risk_summary', 'key_risks',
+].map((name) => `public.project_plans.${name}`)
+
+export default function ProjectPlanRiskSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ProjectPlanRiskSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

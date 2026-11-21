@@ -3,6 +3,8 @@
  * Route: /platform/project-setup/timesheet-settings?projectId=…
  */
 import { useState, useEffect, useCallback } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -25,7 +27,7 @@ const DAY_OPTIONS = [
   { value: 'sat', label: 'Sat' },
 ]
 
-export default function ProjectTimesheetSettings() {
+function ProjectTimesheetSettingsBody() {
   const navigate = useNavigate()
   const { projectId, routeKey, loading: projectIdLoading } = usePlatformProjectId()
   const { showSuccess, modal } = useSuccessModal()
@@ -158,7 +160,7 @@ export default function ProjectTimesheetSettings() {
             ].map(({ key, label, step, min, max }) => (
               <div key={key} className="flex items-end gap-3">
                 <div className="flex-1">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{label}</label>
+                  <FieldLabelWithHelp helpKey={`public.project_timesheet_settings.${key}`} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{label}</FieldLabelWithHelp>
                   <input type="number" step={step} min={min} max={max}
                     value={overrideFlags[key] ? form[key] : orgDefaults[key]}
                     disabled={!overrideFlags[key]}
@@ -175,7 +177,7 @@ export default function ProjectTimesheetSettings() {
 
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Standard working days</label>
+                <FieldLabelWithHelp helpKey="public.project_timesheet_settings.working_days" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Standard working days</FieldLabelWithHelp>
                 <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
                   <input type="checkbox" checked={!!overrideFlags.working_days} onChange={(e) => toggleOverride('working_days', e.target.checked)}
                     className="w-4 h-4 text-blue-600 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500" />
@@ -209,5 +211,19 @@ export default function ProjectTimesheetSettings() {
       </div>
       {modal}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.project_timesheet_settings.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'working_days', 'standard_daily_hours', 'max_overtime_per_day', 'max_overtime_per_week', 'standard_daily_hours', 'max_overtime_per_day', 'max_overtime_per_week',
+].map((name) => `public.project_timesheet_settings.${name}`)
+
+export default function ProjectTimesheetSettings(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ProjectTimesheetSettingsBody {...props} />
+    </FieldHelpScope>
   )
 }

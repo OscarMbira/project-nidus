@@ -1,7 +1,9 @@
 import { useState } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Plus, Trash2, Star, Edit2 } from 'lucide-react'
 
-export default function IssueReportOptionsSection({
+function IssueReportOptionsSectionBody({
   formData,
   onChange,
   options = [],
@@ -87,9 +89,9 @@ export default function IssueReportOptionsSection({
 
       {/* Options Analysis Summary */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="public.issue_report_options.options_analysis" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Options Analysis Summary
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={formData.options_analysis || ''}
           onChange={(e) => onChange('options_analysis', e.target.value)}
@@ -151,9 +153,9 @@ export default function IssueReportOptionsSection({
 
             <div className="grid grid-cols-1 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <FieldLabelWithHelp helpKey="public.issue_report_options.option_title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
                   Option Title <span className="text-red-500">*</span>
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   value={option.option_title || ''}
@@ -169,9 +171,9 @@ export default function IssueReportOptionsSection({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <FieldLabelWithHelp helpKey="public.issue_report_options.option_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Description
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   value={option.option_description || ''}
                   onChange={(e) => updateOption(index, 'option_description', e.target.value)}
@@ -188,9 +190,9 @@ export default function IssueReportOptionsSection({
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <FieldLabelWithHelp helpKey="public.issue_report_options.pros" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Advantages (Pros)
-                  </label>
+                  </FieldLabelWithHelp>
                   <textarea
                     value={option.pros || ''}
                     onChange={(e) => updateOption(index, 'pros', e.target.value)}
@@ -206,9 +208,9 @@ export default function IssueReportOptionsSection({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <FieldLabelWithHelp helpKey="public.issue_report_options.cons" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Disadvantages (Cons)
-                  </label>
+                  </FieldLabelWithHelp>
                   <textarea
                     value={option.cons || ''}
                     onChange={(e) => updateOption(index, 'cons', e.target.value)}
@@ -225,9 +227,9 @@ export default function IssueReportOptionsSection({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <FieldLabelWithHelp helpKey="public.issue_report_options.feasibility" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Feasibility Assessment
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   value={option.feasibility || ''}
                   onChange={(e) => updateOption(index, 'feasibility', e.target.value)}
@@ -244,9 +246,9 @@ export default function IssueReportOptionsSection({
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <FieldLabelWithHelp helpKey="public.issue_report_options.cost_implications" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Cost Implications
-                  </label>
+                  </FieldLabelWithHelp>
                   <textarea
                     value={option.cost_implications || ''}
                     onChange={(e) => updateOption(index, 'cost_implications', e.target.value)}
@@ -262,9 +264,9 @@ export default function IssueReportOptionsSection({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <FieldLabelWithHelp helpKey="public.issue_report_options.time_implications" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Time Implications
-                  </label>
+                  </FieldLabelWithHelp>
                   <textarea
                     value={option.time_implications || ''}
                     onChange={(e) => updateOption(index, 'time_implications', e.target.value)}
@@ -280,9 +282,9 @@ export default function IssueReportOptionsSection({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <FieldLabelWithHelp helpKey="public.issue_report_options.risk_implications" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Risk Implications
-                  </label>
+                  </FieldLabelWithHelp>
                   <textarea
                     value={option.risk_implications || ''}
                     onChange={(e) => updateOption(index, 'risk_implications', e.target.value)}
@@ -311,9 +313,9 @@ export default function IssueReportOptionsSection({
       {/* Recommendation */}
       <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.issue_report_options.recommendation" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Recommendation <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             value={formData.recommendation || ''}
             onChange={(e) => onChange('recommendation', e.target.value)}
@@ -332,9 +334,9 @@ export default function IssueReportOptionsSection({
         </div>
 
         <div className="mt-4">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.issue_report_options.recommendation_rationale" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Recommendation Rationale
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             value={formData.recommendation_rationale || ''}
             onChange={(e) => onChange('recommendation_rationale', e.target.value)}
@@ -350,5 +352,21 @@ export default function IssueReportOptionsSection({
         </div>
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.issue_report_options.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'options_analysis', 'option_title', 'option_description', 'pros', 'cons', 'feasibility',
+  'cost_implications', 'time_implications', 'risk_implications', 'recommendation',
+  'recommendation_rationale',
+].map((name) => `public.issue_report_options.${name}`)
+
+export default function IssueReportOptionsSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <IssueReportOptionsSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

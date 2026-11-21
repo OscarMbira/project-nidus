@@ -4,11 +4,13 @@
  */
 
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { X, Users, CreditCard, Loader, CheckCircle, AlertCircle } from 'lucide-react'
 import { purchaseExtraSeats, getProjectSeatAllocation } from '../../services/seatManagementService'
 import { useToast } from '@nidus/shared/hooks/useToast'
 
-export default function PurchaseExtraSeatsModal({ projectId, isOpen, onClose, currentAllocation }) {
+function PurchaseExtraSeatsModalBody({ projectId, isOpen, onClose, currentAllocation }) {
   const { showToast } = useToast()
   const [loading, setLoading] = useState(false)
   const [quantity, setQuantity] = useState(10)
@@ -103,9 +105,9 @@ export default function PurchaseExtraSeatsModal({ projectId, isOpen, onClose, cu
 
           {/* Quantity Selector */}
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="sim.extra_seat_purchases.quantity" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Number of Seats
-            </label>
+            </FieldLabelWithHelp>
             <div className="flex items-center space-x-4">
               <button
                 onClick={() => setQuantity(Math.max(1, quantity - 5))}
@@ -200,3 +202,15 @@ export default function PurchaseExtraSeatsModal({ projectId, isOpen, onClose, cu
   )
 }
 
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.extra_seat_purchases.quantity',
+]
+
+export default function PurchaseExtraSeatsModal(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <PurchaseExtraSeatsModalBody {...props} />
+    </FieldHelpScope>
+  )
+}

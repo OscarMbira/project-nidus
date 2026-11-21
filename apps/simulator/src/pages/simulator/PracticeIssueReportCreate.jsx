@@ -3,6 +3,8 @@
  */
 
 import { useState } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { createPracticeIssueReport } from '../../services/sim/practiceIssueReportService'
@@ -50,9 +52,10 @@ export default function PracticeIssueReportCreate() {
           <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this report is saved.</p>
         </div>
       ) : (
+      <FieldHelpScope helpKeys={['sim.practice_issue_reports.report_title']}>
       <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 space-y-6">
         <div>
-          <label className="block text-sm font-medium mb-2">Report Title *</label>
+          <FieldLabelWithHelp helpKey="sim.practice_issue_reports.report_title" className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300" required>Report Title *</FieldLabelWithHelp>
           <input type="text" required value={formData.report_title} onChange={(e) => setFormData({ ...formData, report_title: e.target.value })} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
         </div>
         <div className="flex justify-end gap-4">
@@ -60,6 +63,7 @@ export default function PracticeIssueReportCreate() {
           <button type="submit" disabled={loading} className="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50">{loading ? 'Creating...' : 'Create Report'}</button>
         </div>
       </form>
+      </FieldHelpScope>
       )}
     </div>
   )

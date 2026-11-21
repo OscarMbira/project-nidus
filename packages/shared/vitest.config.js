@@ -58,6 +58,7 @@ export default defineConfig({
       'src/services/__tests__/columnProbe.test.js',
       'src/services/__tests__/timesheetFlagService.test.js',
       'src/services/__tests__/projectAdminWorkService.test.js',
+      'src/services/__tests__/planListTablesService.test.js',
       'src/__tests__/idGenerationMigration.test.js',
     ],
   },

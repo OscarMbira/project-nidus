@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { ArrowLeft, Calendar, Users } from 'lucide-react';
 import { RowActionButton } from '@nidus/ui';
 import { supabase } from '../../../services/supabaseClient';
@@ -72,7 +74,7 @@ export function actionToForm(action) {
   };
 }
 
-export default function FollowOnActionsForm({ projectId, action, onClose, onSuccess, readOnly = false, onEdit }) {
+function FollowOnActionsFormBody({ projectId, action, onClose, onSuccess, readOnly = false, onEdit }) {
   const { showSuccess, modal: successModal } = useSuccessModal();
   const [loading, setLoading] = useState(false);
   const [users, setUsers] = useState([]);
@@ -258,7 +260,7 @@ export default function FollowOnActionsForm({ projectId, action, onClose, onSucc
             <>
             <fieldset disabled={readOnly} className="space-y-6 min-w-0 border-0 p-0 m-0">
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Action Title *</label>
+                <FieldLabelWithHelp helpKey="public.follow_on_actions.action_title" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>Action Title *</FieldLabelWithHelp>
                 <input
                   type="text"
                   value={formData.action_title}
@@ -271,7 +273,7 @@ export default function FollowOnActionsForm({ projectId, action, onClose, onSucc
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Action Type *</label>
+                  <FieldLabelWithHelp helpKey="public.follow_on_actions.action_category" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>Action Type *</FieldLabelWithHelp>
                   <SelectField
                     options={withCurrent(CATEGORIES, formData.action_category)}
                     value={formData.action_category}
@@ -281,7 +283,7 @@ export default function FollowOnActionsForm({ projectId, action, onClose, onSucc
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Priority *</label>
+                  <FieldLabelWithHelp helpKey="public.follow_on_actions.priority" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>Priority *</FieldLabelWithHelp>
                   <SelectField
                     options={withCurrent(PRIORITIES, formData.priority)}
                     value={formData.priority}
@@ -291,7 +293,7 @@ export default function FollowOnActionsForm({ projectId, action, onClose, onSucc
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Status *</label>
+                  <FieldLabelWithHelp helpKey="public.follow_on_actions.status" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>Status *</FieldLabelWithHelp>
                   <SelectField
                     options={withCurrent(STATUSES, formData.status)}
                     value={formData.status}
@@ -304,10 +306,10 @@ export default function FollowOnActionsForm({ projectId, action, onClose, onSucc
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.follow_on_actions.assigned_to_user_id" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                     <Users className="h-4 w-4" />
                     Assigned To
-                  </label>
+                  </FieldLabelWithHelp>
                   <SelectField
                     forceSearchable
                     options={userOptions}
@@ -318,10 +320,10 @@ export default function FollowOnActionsForm({ projectId, action, onClose, onSucc
                   />
                 </div>
                 <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.follow_on_actions.recommended_completion_date" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     <Calendar className="h-4 w-4" />
                     Target Completion Date
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="date"
                     value={formData.recommended_completion_date}
@@ -332,7 +334,7 @@ export default function FollowOnActionsForm({ projectId, action, onClose, onSucc
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Assigned Team</label>
+                  <FieldLabelWithHelp helpKey="public.follow_on_actions.assigned_to_team" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Assigned Team</FieldLabelWithHelp>
                   <input
                     type="text"
                     value={formData.assigned_to_team}
@@ -342,7 +344,7 @@ export default function FollowOnActionsForm({ projectId, action, onClose, onSucc
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Recommended Start Date</label>
+                  <FieldLabelWithHelp helpKey="public.follow_on_actions.recommended_start_date" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Recommended Start Date</FieldLabelWithHelp>
                   <input
                     type="date"
                     value={formData.recommended_start_date}
@@ -352,7 +354,7 @@ export default function FollowOnActionsForm({ projectId, action, onClose, onSucc
                 </div>
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Why This Action Is Needed</label>
+                <FieldLabelWithHelp helpKey="public.follow_on_actions.action_rationale" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Why This Action Is Needed</FieldLabelWithHelp>
                 <textarea
                   rows={2}
                   value={formData.action_rationale}
@@ -362,7 +364,7 @@ export default function FollowOnActionsForm({ projectId, action, onClose, onSucc
                 />
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Expected Outcome</label>
+                <FieldLabelWithHelp helpKey="public.follow_on_actions.expected_outcome" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Expected Outcome</FieldLabelWithHelp>
                 <textarea
                   rows={2}
                   value={formData.expected_outcome}
@@ -372,7 +374,7 @@ export default function FollowOnActionsForm({ projectId, action, onClose, onSucc
                 />
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Required Resources</label>
+                <FieldLabelWithHelp helpKey="public.follow_on_actions.required_resources" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Required Resources</FieldLabelWithHelp>
                 <textarea
                   rows={2}
                   value={formData.required_resources}
@@ -382,7 +384,7 @@ export default function FollowOnActionsForm({ projectId, action, onClose, onSucc
                 />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
-                <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                <FieldLabelWithHelp helpKey="public.follow_on_actions.transition_to_operations" className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
                   <input
                     type="checkbox"
                     checked={formData.transition_to_operations}
@@ -390,10 +392,10 @@ export default function FollowOnActionsForm({ projectId, action, onClose, onSucc
                     className="h-4 w-4 rounded border-gray-300 dark:border-gray-600"
                   />
                   Hand this action over to operations
-                </label>
+                </FieldLabelWithHelp>
                 {formData.transition_to_operations && (
                   <div>
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Operational Owner</label>
+                    <FieldLabelWithHelp helpKey="public.follow_on_actions.operational_owner_user_id" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Operational Owner</FieldLabelWithHelp>
                     <SelectField
                       forceSearchable
                       options={userOptions}
@@ -408,7 +410,7 @@ export default function FollowOnActionsForm({ projectId, action, onClose, onSucc
             </fieldset>
 
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Action Description *</label>
+                <FieldLabelWithHelp helpKey="public.follow_on_actions.action_description" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>Action Description *</FieldLabelWithHelp>
                 <ActionDescriptionItemsField
                   items={formData.description_items}
                   disabled={readOnly}
@@ -448,4 +450,21 @@ export default function FollowOnActionsForm({ projectId, action, onClose, onSucc
       {successModal}
     </div>
   );
+}
+
+// v1345 slice 4: field help for this component (public.follow_on_actions.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'action_title', 'action_category', 'priority', 'status', 'assigned_to_user_id',
+  'recommended_completion_date', 'assigned_to_team', 'recommended_start_date', 'action_rationale',
+  'expected_outcome', 'required_resources', 'transition_to_operations', 'operational_owner_user_id',
+  'action_description',
+].map((name) => `public.follow_on_actions.${name}`)
+
+export default function FollowOnActionsForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <FollowOnActionsFormBody {...props} />
+    </FieldHelpScope>
+  )
 }

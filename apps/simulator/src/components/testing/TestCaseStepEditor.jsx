@@ -1,4 +1,6 @@
 import { useMemo, useState } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { ArrowLeft, ChevronDown, ChevronUp, Plus } from 'lucide-react'
 import MultiLineListInput from '@nidus/ui/MultiLineListInput'
 import FieldImagePicker from './FieldImagePicker'
@@ -15,7 +17,7 @@ function actionPreview(action) {
   return line.length > 140 ? `${line.slice(0, 137)}…` : line
 }
 
-export default function TestCaseStepEditor({ steps = [], onChange, projectId }) {
+function TestCaseStepEditorBody({ steps = [], onChange, projectId }) {
   const [viewMode, setViewMode] = useViewMode('testing-test-case-steps', 'list')
   const [query, setQuery] = useState('')
   const [panel, setPanel] = useState(null)
@@ -99,9 +101,9 @@ export default function TestCaseStepEditor({ steps = [], onChange, projectId }) 
         )}
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+          <FieldLabelWithHelp helpKey="sim.test_case_steps.action" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
             Action {!readOnly && <span className="text-red-600 dark:text-red-400">*</span>}
-          </label>
+          </FieldLabelWithHelp>
           {readOnly ? (
             <p className="whitespace-pre-wrap rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 px-3 py-2 text-sm text-gray-900 dark:text-gray-100">
               {active.step.action || 'No action yet'}
@@ -125,7 +127,7 @@ export default function TestCaseStepEditor({ steps = [], onChange, projectId }) 
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Expected Result</label>
+          <FieldLabelWithHelp helpKey="sim.test_case_steps.expected_result" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Expected Result</FieldLabelWithHelp>
           <MultiLineListInput
             viewModeId="testing-test-case-step-expected-result"
             value={active.step.expected_result || ''}
@@ -145,7 +147,7 @@ export default function TestCaseStepEditor({ steps = [], onChange, projectId }) 
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Test Data (optional)</label>
+          <FieldLabelWithHelp helpKey="sim.test_case_steps.test_data" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Test Data (optional)</FieldLabelWithHelp>
           <MultiLineListInput
             viewModeId="testing-test-case-step-test-data"
             value={active.step.test_data || ''}
@@ -170,7 +172,7 @@ export default function TestCaseStepEditor({ steps = [], onChange, projectId }) 
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <label className="text-sm font-medium text-gray-700 dark:text-gray-200">Test Steps</label>
+        <FieldLabelWithHelp helpKey="sim.test_cases.test_steps" className="text-sm font-medium text-gray-700 dark:text-gray-200">Test Steps</FieldLabelWithHelp>
         <div className="flex items-center gap-2">
           <ViewToggle value={viewMode} onChange={setViewMode} ariaLabel="Step list layout" />
           <button
@@ -321,5 +323,20 @@ function DeleteConfirm({ stepNumber, onCancel, onConfirm }) {
         </button>
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.test_case_steps.action',
+  'sim.test_case_steps.expected_result',
+  'sim.test_case_steps.test_data',
+]
+
+export default function TestCaseStepEditor(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <TestCaseStepEditorBody {...props} />
+    </FieldHelpScope>
   )
 }

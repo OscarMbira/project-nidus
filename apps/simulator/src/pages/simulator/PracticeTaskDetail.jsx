@@ -4,6 +4,8 @@
  */
 
 import { useState, useEffect } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { getPracticeTaskById, createPracticeTask, updatePracticeTask } from '../../services/sim/practiceTaskService'
@@ -25,7 +27,7 @@ const PRACTICE_TASK_VIEW_SECTIONS = [
   ]}
 ]
 
-export default function PracticeTaskDetail() {
+function PracticeTaskDetailBody() {
   const { id } = useParams()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -152,7 +154,7 @@ export default function PracticeTaskDetail() {
       ) : (
       <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 space-y-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Task Name *</label>
+          <FieldLabelWithHelp helpKey="sim.practice_tasks.task_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>Task Name *</FieldLabelWithHelp>
           <input
             type="text"
             required
@@ -163,7 +165,7 @@ export default function PracticeTaskDetail() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</label>
+          <FieldLabelWithHelp helpKey="sim.practice_tasks.task_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</FieldLabelWithHelp>
           <textarea
             value={formData.task_description}
             onChange={(e) => setFormData({ ...formData, task_description: e.target.value })}
@@ -174,7 +176,7 @@ export default function PracticeTaskDetail() {
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status</label>
+            <FieldLabelWithHelp helpKey="sim.practice_tasks.status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status</FieldLabelWithHelp>
             <select
               value={formData.status}
               onChange={(e) => setFormData({ ...formData, status: e.target.value })}
@@ -188,7 +190,7 @@ export default function PracticeTaskDetail() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Priority</label>
+            <FieldLabelWithHelp helpKey="sim.practice_tasks.priority" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Priority</FieldLabelWithHelp>
             <select
               value={formData.priority}
               onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
@@ -204,7 +206,7 @@ export default function PracticeTaskDetail() {
 
         <div className="grid grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Start Date</label>
+            <FieldLabelWithHelp helpKey="sim.practice_tasks.planned_start_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Start Date</FieldLabelWithHelp>
             <input
               type="date"
               value={formData.planned_start_date}
@@ -214,7 +216,7 @@ export default function PracticeTaskDetail() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">End Date</label>
+            <FieldLabelWithHelp helpKey="sim.practice_tasks.planned_end_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">End Date</FieldLabelWithHelp>
             <input
               type="date"
               value={formData.planned_end_date}
@@ -224,7 +226,7 @@ export default function PracticeTaskDetail() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Due Date</label>
+            <FieldLabelWithHelp helpKey="sim.practice_tasks.due_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Due Date</FieldLabelWithHelp>
             <input
               type="date"
               value={formData.due_date}
@@ -253,5 +255,20 @@ export default function PracticeTaskDetail() {
       </form>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (sim.practice_tasks.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'task_name', 'task_description', 'status', 'priority', 'planned_start_date', 'planned_end_date',
+  'due_date',
+].map((name) => `sim.practice_tasks.${name}`)
+
+export default function PracticeTaskDetail(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <PracticeTaskDetailBody {...props} />
+    </FieldHelpScope>
   )
 }

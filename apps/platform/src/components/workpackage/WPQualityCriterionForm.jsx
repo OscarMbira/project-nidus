@@ -4,6 +4,8 @@
  */
 
 import { useState, useEffect } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { X, Save } from 'lucide-react'
 import { addQualityCriterion, updateQualityCriterion } from '../../services/wpQualityCriteriaService'
 import { supabase } from '../../services/supabaseClient'
@@ -14,7 +16,7 @@ import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
-export default function WPQualityCriterionForm({ wpId, criterion = null, mode = 'create', onSave, onCancel }) {
+function WPQualityCriterionFormBody({ wpId, criterion = null, mode = 'create', onSave, onCancel }) {
   const [formData, setFormData] = useState({
     criteria_title: '',
     criteria_description: '',
@@ -155,9 +157,9 @@ export default function WPQualityCriterionForm({ wpId, criterion = null, mode = 
         {formTab === 'details' && (
         <>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <FieldLabelWithHelp helpKey="public.wp_quality_criteria.criteria_title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
             Criteria Title <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             name="criteria_title"
@@ -173,9 +175,9 @@ export default function WPQualityCriterionForm({ wpId, criterion = null, mode = 
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <FieldLabelWithHelp helpKey="public.wp_quality_criteria.criteria_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
             Criteria Description <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             name="criteria_description"
             value={formData.criteria_description}
@@ -193,9 +195,9 @@ export default function WPQualityCriterionForm({ wpId, criterion = null, mode = 
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <FieldLabelWithHelp helpKey="public.wp_quality_criteria.criteria_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Criteria Type
-            </label>
+            </FieldLabelWithHelp>
             <select
               name="criteria_type"
               value={formData.criteria_type}
@@ -215,9 +217,9 @@ export default function WPQualityCriterionForm({ wpId, criterion = null, mode = 
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <FieldLabelWithHelp helpKey="public.wp_quality_criteria.quality_method" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Quality Method
-            </label>
+            </FieldLabelWithHelp>
             <select
               name="quality_method"
               value={formData.quality_method || ''}
@@ -235,9 +237,9 @@ export default function WPQualityCriterionForm({ wpId, criterion = null, mode = 
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <FieldLabelWithHelp helpKey="public.wp_quality_criteria.quality_responsible" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Quality Responsible
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             name="quality_responsible"
@@ -250,9 +252,9 @@ export default function WPQualityCriterionForm({ wpId, criterion = null, mode = 
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <FieldLabelWithHelp helpKey="public.wp_quality_criteria.quality_status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Quality Status
-            </label>
+            </FieldLabelWithHelp>
             <select
               name="quality_status"
               value={formData.quality_status}
@@ -268,9 +270,9 @@ export default function WPQualityCriterionForm({ wpId, criterion = null, mode = 
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <FieldLabelWithHelp helpKey="public.wp_quality_criteria.quality_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Quality Date
-            </label>
+            </FieldLabelWithHelp>
             <input
               type="date"
               name="quality_date"
@@ -282,9 +284,9 @@ export default function WPQualityCriterionForm({ wpId, criterion = null, mode = 
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <FieldLabelWithHelp helpKey="public.wp_quality_criteria.quality_result" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Quality Result
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             name="quality_result"
             value={formData.quality_result}
@@ -318,5 +320,20 @@ export default function WPQualityCriterionForm({ wpId, criterion = null, mode = 
         </div>
       </form>
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.wp_quality_criteria.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'criteria_title', 'criteria_description', 'criteria_type', 'quality_method', 'quality_responsible',
+  'quality_status', 'quality_date', 'quality_result',
+].map((name) => `public.wp_quality_criteria.${name}`)
+
+export default function WPQualityCriterionForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <WPQualityCriterionFormBody {...props} />
+    </FieldHelpScope>
   )
 }

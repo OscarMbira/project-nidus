@@ -3,6 +3,8 @@
  */
 
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { X, Save } from 'lucide-react'
 import { supabase } from '../../services/supabaseClient'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
@@ -48,7 +50,7 @@ const ACCEPTANCE_STATUSES = [
   { value: 'deferred', label: 'Deferred' }
 ]
 
-export default function AcceptanceCriterionForm({ criterion, onSubmit, onCancel }) {
+function AcceptanceCriterionFormBody({ criterion, onSubmit, onCancel }) {
   const [formData, setFormData] = useState({
     criteria_title: '',
     criteria_description: '',
@@ -144,9 +146,9 @@ export default function AcceptanceCriterionForm({ criterion, onSubmit, onCancel 
       <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.pd_acceptance_criteria.criteria_title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Criteria Title <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             value={formData.criteria_title}
@@ -158,9 +160,9 @@ export default function AcceptanceCriterionForm({ criterion, onSubmit, onCancel 
         </div>
 
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.pd_acceptance_criteria.criteria_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Criteria Description <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             value={formData.criteria_description}
             onChange={(e) => setFormData({ ...formData, criteria_description: e.target.value })}
@@ -172,9 +174,9 @@ export default function AcceptanceCriterionForm({ criterion, onSubmit, onCancel 
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.pd_acceptance_criteria.criteria_category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Category
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={formData.criteria_category}
             onChange={(e) => setFormData({ ...formData, criteria_category: e.target.value })}
@@ -189,9 +191,9 @@ export default function AcceptanceCriterionForm({ criterion, onSubmit, onCancel 
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.pd_acceptance_criteria.stakeholder_group" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Stakeholder Group
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={formData.stakeholder_group}
             onChange={(e) => setFormData({ ...formData, stakeholder_group: e.target.value })}
@@ -206,9 +208,9 @@ export default function AcceptanceCriterionForm({ criterion, onSubmit, onCancel 
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.pd_acceptance_criteria.priority" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Priority
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={formData.priority}
             onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
@@ -223,9 +225,9 @@ export default function AcceptanceCriterionForm({ criterion, onSubmit, onCancel 
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.pd_acceptance_criteria.acceptance_status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Acceptance Status
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={formData.acceptance_status}
             onChange={(e) => setFormData({ ...formData, acceptance_status: e.target.value })}
@@ -240,9 +242,9 @@ export default function AcceptanceCriterionForm({ criterion, onSubmit, onCancel 
         </div>
 
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.pd_acceptance_criteria.measurement_method" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Measurement Method
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             value={formData.measurement_method}
             onChange={(e) => setFormData({ ...formData, measurement_method: e.target.value })}
@@ -253,9 +255,9 @@ export default function AcceptanceCriterionForm({ criterion, onSubmit, onCancel 
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.pd_acceptance_criteria.target_value" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Target Value
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             value={formData.target_value}
@@ -266,9 +268,9 @@ export default function AcceptanceCriterionForm({ criterion, onSubmit, onCancel 
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.pd_acceptance_criteria.unit_of_measure" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Unit of Measure
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             value={formData.unit_of_measure}
@@ -279,9 +281,9 @@ export default function AcceptanceCriterionForm({ criterion, onSubmit, onCancel 
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.pd_acceptance_criteria.tolerance_lower" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Tolerance Lower
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             value={formData.tolerance_lower}
@@ -292,9 +294,9 @@ export default function AcceptanceCriterionForm({ criterion, onSubmit, onCancel 
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.pd_acceptance_criteria.tolerance_upper" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Tolerance Upper
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             value={formData.tolerance_upper}
@@ -305,9 +307,9 @@ export default function AcceptanceCriterionForm({ criterion, onSubmit, onCancel 
         </div>
 
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.pd_acceptance_criteria.proxy_measure" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Proxy Measure (if not directly provable)
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             value={formData.proxy_measure}
             onChange={(e) => setFormData({ ...formData, proxy_measure: e.target.value })}
@@ -318,7 +320,7 @@ export default function AcceptanceCriterionForm({ criterion, onSubmit, onCancel 
         </div>
 
         <div className="md:col-span-2 space-y-2">
-          <label className="flex items-center">
+          <FieldLabelWithHelp helpKey="sim.pd_acceptance_criteria.is_measurable" className="flex items-center">
             <input
               type="checkbox"
               checked={formData.is_measurable}
@@ -328,8 +330,8 @@ export default function AcceptanceCriterionForm({ criterion, onSubmit, onCancel 
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
               Validated as Measurable
             </span>
-          </label>
-          <label className="flex items-center">
+          </FieldLabelWithHelp>
+          <FieldLabelWithHelp helpKey="sim.pd_acceptance_criteria.is_realistic" className="flex items-center">
             <input
               type="checkbox"
               checked={formData.is_realistic}
@@ -339,8 +341,8 @@ export default function AcceptanceCriterionForm({ criterion, onSubmit, onCancel 
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
               Validated as Realistic
             </span>
-          </label>
-          <label className="flex items-center">
+          </FieldLabelWithHelp>
+          <FieldLabelWithHelp helpKey="sim.pd_acceptance_criteria.is_provable_in_project" className="flex items-center">
             <input
               type="checkbox"
               checked={formData.is_provable_in_project}
@@ -350,13 +352,13 @@ export default function AcceptanceCriterionForm({ criterion, onSubmit, onCancel 
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
               Can be Proven in Project
             </span>
-          </label>
+          </FieldLabelWithHelp>
         </div>
 
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.pd_acceptance_criteria.validation_notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Validation Notes
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             value={formData.validation_notes}
             onChange={(e) => setFormData({ ...formData, validation_notes: e.target.value })}
@@ -389,5 +391,33 @@ export default function AcceptanceCriterionForm({ criterion, onSubmit, onCancel 
         </button>
       </div>
     </form>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.pd_acceptance_criteria.criteria_title',
+  'sim.pd_acceptance_criteria.criteria_description',
+  'sim.pd_acceptance_criteria.criteria_category',
+  'sim.pd_acceptance_criteria.stakeholder_group',
+  'sim.pd_acceptance_criteria.priority',
+  'sim.pd_acceptance_criteria.acceptance_status',
+  'sim.pd_acceptance_criteria.measurement_method',
+  'sim.pd_acceptance_criteria.target_value',
+  'sim.pd_acceptance_criteria.unit_of_measure',
+  'sim.pd_acceptance_criteria.tolerance_lower',
+  'sim.pd_acceptance_criteria.tolerance_upper',
+  'sim.pd_acceptance_criteria.proxy_measure',
+  'sim.pd_acceptance_criteria.is_measurable',
+  'sim.pd_acceptance_criteria.is_realistic',
+  'sim.pd_acceptance_criteria.is_provable_in_project',
+  'sim.pd_acceptance_criteria.validation_notes',
+]
+
+export default function AcceptanceCriterionForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <AcceptanceCriterionFormBody {...props} />
+    </FieldHelpScope>
   )
 }

@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { DEPENDENCY_TYPES, validateDependency } from '@nidus/shared/utils/cpmCalculator';
 
 /**
@@ -360,9 +362,9 @@ const DependencyForm = ({ taskId, tasks, dependencies, dependency, onSave, onCan
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Task Selection */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.task_dependencies.linked_task_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
             {isPredecessor ? 'Predecessor Task' : 'Successor Task'}
-          </label>
+          </FieldLabelWithHelp>
           <select
             name={isPredecessor ? 'source_task_id' : 'target_task_id'}
             value={isPredecessor ? formData.source_task_id : formData.target_task_id}
@@ -381,9 +383,9 @@ const DependencyForm = ({ taskId, tasks, dependencies, dependency, onSave, onCan
 
         {/* Dependency Type */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.task_dependencies.dependency_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Dependency Type
-          </label>
+          </FieldLabelWithHelp>
           <select
             name="dependency_type"
             value={formData.dependency_type}
@@ -399,9 +401,9 @@ const DependencyForm = ({ taskId, tasks, dependencies, dependency, onSave, onCan
 
         {/* Lag Days */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.task_dependencies.lag_days" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Lag Days (use negative for lead time)
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="number"
             name="lag_days"
@@ -414,9 +416,9 @@ const DependencyForm = ({ taskId, tasks, dependencies, dependency, onSave, onCan
 
         {/* Description */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.task_dependencies.description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Description (Optional)
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             name="description"
             value={formData.description}
@@ -455,4 +457,20 @@ const DependencyForm = ({ taskId, tasks, dependencies, dependency, onSave, onCan
   );
 };
 
-export default DependencyManager;
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.task_dependencies.linked_task_id',
+  'sim.task_dependencies.dependency_type',
+  'sim.task_dependencies.lag_days',
+  'sim.task_dependencies.description',
+]
+
+function DependencyManagerWithHelp(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <DependencyManager {...props} />
+    </FieldHelpScope>
+  )
+}
+
+export default DependencyManagerWithHelp

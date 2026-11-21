@@ -4,6 +4,8 @@
  */
 
 import { useState, useEffect } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { X, Save } from 'lucide-react'
 import { addProduct, updateProduct } from '../../services/wpProductsService'
 import { supabase } from '../../services/supabaseClient'
@@ -14,7 +16,7 @@ import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
-export default function WPProductForm({ wpId, product = null, mode = 'create', onSave, onCancel }) {
+function WPProductFormBody({ wpId, product = null, mode = 'create', onSave, onCancel }) {
   const [formData, setFormData] = useState({
     product_name: '',
     product_description: '',
@@ -193,9 +195,9 @@ export default function WPProductForm({ wpId, product = null, mode = 'create', o
         {formTab === 'details' && (
         <>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <FieldLabelWithHelp helpKey="public.wp_products.product_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
             Product Name <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             name="product_name"
@@ -211,9 +213,9 @@ export default function WPProductForm({ wpId, product = null, mode = 'create', o
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <FieldLabelWithHelp helpKey="public.wp_products.product_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Product Type
-          </label>
+          </FieldLabelWithHelp>
           <select
             name="product_type"
             value={formData.product_type}
@@ -231,9 +233,9 @@ export default function WPProductForm({ wpId, product = null, mode = 'create', o
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <FieldLabelWithHelp helpKey="public.wp_products.product_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Product Description
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             name="product_description"
             value={formData.product_description}
@@ -246,9 +248,9 @@ export default function WPProductForm({ wpId, product = null, mode = 'create', o
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <FieldLabelWithHelp helpKey="public.wp_products.linked_product_deliverable_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" listOptions={false}>
               Link to Product Deliverable
-            </label>
+            </FieldLabelWithHelp>
             <select
               name="linked_product_deliverable_id"
               value={formData.linked_product_deliverable_id || ''}
@@ -265,9 +267,9 @@ export default function WPProductForm({ wpId, product = null, mode = 'create', o
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <FieldLabelWithHelp helpKey="public.wp_products.linked_product_description_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" listOptions={false}>
               Link to Product Description
-            </label>
+            </FieldLabelWithHelp>
             <select
               name="linked_product_description_id"
               value={formData.linked_product_description_id || ''}
@@ -285,9 +287,9 @@ export default function WPProductForm({ wpId, product = null, mode = 'create', o
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <FieldLabelWithHelp helpKey="public.wp_products.quality_criteria" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Quality Criteria
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             name="quality_criteria"
             value={formData.quality_criteria}
@@ -299,9 +301,9 @@ export default function WPProductForm({ wpId, product = null, mode = 'create', o
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <FieldLabelWithHelp helpKey="public.wp_products.acceptance_criteria" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Acceptance Criteria
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             name="acceptance_criteria"
             value={formData.acceptance_criteria}
@@ -314,9 +316,9 @@ export default function WPProductForm({ wpId, product = null, mode = 'create', o
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <FieldLabelWithHelp helpKey="public.wp_products.delivery_status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Delivery Status
-            </label>
+            </FieldLabelWithHelp>
             <select
               name="delivery_status"
               value={formData.delivery_status}
@@ -333,9 +335,9 @@ export default function WPProductForm({ wpId, product = null, mode = 'create', o
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <FieldLabelWithHelp helpKey="public.wp_products.delivery_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Delivery Date
-            </label>
+            </FieldLabelWithHelp>
             <input
               type="date"
               name="delivery_date"
@@ -346,9 +348,9 @@ export default function WPProductForm({ wpId, product = null, mode = 'create', o
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <FieldLabelWithHelp helpKey="public.wp_products.acceptance_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Acceptance Date
-            </label>
+            </FieldLabelWithHelp>
             <input
               type="date"
               name="acceptance_date"
@@ -382,5 +384,21 @@ export default function WPProductForm({ wpId, product = null, mode = 'create', o
         </div>
       </form>
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.wp_products.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'product_name', 'product_type', 'product_description', 'linked_product_deliverable_id',
+  'linked_product_description_id', 'quality_criteria', 'acceptance_criteria', 'delivery_status',
+  'delivery_date', 'acceptance_date',
+].map((name) => `public.wp_products.${name}`)
+
+export default function WPProductForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <WPProductFormBody {...props} />
+    </FieldHelpScope>
   )
 }

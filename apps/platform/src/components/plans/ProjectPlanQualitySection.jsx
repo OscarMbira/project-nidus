@@ -2,10 +2,13 @@
  * Project Plan Quality Section
  */
 
+import PlanListTable from '@nidus/ui/PlanListTable'
 import { useState, useEffect } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { platformDb } from '@nidus/supabase'
 
-export default function ProjectPlanQualitySection({ formData, onChange, mode, projectId }) {
+function ProjectPlanQualitySectionBody({ formData, onChange, mode, projectId }) {
   const [qualityStrategies, setQualityStrategies] = useState([])
 
   useEffect(() => {
@@ -32,9 +35,9 @@ export default function ProjectPlanQualitySection({ formData, onChange, mode, pr
       <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Quality Summary</h2>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="public.project_plans.quality_management_strategy_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
           Link to Quality Management Strategy
-        </label>
+        </FieldLabelWithHelp>
         <select
           value={formData.quality_management_strategy_id || ''}
           onChange={(e) => onChange('quality_management_strategy_id', e.target.value || null)}
@@ -51,9 +54,9 @@ export default function ProjectPlanQualitySection({ formData, onChange, mode, pr
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="public.project_plans.quality_summary" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Quality Summary
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={formData.quality_summary || ''}
           onChange={(e) => onChange('quality_summary', e.target.value)}
@@ -65,9 +68,9 @@ export default function ProjectPlanQualitySection({ formData, onChange, mode, pr
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="public.project_plans.quality_standards" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Quality Standards
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={formData.quality_standards || ''}
           onChange={(e) => onChange('quality_standards', e.target.value)}
@@ -79,28 +82,31 @@ export default function ProjectPlanQualitySection({ formData, onChange, mode, pr
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Quality Gates (JSON Array)
-        </label>
-        <textarea
-          value={formData.quality_gates ? JSON.stringify(formData.quality_gates, null, 2) : ''}
-          onChange={(e) => {
-            try {
-              const parsed = JSON.parse(e.target.value)
-              onChange('quality_gates', parsed)
-            } catch {
-              // Invalid JSON, ignore
-            }
-          }}
+        <FieldLabelWithHelp helpKey="public.project_plans.quality_gates" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Quality Gates
+        </FieldLabelWithHelp>
+        <PlanListTable
+          kind="project"
+          listKey="quality_gates"
+          value={formData.quality_gates}
+          onChange={(rows) => onChange('quality_gates', rows)}
           disabled={mode === 'view'}
-          rows={6}
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono text-sm"
-          placeholder='[{"gate_name": "...", "gate_date": "..."}, ...]'
         />
-        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-          Enter quality gates as JSON array
-        </p>
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.project_plans.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'quality_management_strategy_id', 'quality_summary', 'quality_standards', 'quality_gates',
+].map((name) => `public.project_plans.${name}`)
+
+export default function ProjectPlanQualitySection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ProjectPlanQualitySectionBody {...props} />
+    </FieldHelpScope>
   )
 }

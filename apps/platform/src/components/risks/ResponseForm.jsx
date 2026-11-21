@@ -4,6 +4,8 @@
  */
 
 import { useState, useEffect } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { X, Save } from 'lucide-react'
 import { platformDb } from '@nidus/supabase'
 import { createResponse, updateResponse } from '../../services/riskResponseService'
@@ -15,7 +17,7 @@ import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
-export default function ResponseForm({ riskId, response, onSave, onCancel }) {
+function ResponseFormBody({ riskId, response, onSave, onCancel }) {
   const [formData, setFormData] = useState({
     action_description: '',
     action_type: 'preventive',
@@ -196,9 +198,9 @@ export default function ResponseForm({ riskId, response, onSave, onCancel }) {
           {formTab === 'details' && (
           <>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.risk_responses.action_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
               Action Description * <span className="text-xs text-gray-500">(Min 20 characters)</span>
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               value={formData.action_description}
               onChange={(e) => handleChange('action_description', e.target.value)}
@@ -213,9 +215,9 @@ export default function ResponseForm({ riskId, response, onSave, onCancel }) {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.risk_responses.action_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Action Type *
-              </label>
+              </FieldLabelWithHelp>
               <select
                 value={formData.action_type}
                 onChange={(e) => handleChange('action_type', e.target.value)}
@@ -229,9 +231,9 @@ export default function ResponseForm({ riskId, response, onSave, onCancel }) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.risk_responses.status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Status
-              </label>
+              </FieldLabelWithHelp>
               <select
                 value={formData.status}
                 onChange={(e) => handleChange('status', e.target.value)}
@@ -247,9 +249,9 @@ export default function ResponseForm({ riskId, response, onSave, onCancel }) {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.risk_responses.assigned_to_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                 Assigned To
-              </label>
+              </FieldLabelWithHelp>
               <select
                 value={formData.assigned_to_id}
                 onChange={(e) => handleChange('assigned_to_id', e.target.value)}
@@ -265,9 +267,9 @@ export default function ResponseForm({ riskId, response, onSave, onCancel }) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.risk_responses.target_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Target Date
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="date"
                 value={formData.target_date}
@@ -278,9 +280,9 @@ export default function ResponseForm({ riskId, response, onSave, onCancel }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.risk_responses.estimated_cost" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" isAmount>
               Estimated Cost ($)
-            </label>
+            </FieldLabelWithHelp>
             <SmartAmountInput
               value={formData.estimated_cost ? parseFloat(formData.estimated_cost) : null}
               onChange={(value) => handleChange('estimated_cost', value)}
@@ -312,5 +314,19 @@ export default function ResponseForm({ riskId, response, onSave, onCancel }) {
         </form>
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.risk_responses.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'action_description', 'action_type', 'status', 'assigned_to_id', 'target_date', 'estimated_cost',
+].map((name) => `public.risk_responses.${name}`)
+
+export default function ResponseForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ResponseFormBody {...props} />
+    </FieldHelpScope>
   )
 }

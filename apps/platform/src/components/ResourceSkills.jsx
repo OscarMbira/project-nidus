@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { supabase } from '../services/supabaseClient'
 import { X, Save, Plus, Award, Star } from 'lucide-react'
 import { RowActionButton } from '@nidus/ui'
 
-export default function ResourceSkills({ resourceId, onClose, onSave }) {
+function ResourceSkillsBody({ resourceId, onClose, onSave }) {
   const [skills, setSkills] = useState([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -309,9 +311,9 @@ export default function ResourceSkills({ resourceId, onClose, onSave }) {
 
               <form onSubmit={handleSubmit} className="p-6 space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.resource_skills.skill_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                     Skill Name *
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="text"
                     name="skill_name"
@@ -324,9 +326,9 @@ export default function ResourceSkills({ resourceId, onClose, onSave }) {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.resource_skills.skill_category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Category
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="text"
                     name="skill_category"
@@ -338,9 +340,9 @@ export default function ResourceSkills({ resourceId, onClose, onSave }) {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.resource_skills.proficiency_level" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                     Proficiency Level *
-                  </label>
+                  </FieldLabelWithHelp>
                   <select
                     name="proficiency_level"
                     value={formData.proficiency_level}
@@ -356,9 +358,9 @@ export default function ResourceSkills({ resourceId, onClose, onSave }) {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.resource_skills.years_of_experience" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Years of Experience
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="number"
                     name="years_of_experience"
@@ -370,9 +372,9 @@ export default function ResourceSkills({ resourceId, onClose, onSave }) {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.resource_skills.certification" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Certification
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="text"
                     name="certification"
@@ -384,9 +386,9 @@ export default function ResourceSkills({ resourceId, onClose, onSave }) {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.resource_skills.notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Notes
-                  </label>
+                  </FieldLabelWithHelp>
                   <textarea
                     name="notes"
                     value={formData.notes}
@@ -425,3 +427,16 @@ export default function ResourceSkills({ resourceId, onClose, onSave }) {
   )
 }
 
+// v1345 slice 4: field help for this component (public.resource_skills.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'skill_name', 'skill_category', 'proficiency_level', 'years_of_experience', 'certification', 'notes',
+].map((name) => `public.resource_skills.${name}`)
+
+export default function ResourceSkills(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ResourceSkillsBody {...props} />
+    </FieldHelpScope>
+  )
+}

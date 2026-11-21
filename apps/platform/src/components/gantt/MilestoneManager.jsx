@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import * as ganttService from '../../services/ganttService';
 
 /**
@@ -505,9 +507,9 @@ const MilestoneForm = ({ milestone, tasks, onSave, onCancel }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Milestone Name */}
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.project_milestones.milestone_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
               Milestone Name *
-            </label>
+            </FieldLabelWithHelp>
             <input
               type="text"
               name="milestone_name"
@@ -521,9 +523,9 @@ const MilestoneForm = ({ milestone, tasks, onSave, onCancel }) => {
 
           {/* Milestone Date */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.project_milestones.milestone_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
               Date *
-            </label>
+            </FieldLabelWithHelp>
             <input
               type="date"
               name="milestone_date"
@@ -536,9 +538,9 @@ const MilestoneForm = ({ milestone, tasks, onSave, onCancel }) => {
 
           {/* Milestone Type */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.project_milestones.milestone_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
               Type *
-            </label>
+            </FieldLabelWithHelp>
             <select
               name="milestone_type"
               value={formData.milestone_type}
@@ -555,9 +557,9 @@ const MilestoneForm = ({ milestone, tasks, onSave, onCancel }) => {
 
           {/* Link to Task (Optional) */}
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.project_milestones.task_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Link to Task (Optional)
-            </label>
+            </FieldLabelWithHelp>
             <select
               name="task_id"
               value={formData.task_id}
@@ -575,9 +577,9 @@ const MilestoneForm = ({ milestone, tasks, onSave, onCancel }) => {
 
           {/* Description */}
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.project_milestones.description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Description (Optional)
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               name="description"
               value={formData.description}
@@ -616,4 +618,15 @@ const MilestoneForm = ({ milestone, tasks, onSave, onCancel }) => {
   );
 };
 
-export default MilestoneManager;
+// v1345 slice 4: field help for this component (public.project_milestones.<column>), carried in its own scope.
+const HELP_KEYS = ['milestone_name', 'milestone_date', 'milestone_type', 'task_id', 'description'].map((name) => `public.project_milestones.${name}`)
+
+function MilestoneManagerWithHelp(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <MilestoneManager {...props} />
+    </FieldHelpScope>
+  )
+}
+
+export default MilestoneManagerWithHelp;

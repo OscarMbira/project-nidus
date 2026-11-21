@@ -1,4 +1,6 @@
 import { Fragment, useEffect, useMemo, useState } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import toast from 'react-hot-toast'
 import { Plus, X, Send, AlertTriangle, History, ChevronDown, ChevronRight } from 'lucide-react'
 import {
@@ -52,7 +54,7 @@ const blankDraft = () => ({ details: '', statusCode: 'not_started', targetComple
  * approved/rejected lifecycle and edit-locking as Timesheets; approve/reject itself lives on the
  * Team Work Plan view (PM/PMO/Team Lead/Team Manager), not here.
  */
-export default function WorkPlanGrid({ projectId, userId, periodType, periodStartDate, periodEndDate, previousPeriodStartDate, entries, billingType, onChanged }) {
+function WorkPlanGridBody({ projectId, userId, periodType, periodStartDate, periodEndDate, previousPeriodStartDate, entries, billingType, onChanged }) {
   const [workPlan, setWorkPlan] = useState(null)
   const [items, setItems] = useState([])
   const [statuses, setStatuses] = useState([])
@@ -454,21 +456,21 @@ export default function WorkPlanGrid({ projectId, userId, periodType, periodStar
                     <td colSpan={7} className="px-3 pb-3">
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                         <div>
-                          <label className="block text-xs text-gray-500 dark:text-slate-400 mb-1">Start</label>
+                          <FieldLabelWithHelp helpKey="public.project_work_plan_items.start_date" className="block text-xs text-gray-500 dark:text-slate-400 mb-1">Start</FieldLabelWithHelp>
                           <input type="date" value={draft.startDate} disabled={!editable || rowBusy}
                             onChange={(e) => updateDraft(rowKey, 'startDate', e.target.value)}
                             onBlur={() => handleBlur(rowKey)}
                             className="w-full rounded border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 py-1.5 text-sm text-gray-700 dark:text-slate-300 focus:border-blue-500 focus:outline-none disabled:opacity-70 disabled:cursor-not-allowed" />
                         </div>
                         <div>
-                          <label className="block text-xs text-gray-500 dark:text-slate-400 mb-1">End</label>
+                          <FieldLabelWithHelp helpKey="public.project_work_plan_items.end_date" className="block text-xs text-gray-500 dark:text-slate-400 mb-1">End</FieldLabelWithHelp>
                           <input type="date" value={draft.endDate} disabled={!editable || rowBusy}
                             onChange={(e) => updateDraft(rowKey, 'endDate', e.target.value)}
                             onBlur={() => handleBlur(rowKey)}
                             className="w-full rounded border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 py-1.5 text-sm text-gray-700 dark:text-slate-300 focus:border-blue-500 focus:outline-none disabled:opacity-70 disabled:cursor-not-allowed" />
                         </div>
                         <div>
-                          <label className="block text-xs text-gray-500 dark:text-slate-400 mb-1">Role</label>
+                          <FieldLabelWithHelp helpKey="public.project_work_plan_items.role_code" className="block text-xs text-gray-500 dark:text-slate-400 mb-1">Role</FieldLabelWithHelp>
                           <SelectField
                             value={draft.roleCode}
                             onChange={(v) => handleSelectChange(rowKey, 'roleCode', v)}
@@ -479,7 +481,7 @@ export default function WorkPlanGrid({ projectId, userId, periodType, periodStar
                           />
                         </div>
                         <div>
-                          <label className="block text-xs text-gray-500 dark:text-slate-400 mb-1">Task</label>
+                          <FieldLabelWithHelp helpKey="public.project_work_plan_items.task_label" className="block text-xs text-gray-500 dark:text-slate-400 mb-1">Task</FieldLabelWithHelp>
                           <input type="text" value={draft.taskLabel} disabled={!editable || rowBusy}
                             onChange={(e) => updateDraft(rowKey, 'taskLabel', e.target.value)}
                             onBlur={() => handleBlur(rowKey)}
@@ -487,7 +489,7 @@ export default function WorkPlanGrid({ projectId, userId, periodType, periodStar
                             className="w-full rounded border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 py-1.5 text-sm text-gray-700 dark:text-slate-300 focus:border-blue-500 focus:outline-none disabled:opacity-70 disabled:cursor-not-allowed" />
                         </div>
                         <div>
-                          <label className="block text-xs text-gray-500 dark:text-slate-400 mb-1">Member</label>
+                          <FieldLabelWithHelp helpKey="public.project_work_plan_items.member_user_id" className="block text-xs text-gray-500 dark:text-slate-400 mb-1" listOptions={false}>Member</FieldLabelWithHelp>
                           <SelectField
                             value={draft.memberUserId}
                             onChange={(v) => handleSelectChange(rowKey, 'memberUserId', v)}
@@ -498,7 +500,7 @@ export default function WorkPlanGrid({ projectId, userId, periodType, periodStar
                           />
                         </div>
                         <div>
-                          <label className="block text-xs text-gray-500 dark:text-slate-400 mb-1">Priority</label>
+                          <FieldLabelWithHelp helpKey="public.project_work_plan_items.priority" className="block text-xs text-gray-500 dark:text-slate-400 mb-1">Priority</FieldLabelWithHelp>
                           <select value={draft.priority} disabled={!editable || rowBusy}
                             onChange={(e) => updateDraft(rowKey, 'priority', e.target.value)}
                             onBlur={() => handleBlur(rowKey)}
@@ -507,7 +509,7 @@ export default function WorkPlanGrid({ projectId, userId, periodType, periodStar
                           </select>
                         </div>
                         <div className="sm:col-span-2 lg:col-span-3">
-                          <label className="block text-xs text-gray-500 dark:text-slate-400 mb-1">Remark</label>
+                          <FieldLabelWithHelp helpKey="public.project_work_plan_items.remark" className="block text-xs text-gray-500 dark:text-slate-400 mb-1">Remark</FieldLabelWithHelp>
                           <input type="text" value={draft.remark} disabled={!editable || rowBusy}
                             onChange={(e) => updateDraft(rowKey, 'remark', e.target.value)}
                             onBlur={() => handleBlur(rowKey)}
@@ -634,5 +636,19 @@ export default function WorkPlanGrid({ projectId, userId, periodType, periodStar
         </div>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.project_work_plan_items.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'start_date', 'end_date', 'role_code', 'task_label', 'member_user_id', 'priority', 'remark',
+].map((name) => `public.project_work_plan_items.${name}`)
+
+export default function WorkPlanGrid(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <WorkPlanGridBody {...props} />
+    </FieldHelpScope>
   )
 }

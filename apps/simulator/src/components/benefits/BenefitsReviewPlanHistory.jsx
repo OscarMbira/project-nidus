@@ -4,12 +4,14 @@
  */
 
 import { useState, useEffect } from 'react';
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { History, Plus, Clock, User, FileText } from 'lucide-react';
 import { getRevisionHistory, addRevision } from '../../services/benefitsReviewPlanService';
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
-export default function BenefitsReviewPlanHistory({ planId, onUpdate }) {
+function BenefitsReviewPlanHistoryBody({ planId, onUpdate }) {
   const [revisions, setRevisions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -100,9 +102,9 @@ export default function BenefitsReviewPlanHistory({ planId, onUpdate }) {
           <form onSubmit={handleAddRevision} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.benefits_review_plan_revisions.revision_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Revision Date *
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="date"
                   value={newRevision.revision_date}
@@ -113,9 +115,9 @@ export default function BenefitsReviewPlanHistory({ planId, onUpdate }) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.benefits_review_plan_revisions.revision_number" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Revision Number *
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   value={newRevision.revision_number}
@@ -128,9 +130,9 @@ export default function BenefitsReviewPlanHistory({ planId, onUpdate }) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.benefits_review_plan_revisions.summary_of_changes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Summary of Changes *
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={newRevision.summary_of_changes}
                 onChange={(e) => setNewRevision({ ...newRevision, summary_of_changes: e.target.value })}
@@ -148,9 +150,9 @@ export default function BenefitsReviewPlanHistory({ planId, onUpdate }) {
                 onChange={(e) => setNewRevision({ ...newRevision, changes_marked: e.target.checked })}
                 className="w-5 h-5 text-blue-600 rounded border-gray-300"
               />
-              <label className="text-sm text-gray-700 dark:text-gray-300">
+              <FieldLabelWithHelp helpKey="sim.benefits_review_plan_revisions.changes_marked" className="text-sm text-gray-700 dark:text-gray-300">
                 Changes marked in document
-              </label>
+              </FieldLabelWithHelp>
             </div>
 
             <div className="flex justify-end gap-3">
@@ -239,4 +241,20 @@ export default function BenefitsReviewPlanHistory({ planId, onUpdate }) {
       </div>
     </div>
   );
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.benefits_review_plan_revisions.revision_date',
+  'sim.benefits_review_plan_revisions.revision_number',
+  'sim.benefits_review_plan_revisions.summary_of_changes',
+  'sim.benefits_review_plan_revisions.changes_marked',
+]
+
+export default function BenefitsReviewPlanHistory(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <BenefitsReviewPlanHistoryBody {...props} />
+    </FieldHelpScope>
+  )
 }

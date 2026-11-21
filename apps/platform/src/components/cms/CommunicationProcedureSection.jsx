@@ -3,7 +3,7 @@
  * Planning, Control, Assurance approaches
  */
 
-export default function CommunicationProcedureSection({ cmsData, onChange, errors = {}, readOnly = false }) {
+function CommunicationProcedureSectionBody({ cmsData, onChange, errors = {}, readOnly = false }) {
   const handleChange = (field, value) => {
     if (onChange) {
       onChange({ ...cmsData, [field]: value })
@@ -60,9 +60,9 @@ export default function CommunicationProcedureSection({ cmsData, onChange, error
   return (
     <div className="space-y-6">
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="public.communication_management_strategies.communication_planning_approach" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
           Communication Planning Approach <span className="text-red-500">*</span>
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={cmsData?.communication_planning_approach || ''}
           onChange={(e) => handleChange('communication_planning_approach', e.target.value)}
@@ -79,9 +79,9 @@ export default function CommunicationProcedureSection({ cmsData, onChange, error
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="public.communication_management_strategies.communication_control_approach" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
           Communication Control Approach <span className="text-red-500">*</span>
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={cmsData?.communication_control_approach || ''}
           onChange={(e) => handleChange('communication_control_approach', e.target.value)}
@@ -98,9 +98,9 @@ export default function CommunicationProcedureSection({ cmsData, onChange, error
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="public.communication_management_strategies.communication_assurance_approach" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
           Communication Assurance Approach <span className="text-red-500">*</span>
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={cmsData?.communication_assurance_approach || ''}
           onChange={(e) => handleChange('communication_assurance_approach', e.target.value)}
@@ -117,9 +117,9 @@ export default function CommunicationProcedureSection({ cmsData, onChange, error
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="public.communication_management_strategies.corporate_communication_policy_reference" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Corporate Communication Policy Reference
-        </label>
+        </FieldLabelWithHelp>
         <input
           type="text"
           value={cmsData?.corporate_communication_policy_reference || ''}
@@ -130,9 +130,9 @@ export default function CommunicationProcedureSection({ cmsData, onChange, error
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="public.communication_management_strategies.variance_from_corporate" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Variance from Corporate Standards (if any)
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={cmsData?.variance_from_corporate || ''}
           onChange={(e) => handleChange('variance_from_corporate', e.target.value)}
@@ -144,9 +144,9 @@ export default function CommunicationProcedureSection({ cmsData, onChange, error
 
       {cmsData?.variance_from_corporate && (
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.communication_management_strategies.variance_justification" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Variance Justification <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             value={cmsData?.variance_justification || ''}
             onChange={(e) => handleChange('variance_justification', e.target.value)}
@@ -163,5 +163,20 @@ export default function CommunicationProcedureSection({ cmsData, onChange, error
         </div>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.communication_management_strategies.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'communication_planning_approach', 'communication_control_approach', 'communication_assurance_approach',
+  'corporate_communication_policy_reference', 'variance_from_corporate', 'variance_justification',
+].map((name) => `public.communication_management_strategies.${name}`)
+
+export default function CommunicationProcedureSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <CommunicationProcedureSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { Gavel, Plus, Trash2 } from 'lucide-react'
 import * as decisionService from '../../../services/highlightReportDecisionService'
 
@@ -16,7 +18,7 @@ const STATUS_OPTIONS = [
   { value: 'deferred', label: 'Deferred' }
 ]
 
-export default function HighlightReportDecisionsSection({ reportId, formData, onChange, mode }) {
+function HighlightReportDecisionsSectionBody({ reportId, formData, onChange, mode }) {
   const [decisions, setDecisions] = useState([])
   const [loading, setLoading] = useState(false)
   const [adding, setAdding] = useState(false)
@@ -87,7 +89,7 @@ export default function HighlightReportDecisionsSection({ reportId, formData, on
 
       {formData?.decisions_required != null && (
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Decisions required (summary)</label>
+          <FieldLabelWithHelp helpKey="sim.highlight_report_decisions.decisions_required" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>Decisions required (summary)</FieldLabelWithHelp>
           <textarea
             value={formData.decisions_required || ''}
             onChange={(e) => onChange('decisions_required', e.target.value)}
@@ -100,7 +102,7 @@ export default function HighlightReportDecisionsSection({ reportId, formData, on
 
       {formData?.recommendations != null && (
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Recommendations</label>
+          <FieldLabelWithHelp helpKey="sim.highlight_report_decisions.recommendations" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Recommendations</FieldLabelWithHelp>
           <textarea
             value={formData.recommendations || ''}
             onChange={(e) => onChange('recommendations', e.target.value)}
@@ -191,5 +193,19 @@ export default function HighlightReportDecisionsSection({ reportId, formData, on
 
       {!reportId && <p className="text-sm text-gray-500 dark:text-gray-400">Save the report first to add decisions.</p>}
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.highlight_report_decisions.decisions_required',
+  'sim.highlight_report_decisions.recommendations',
+]
+
+export default function HighlightReportDecisionsSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <HighlightReportDecisionsSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

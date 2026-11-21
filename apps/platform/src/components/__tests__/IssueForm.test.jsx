@@ -38,6 +38,17 @@ vi.mock('../../services/issueService', () => ({
 }))
 
 const validateIssueFormMock = vi.fn(() => ({ valid: true, errors: {} }))
+// v1345: these tests are about saving, not field help — render the help scope as a plain pass-through.
+vi.mock('@nidus/shared/context/FieldHelpContext', async () => {
+  const { createContext } = await import('react')
+  return {
+    default: createContext(null),
+    FieldHelpScope: ({ children }) => children,
+    useFieldHelpEntry: () => null,
+    useFieldHelpScope: () => null,
+  }
+})
+
 vi.mock('@nidus/shared/utils/issueValidation', () => ({
   validateIssueForm: (...args) => validateIssueFormMock(...args),
   validateStatusTransition: vi.fn(() => ({ valid: true, message: '' })),

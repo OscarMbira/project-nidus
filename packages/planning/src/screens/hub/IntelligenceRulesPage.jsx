@@ -3,6 +3,8 @@
  * Route: /pmo/planning/intelligence-rules
  */
 import { useState, useEffect, useCallback } from 'react';
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useNavigate } from 'react-router-dom';
 import { Plus, Cpu, Search, Edit2, Trash2, ToggleRight, ToggleLeft } from 'lucide-react';
 import { platformDb } from '@nidus/supabase';
@@ -12,7 +14,7 @@ const lbl = 'block text-sm font-medium text-gray-300 mb-1';
 
 const EMPTY_RULE = { name:'', trigger_condition:'', action:'', priority:'medium', is_active:true, description:'' };
 
-export default function IntelligenceRulesPage() {
+function IntelligenceRulesPageBody() {
   const [rules, setRules]     = useState([]);
   const [search, setSearch]   = useState('');
   const [loading, setLoading] = useState(true);
@@ -65,12 +67,12 @@ export default function IntelligenceRulesPage() {
           <h2 className="font-semibold text-sm text-gray-800 dark:text-gray-200">{editing==='new'?'Create New Rule':'Edit Rule'}</h2>
           {saved && <p className="text-green-400 text-xs">Saved.</p>}
           <div className="grid grid-cols-2 gap-4">
-            <div><label className={lbl}>Rule Name <span className="text-red-400">*</span></label><input className={inp} value={form.name} onChange={set('name')} required/></div>
-            <div><label className={lbl}>Priority</label><select className={inp} value={form.priority} onChange={set('priority')}>{['low','medium','high','critical'].map(p=><option key={p} value={p}>{p}</option>)}</select></div>
+            <div><FieldLabelWithHelp helpKey="public.intelligence_rules.name" className={lbl} required>Rule Name <span className="text-red-400">*</span></FieldLabelWithHelp><input className={inp} value={form.name} onChange={set('name')} required/></div>
+            <div><FieldLabelWithHelp helpKey="public.intelligence_rules.priority" className={lbl}>Priority</FieldLabelWithHelp><select className={inp} value={form.priority} onChange={set('priority')}>{['low','medium','high','critical'].map(p=><option key={p} value={p}>{p}</option>)}</select></div>
           </div>
-          <div><label className={lbl}>Trigger Condition</label><input className={inp} value={form.trigger_condition} onChange={set('trigger_condition')} placeholder="e.g. risk_count > 5"/></div>
-          <div><label className={lbl}>Action</label><input className={inp} value={form.action} onChange={set('action')} placeholder="e.g. notify_pmo, flag_project"/></div>
-          <div><label className={lbl}>Description</label><textarea className={`${inp} h-16 resize-none`} value={form.description} onChange={set('description')}/></div>
+          <div><FieldLabelWithHelp helpKey="public.intelligence_rules.trigger_condition" className={lbl}>Trigger Condition</FieldLabelWithHelp><input className={inp} value={form.trigger_condition} onChange={set('trigger_condition')} placeholder="e.g. risk_count > 5"/></div>
+          <div><FieldLabelWithHelp helpKey="public.intelligence_rules.action" className={lbl}>Action</FieldLabelWithHelp><input className={inp} value={form.action} onChange={set('action')} placeholder="e.g. notify_pmo, flag_project"/></div>
+          <div><FieldLabelWithHelp helpKey="public.intelligence_rules.description" className={lbl}>Description</FieldLabelWithHelp><textarea className={`${inp} h-16 resize-none`} value={form.description} onChange={set('description')}/></div>
           <div className="flex gap-3">
             <button type="submit" disabled={saving} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-lg text-sm font-medium">{saving?'Saving…':'Save Rule'}</button>
             <button type="button" onClick={()=>setEditing(null)} className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white text-sm">Cancel</button>
@@ -106,4 +108,18 @@ export default function IntelligenceRulesPage() {
       )}
     </div>
   );
+}
+
+// v1345 slice 4: field help for this component (public.intelligence_rules.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'name', 'priority', 'trigger_condition', 'action', 'description',
+].map((name) => `public.intelligence_rules.${name}`)
+
+export default function IntelligenceRulesPage(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <IntelligenceRulesPageBody {...props} />
+    </FieldHelpScope>
+  )
 }

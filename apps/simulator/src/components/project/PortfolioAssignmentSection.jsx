@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { Briefcase, X, Search } from 'lucide-react'
 import { getPortfolioList } from '../../services/portfolioService'
 import { useAssignmentDropdownPlacement } from '@nidus/shared/hooks/useAssignmentDropdownPlacement'
@@ -16,7 +18,7 @@ function formatLoadError(err) {
  *   onChange     {(id, portfolio) => void}
  *   selection    {object|null} optional — { id, portfolio_code, portfolio_name } from parent
  */
-export default function PortfolioAssignmentSection({ portfolioId, onChange, selection = null }) {
+function PortfolioAssignmentSectionBody({ portfolioId, onChange, selection = null }) {
   const [portfolios, setPortfolios] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -98,7 +100,7 @@ export default function PortfolioAssignmentSection({ portfolioId, onChange, sele
   return (
     <div className="space-y-6">
       <div className="mb-4">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Portfolio Assignment</h2>
+        <FieldLabelWithHelp as="h2" helpKey="sim.projects.portfolio_id" className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Portfolio Assignment</FieldLabelWithHelp>
         <p className="text-sm text-gray-600 dark:text-gray-400">
           Optionally link this project to an existing portfolio. Leave blank if not applicable.
         </p>
@@ -133,13 +135,13 @@ export default function PortfolioAssignmentSection({ portfolioId, onChange, sele
         {selected && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Portfolio Code</label>
+              <FieldLabelWithHelp helpKey="sim.portfolios.portfolio_code" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Portfolio Code</FieldLabelWithHelp>
               <div className="px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300 font-mono text-sm">
                 {selected.portfolio_code || '—'}
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Portfolio Name</label>
+              <FieldLabelWithHelp helpKey="sim.portfolios.portfolio_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Portfolio Name</FieldLabelWithHelp>
               <div className="px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300 text-sm">
                 {selected.portfolio_name || '—'}
               </div>
@@ -232,5 +234,18 @@ export default function PortfolioAssignmentSection({ portfolioId, onChange, sele
         </div>
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.projects.portfolio_id',
+]
+
+export default function PortfolioAssignmentSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <PortfolioAssignmentSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

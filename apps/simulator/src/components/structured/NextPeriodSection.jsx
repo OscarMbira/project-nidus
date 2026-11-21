@@ -1,6 +1,8 @@
 import { Calendar } from 'lucide-react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 
-export default function NextPeriodSection({ formData, onChange, errors, mode }) {
+function NextPeriodSectionBody({ formData, onChange, errors, mode }) {
   return (
     <div className="space-y-6">
       <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
@@ -11,9 +13,9 @@ export default function NextPeriodSection({ formData, onChange, errors, mode }) 
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="sim.checkpoint_reports.next_period_products_developing" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Products Planned for Development
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={formData.next_period_products_developing || ''}
           onChange={(e) => onChange('next_period_products_developing', e.target.value)}
@@ -27,9 +29,9 @@ export default function NextPeriodSection({ formData, onChange, errors, mode }) 
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="sim.checkpoint_reports.next_period_products_completing" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Products Planned for Completion
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={formData.next_period_products_completing || ''}
           onChange={(e) => onChange('next_period_products_completing', e.target.value)}
@@ -43,9 +45,9 @@ export default function NextPeriodSection({ formData, onChange, errors, mode }) 
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="sim.checkpoint_reports.next_period_quality_activities" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Quality Activities Planned
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={formData.next_period_quality_activities || ''}
           onChange={(e) => onChange('next_period_quality_activities', e.target.value)}
@@ -58,5 +60,20 @@ export default function NextPeriodSection({ formData, onChange, errors, mode }) 
         />
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.checkpoint_reports.next_period_products_developing',
+  'sim.checkpoint_reports.next_period_products_completing',
+  'sim.checkpoint_reports.next_period_quality_activities',
+]
+
+export default function NextPeriodSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <NextPeriodSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

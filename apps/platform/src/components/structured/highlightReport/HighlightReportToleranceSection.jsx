@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { TrendingUp, AlertTriangle, CheckCircle } from 'lucide-react'
 import { getTolerances, getToleranceBreaches } from '../../../services/highlightReportToleranceService'
 import { calculateAllTolerances } from '../../../services/highlightReportToleranceService'
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
-export default function HighlightReportToleranceSection({ reportId, formData, onChange, mode }) {
+function HighlightReportToleranceSectionBody({ reportId, formData, onChange, mode }) {
   const [tolerances, setTolerances] = useState([])
   const [breaches, setBreaches] = useState([])
   const [loading, setLoading] = useState(false)
@@ -125,7 +127,7 @@ export default function HighlightReportToleranceSection({ reportId, formData, on
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Tolerance breaches summary</label>
+          <FieldLabelWithHelp helpKey="public.highlight_report_tolerances.tolerance_breaches_summary" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Tolerance breaches summary</FieldLabelWithHelp>
           <textarea
             value={formData.tolerance_breaches_summary || ''}
             onChange={(e) => onChange('tolerance_breaches_summary', e.target.value)}
@@ -135,7 +137,7 @@ export default function HighlightReportToleranceSection({ reportId, formData, on
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Tolerance warnings summary</label>
+          <FieldLabelWithHelp helpKey="public.highlight_report_tolerances.tolerance_warnings_summary" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Tolerance warnings summary</FieldLabelWithHelp>
           <textarea
             value={formData.tolerance_warnings_summary || ''}
             onChange={(e) => onChange('tolerance_warnings_summary', e.target.value)}
@@ -147,7 +149,7 @@ export default function HighlightReportToleranceSection({ reportId, formData, on
       </div>
 
       <div className="flex flex-wrap gap-4 items-center">
-        <label className="inline-flex items-center gap-2 cursor-pointer">
+        <FieldLabelWithHelp helpKey="public.highlight_reports.escalation_required" className="inline-flex items-center gap-2 cursor-pointer">
           <input
             type="checkbox"
             checked={!!formData.escalation_required}
@@ -156,11 +158,11 @@ export default function HighlightReportToleranceSection({ reportId, formData, on
             className="rounded border-gray-300 dark:border-gray-600"
           />
           <span className="text-sm text-gray-700 dark:text-gray-300">Escalation required</span>
-        </label>
+        </FieldLabelWithHelp>
       </div>
       {formData.escalation_required && (
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Escalation reason</label>
+          <FieldLabelWithHelp helpKey="public.highlight_report_tolerances.escalation_reason" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Escalation reason</FieldLabelWithHelp>
           <textarea
             value={formData.escalation_reason || ''}
             onChange={(e) => onChange('escalation_reason', e.target.value)}
@@ -171,5 +173,19 @@ export default function HighlightReportToleranceSection({ reportId, formData, on
         </div>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.highlight_report_tolerances.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'tolerance_breaches_summary', 'tolerance_warnings_summary', 'escalation_reason',
+].map((name) => `public.highlight_report_tolerances.${name}`)
+
+export default function HighlightReportToleranceSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <HighlightReportToleranceSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

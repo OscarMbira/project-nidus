@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { supabase } from '../../../services/supabaseClient';
 import { X, Calendar, Clock, MapPin, FileText, Users } from 'lucide-react';
 import { createBoardMeeting, updateBoardMeeting, fetchBoardMembers } from '../../../services/directingProjectService';
@@ -11,7 +13,7 @@ import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
-export default function BoardMeetingForm({ boardId, meeting, onClose, onSuccess }) {
+function BoardMeetingFormBody({ boardId, meeting, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [boardMembers, setBoardMembers] = useState([]);
   const [formTab, setFormTab] = useState('details');
@@ -165,10 +167,10 @@ export default function BoardMeetingForm({ boardId, meeting, onClose, onSuccess 
           <>
           {/* Meeting Title */}
           <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.board_meetings.meeting_title" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
               <FileText className="h-4 w-4" />
               Meeting Title *
-            </label>
+            </FieldLabelWithHelp>
             <input
               type="text"
               value={formData.meeting_title}
@@ -182,10 +184,10 @@ export default function BoardMeetingForm({ boardId, meeting, onClose, onSuccess 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Meeting Type */}
             <div>
-              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.board_meetings.meeting_type" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 <FileText className="h-4 w-4" />
                 Meeting Type *
-              </label>
+              </FieldLabelWithHelp>
               <select
                 value={formData.meeting_type}
                 onChange={(e) => setFormData({ ...formData, meeting_type: e.target.value })}
@@ -207,10 +209,10 @@ export default function BoardMeetingForm({ boardId, meeting, onClose, onSuccess 
 
             {/* Meeting Status */}
             <div>
-              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.board_meetings.meeting_status" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 <Clock className="h-4 w-4" />
                 Status *
-              </label>
+              </FieldLabelWithHelp>
               <select
                 value={formData.meeting_status}
                 onChange={(e) => setFormData({ ...formData, meeting_status: e.target.value })}
@@ -229,10 +231,10 @@ export default function BoardMeetingForm({ boardId, meeting, onClose, onSuccess 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Meeting Date */}
             <div>
-              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.board_meetings.meeting_date" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 <Calendar className="h-4 w-4" />
                 Meeting Date *
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="date"
                 value={formData.meeting_date}
@@ -244,10 +246,10 @@ export default function BoardMeetingForm({ boardId, meeting, onClose, onSuccess 
 
             {/* Start Time */}
             <div>
-              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.board_meetings.start_time" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 <Clock className="h-4 w-4" />
                 Start Time *
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="time"
                 value={formData.start_time}
@@ -259,10 +261,10 @@ export default function BoardMeetingForm({ boardId, meeting, onClose, onSuccess 
 
             {/* End Time */}
             <div>
-              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.board_meetings.end_time" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 <Clock className="h-4 w-4" />
                 End Time *
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="time"
                 value={formData.end_time}
@@ -275,10 +277,10 @@ export default function BoardMeetingForm({ boardId, meeting, onClose, onSuccess 
 
           {/* Location */}
           <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.board_meetings.location" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               <MapPin className="h-4 w-4" />
               Location
-            </label>
+            </FieldLabelWithHelp>
             <input
               type="text"
               value={formData.location}
@@ -290,10 +292,10 @@ export default function BoardMeetingForm({ boardId, meeting, onClose, onSuccess 
 
           {/* Meeting Purpose */}
           <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.board_meetings.meeting_purpose" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               <FileText className="h-4 w-4" />
               Meeting Purpose
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               value={formData.meeting_purpose}
               onChange={(e) => setFormData({ ...formData, meeting_purpose: e.target.value })}
@@ -305,10 +307,10 @@ export default function BoardMeetingForm({ boardId, meeting, onClose, onSuccess 
 
           {/* Agenda Items */}
           <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.board_meetings.agenda_items" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               <FileText className="h-4 w-4" />
               Agenda Items
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               value={formData.agenda_items}
               onChange={(e) => setFormData({ ...formData, agenda_items: e.target.value })}
@@ -325,10 +327,10 @@ export default function BoardMeetingForm({ boardId, meeting, onClose, onSuccess 
             <>
               {/* Minutes */}
               <div>
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.board_meetings.minutes" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   <FileText className="h-4 w-4" />
                   Meeting Minutes
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   value={formData.minutes}
                   onChange={(e) => setFormData({ ...formData, minutes: e.target.value })}
@@ -340,10 +342,10 @@ export default function BoardMeetingForm({ boardId, meeting, onClose, onSuccess 
 
               {/* Action Items */}
               <div>
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.board_meetings.action_items" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   <FileText className="h-4 w-4" />
                   Action Items
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   value={formData.action_items}
                   onChange={(e) => setFormData({ ...formData, action_items: e.target.value })}
@@ -399,4 +401,19 @@ export default function BoardMeetingForm({ boardId, meeting, onClose, onSuccess 
       </div>
     </div>
   );
+}
+
+// v1345 slice 4: field help for this component (public.board_meetings.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'meeting_title', 'meeting_type', 'meeting_status', 'meeting_date', 'start_time', 'end_time', 'location',
+  'meeting_purpose', 'agenda_items', 'minutes', 'action_items',
+].map((name) => `public.board_meetings.${name}`)
+
+export default function BoardMeetingForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <BoardMeetingFormBody {...props} />
+    </FieldHelpScope>
+  )
 }

@@ -4,6 +4,8 @@
  * they are managed in the dependency register).
  */
 import { useEffect, useMemo, useState } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { RowActionButton } from '@nidus/ui'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import PlanningTable from '../../components/PlanningTable.jsx'
@@ -13,7 +15,7 @@ import { DEPENDENCY_TYPES, dependencyShort } from '../../services/scheduleData.j
 
 const field = 'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white'
 
-export default function ScheduleDependenciesScreen() {
+function ScheduleDependenciesScreenBody() {
   const { projectId, loading: projectLoading } = useScheduleProjectId()
   const schedule = useSchedule(projectId, { withCalendar: false })
   const { showSuccess, modal } = useSuccessModal()
@@ -82,26 +84,26 @@ export default function ScheduleDependenciesScreen() {
           {tab === 'internal' ? (
             <>
               <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 grid grid-cols-1 md:grid-cols-5 gap-3 items-end">
-                <label className="md:col-span-2 text-xs text-gray-600 dark:text-gray-400">First task
+                <FieldLabelWithHelp helpKey="public.task_dependencies.predecessor" className="md:col-span-2 text-xs text-gray-600 dark:text-gray-400">First task
                   <select className={field} value={form.predecessorId} onChange={(e) => setForm({ ...form, predecessorId: e.target.value })}>
                     <option value="">Choose…</option>
                     {schedule.tasks.map((t) => <option key={t.id} value={t.id}>{t.task_name}</option>)}
                   </select>
-                </label>
-                <label className="md:col-span-2 text-xs text-gray-600 dark:text-gray-400">Then task
+                </FieldLabelWithHelp>
+                <FieldLabelWithHelp helpKey="public.task_dependencies.successor" className="md:col-span-2 text-xs text-gray-600 dark:text-gray-400">Then task
                   <select className={field} value={form.successorId} onChange={(e) => setForm({ ...form, successorId: e.target.value })}>
                     <option value="">Choose…</option>
                     {schedule.tasks.filter((t) => t.id !== form.predecessorId).map((t) => <option key={t.id} value={t.id}>{t.task_name}</option>)}
                   </select>
-                </label>
-                <label className="text-xs text-gray-600 dark:text-gray-400">Type
+                </FieldLabelWithHelp>
+                <FieldLabelWithHelp helpKey="public.task_dependencies.type" className="text-xs text-gray-600 dark:text-gray-400">Type
                   <select className={field} value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
                     {DEPENDENCY_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
                   </select>
-                </label>
-                <label className="text-xs text-gray-600 dark:text-gray-400">Lag (working days)
+                </FieldLabelWithHelp>
+                <FieldLabelWithHelp helpKey="public.task_dependencies.lag" className="text-xs text-gray-600 dark:text-gray-400">Lag (working days)
                   <input type="number" className={field} value={form.lag} onChange={(e) => setForm({ ...form, lag: e.target.value })} />
-                </label>
+                </FieldLabelWithHelp>
                 <div className="md:col-span-4 flex items-center gap-3">
                   <button type="button" onClick={add} disabled={!form.predecessorId || !form.successorId}
                     className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm disabled:opacity-50">Add link</button>
@@ -144,5 +146,19 @@ export default function ScheduleDependenciesScreen() {
       )}
       {modal}
     </ScheduleLayout>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.task_dependencies.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'predecessor', 'successor', 'type', 'lag',
+].map((name) => `public.task_dependencies.${name}`)
+
+export default function ScheduleDependenciesScreen(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ScheduleDependenciesScreenBody {...props} />
+    </FieldHelpScope>
   )
 }

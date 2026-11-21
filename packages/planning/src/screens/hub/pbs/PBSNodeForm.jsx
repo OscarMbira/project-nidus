@@ -5,6 +5,8 @@
  * detection as PBSBuilder.jsx, since this codebase's PBS pages are duplicated per app.
  */
 import { useState, useEffect, useMemo } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { ArrowLeft } from 'lucide-react'
@@ -32,7 +34,7 @@ const EMPTY_FORM = {
   parent_id: null,
 }
 
-export default function PBSNodeForm() {
+function PBSNodeFormBody() {
   const { pathname } = useLocation()
   const params = useParams()
   const [searchParams] = useSearchParams()
@@ -193,7 +195,7 @@ export default function PBSNodeForm() {
       )}
 
       <form onSubmit={save} className="space-y-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 mt-4">
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+        <FieldLabelWithHelp helpKey="public.plan_pbs_nodes.name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
           Name
           <input
             required
@@ -202,9 +204,9 @@ export default function PBSNodeForm() {
             disabled={!canEdit}
             className={`mt-1 ${inputClass}`}
           />
-        </label>
+        </FieldLabelWithHelp>
 
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+        <FieldLabelWithHelp helpKey="public.plan_pbs_nodes.product_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
           Type
           <select
             value={form.product_type}
@@ -216,9 +218,9 @@ export default function PBSNodeForm() {
             <option value="sub-product">sub-product</option>
             <option value="component">component</option>
           </select>
-        </label>
+        </FieldLabelWithHelp>
 
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+        <FieldLabelWithHelp helpKey="public.plan_pbs_nodes.description" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
           Description
           <textarea
             value={form.description}
@@ -227,10 +229,10 @@ export default function PBSNodeForm() {
             rows={3}
             className={`mt-1 ${inputClass}`}
           />
-        </label>
+        </FieldLabelWithHelp>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Acceptance criteria</label>
+          <FieldLabelWithHelp helpKey="public.plan_pbs_nodes.acceptance_criteria" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Acceptance criteria</FieldLabelWithHelp>
           <MultiLineListInput
             viewModeId="pbs-node-acceptance-criteria"
             id="pbs_node_acceptance_criteria"
@@ -243,7 +245,7 @@ export default function PBSNodeForm() {
           />
         </div>
 
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+        <FieldLabelWithHelp helpKey="public.plan_pbs_nodes.status" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
           Status
           <select
             value={form.status}
@@ -257,7 +259,7 @@ export default function PBSNodeForm() {
             <option value="approved">approved</option>
             <option value="rejected">rejected</option>
           </select>
-        </label>
+        </FieldLabelWithHelp>
 
         {canEdit && (
           <div className="flex justify-end gap-2 pt-2">
@@ -272,5 +274,19 @@ export default function PBSNodeForm() {
       </form>
       {modal}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.plan_pbs_nodes.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'name', 'product_type', 'description', 'acceptance_criteria', 'status',
+].map((name) => `public.plan_pbs_nodes.${name}`)
+
+export default function PBSNodeForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <PBSNodeFormBody {...props} />
+    </FieldHelpScope>
   )
 }

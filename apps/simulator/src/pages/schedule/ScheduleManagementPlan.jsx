@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { Link, useParams } from 'react-router-dom'
 import { useProjectRole } from '@nidus/shared/hooks/useProjectRole'
 import { getScheduleManagementPlanByProject, saveScheduleManagementPlan } from '../../services/scheduleManagementPlanService'
@@ -30,7 +32,7 @@ const SECTIONS = [
   },
 ]
 
-export default function ScheduleManagementPlan() {
+function ScheduleManagementPlanBody() {
   const { projectId } = useParams()
   const { canEdit } = useProjectRole(projectId)
   const [loading, setLoading] = useState(true)
@@ -168,7 +170,7 @@ export default function ScheduleManagementPlan() {
           ['schedule_model_maintenance', 'Schedule model maintenance'],
         ].map(([k, lab]) => (
           <div key={k}>
-            <label className="mb-1 block text-xs text-gray-600 dark:text-gray-400">{lab}</label>
+            <FieldLabelWithHelp helpKey={`sim.schedule_management_plans.${k}`} className="mb-1 block text-xs text-gray-600 dark:text-gray-400">{lab}</FieldLabelWithHelp>
             <textarea
               value={form[k]}
               onChange={(e) => setForm((f) => ({ ...f, [k]: e.target.value }))}
@@ -179,7 +181,7 @@ export default function ScheduleManagementPlan() {
           </div>
         ))}
         <div>
-          <label className="mb-1 block text-xs text-gray-600 dark:text-gray-400">Control thresholds (JSON)</label>
+          <FieldLabelWithHelp helpKey="sim.schedule_management_plans.control_thresholds_json" className="mb-1 block text-xs text-gray-600 dark:text-gray-400">Control thresholds (JSON)</FieldLabelWithHelp>
           <textarea
             value={form.control_thresholds_json}
             onChange={(e) => setForm((f) => ({ ...f, control_thresholds_json: e.target.value }))}
@@ -189,7 +191,7 @@ export default function ScheduleManagementPlan() {
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs text-gray-600 dark:text-gray-400">Variance thresholds (JSON)</label>
+          <FieldLabelWithHelp helpKey="sim.schedule_management_plans.variance_thresholds_json" className="mb-1 block text-xs text-gray-600 dark:text-gray-400">Variance thresholds (JSON)</FieldLabelWithHelp>
           <textarea
             value={form.variance_thresholds_json}
             onChange={(e) => setForm((f) => ({ ...f, variance_thresholds_json: e.target.value }))}
@@ -200,7 +202,7 @@ export default function ScheduleManagementPlan() {
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="mb-1 block text-xs text-gray-600 dark:text-gray-400">Status</label>
+            <FieldLabelWithHelp helpKey="sim.schedule_management_plans.status" className="mb-1 block text-xs text-gray-600 dark:text-gray-400">Status</FieldLabelWithHelp>
             <select
               value={form.status}
               onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
@@ -212,7 +214,7 @@ export default function ScheduleManagementPlan() {
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-xs text-gray-600 dark:text-gray-400">Version</label>
+            <FieldLabelWithHelp helpKey="sim.schedule_management_plans.version" className="mb-1 block text-xs text-gray-600 dark:text-gray-400">Version</FieldLabelWithHelp>
             <input
               value={form.version}
               onChange={(e) => setForm((f) => ({ ...f, version: e.target.value }))}
@@ -233,5 +235,27 @@ export default function ScheduleManagementPlan() {
         )}
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.schedule_management_plans.control_thresholds_json',
+  'sim.schedule_management_plans.variance_thresholds_json',
+  'sim.schedule_management_plans.status',
+  'sim.schedule_management_plans.version',
+  'sim.schedule_management_plans.scheduling_methodology',
+  'sim.schedule_management_plans.scheduling_tool',
+  'sim.schedule_management_plans.level_of_accuracy',
+  'sim.schedule_management_plans.units_of_measure',
+  'sim.schedule_management_plans.reporting_formats',
+  'sim.schedule_management_plans.schedule_model_maintenance',
+]
+
+export default function ScheduleManagementPlan(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ScheduleManagementPlanBody {...props} />
+    </FieldHelpScope>
   )
 }

@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { Link } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { getSystemAssignmentLimit, updateSystemAssignmentLimit } from '../../services/managerAssignmentService'
 
-export default function ManagerAssignmentSettings() {
+function ManagerAssignmentSettingsBody() {
   const [loading, setLoading] = useState(true)
   const [value, setValue] = useState(5)
   const [saving, setSaving] = useState(false)
@@ -68,9 +70,9 @@ export default function ManagerAssignmentSettings() {
           ) : (
             <>
               <div>
-                <label htmlFor="max-assign" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <FieldLabelWithHelp helpKey="sim.system_settings.max_manager_assignments" htmlFor="max-assign" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Maximum concurrent assignments per manager
-                </label>
+                </FieldLabelWithHelp>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
                   Current value: <strong className="text-gray-900 dark:text-white">{value}</strong> — counts only active (non-completed) projects, programmes, and portfolios.
                 </p>
@@ -96,5 +98,18 @@ export default function ManagerAssignmentSettings() {
         </form>
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.system_settings.max_manager_assignments',
+]
+
+export default function ManagerAssignmentSettings(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ManagerAssignmentSettingsBody {...props} />
+    </FieldHelpScope>
   )
 }

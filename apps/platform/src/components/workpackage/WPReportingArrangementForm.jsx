@@ -4,6 +4,8 @@
  */
 
 import { useState, useEffect } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { X, Save } from 'lucide-react'
 import { addReportingArrangement, updateReportingArrangement } from '../../services/wpReportingArrangementsService'
 import { supabase } from '../../services/supabaseClient'
@@ -14,7 +16,7 @@ import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
-export default function WPReportingArrangementForm({ wpId, arrangement = null, mode = 'create', projectId, onSave, onCancel }) {
+function WPReportingArrangementFormBody({ wpId, arrangement = null, mode = 'create', projectId, onSave, onCancel }) {
   const [formData, setFormData] = useState({
     report_type: 'checkpoint_report',
     report_frequency: '',
@@ -170,9 +172,9 @@ export default function WPReportingArrangementForm({ wpId, arrangement = null, m
         <>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <FieldLabelWithHelp helpKey="public.wp_reporting_arrangements.report_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Report Type
-            </label>
+            </FieldLabelWithHelp>
             <select
               name="report_type"
               value={formData.report_type}
@@ -188,9 +190,9 @@ export default function WPReportingArrangementForm({ wpId, arrangement = null, m
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <FieldLabelWithHelp helpKey="public.wp_reporting_arrangements.report_format" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Report Format
-            </label>
+            </FieldLabelWithHelp>
             <select
               name="report_format"
               value={formData.report_format}
@@ -206,9 +208,9 @@ export default function WPReportingArrangementForm({ wpId, arrangement = null, m
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <FieldLabelWithHelp helpKey="public.wp_reporting_arrangements.report_frequency" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Report Frequency
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             name="report_frequency"
@@ -220,9 +222,9 @@ export default function WPReportingArrangementForm({ wpId, arrangement = null, m
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <FieldLabelWithHelp helpKey="public.wp_reporting_arrangements.report_recipients" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Report Recipients
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             name="report_recipients"
             value={formData.report_recipients}
@@ -234,9 +236,9 @@ export default function WPReportingArrangementForm({ wpId, arrangement = null, m
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <FieldLabelWithHelp helpKey="public.wp_reporting_arrangements.report_owner" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" listOptions={false}>
             Report Owner
-          </label>
+          </FieldLabelWithHelp>
           <select
             name="report_owner"
             value={formData.report_owner || ''}
@@ -253,9 +255,9 @@ export default function WPReportingArrangementForm({ wpId, arrangement = null, m
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <FieldLabelWithHelp helpKey="public.wp_reporting_arrangements.report_template" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Report Template
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             name="report_template"
@@ -267,9 +269,9 @@ export default function WPReportingArrangementForm({ wpId, arrangement = null, m
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <FieldLabelWithHelp helpKey="public.wp_reporting_arrangements.report_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Report Description
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             name="report_description"
             value={formData.report_description}
@@ -303,5 +305,20 @@ export default function WPReportingArrangementForm({ wpId, arrangement = null, m
         </div>
       </form>
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.wp_reporting_arrangements.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'report_type', 'report_format', 'report_frequency', 'report_recipients', 'report_owner',
+  'report_template', 'report_description',
+].map((name) => `public.wp_reporting_arrangements.${name}`)
+
+export default function WPReportingArrangementForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <WPReportingArrangementFormBody {...props} />
+    </FieldHelpScope>
   )
 }

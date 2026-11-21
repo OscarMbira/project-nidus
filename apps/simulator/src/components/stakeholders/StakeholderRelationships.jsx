@@ -4,6 +4,8 @@
  */
 
 import { useState, useEffect, useCallback } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { Plus, Pencil, Trash2, ArrowRight } from 'lucide-react'
 import { getStakeholderRelationships, saveStakeholderRelationship, deleteStakeholderRelationship, getStakeholders } from '../../services/stakeholderService'
 
@@ -16,7 +18,7 @@ const REL_TYPES = [
   { value: 'depends-on', label: 'Depends on' },
 ]
 
-export default function StakeholderRelationships({ projectId, stakeholderId = null }) {
+function StakeholderRelationshipsBody({ projectId, stakeholderId = null }) {
   const [relationships, setRelationships] = useState([])
   const [stakeholders, setStakeholders] = useState([])
   const [loading, setLoading] = useState(true)
@@ -164,7 +166,7 @@ export default function StakeholderRelationships({ projectId, stakeholderId = nu
         <form onSubmit={handleSubmit} className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">From stakeholder *</label>
+              <FieldLabelWithHelp helpKey="sim.stakeholder_relationships.from_stakeholder_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required listOptions={false}>From stakeholder *</FieldLabelWithHelp>
               <select
                 value={form.from_stakeholder_id}
                 onChange={(e) => setForm((f) => ({ ...f, from_stakeholder_id: e.target.value }))}
@@ -179,7 +181,7 @@ export default function StakeholderRelationships({ projectId, stakeholderId = nu
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">To stakeholder *</label>
+              <FieldLabelWithHelp helpKey="sim.stakeholder_relationships.to_stakeholder_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required listOptions={false}>To stakeholder *</FieldLabelWithHelp>
               <select
                 value={form.to_stakeholder_id}
                 onChange={(e) => setForm((f) => ({ ...f, to_stakeholder_id: e.target.value }))}
@@ -195,7 +197,7 @@ export default function StakeholderRelationships({ projectId, stakeholderId = nu
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type *</label>
+              <FieldLabelWithHelp helpKey="sim.stakeholder_relationships.relationship_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>Type *</FieldLabelWithHelp>
               <select
                 value={form.relationship_type}
                 onChange={(e) => setForm((f) => ({ ...f, relationship_type: e.target.value }))}
@@ -207,7 +209,7 @@ export default function StakeholderRelationships({ projectId, stakeholderId = nu
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Strength (1–5)</label>
+              <FieldLabelWithHelp helpKey="sim.stakeholder_relationships.relationship_strength" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Strength (1–5)</FieldLabelWithHelp>
               <select
                 value={form.relationship_strength}
                 onChange={(e) => setForm((f) => ({ ...f, relationship_strength: e.target.value }))}
@@ -221,7 +223,7 @@ export default function StakeholderRelationships({ projectId, stakeholderId = nu
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</label>
+            <FieldLabelWithHelp helpKey="sim.stakeholder_relationships.notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</FieldLabelWithHelp>
             <textarea
               value={form.notes}
               onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
@@ -268,5 +270,22 @@ export default function StakeholderRelationships({ projectId, stakeholderId = nu
         )}
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.stakeholder_relationships.from_stakeholder_id',
+  'sim.stakeholder_relationships.to_stakeholder_id',
+  'sim.stakeholder_relationships.relationship_type',
+  'sim.stakeholder_relationships.relationship_strength',
+  'sim.stakeholder_relationships.notes',
+]
+
+export default function StakeholderRelationships(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <StakeholderRelationshipsBody {...props} />
+    </FieldHelpScope>
   )
 }

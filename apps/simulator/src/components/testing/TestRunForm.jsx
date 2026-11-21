@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import SelectField from '@nidus/ui/SelectField'
@@ -29,7 +31,7 @@ function formFromRun(run) {
   }
 }
 
-export default function TestRunForm({
+function TestRunFormBody({
   projectId,
   suites = [],
   run = null,
@@ -140,7 +142,7 @@ export default function TestRunForm({
         ) : (
         <>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Run name *</label>
+          <FieldLabelWithHelp helpKey="sim.test_runs.run_name" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1" required>Run name *</FieldLabelWithHelp>
           <input
             required
             value={form.run_name}
@@ -149,7 +151,7 @@ export default function TestRunForm({
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Suite *</label>
+          <FieldLabelWithHelp helpKey="sim.test_runs.suite_id" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1" required>Suite *</FieldLabelWithHelp>
           <SelectField
             id="test-run-suite"
             required
@@ -164,7 +166,7 @@ export default function TestRunForm({
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Environment</label>
+            <FieldLabelWithHelp helpKey="sim.test_runs.environment" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Environment</FieldLabelWithHelp>
             <select
               value={form.environment}
               onChange={(e) => setForm((f) => ({ ...f, environment: e.target.value }))}
@@ -183,7 +185,7 @@ export default function TestRunForm({
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Status</label>
+            <FieldLabelWithHelp helpKey="sim.test_runs.status" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Status</FieldLabelWithHelp>
             <select
               value={form.status}
               onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
@@ -198,7 +200,7 @@ export default function TestRunForm({
           </div>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Run date</label>
+          <FieldLabelWithHelp helpKey="sim.test_runs.run_date" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Run date</FieldLabelWithHelp>
           <input
             type="date"
             value={form.run_date}
@@ -207,7 +209,7 @@ export default function TestRunForm({
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Notes</label>
+          <FieldLabelWithHelp helpKey="sim.test_runs.notes" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Notes</FieldLabelWithHelp>
           <textarea
             value={form.notes}
             onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
@@ -237,5 +239,23 @@ export default function TestRunForm({
         </div>
       </form>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.test_runs.run_name',
+  'sim.test_runs.suite_id',
+  'sim.test_runs.environment',
+  'sim.test_runs.status',
+  'sim.test_runs.run_date',
+  'sim.test_runs.notes',
+]
+
+export default function TestRunForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <TestRunFormBody {...props} />
+    </FieldHelpScope>
   )
 }

@@ -9,6 +9,8 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -342,9 +344,9 @@ export function DraftExpiryConfig() {
             <>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.draft_expiry_config.entity_type" className="block text-sm font-medium text-gray-300 mb-2">
                   Entity Type (optional)
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   value={newConfig.entity_type}
                   onChange={(e) => setNewConfig(prev => ({ ...prev, entity_type: e.target.value }))}
@@ -360,9 +362,9 @@ export function DraftExpiryConfig() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.draft_expiry_config.project_type_id" className="block text-sm font-medium text-gray-300 mb-2">
                   Project Type (optional)
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   value={newConfig.project_type_id}
                   onChange={(e) => setNewConfig(prev => ({ ...prev, project_type_id: e.target.value }))}
@@ -378,9 +380,9 @@ export function DraftExpiryConfig() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.draft_expiry_config.expiry_days" className="block text-sm font-medium text-gray-300 mb-2">
                   Expiry Days
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="number"
                   min="1"
@@ -392,9 +394,9 @@ export function DraftExpiryConfig() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.draft_expiry_config.warning_days" className="block text-sm font-medium text-gray-300 mb-2">
                   Warning Days (before expiry)
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="number"
                   min="1"
@@ -494,4 +496,20 @@ function ConfigRow({ config, saving, onUpdate, onDelete, label, showDelete = tru
   );
 }
 
-export default DraftExpiryConfig;
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.draft_expiry_config.entity_type',
+  'sim.draft_expiry_config.project_type_id',
+  'sim.draft_expiry_config.expiry_days',
+  'sim.draft_expiry_config.warning_days',
+]
+
+function DraftExpiryConfigWithHelp(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <DraftExpiryConfig {...props} />
+    </FieldHelpScope>
+  )
+}
+
+export default DraftExpiryConfigWithHelp

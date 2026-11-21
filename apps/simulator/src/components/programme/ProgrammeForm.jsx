@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { X, Save, Target, User, DollarSign, Calendar, Trash2, Info } from 'lucide-react';
 import { saveProgramme } from '../../services/programmeService';
 import { getPortfolioCategories } from '../../services/portfolioCategoryService';
@@ -14,7 +16,7 @@ import AuditField from '@nidus/ui/AuditField';
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
 import { humanizeAuditToken } from '@nidus/shared/utils/auditDisplayUtils';
 
-export default function ProgrammeForm({ programme, onSave, onCancel, embedded = true }) {
+function ProgrammeFormBody({ programme, onSave, onCancel, embedded = true }) {
   const [formData, setFormData] = useState({
     programme_code: '',
     programme_name: '',
@@ -255,9 +257,9 @@ export default function ProgrammeForm({ programme, onSave, onCancel, embedded = 
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.programmes.programme_code" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Programme Code
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   name="programme_code"
@@ -268,9 +270,9 @@ export default function ProgrammeForm({ programme, onSave, onCancel, embedded = 
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.programmes.programme_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Programme Name *
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   name="programme_name"
@@ -282,9 +284,9 @@ export default function ProgrammeForm({ programme, onSave, onCancel, embedded = 
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.programmes.programme_status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Status *
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="programme_status"
                   value={formData.programme_status}
@@ -301,9 +303,9 @@ export default function ProgrammeForm({ programme, onSave, onCancel, embedded = 
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.programmes.programme_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Programme Type *
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="programme_type"
                   value={formData.programme_type}
@@ -321,9 +323,9 @@ export default function ProgrammeForm({ programme, onSave, onCancel, embedded = 
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.programmes.programme_category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Category
-                </label>
+                </FieldLabelWithHelp>
                 <SearchableSelect
                   options={categories.map((c) => ({
                     value: c.code || c.name,
@@ -341,9 +343,9 @@ export default function ProgrammeForm({ programme, onSave, onCancel, embedded = 
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.programmes.programme_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Description
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   name="programme_description"
                   value={formData.programme_description}
@@ -354,9 +356,9 @@ export default function ProgrammeForm({ programme, onSave, onCancel, embedded = 
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.programmes.programme_vision" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Vision
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   name="programme_vision"
                   value={formData.programme_vision}
@@ -368,9 +370,9 @@ export default function ProgrammeForm({ programme, onSave, onCancel, embedded = 
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.programmes.programme_mission" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Mission
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   name="programme_mission"
                   value={formData.programme_mission}
@@ -391,9 +393,9 @@ export default function ProgrammeForm({ programme, onSave, onCancel, embedded = 
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.programmes.programme_owner_user_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                   Programme Owner
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="programme_owner_user_id"
                   value={formData.programme_owner_user_id}
@@ -410,9 +412,9 @@ export default function ProgrammeForm({ programme, onSave, onCancel, embedded = 
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.programmes.programme_manager_user_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                   Programme Manager
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="programme_manager_user_id"
                   value={formData.programme_manager_user_id}
@@ -430,9 +432,9 @@ export default function ProgrammeForm({ programme, onSave, onCancel, embedded = 
 
               {portfolios.length > 0 && (
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="sim.programmes.portfolio_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                     Portfolio (optional)
-                  </label>
+                  </FieldLabelWithHelp>
                   <select
                     name="portfolio_id"
                     value={formData.portfolio_id}
@@ -459,9 +461,9 @@ export default function ProgrammeForm({ programme, onSave, onCancel, embedded = 
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.programmes.programme_start_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Start Date
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="date"
                   name="programme_start_date"
@@ -472,9 +474,9 @@ export default function ProgrammeForm({ programme, onSave, onCancel, embedded = 
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.programmes.programme_end_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   End Date
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="date"
                   name="programme_end_date"
@@ -495,9 +497,9 @@ export default function ProgrammeForm({ programme, onSave, onCancel, embedded = 
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.programmes.budget_currency" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Reporting Currency
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="budget_currency"
                   value={formData.budget_currency}
@@ -516,9 +518,9 @@ export default function ProgrammeForm({ programme, onSave, onCancel, embedded = 
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.programmes.budget_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Budget Type
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="budget_type"
                   value={formData.budget_type || ''}
@@ -539,9 +541,9 @@ export default function ProgrammeForm({ programme, onSave, onCancel, embedded = 
 
             <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-900">
               <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <FieldLabelWithHelp helpKey="sim.programmes.budget_categories" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Budget Categories
-                </label>
+                </FieldLabelWithHelp>
                 <button
                   type="button"
                   onClick={addBudgetItem}
@@ -657,9 +659,9 @@ export default function ProgrammeForm({ programme, onSave, onCancel, embedded = 
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.programmes.governance_model" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Governance Model
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="governance_model"
                   value={formData.governance_model}
@@ -674,9 +676,9 @@ export default function ProgrammeForm({ programme, onSave, onCancel, embedded = 
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.programmes.review_frequency" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Review Frequency
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="review_frequency"
                   value={formData.review_frequency}
@@ -690,9 +692,9 @@ export default function ProgrammeForm({ programme, onSave, onCancel, embedded = 
                 </select>
               </div>
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.programmes.delivery_methodology_track" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Delivery Methodology
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="delivery_methodology_track"
                   value={formData.delivery_methodology_track}
@@ -795,3 +797,33 @@ export default function ProgrammeForm({ programme, onSave, onCancel, embedded = 
   );
 }
 
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.programmes.programme_code',
+  'sim.programmes.programme_name',
+  'sim.programmes.programme_status',
+  'sim.programmes.programme_type',
+  'sim.programmes.programme_category',
+  'sim.programmes.programme_description',
+  'sim.programmes.programme_vision',
+  'sim.programmes.programme_mission',
+  'sim.programmes.programme_owner_user_id',
+  'sim.programmes.programme_manager_user_id',
+  'sim.programmes.portfolio_id',
+  'sim.programmes.programme_start_date',
+  'sim.programmes.programme_end_date',
+  'sim.programmes.budget_currency',
+  'sim.programmes.budget_type',
+  'sim.programmes.budget_categories',
+  'sim.programmes.governance_model',
+  'sim.programmes.review_frequency',
+  'sim.programmes.delivery_methodology_track',
+]
+
+export default function ProgrammeForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ProgrammeFormBody {...props} />
+    </FieldHelpScope>
+  )
+}

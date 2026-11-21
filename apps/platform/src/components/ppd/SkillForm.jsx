@@ -4,6 +4,8 @@
  */
 
 import { useState, useEffect } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { X, Save } from 'lucide-react'
 import { addSkill, updateSkill } from '../../services/ppdSkillsService'
 import { supabase } from '../../services/supabaseClient'
@@ -14,7 +16,7 @@ import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
-export default function SkillForm({ ppdId, skill = null, mode = 'create', onSave, onCancel }) {
+function SkillFormBody({ ppdId, skill = null, mode = 'create', onSave, onCancel }) {
   const [formData, setFormData] = useState({
     skill_name: '',
     skill_description: '',
@@ -150,9 +152,9 @@ export default function SkillForm({ ppdId, skill = null, mode = 'create', onSave
         {formTab === 'details' && (
         <>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <FieldLabelWithHelp helpKey="public.ppd_skills_required.skill_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
             Skill Name <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             name="skill_name"
@@ -168,9 +170,9 @@ export default function SkillForm({ ppdId, skill = null, mode = 'create', onSave
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <FieldLabelWithHelp helpKey="public.ppd_skills_required.skill_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Skill Description
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             name="skill_description"
             value={formData.skill_description}
@@ -183,9 +185,9 @@ export default function SkillForm({ ppdId, skill = null, mode = 'create', onSave
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <FieldLabelWithHelp helpKey="public.ppd_skills_required.skill_category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Skill Category
-            </label>
+            </FieldLabelWithHelp>
             <select
               name="skill_category"
               value={formData.skill_category}
@@ -202,9 +204,9 @@ export default function SkillForm({ ppdId, skill = null, mode = 'create', onSave
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <FieldLabelWithHelp helpKey="public.ppd_skills_required.proficiency_level" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Proficiency Level
-            </label>
+            </FieldLabelWithHelp>
             <select
               name="proficiency_level"
               value={formData.proficiency_level}
@@ -220,9 +222,9 @@ export default function SkillForm({ ppdId, skill = null, mode = 'create', onSave
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <FieldLabelWithHelp helpKey="public.ppd_skills_required.required_for" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Required For
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             name="required_for"
@@ -234,9 +236,9 @@ export default function SkillForm({ ppdId, skill = null, mode = 'create', onSave
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <FieldLabelWithHelp helpKey="public.ppd_skills_required.resource_area" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Resource Area
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             name="resource_area"
@@ -248,7 +250,7 @@ export default function SkillForm({ ppdId, skill = null, mode = 'create', onSave
         </div>
 
         <div>
-          <label className="flex items-center gap-2">
+          <FieldLabelWithHelp helpKey="public.ppd_skills_required.is_critical" className="flex items-center gap-2">
             <input
               type="checkbox"
               name="is_critical"
@@ -257,7 +259,7 @@ export default function SkillForm({ ppdId, skill = null, mode = 'create', onSave
               className="rounded border-gray-300 dark:border-gray-600"
             />
             <span className="text-sm text-gray-700 dark:text-gray-300">Critical skill</span>
-          </label>
+          </FieldLabelWithHelp>
         </div>
         </>
         )}
@@ -283,5 +285,20 @@ export default function SkillForm({ ppdId, skill = null, mode = 'create', onSave
         </div>
       </form>
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.ppd_skills_required.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'skill_name', 'skill_description', 'skill_category', 'proficiency_level', 'required_for',
+  'resource_area', 'is_critical',
+].map((name) => `public.ppd_skills_required.${name}`)
+
+export default function SkillForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <SkillFormBody {...props} />
+    </FieldHelpScope>
   )
 }

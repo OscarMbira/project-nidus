@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, Save, CheckCircle, Clock } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -98,7 +100,7 @@ function weeksInMonth(monthOpt, workingDays) {
   return weeks
 }
 
-export default function TimesheetEntryForm() {
+function TimesheetEntryFormBody() {
   const { id } = useParams()
   const [searchParams] = useSearchParams()
   const projectId = searchParams.get('projectId')
@@ -400,13 +402,13 @@ export default function TimesheetEntryForm() {
         <fieldset disabled={isLocked} className="rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800/40 p-5 space-y-4 disabled:opacity-60">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Date *</label>
+              <FieldLabelWithHelp helpKey="sim.timesheet_entries.entry_date" className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1" required>Date *</FieldLabelWithHelp>
               <p aria-hidden="true" className="text-xs mb-1 invisible">&nbsp;</p>
               <input type="date" name="entry_date" value={form.entry_date} onChange={handleChange}
                 className="w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2.5 text-sm text-gray-900 dark:text-slate-100 focus:border-blue-500 focus:outline-none" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Hours *</label>
+              <FieldLabelWithHelp helpKey="sim.timesheet_entries.hours_worked" className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1" required>Hours *</FieldLabelWithHelp>
               <p className="text-xs text-gray-500 dark:text-slate-500 mb-1">
                 {timesAreSet ? 'Calculated from start/end time' : 'Enter hours (e.g. 1.5, 2h, 7.5h)'}
               </p>
@@ -420,12 +422,12 @@ export default function TimesheetEntryForm() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Start Time</label>
+              <FieldLabelWithHelp helpKey="sim.timesheet_entries.start_time" className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Start Time</FieldLabelWithHelp>
               <input type="time" name="start_time" value={form.start_time} onChange={handleTimeChange}
                 className="w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2.5 text-sm text-gray-900 dark:text-slate-100 focus:border-blue-500 focus:outline-none" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">End Time</label>
+              <FieldLabelWithHelp helpKey="sim.timesheet_entries.end_time" className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">End Time</FieldLabelWithHelp>
               <input type="time" name="end_time" value={form.end_time} onChange={handleTimeChange}
                 className="w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2.5 text-sm text-gray-900 dark:text-slate-100 focus:border-blue-500 focus:outline-none" />
               <p className="text-xs text-gray-500 dark:text-slate-500 mt-1">Earlier than start time = spans past midnight</p>
@@ -434,7 +436,7 @@ export default function TimesheetEntryForm() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Work Category</label>
+              <FieldLabelWithHelp helpKey="sim.timesheet_entries.work_category" className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Work Category</FieldLabelWithHelp>
               <select name="work_category" value={form.work_category} onChange={handleChange}
                 className="w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2.5 text-sm text-gray-900 dark:text-slate-100 focus:border-blue-500 focus:outline-none">
                 {categories.map(c => (
@@ -446,7 +448,7 @@ export default function TimesheetEntryForm() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Location</label>
+              <FieldLabelWithHelp helpKey="sim.timesheet_entries.work_location" className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Location</FieldLabelWithHelp>
               <select name="work_location" value={form.work_location} onChange={handleChange}
                 className="w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2.5 text-sm text-gray-900 dark:text-slate-100 focus:border-blue-500 focus:outline-none">
                 <option value="onsite">Onsite</option>
@@ -457,7 +459,7 @@ export default function TimesheetEntryForm() {
 
           {record?.is_overtime && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Type</label>
+              <FieldLabelWithHelp helpKey="sim.timesheet_entries.overtime_type_code" className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Type</FieldLabelWithHelp>
               <select name="overtime_type_code" value={form.overtime_type_code} onChange={handleChange}
                 className="w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2.5 text-sm text-gray-900 dark:text-slate-100 focus:border-blue-500 focus:outline-none">
                 <option value="">Select type…</option>
@@ -467,7 +469,7 @@ export default function TimesheetEntryForm() {
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Activity / Task</label>
+            <FieldLabelWithHelp helpKey="sim.timesheet_entries.activity" className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Activity / Task</FieldLabelWithHelp>
             <input type="text" name="activity" value={form.activity}
               onChange={(e) => setForm((f) => ({ ...f, activity: e.target.value }))}
               placeholder="Describe the work done…"
@@ -476,7 +478,7 @@ export default function TimesheetEntryForm() {
 
           {isEdit && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Status</label>
+              <FieldLabelWithHelp helpKey="sim.timesheet_entries.status" className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Status</FieldLabelWithHelp>
               <select name="status" value={form.status} onChange={handleChange}
                 className="w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2.5 text-sm text-gray-900 dark:text-slate-100 focus:border-blue-500 focus:outline-none">
                 <option value="draft">Draft</option>
@@ -507,5 +509,26 @@ export default function TimesheetEntryForm() {
         )}
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.timesheet_entries.entry_date',
+  'sim.timesheet_entries.hours_worked',
+  'sim.timesheet_entries.start_time',
+  'sim.timesheet_entries.end_time',
+  'sim.timesheet_entries.work_category',
+  'sim.timesheet_entries.work_location',
+  'sim.timesheet_entries.overtime_type_code',
+  'sim.timesheet_entries.activity',
+  'sim.timesheet_entries.status',
+]
+
+export default function TimesheetEntryForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <TimesheetEntryFormBody {...props} />
+    </FieldHelpScope>
   )
 }

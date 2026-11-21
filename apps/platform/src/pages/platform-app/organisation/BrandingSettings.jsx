@@ -6,6 +6,8 @@
  * Optimised: loading state, no-account handling with retry, memoized defaults, cancel-safe save/reset.
  */
 import { useState, useEffect, useMemo, useRef } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useSearchParams } from 'react-router-dom'
 import { Palette, Image, Type, User, Save, RotateCcw, Building2, Loader2, CheckCircle, AlertCircle } from 'lucide-react'
 import { useBranding, applyBrandingToDOM } from '../../../lib/BrandingContext'
@@ -48,7 +50,7 @@ const LOGO_SLOTS = [
   { assetType: 'report_cover',  urlKey: 'report_cover_url',  label: 'Report Cover Image',    description: 'Cover image for exported reports/PDFs', recommendedSize: 'A4 ratio', maxSizeMB: 5 },
 ]
 
-export default function BrandingSettings() {
+function BrandingSettingsBody() {
   const [searchParams, setSearchParams] = useSearchParams()
   const initialTab = searchParams.get('tab') || 'identity'
   const [activeTab, setActiveTab] = useState(initialTab)
@@ -260,10 +262,10 @@ export default function BrandingSettings() {
           {activeTab === 'identity' && (
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 space-y-5">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <FieldLabelWithHelp helpKey="public.organisation_branding.app_display_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   App Display Name
                   <span className="ml-2 text-xs text-gray-400">({(form.app_display_name || '').length}/100)</span>
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   maxLength={100}
@@ -276,10 +278,10 @@ export default function BrandingSettings() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <FieldLabelWithHelp helpKey="public.organisation_branding.app_tagline" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Tagline
                   <span className="ml-2 text-xs text-gray-400">({(form.app_tagline || '').length}/200)</span>
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   maxLength={200}
@@ -338,9 +340,9 @@ export default function BrandingSettings() {
                 onChange={(font) => handleChange('font_family', font)}
               />
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                <FieldLabelWithHelp helpKey="public.organisation_branding.base_font_size" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                   Base font size
-                </label>
+                </FieldLabelWithHelp>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
                   System-wide base font size. All text that uses rem units will scale with this setting.
                 </p>
@@ -373,5 +375,19 @@ export default function BrandingSettings() {
         </div>
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.organisation_branding.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'app_display_name', 'app_tagline', 'base_font_size',
+].map((name) => `public.organisation_branding.${name}`)
+
+export default function BrandingSettings(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <BrandingSettingsBody {...props} />
+    </FieldHelpScope>
   )
 }

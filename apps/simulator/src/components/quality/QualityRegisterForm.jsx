@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { Save, FileText, Calendar, Target, CheckCircle } from 'lucide-react';
 import { saveQualityRegisterItem } from '../../services/qualityManagementService';
 import { supabase } from '../../services/supabaseClient';
@@ -15,7 +17,7 @@ import AuditField from '@nidus/ui/AuditField';
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
 
-export default function QualityRegisterForm({
+function QualityRegisterFormBody({
   item,
   projectId,
   onSave,
@@ -226,9 +228,9 @@ export default function QualityRegisterForm({
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.quality_register.product_reference" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Product Reference
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   name="product_reference"
@@ -240,9 +242,9 @@ export default function QualityRegisterForm({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.quality_register.product_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Product Name *
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   name="product_name"
@@ -255,9 +257,9 @@ export default function QualityRegisterForm({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.quality_register.product_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Product Type *
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="product_type"
                   value={formData.product_type}
@@ -275,9 +277,9 @@ export default function QualityRegisterForm({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.quality_register.product_category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Product Category
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   name="product_category"
@@ -289,9 +291,9 @@ export default function QualityRegisterForm({
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.quality_register.product_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Description
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   name="product_description"
                   value={formData.product_description}
@@ -312,9 +314,9 @@ export default function QualityRegisterForm({
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.quality_register.quality_method" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Quality Method *
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="quality_method"
                   value={formData.quality_method}
@@ -331,9 +333,9 @@ export default function QualityRegisterForm({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.quality_register.quality_owner_user_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                   Quality Owner
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="quality_owner_user_id"
                   value={formData.quality_owner_user_id}
@@ -350,9 +352,9 @@ export default function QualityRegisterForm({
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.quality_register.quality_responsibilities" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Quality Responsibilities
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   name="quality_responsibilities"
                   value={formData.quality_responsibilities}
@@ -364,9 +366,9 @@ export default function QualityRegisterForm({
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.quality_register.quality_criteria" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Quality Criteria
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   name="quality_criteria"
                   value={formData.quality_criteria}
@@ -378,9 +380,9 @@ export default function QualityRegisterForm({
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.quality_register.acceptance_criteria" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Acceptance Criteria
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   name="acceptance_criteria"
                   value={formData.acceptance_criteria}
@@ -401,9 +403,9 @@ export default function QualityRegisterForm({
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.quality_register.quality_review_planned_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Planned Review Date
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="date"
                   name="quality_review_planned_date"
@@ -414,9 +416,9 @@ export default function QualityRegisterForm({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.quality_register.defect_tolerance" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Defect Tolerance
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="number"
                   name="defect_tolerance"
@@ -436,16 +438,16 @@ export default function QualityRegisterForm({
                   onChange={handleChange}
                   className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                 />
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <FieldLabelWithHelp helpKey="sim.quality_register.sign_off_required" className="text-sm font-medium text-gray-700 dark:text-gray-300" required>
                   Sign-off Required
-                </label>
+                </FieldLabelWithHelp>
               </div>
 
               {formData.sign_off_required && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="sim.quality_register.sign_off_by_user_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                     Sign-off By
-                  </label>
+                  </FieldLabelWithHelp>
                   <select
                     name="sign_off_by_user_id"
                     value={formData.sign_off_by_user_id}
@@ -520,3 +522,25 @@ export default function QualityRegisterForm({
   );
 }
 
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.quality_register.product_reference',
+  'sim.quality_register.product_name',
+  'sim.quality_register.product_type',
+  'sim.quality_register.product_category',
+  'sim.quality_register.product_description',
+  'sim.quality_register.quality_method',
+  'sim.quality_register.quality_owner_user_id',
+  'sim.quality_register.quality_review_planned_date',
+  'sim.quality_register.defect_tolerance',
+  'sim.quality_register.sign_off_required',
+  'sim.quality_register.sign_off_by_user_id',
+]
+
+export default function QualityRegisterForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <QualityRegisterFormBody {...props} />
+    </FieldHelpScope>
+  )
+}

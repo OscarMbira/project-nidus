@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Save, Users, FolderKanban, Target, Calendar, AlertTriangle, TrendingUp } from 'lucide-react';
 import { saveCrossProjectAllocation, checkResourceConflicts } from '../../services/crossResourceService';
 import { getMyProjects } from '../../services/projectService';
@@ -17,7 +19,7 @@ import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/
 // and above (or any org-wide system role) may allocate beyond project scope.
 const HIGHER_TIER_MIN_ROLE_LEVEL = 10;
 
-export default function CrossProjectAllocationForm({ allocation, onSave, onCancel, variant = 'modal', backLabel = null }) {
+function CrossProjectAllocationFormBody({ allocation, onSave, onCancel, variant = 'modal', backLabel = null }) {
   const [formTab, setFormTab] = useState('details');
   const [auditUserLabels, setAuditUserLabels] = useState({});
   const [maxRoleLevel, setMaxRoleLevel] = useState(null); // null = still resolving
@@ -272,9 +274,9 @@ export default function CrossProjectAllocationForm({ allocation, onSave, onCance
               Resource Selection
             </h3>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.cross_project_resource_allocations.resource_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required listOptions={false}>
                 Resource *
-              </label>
+              </FieldLabelWithHelp>
               <select
                 name="resource_id"
                 value={formData.resource_id}
@@ -299,10 +301,10 @@ export default function CrossProjectAllocationForm({ allocation, onSave, onCance
             </h3>
             <div className={`grid grid-cols-1 gap-4 ${showHigherTierFields ? 'md:grid-cols-3' : 'md:max-w-xs'}`}>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+                <FieldLabelWithHelp helpKey="public.cross_project_resource_allocations.project_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2" listOptions={false}>
                   <FolderKanban className="h-4 w-4" />
                   Project
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="project_id"
                   value={formData.project_id}
@@ -325,10 +327,10 @@ export default function CrossProjectAllocationForm({ allocation, onSave, onCance
 
               {showHigherTierFields && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+                <FieldLabelWithHelp helpKey="public.cross_project_resource_allocations.portfolio_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2" listOptions={false}>
                   <Target className="h-4 w-4" />
                   Portfolio
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="portfolio_id"
                   value={formData.portfolio_id}
@@ -348,10 +350,10 @@ export default function CrossProjectAllocationForm({ allocation, onSave, onCance
 
               {showHigherTierFields && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+                <FieldLabelWithHelp helpKey="public.cross_project_resource_allocations.programme_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2" listOptions={false}>
                   <TrendingUp className="h-4 w-4" />
                   Programme
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="programme_id"
                   value={formData.programme_id}
@@ -379,9 +381,9 @@ export default function CrossProjectAllocationForm({ allocation, onSave, onCance
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.cross_project_resource_allocations.allocation_start_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Start Date *
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="date"
                   name="allocation_start_date"
@@ -393,9 +395,9 @@ export default function CrossProjectAllocationForm({ allocation, onSave, onCance
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.cross_project_resource_allocations.allocation_end_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   End Date
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="date"
                   name="allocation_end_date"
@@ -409,9 +411,9 @@ export default function CrossProjectAllocationForm({ allocation, onSave, onCance
 
           {/* Notes */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.cross_project_resource_allocations.allocation_notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Notes
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               name="allocation_notes"
               value={formData.allocation_notes}
@@ -433,9 +435,9 @@ export default function CrossProjectAllocationForm({ allocation, onSave, onCance
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.cross_project_resource_allocations.allocation_percentage" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Allocation Percentage *
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="number"
                   name="allocation_percentage"
@@ -451,9 +453,9 @@ export default function CrossProjectAllocationForm({ allocation, onSave, onCance
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.cross_project_resource_allocations.allocated_hours_per_week" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Hours per Week
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="number"
                   name="allocated_hours_per_week"
@@ -466,9 +468,9 @@ export default function CrossProjectAllocationForm({ allocation, onSave, onCance
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.cross_project_resource_allocations.allocation_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Allocation Type *
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="allocation_type"
                   value={formData.allocation_type}
@@ -484,9 +486,9 @@ export default function CrossProjectAllocationForm({ allocation, onSave, onCance
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.cross_project_resource_allocations.allocation_status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Status *
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="allocation_status"
                   value={formData.allocation_status}
@@ -503,9 +505,9 @@ export default function CrossProjectAllocationForm({ allocation, onSave, onCance
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.cross_project_resource_allocations.allocation_priority" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Priority
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="allocation_priority"
                   value={formData.allocation_priority}
@@ -527,9 +529,9 @@ export default function CrossProjectAllocationForm({ allocation, onSave, onCance
                   onChange={handleChange}
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 />
-                <label className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+                <FieldLabelWithHelp helpKey="public.cross_project_resource_allocations.is_critical_resource" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
                   Critical Resource
-                </label>
+                </FieldLabelWithHelp>
               </div>
             </div>
           </div>
@@ -599,4 +601,20 @@ export default function CrossProjectAllocationForm({ allocation, onSave, onCance
         )}
     </FormSurface>
   );
+}
+
+// v1345 slice 4: field help for this component (public.cross_project_resource_allocations.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'resource_id', 'project_id', 'portfolio_id', 'programme_id', 'allocation_start_date',
+  'allocation_end_date', 'allocation_notes', 'allocation_percentage', 'allocated_hours_per_week',
+  'allocation_type', 'allocation_status', 'allocation_priority', 'is_critical_resource',
+].map((name) => `public.cross_project_resource_allocations.${name}`)
+
+export default function CrossProjectAllocationForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <CrossProjectAllocationFormBody {...props} />
+    </FieldHelpScope>
+  )
 }

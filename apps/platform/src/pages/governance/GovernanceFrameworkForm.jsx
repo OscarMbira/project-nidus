@@ -6,6 +6,8 @@
  * Escalation: structured steps (Level · Escalate to · Timeframe · Notes) stored as escalation_path TEXT.
  */
 import { useState, useEffect } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Save, Shield, ArrowLeft, Plus } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -94,7 +96,7 @@ function stepsToLegacyText(steps) {
     .join('\n')
 }
 
-export default function GovernanceFrameworkForm() {
+function GovernanceFrameworkFormBody() {
   const { id } = useParams()
   const isEdit = Boolean(id)
   const navigate = useNavigate()
@@ -274,18 +276,18 @@ export default function GovernanceFrameworkForm() {
         ) : (
           <form onSubmit={handleSave} className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 space-y-5">
             <div>
-              <label className={lbl}>
+              <FieldLabelWithHelp helpKey="public.governance_frameworks.name" className={lbl} required>
                 Name <span className="text-red-500">*</span>
-              </label>
+              </FieldLabelWithHelp>
               <input className={inp} value={form.name} onChange={setField('name')} required disabled={saving} />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className={lbl}>Version</label>
+                <FieldLabelWithHelp helpKey="public.governance_frameworks.version" className={lbl}>Version</FieldLabelWithHelp>
                 <input className={inp} value={form.version} onChange={setField('version')} disabled={saving} />
               </div>
               <div>
-                <label className={lbl}>Status</label>
+                <FieldLabelWithHelp helpKey="public.governance_frameworks.status" className={lbl}>Status</FieldLabelWithHelp>
                 <SelectField
                   forceNative
                   options={STATUS_OPTIONS}
@@ -297,12 +299,12 @@ export default function GovernanceFrameworkForm() {
               </div>
             </div>
             <div>
-              <label className={lbl}>Description</label>
+              <FieldLabelWithHelp helpKey="public.governance_frameworks.description" className={lbl}>Description</FieldLabelWithHelp>
               <textarea className={`${inp} min-h-[5rem]`} value={form.description} onChange={setField('description')} disabled={saving} rows={3} />
             </div>
 
             <div className="space-y-1">
-              <label className={lbl}>Governance principles</label>
+              <FieldLabelWithHelp helpKey="public.governance_frameworks.principles" className={lbl}>Governance principles</FieldLabelWithHelp>
               <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">One principle per row.</p>
               <MultiLineListInput
                 viewModeId="gov-framework-principles"
@@ -318,7 +320,7 @@ export default function GovernanceFrameworkForm() {
             <div className="space-y-2">
               <div className="flex items-center justify-between gap-2">
                 <div>
-                  <label className={lbl}>Escalation path</label>
+                  <FieldLabelWithHelp helpKey="public.governance_frameworks.escalation_path" className={lbl}>Escalation path</FieldLabelWithHelp>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
                     Level, whom to escalate to, and timeframe (one step per row).
                   </p>
@@ -413,7 +415,7 @@ export default function GovernanceFrameworkForm() {
             </div>
 
             <div>
-              <label className={lbl}>Notes</label>
+              <FieldLabelWithHelp helpKey="public.governance_frameworks.notes" className={lbl}>Notes</FieldLabelWithHelp>
               <textarea className={`${inp} min-h-[5rem]`} value={form.notes} onChange={setField('notes')} disabled={saving} rows={3} />
             </div>
 
@@ -439,5 +441,19 @@ export default function GovernanceFrameworkForm() {
       </div>
       {modal}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.governance_frameworks.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'name', 'version', 'status', 'description', 'principles', 'escalation_path', 'notes',
+].map((name) => `public.governance_frameworks.${name}`)
+
+export default function GovernanceFrameworkForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <GovernanceFrameworkFormBody {...props} />
+    </FieldHelpScope>
   )
 }

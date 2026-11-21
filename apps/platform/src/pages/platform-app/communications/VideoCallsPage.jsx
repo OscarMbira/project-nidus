@@ -1,4 +1,6 @@
 import { useEffect, useState, useMemo } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import toast from 'react-hot-toast'
 import { Video, Plus, Search, ExternalLink, Calendar, Clock, Pencil, Trash2, X, Save } from 'lucide-react'
 import { platformDb } from '@nidus/supabase'
@@ -36,34 +38,34 @@ function CallForm({ initial, onSave, onCancel, saving }) {
     <div className="rounded-xl border border-blue-700 bg-slate-800 p-5 space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="sm:col-span-2">
-          <label className="block text-sm font-medium text-slate-300 mb-1">Title *</label>
+          <FieldLabelWithHelp helpKey="public.team_calls.title" className="block text-sm font-medium text-slate-300 mb-1" required>Title *</FieldLabelWithHelp>
           <input type="text" name="title" value={form.title} onChange={handleChange}
             className="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2.5 text-sm text-slate-100 focus:border-blue-500 focus:outline-none" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-300 mb-1">Scheduled Date & Time</label>
+          <FieldLabelWithHelp helpKey="public.team_calls.scheduled_at" className="block text-sm font-medium text-slate-300 mb-1">Scheduled Date & Time</FieldLabelWithHelp>
           <input type="datetime-local" name="scheduled_at" value={form.scheduled_at} onChange={handleChange}
             className="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2.5 text-sm text-slate-100 focus:border-blue-500 focus:outline-none" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-300 mb-1">Duration (minutes)</label>
+          <FieldLabelWithHelp helpKey="public.team_calls.duration_minutes" className="block text-sm font-medium text-slate-300 mb-1">Duration (minutes)</FieldLabelWithHelp>
           <input type="number" name="duration_minutes" value={form.duration_minutes} onChange={handleChange} min="1"
             className="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2.5 text-sm text-slate-100 focus:border-blue-500 focus:outline-none" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-300 mb-1">Join Link (Zoom / Teams / Meet)</label>
+          <FieldLabelWithHelp helpKey="public.team_calls.join_link" className="block text-sm font-medium text-slate-300 mb-1">Join Link (Zoom / Teams / Meet)</FieldLabelWithHelp>
           <input type="url" name="join_link" value={form.join_link} onChange={handleChange}
             placeholder="https://…"
             className="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2.5 text-sm text-slate-100 focus:border-blue-500 focus:outline-none" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-300 mb-1">Platform</label>
+          <FieldLabelWithHelp helpKey="public.team_calls.platform_name" className="block text-sm font-medium text-slate-300 mb-1">Platform</FieldLabelWithHelp>
           <input type="text" name="platform_name" value={form.platform_name} onChange={handleChange}
             placeholder="e.g. Zoom, Teams, Google Meet"
             className="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2.5 text-sm text-slate-100 focus:border-blue-500 focus:outline-none" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-300 mb-1">Status</label>
+          <FieldLabelWithHelp helpKey="public.team_calls.status" className="block text-sm font-medium text-slate-300 mb-1">Status</FieldLabelWithHelp>
           <select name="status" value={form.status} onChange={handleChange}
             className="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2.5 text-sm text-slate-100 focus:border-blue-500 focus:outline-none">
             {['scheduled','in_progress','completed','cancelled'].map(s => (
@@ -72,17 +74,17 @@ function CallForm({ initial, onSave, onCancel, saving }) {
           </select>
         </div>
         <div className="sm:col-span-2">
-          <label className="block text-sm font-medium text-slate-300 mb-1">Description / Agenda</label>
+          <FieldLabelWithHelp helpKey="public.team_calls.description" className="block text-sm font-medium text-slate-300 mb-1">Description / Agenda</FieldLabelWithHelp>
           <textarea name="description" value={form.description} onChange={handleChange} rows={3}
             className="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2.5 text-sm text-slate-100 focus:border-blue-500 focus:outline-none resize-y" />
         </div>
         <div className="sm:col-span-2">
-          <label className="block text-sm font-medium text-slate-300 mb-1">Notes / Minutes</label>
+          <FieldLabelWithHelp helpKey="public.team_calls.notes" className="block text-sm font-medium text-slate-300 mb-1">Notes / Minutes</FieldLabelWithHelp>
           <textarea name="notes" value={form.notes} onChange={handleChange} rows={2}
             className="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2.5 text-sm text-slate-100 focus:border-blue-500 focus:outline-none resize-y" />
         </div>
         <div className="sm:col-span-2">
-          <label className="block text-sm font-medium text-slate-300 mb-1">Recording Link</label>
+          <FieldLabelWithHelp helpKey="public.team_calls.recording_link" className="block text-sm font-medium text-slate-300 mb-1">Recording Link</FieldLabelWithHelp>
           <input type="url" name="recording_link" value={form.recording_link} onChange={handleChange}
             placeholder="https://…"
             className="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2.5 text-sm text-slate-100 focus:border-blue-500 focus:outline-none" />
@@ -102,7 +104,7 @@ function CallForm({ initial, onSave, onCancel, saving }) {
   )
 }
 
-export default function VideoCallsPage() {
+function VideoCallsPageBody() {
   const projectId = usePlanningProjectId()
   const [userId, setUserId] = useState(null)
   const [calls, setCalls] = useState([])
@@ -305,5 +307,20 @@ export default function VideoCallsPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.team_calls.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'title', 'scheduled_at', 'duration_minutes', 'join_link', 'platform_name', 'status', 'description',
+  'notes', 'recording_link',
+].map((name) => `public.team_calls.${name}`)
+
+export default function VideoCallsPage(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <VideoCallsPageBody {...props} />
+    </FieldHelpScope>
   )
 }

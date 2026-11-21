@@ -5,6 +5,8 @@
  * and revision history.
  */
 import { useState, useEffect, useCallback } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Link } from 'react-router-dom'
 import { ArrowLeft, Plus, Trash2, CheckCircle2, XCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -45,7 +47,7 @@ const APPROVAL_STYLES = {
   rejected: { text: 'text-red-700 dark:text-red-300', bg: 'bg-red-50 dark:bg-red-900/20', label: 'Rejected' },
 }
 
-export default function ProjectBudgetPage() {
+function ProjectBudgetPageBody() {
   const { projectId } = usePlatformProjectId()
   const { canManage, canManageAll, readOnlyExecutive } = useFinancialPermissions()
   const { showSuccess, modal } = useSuccessModal()
@@ -397,7 +399,7 @@ export default function ProjectBudgetPage() {
           </div>
         ) : activeTab === 'notes' ? (
           <div className="space-y-3 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4">
-            <label htmlFor="budget-notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Overall budget notes</label>
+            <FieldLabelWithHelp helpKey="public.projects.budget_notes" htmlFor="budget-notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Overall budget notes</FieldLabelWithHelp>
             <textarea
               id="budget-notes"
               rows={6}
@@ -478,5 +480,19 @@ export default function ProjectBudgetPage() {
       </div>
       {modal}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.projects.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'budget_notes',
+].map((name) => `public.projects.${name}`)
+
+export default function ProjectBudgetPage(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ProjectBudgetPageBody {...props} />
+    </FieldHelpScope>
   )
 }

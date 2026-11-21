@@ -1,7 +1,9 @@
 import { Settings, Calendar, User } from 'lucide-react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useState, useEffect } from 'react'
 
-export default function IssueReportDecisionSection({
+function IssueReportDecisionSectionBody({
   formData,
   onChange,
   errors = {},
@@ -37,7 +39,7 @@ export default function IssueReportDecisionSection({
 
       {/* Decision Required */}
       <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-        <label className="flex items-center gap-2">
+        <FieldLabelWithHelp helpKey="public.issue_reports.decision_required" className="flex items-center gap-2">
           <input
             type="checkbox"
             checked={formData.decision_required || false}
@@ -48,16 +50,16 @@ export default function IssueReportDecisionSection({
           <span className="text-sm font-medium text-gray-900 dark:text-white">
             Decision Required
           </span>
-        </label>
+        </FieldLabelWithHelp>
       </div>
 
       {formData.decision_required && (
         <div className="space-y-6">
           {/* Decision By */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.issue_reports.decision_by" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
               Decision By <span className="text-red-500">*</span>
-            </label>
+            </FieldLabelWithHelp>
             <input
               type="text"
               value={formData.decision_by || ''}
@@ -79,10 +81,10 @@ export default function IssueReportDecisionSection({
           {formData.report_status === 'closed' || formData.decision_date ? (
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.issue_reports.decision_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   <Calendar className="w-4 h-4 inline mr-1" />
                   Decision Date
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="date"
                   value={formData.decision_date || ''}
@@ -97,9 +99,9 @@ export default function IssueReportDecisionSection({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.issue_reports.decision_made" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Decision Made <span className="text-red-500">*</span>
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   value={formData.decision_made || ''}
                   onChange={(e) => onChange('decision_made', e.target.value)}
@@ -118,10 +120,10 @@ export default function IssueReportDecisionSection({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.issue_reports.decision_made_by_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                   <User className="w-4 h-4 inline mr-1" />
                   Decision Made By
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   value={formData.decision_made_by_id || ''}
                   onChange={(e) => onChange('decision_made_by_id', e.target.value || null)}
@@ -156,9 +158,9 @@ export default function IssueReportDecisionSection({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.issue_reports.decision_conditions" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Decision Conditions
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   value={formData.decision_conditions || ''}
                   onChange={(e) => onChange('decision_conditions', e.target.value)}
@@ -183,5 +185,20 @@ export default function IssueReportDecisionSection({
         </div>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.issue_reports.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'decision_required', 'decision_by', 'decision_date', 'decision_made', 'decision_made_by_id',
+  'decision_conditions',
+].map((name) => `public.issue_reports.${name}`)
+
+export default function IssueReportDecisionSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <IssueReportDecisionSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

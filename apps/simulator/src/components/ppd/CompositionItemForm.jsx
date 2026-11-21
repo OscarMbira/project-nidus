@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { supabase } from '../../services/supabaseClient'
 import { X, Save, Package } from 'lucide-react'
 import { addCompositionItem, updateCompositionItem } from '../../services/ppdCompositionService'
@@ -10,7 +12,7 @@ import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
-export default function CompositionItemForm({ item, ppdId, onSave, onCancel }) {
+function CompositionItemFormBody({ item, ppdId, onSave, onCancel }) {
   const [formData, setFormData] = useState({
     product_name: '',
     product_description: '',
@@ -194,9 +196,9 @@ export default function CompositionItemForm({ item, ppdId, onSave, onCancel }) {
           {formTab === 'details' && (
           <>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="sim.ppd_composition_items.product_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
               Product Name *
-            </label>
+            </FieldLabelWithHelp>
             <input
               type="text"
               name="product_name"
@@ -213,9 +215,9 @@ export default function CompositionItemForm({ item, ppdId, onSave, onCancel }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="sim.ppd_composition_items.product_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Product Description
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               name="product_description"
               value={formData.product_description}
@@ -228,9 +230,9 @@ export default function CompositionItemForm({ item, ppdId, onSave, onCancel }) {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.ppd_composition_items.product_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Product Type *
-              </label>
+              </FieldLabelWithHelp>
               <select
                 name="product_type"
                 value={formData.product_type}
@@ -248,9 +250,9 @@ export default function CompositionItemForm({ item, ppdId, onSave, onCancel }) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.ppd_composition_items.planned_delivery_stage" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Planned Delivery Stage
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="text"
                 name="planned_delivery_stage"
@@ -263,9 +265,9 @@ export default function CompositionItemForm({ item, ppdId, onSave, onCancel }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="sim.ppd_composition_items.linked_product_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
               Link to Product Deliverable
-            </label>
+            </FieldLabelWithHelp>
             <select
               name="linked_product_id"
               value={formData.linked_product_id}
@@ -282,9 +284,9 @@ export default function CompositionItemForm({ item, ppdId, onSave, onCancel }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="sim.ppd_composition_items.product_description_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
               Link to Product Description
-            </label>
+            </FieldLabelWithHelp>
             <select
               name="product_description_id"
               value={formData.product_description_id}
@@ -311,9 +313,9 @@ export default function CompositionItemForm({ item, ppdId, onSave, onCancel }) {
               onChange={handleChange}
               className="h-4 w-4 text-blue-600 rounded border-gray-300"
             />
-            <label className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+            <FieldLabelWithHelp helpKey="sim.ppd_composition_items.is_mandatory" className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
               Mandatory (must be delivered)
-            </label>
+            </FieldLabelWithHelp>
           </div>
           </>
           )}
@@ -338,5 +340,24 @@ export default function CompositionItemForm({ item, ppdId, onSave, onCancel }) {
         </form>
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.ppd_composition_items.product_name',
+  'sim.ppd_composition_items.product_description',
+  'sim.ppd_composition_items.product_type',
+  'sim.ppd_composition_items.planned_delivery_stage',
+  'sim.ppd_composition_items.linked_product_id',
+  'sim.ppd_composition_items.product_description_id',
+  'sim.ppd_composition_items.is_mandatory',
+]
+
+export default function CompositionItemForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <CompositionItemFormBody {...props} />
+    </FieldHelpScope>
   )
 }

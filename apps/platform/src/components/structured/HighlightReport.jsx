@@ -1,9 +1,11 @@
 import { useState } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { format, subDays } from 'date-fns'
 import { FileText, Save, X, Calendar } from 'lucide-react'
 import { createHighlightReport } from '../../services/controllingStageService'
 
-export default function HighlightReport({ projectId, stageBoundaryId, onSave, onCancel, embedded = false }) {
+function HighlightReportBody({ projectId, stageBoundaryId, onSave, onCancel, embedded = false }) {
   const [formData, setFormData] = useState({
     reporting_period_start: format(subDays(new Date(), 7), 'yyyy-MM-dd'),
     reporting_period_end: format(new Date(), 'yyyy-MM-dd'),
@@ -91,10 +93,10 @@ export default function HighlightReport({ projectId, stageBoundaryId, onSave, on
           {/* Report Period */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.highlight_reports.reporting_period_start" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 <Calendar className="h-4 w-4 inline mr-1" />
                 Reporting Period Start *
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="date"
                 name="reporting_period_start"
@@ -105,10 +107,10 @@ export default function HighlightReport({ projectId, stageBoundaryId, onSave, on
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.highlight_reports.reporting_period_end" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 <Calendar className="h-4 w-4 inline mr-1" />
                 Reporting Period End *
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="date"
                 name="reporting_period_end"
@@ -119,9 +121,9 @@ export default function HighlightReport({ projectId, stageBoundaryId, onSave, on
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.highlight_reports.report_title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Report Title
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="text"
                 name="report_title"
@@ -134,9 +136,9 @@ export default function HighlightReport({ projectId, stageBoundaryId, onSave, on
 
           {/* Executive Summary */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.highlight_reports.executive_summary" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
               Executive Summary *
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               name="executive_summary"
               value={formData.executive_summary}
@@ -151,9 +153,9 @@ export default function HighlightReport({ projectId, stageBoundaryId, onSave, on
           {/* Status */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.highlight_reports.stage_status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Stage Status
-              </label>
+              </FieldLabelWithHelp>
               <select
                 name="stage_status"
                 value={formData.stage_status}
@@ -167,9 +169,9 @@ export default function HighlightReport({ projectId, stageBoundaryId, onSave, on
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.highlight_reports.overall_status_summary" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Overall Status Summary
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 name="overall_status_summary"
                 value={formData.overall_status_summary}
@@ -185,9 +187,9 @@ export default function HighlightReport({ projectId, stageBoundaryId, onSave, on
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Progress</h3>
             <div className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.highlight_reports.progress_summary" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Progress Summary
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   name="progress_summary"
                   value={formData.progress_summary}
@@ -198,9 +200,9 @@ export default function HighlightReport({ projectId, stageBoundaryId, onSave, on
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.highlight_reports.completed_this_period" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Completed This Period
-                  </label>
+                  </FieldLabelWithHelp>
                   <textarea
                     name="completed_this_period"
                     value={formData.completed_this_period}
@@ -210,9 +212,9 @@ export default function HighlightReport({ projectId, stageBoundaryId, onSave, on
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.highlight_reports.planned_next_period" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Planned Next Period
-                  </label>
+                  </FieldLabelWithHelp>
                   <textarea
                     name="planned_next_period"
                     value={formData.planned_next_period}
@@ -230,9 +232,9 @@ export default function HighlightReport({ projectId, stageBoundaryId, onSave, on
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Budget & Schedule</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.highlight_reports.budget_status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Budget Status
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   name="budget_status"
                   value={formData.budget_status}
@@ -242,9 +244,9 @@ export default function HighlightReport({ projectId, stageBoundaryId, onSave, on
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.highlight_reports.budget_variance" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" isAmount>
                   Budget Variance
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="number"
                   name="budget_variance"
@@ -255,9 +257,9 @@ export default function HighlightReport({ projectId, stageBoundaryId, onSave, on
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.highlight_reports.schedule_status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Schedule Status
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   name="schedule_status"
                   value={formData.schedule_status}
@@ -267,9 +269,9 @@ export default function HighlightReport({ projectId, stageBoundaryId, onSave, on
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.highlight_reports.schedule_variance_days" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Schedule Variance (Days)
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="number"
                   name="schedule_variance_days"
@@ -286,9 +288,9 @@ export default function HighlightReport({ projectId, stageBoundaryId, onSave, on
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Risks & Issues</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.highlight_reports.risks_summary" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Risks Summary
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   name="risks_summary"
                   value={formData.risks_summary}
@@ -298,9 +300,9 @@ export default function HighlightReport({ projectId, stageBoundaryId, onSave, on
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.highlight_reports.issues_summary" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Issues Summary
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   name="issues_summary"
                   value={formData.issues_summary}
@@ -317,9 +319,9 @@ export default function HighlightReport({ projectId, stageBoundaryId, onSave, on
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Decisions & Recommendations</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.highlight_reports.decisions_required" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Decisions Required
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   name="decisions_required"
                   value={formData.decisions_required}
@@ -329,9 +331,9 @@ export default function HighlightReport({ projectId, stageBoundaryId, onSave, on
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.highlight_reports.recommendations" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Recommendations
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   name="recommendations"
                   value={formData.recommendations}
@@ -366,3 +368,19 @@ export default function HighlightReport({ projectId, stageBoundaryId, onSave, on
   )
 }
 
+// v1345 slice 4: field help for this component (public.highlight_reports.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'reporting_period_start', 'reporting_period_end', 'report_title', 'executive_summary', 'stage_status',
+  'overall_status_summary', 'progress_summary', 'completed_this_period', 'planned_next_period',
+  'budget_status', 'budget_variance', 'schedule_status', 'schedule_variance_days', 'risks_summary',
+  'issues_summary', 'decisions_required', 'recommendations',
+].map((name) => `public.highlight_reports.${name}`)
+
+export default function HighlightReport(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <HighlightReportBody {...props} />
+    </FieldHelpScope>
+  )
+}

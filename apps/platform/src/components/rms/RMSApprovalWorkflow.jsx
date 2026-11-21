@@ -4,11 +4,13 @@
  */
 
 import { useState, useEffect } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Send, CheckCircle, XCircle, Clock, Users, AlertCircle } from 'lucide-react'
 import { platformDb } from '@nidus/supabase'
 import { submitForApproval, approveRMS } from '../../services/riskManagementStrategyService'
 
-export default function RMSApprovalWorkflow({ rms, onUpdate }) {
+function RMSApprovalWorkflowBody({ rms, onUpdate }) {
   const [teamMembers, setTeamMembers] = useState([])
   const [selectedApprovers, setSelectedApprovers] = useState([])
   const [submitting, setSubmitting] = useState(false)
@@ -136,9 +138,9 @@ export default function RMSApprovalWorkflow({ rms, onUpdate }) {
           </h3>
           
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.rms_approvals.approver_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
               Select Approvers
-            </label>
+            </FieldLabelWithHelp>
             <div className="space-y-2 max-h-48 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-lg p-2">
               {teamMembers.map((member) => (
                 <label
@@ -243,5 +245,19 @@ export default function RMSApprovalWorkflow({ rms, onUpdate }) {
         </div>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.rms_approvals.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'approver_id',
+].map((name) => `public.rms_approvals.${name}`)
+
+export default function RMSApprovalWorkflow(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <RMSApprovalWorkflowBody {...props} />
+    </FieldHelpScope>
   )
 }

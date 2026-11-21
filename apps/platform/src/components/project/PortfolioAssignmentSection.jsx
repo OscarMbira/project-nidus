@@ -134,13 +134,13 @@ export default function PortfolioAssignmentSection({ portfolioId, onChange, sele
         {selected && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Portfolio Code</label>
+              <FieldLabelWithHelp helpKey="public.portfolios.portfolio_code" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Portfolio Code</FieldLabelWithHelp>
               <div className="px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300 font-mono text-sm">
                 {selected.portfolio_code || '—'}
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Portfolio Name</label>
+              <FieldLabelWithHelp helpKey="public.portfolios.portfolio_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Portfolio Name</FieldLabelWithHelp>
               <div className="px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300 text-sm">
                 {selected.portfolio_name || '—'}
               </div>

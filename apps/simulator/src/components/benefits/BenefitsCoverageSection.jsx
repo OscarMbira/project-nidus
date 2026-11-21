@@ -4,13 +4,15 @@
  */
 
 import { useState, useEffect } from 'react';
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { Target, Plus, AlertTriangle, CheckCircle, XCircle, Edit2, Trash2, Calendar, User } from 'lucide-react';
 import { getPlanBenefits, addBenefitToPlan, updateBenefitCoverage, removeBenefitFromPlan, getUnmappedBenefits } from '../../services/benefitsReviewPlanService';
 import { platformDb } from '../../services/supabaseClient';
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
-export default function BenefitsCoverageSection({ planId, projectId, onUpdate }) {
+function BenefitsCoverageSectionBody({ planId, projectId, onUpdate }) {
   const [coverage, setCoverage] = useState([]);
   const [unmappedBenefits, setUnmappedBenefits] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -205,9 +207,9 @@ export default function BenefitsCoverageSection({ planId, projectId, onUpdate })
           <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Add Benefit to Review Plan</h4>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.benefits_review_plan_benefits.benefit_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required listOptions={false}>
                 Select Benefit *
-              </label>
+              </FieldLabelWithHelp>
               <select
                 value={coverageData.benefit_id}
                 onChange={(e) => setCoverageData({ ...coverageData, benefit_id: e.target.value })}
@@ -227,9 +229,9 @@ export default function BenefitsCoverageSection({ planId, projectId, onUpdate })
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.benefits_review_plan_benefits.measurement_frequency" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Measurement Frequency
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   value={coverageData.measurement_frequency}
                   onChange={(e) => setCoverageData({ ...coverageData, measurement_frequency: e.target.value })}
@@ -246,9 +248,9 @@ export default function BenefitsCoverageSection({ planId, projectId, onUpdate })
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.benefits_review_plan_benefits.priority" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Priority
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   value={coverageData.priority}
                   onChange={(e) => setCoverageData({ ...coverageData, priority: e.target.value })}
@@ -262,9 +264,9 @@ export default function BenefitsCoverageSection({ planId, projectId, onUpdate })
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.benefits_review_plan_benefits.accountable_user_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                   Accountable Person
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   value={coverageData.accountable_user_id}
                   onChange={(e) => setCoverageData({ ...coverageData, accountable_user_id: e.target.value })}
@@ -280,9 +282,9 @@ export default function BenefitsCoverageSection({ planId, projectId, onUpdate })
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.benefits_review_plan_benefits.next_review_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Next Review Date
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="date"
                   value={coverageData.next_review_date}
@@ -293,9 +295,9 @@ export default function BenefitsCoverageSection({ planId, projectId, onUpdate })
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.benefits_review_plan_benefits.measurement_timing_reason" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Measurement Timing Reason
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={coverageData.measurement_timing_reason}
                 onChange={(e) => setCoverageData({ ...coverageData, measurement_timing_reason: e.target.value })}
@@ -334,9 +336,9 @@ export default function BenefitsCoverageSection({ planId, projectId, onUpdate })
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.benefits_review_plan_benefits.measurement_frequency" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Measurement Frequency
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   value={coverageData.measurement_frequency}
                   onChange={(e) => setCoverageData({ ...coverageData, measurement_frequency: e.target.value })}
@@ -353,9 +355,9 @@ export default function BenefitsCoverageSection({ planId, projectId, onUpdate })
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.benefits_review_plan_benefits.priority" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Priority
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   value={coverageData.priority}
                   onChange={(e) => setCoverageData({ ...coverageData, priority: e.target.value })}
@@ -369,9 +371,9 @@ export default function BenefitsCoverageSection({ planId, projectId, onUpdate })
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.benefits_review_plan_benefits.accountable_user_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                   Accountable Person
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   value={coverageData.accountable_user_id}
                   onChange={(e) => setCoverageData({ ...coverageData, accountable_user_id: e.target.value })}
@@ -387,9 +389,9 @@ export default function BenefitsCoverageSection({ planId, projectId, onUpdate })
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.benefits_review_plan_benefits.next_review_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Next Review Date
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="date"
                   value={coverageData.next_review_date}
@@ -400,9 +402,9 @@ export default function BenefitsCoverageSection({ planId, projectId, onUpdate })
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.benefits_review_plan_benefits.measurement_timing_reason" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Measurement Timing Reason
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={coverageData.measurement_timing_reason}
                 onChange={(e) => setCoverageData({ ...coverageData, measurement_timing_reason: e.target.value })}
@@ -525,4 +527,22 @@ export default function BenefitsCoverageSection({ planId, projectId, onUpdate })
       </div>
     </div>
   );
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.benefits_review_plan_benefits.benefit_id',
+  'sim.benefits_review_plan_benefits.measurement_frequency',
+  'sim.benefits_review_plan_benefits.priority',
+  'sim.benefits_review_plan_benefits.accountable_user_id',
+  'sim.benefits_review_plan_benefits.next_review_date',
+  'sim.benefits_review_plan_benefits.measurement_timing_reason',
+]
+
+export default function BenefitsCoverageSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <BenefitsCoverageSectionBody {...props} />
+    </FieldHelpScope>
+  )
 }

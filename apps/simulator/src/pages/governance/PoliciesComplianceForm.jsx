@@ -3,6 +3,8 @@
  * Route: /platform/governance/policies/create  |  /platform/governance/policies/:id/edit
  */
 import { useState, useEffect } from 'react';
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { useNavigate, useParams } from 'react-router-dom';
 import { Save, FileCheck, ArrowLeft } from 'lucide-react';
 import { platformDb } from '@nidus/supabase';
@@ -17,7 +19,7 @@ const inp = 'w-full rounded-lg border border-gray-600 bg-gray-700 text-gray-100 
 const lbl = 'block text-sm font-medium text-gray-300 mb-1';
 const EMPTY = {policy_name:'',category:'',status:'draft',compliance_owner:'',review_date:'',description:'',requirements:'',notes:''};
 
-export default function PoliciesComplianceForm() {
+function PoliciesComplianceFormBody() {
   const {id} = useParams(); const isEdit=Boolean(id);
   const navigate=useNavigate();
   const [form,setForm]=useState(EMPTY);
@@ -90,18 +92,18 @@ export default function PoliciesComplianceForm() {
         </div>
       ) : (
       <form onSubmit={handleSave} className="rounded-lg border border-gray-700 bg-gray-800 p-6 space-y-4">
-        <div><label className={lbl}>Policy Name <span className="text-red-400">*</span></label><input className={inp} value={form.policy_name} onChange={set('policy_name')} required/></div>
+        <div><FieldLabelWithHelp helpKey="sim.policies_compliance.policy_name" className={lbl} required>Policy Name <span className="text-red-400">*</span></FieldLabelWithHelp><input className={inp} value={form.policy_name} onChange={set('policy_name')} required/></div>
         <div className="grid grid-cols-2 gap-4">
-          <div><label className={lbl}>Category</label><input className={inp} value={form.category} onChange={set('category')} placeholder="e.g. Security, HR, Finance"/></div>
-          <div><label className={lbl}>Status</label><select className={inp} value={form.status} onChange={set('status')}>{['draft','active','archived'].map(s=><option key={s} value={s}>{s}</option>)}</select></div>
+          <div><FieldLabelWithHelp helpKey="sim.policies_compliance.category" className={lbl}>Category</FieldLabelWithHelp><input className={inp} value={form.category} onChange={set('category')} placeholder="e.g. Security, HR, Finance"/></div>
+          <div><FieldLabelWithHelp helpKey="sim.policies_compliance.status" className={lbl}>Status</FieldLabelWithHelp><select className={inp} value={form.status} onChange={set('status')}>{['draft','active','archived'].map(s=><option key={s} value={s}>{s}</option>)}</select></div>
         </div>
         <div className="grid grid-cols-2 gap-4">
-          <div><label className={lbl}>Compliance Owner</label><input className={inp} value={form.compliance_owner} onChange={set('compliance_owner')}/></div>
-          <div><label className={lbl}>Review Date</label><input type="date" className={inp} value={form.review_date} onChange={set('review_date')}/></div>
+          <div><FieldLabelWithHelp helpKey="sim.policies_compliance.compliance_owner" className={lbl} listOptions={false}>Compliance Owner</FieldLabelWithHelp><input className={inp} value={form.compliance_owner} onChange={set('compliance_owner')}/></div>
+          <div><FieldLabelWithHelp helpKey="sim.policies_compliance.review_date" className={lbl}>Review Date</FieldLabelWithHelp><input type="date" className={inp} value={form.review_date} onChange={set('review_date')}/></div>
         </div>
-        <div><label className={lbl}>Description</label><textarea className={`${inp} h-20 resize-none`} value={form.description} onChange={set('description')}/></div>
-        <div><label className={lbl}>Requirements</label><textarea className={`${inp} h-24 resize-none`} value={form.requirements} onChange={set('requirements')} placeholder="List compliance requirements…"/></div>
-        <div><label className={lbl}>Notes</label><textarea className={`${inp} h-20 resize-none`} value={form.notes} onChange={set('notes')}/></div>
+        <div><FieldLabelWithHelp helpKey="sim.policies_compliance.description" className={lbl}>Description</FieldLabelWithHelp><textarea className={`${inp} h-20 resize-none`} value={form.description} onChange={set('description')}/></div>
+        <div><FieldLabelWithHelp helpKey="sim.policies_compliance.requirements" className={lbl}>Requirements</FieldLabelWithHelp><textarea className={`${inp} h-24 resize-none`} value={form.requirements} onChange={set('requirements')} placeholder="List compliance requirements…"/></div>
+        <div><FieldLabelWithHelp helpKey="sim.policies_compliance.notes" className={lbl}>Notes</FieldLabelWithHelp><textarea className={`${inp} h-20 resize-none`} value={form.notes} onChange={set('notes')}/></div>
         <div className="flex gap-3 pt-2">
           <button type="submit" disabled={saving} className="flex items-center gap-2 px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-lg text-sm font-medium"><Save size={15}/>{saving?'Saving…':isEdit?'Update':'Create'}</button>
           <button type="button" onClick={()=>navigate(-1)} className="px-4 py-2 rounded-lg border border-gray-600 text-gray-300 hover:text-white text-sm">Cancel</button>
@@ -110,4 +112,24 @@ export default function PoliciesComplianceForm() {
       )}
     </div>
   );
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.policies_compliance.policy_name',
+  'sim.policies_compliance.category',
+  'sim.policies_compliance.status',
+  'sim.policies_compliance.compliance_owner',
+  'sim.policies_compliance.review_date',
+  'sim.policies_compliance.description',
+  'sim.policies_compliance.requirements',
+  'sim.policies_compliance.notes',
+]
+
+export default function PoliciesComplianceForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <PoliciesComplianceFormBody {...props} />
+    </FieldHelpScope>
+  )
 }

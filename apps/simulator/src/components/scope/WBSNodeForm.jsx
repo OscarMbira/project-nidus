@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
 import AuditCard from '@nidus/ui/AuditCard'
 import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 
-export default function WBSNodeForm({ initial, parentId, onSubmit, onCancel }) {
+function WBSNodeFormBody({ initial, parentId, onSubmit, onCancel }) {
   const [wbs_code, setWbsCode] = useState('')
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -54,24 +56,24 @@ export default function WBSNodeForm({ initial, parentId, onSubmit, onCancel }) {
         ) : (
         <div className="space-y-3">
           <div>
-            <label className="mb-1 block text-xs text-gray-400">WBS code</label>
+            <FieldLabelWithHelp helpKey="sim.wbs_nodes.wbs_code" className="mb-1 block text-xs text-gray-400">WBS code</FieldLabelWithHelp>
             <input value={wbs_code} onChange={(e) => setWbsCode(e.target.value)} className="w-full rounded-lg border border-gray-600 bg-gray-800 px-3 py-2 text-white" />
           </div>
           <div>
-            <label className="mb-1 block text-xs text-gray-400">Title *</label>
+            <FieldLabelWithHelp helpKey="sim.wbs_nodes.title" className="mb-1 block text-xs text-gray-400" required>Title *</FieldLabelWithHelp>
             <input value={title} onChange={(e) => setTitle(e.target.value)} className="w-full rounded-lg border border-gray-600 bg-gray-800 px-3 py-2 text-white" required />
           </div>
           <div>
-            <label className="mb-1 block text-xs text-gray-400">Description</label>
+            <FieldLabelWithHelp helpKey="sim.wbs_nodes.description" className="mb-1 block text-xs text-gray-400">Description</FieldLabelWithHelp>
             <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className="w-full rounded-lg border border-gray-600 bg-gray-800 px-3 py-2 text-white" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block text-xs text-gray-400">Level</label>
+              <FieldLabelWithHelp helpKey="sim.wbs_nodes.level_num" className="mb-1 block text-xs text-gray-400">Level</FieldLabelWithHelp>
               <input type="number" min={1} max={20} value={level_num} onChange={(e) => setLevelNum(Number(e.target.value))} className="w-full rounded-lg border border-gray-600 bg-gray-800 px-3 py-2 text-white" />
             </div>
             <div>
-              <label className="mb-1 block text-xs text-gray-400">Sort order</label>
+              <FieldLabelWithHelp helpKey="sim.wbs_nodes.sort_order" className="mb-1 block text-xs text-gray-400">Sort order</FieldLabelWithHelp>
               <input type="number" value={sort_order} onChange={(e) => setSortOrder(Number(e.target.value))} className="w-full rounded-lg border border-gray-600 bg-gray-800 px-3 py-2 text-white" />
             </div>
           </div>
@@ -102,5 +104,22 @@ export default function WBSNodeForm({ initial, parentId, onSubmit, onCancel }) {
         </div>
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.wbs_nodes.wbs_code',
+  'sim.wbs_nodes.title',
+  'sim.wbs_nodes.description',
+  'sim.wbs_nodes.level_num',
+  'sim.wbs_nodes.sort_order',
+]
+
+export default function WBSNodeForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <WBSNodeFormBody {...props} />
+    </FieldHelpScope>
   )
 }

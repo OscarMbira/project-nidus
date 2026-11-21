@@ -3,6 +3,8 @@
  * Routes: /platform/teams/:id  ·  /platform/teams/:id/edit
  */
 import { useEffect, useMemo, useState } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { ArrowLeft, Pencil } from 'lucide-react'
@@ -119,7 +121,7 @@ function RoleSkillsTable({ skills }) {
   )
 }
 
-export default function TeamDetail({ mode: modeProp }) {
+function TeamDetailBody({ mode: modeProp }) {
   const { id } = useParams()
   const navigate = useNavigate()
   const { showSuccess, modal } = useSuccessModal()
@@ -593,9 +595,9 @@ export default function TeamDetail({ mode: modeProp }) {
             className="space-y-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 sm:p-6"
           >
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="sim.teams.team_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
                 Team name *
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="text"
                 value={form.team_name}
@@ -605,9 +607,9 @@ export default function TeamDetail({ mode: modeProp }) {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="sim.teams.team_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Description
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={form.team_description}
                 onChange={(e) => setForm((f) => ({ ...f, team_description: e.target.value }))}
@@ -617,9 +619,9 @@ export default function TeamDetail({ mode: modeProp }) {
             </div>
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <FieldLabelWithHelp helpKey="sim.teams.team_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Team type
-                </label>
+                </FieldLabelWithHelp>
                 <SelectField
                   value={form.team_type}
                   onChange={handleTeamTypeChange}
@@ -632,9 +634,9 @@ export default function TeamDetail({ mode: modeProp }) {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <FieldLabelWithHelp helpKey="sim.teams.max_team_size" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Max team size
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="number"
                   min={1}
@@ -646,9 +648,9 @@ export default function TeamDetail({ mode: modeProp }) {
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="sim.teams.team_lead_user_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" listOptions={false}>
                 Team lead
-              </label>
+              </FieldLabelWithHelp>
               <SelectField
                 value={form.team_lead_user_id}
                 onChange={(v) => setForm((f) => ({ ...f, team_lead_user_id: v }))}
@@ -658,7 +660,7 @@ export default function TeamDetail({ mode: modeProp }) {
                 disabled={readOnly}
               />
             </div>
-            <label className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+            <FieldLabelWithHelp helpKey="sim.teams.is_active" className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
               <input
                 type="checkbox"
                 checked={form.is_active}
@@ -666,7 +668,7 @@ export default function TeamDetail({ mode: modeProp }) {
                 className="rounded border-gray-300 dark:border-gray-600"
               />
               Active
-            </label>
+            </FieldLabelWithHelp>
           </fieldset>
         )}
 
@@ -694,7 +696,7 @@ export default function TeamDetail({ mode: modeProp }) {
 
             {isEdit && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40 p-3">
-                <label className="block text-xs text-gray-700 dark:text-gray-200 md:col-span-2">
+                <FieldLabelWithHelp helpKey="sim.teams.user_id" className="block text-xs text-gray-700 dark:text-gray-200 md:col-span-2" listOptions={false}>
                   Member
                   <div className="mt-1">
                     <SelectField
@@ -708,8 +710,8 @@ export default function TeamDetail({ mode: modeProp }) {
                       disabled={!peopleOptions.length}
                     />
                   </div>
-                </label>
-                <label className="block text-xs text-gray-700 dark:text-gray-200 md:col-span-2">
+                </FieldLabelWithHelp>
+                <FieldLabelWithHelp helpKey="sim.teams.member_role" className="block text-xs text-gray-700 dark:text-gray-200 md:col-span-2">
                   Member role *
                   <div className="mt-1">
                     <SelectField
@@ -728,8 +730,8 @@ export default function TeamDetail({ mode: modeProp }) {
                   {memberDraft.member_role ? (
                     <RoleSkillsTable skills={skillsForRole(projectRoleRows, memberDraft.member_role)} />
                   ) : null}
-                </label>
-                <label className="block text-xs text-gray-700 dark:text-gray-200 md:col-span-2 max-w-xs">
+                </FieldLabelWithHelp>
+                <FieldLabelWithHelp helpKey="sim.teams.allocation_percentage" className="block text-xs text-gray-700 dark:text-gray-200 md:col-span-2 max-w-xs">
                   Allocation %
                   <input
                     type="number"
@@ -742,8 +744,8 @@ export default function TeamDetail({ mode: modeProp }) {
                     }
                     className="mt-1 w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2"
                   />
-                </label>
-                <label className="block text-xs text-gray-700 dark:text-gray-200">
+                </FieldLabelWithHelp>
+                <FieldLabelWithHelp helpKey="sim.teams.allocation_start_date" className="block text-xs text-gray-700 dark:text-gray-200">
                   Start date
                   <input
                     type="date"
@@ -753,8 +755,8 @@ export default function TeamDetail({ mode: modeProp }) {
                     }
                     className="mt-1 w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2"
                   />
-                </label>
-                <label className="block text-xs text-gray-700 dark:text-gray-200">
+                </FieldLabelWithHelp>
+                <FieldLabelWithHelp helpKey="sim.teams.allocation_end_date" className="block text-xs text-gray-700 dark:text-gray-200">
                   End date
                   <input
                     type="date"
@@ -765,8 +767,8 @@ export default function TeamDetail({ mode: modeProp }) {
                     }
                     className="mt-1 w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2"
                   />
-                </label>
-                <label className="block text-xs text-gray-700 dark:text-gray-200 md:col-span-2">
+                </FieldLabelWithHelp>
+                <FieldLabelWithHelp helpKey="sim.teams.member_comments" className="block text-xs text-gray-700 dark:text-gray-200 md:col-span-2">
                   Comments
                   <textarea
                     value={memberDraft.member_comments}
@@ -777,7 +779,7 @@ export default function TeamDetail({ mode: modeProp }) {
                     placeholder="Optional notes about this member on the team…"
                     className="mt-1 w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2"
                   />
-                </label>
+                </FieldLabelWithHelp>
                 <div className="flex items-end md:col-span-2">
                   <button
                     type="button"
@@ -971,7 +973,7 @@ export default function TeamDetail({ mode: modeProp }) {
 
         {isEdit && activeTab !== 'audit' && (
           <div className="mt-4 space-y-3">
-            <label className="block text-sm text-gray-700 dark:text-gray-200">
+            <FieldLabelWithHelp helpKey="sim.teams.change_reason" className="block text-sm text-gray-700 dark:text-gray-200">
               Change reason *
               <textarea
                 id="team-change-reason"
@@ -982,7 +984,7 @@ export default function TeamDetail({ mode: modeProp }) {
                 placeholder="Why are these team or member fields changing?"
                 className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2"
               />
-            </label>
+            </FieldLabelWithHelp>
             {isDirty && !String(changeReason || '').trim() && (
               <p className="text-xs text-amber-700 dark:text-amber-300">
                 Enter a change reason to save your edits.
@@ -1008,5 +1010,30 @@ export default function TeamDetail({ mode: modeProp }) {
         )}
       </form>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.teams.team_name',
+  'sim.teams.team_description',
+  'sim.teams.team_type',
+  'sim.teams.max_team_size',
+  'sim.teams.team_lead_user_id',
+  'sim.teams.is_active',
+  'sim.teams.user_id',
+  'sim.teams.member_role',
+  'sim.teams.allocation_percentage',
+  'sim.teams.allocation_start_date',
+  'sim.teams.allocation_end_date',
+  'sim.teams.member_comments',
+  'sim.teams.change_reason',
+]
+
+export default function TeamDetail(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <TeamDetailBody {...props} />
+    </FieldHelpScope>
   )
 }

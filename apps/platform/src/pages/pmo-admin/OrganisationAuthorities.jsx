@@ -5,6 +5,8 @@
  * Route: /platform/pmo-admin/authorities
  */
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useNavigate } from 'react-router-dom'
 import { ShieldCheck, Plus, LayoutGrid, List, Search, ArrowLeft, Save, X } from 'lucide-react'
 import { useViewMode } from '@nidus/shared/hooks/useViewMode'
@@ -42,7 +44,7 @@ const EMPTY_FORM = {
   description: '', is_active: true,
 }
 
-export default function OrganisationAuthorities() {
+function OrganisationAuthoritiesBody() {
   const navigate = useNavigate()
   const [viewMode, setViewMode] = useViewMode('pmo-organisation-authorities', 'list')
   const { showSuccess, modal: successModal } = useSuccessModal()
@@ -188,11 +190,11 @@ export default function OrganisationAuthorities() {
             <form onSubmit={handleSubmit} className="mt-4 space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Name *</label>
+                  <FieldLabelWithHelp helpKey="public.organisation_authorities.authority_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>Name *</FieldLabelWithHelp>
                   <input type="text" value={form.authority_name} onChange={(e) => setForm((f) => ({ ...f, authority_name: e.target.value }))} required placeholder="e.g. Change Request Approval" className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Type</label>
+                  <FieldLabelWithHelp helpKey="public.organisation_authorities.authority_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Type</FieldLabelWithHelp>
                   <select value={form.authority_type} onChange={(e) => setForm((f) => ({ ...f, authority_type: e.target.value }))} className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
                     {AUTHORITY_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
                   </select>
@@ -200,44 +202,44 @@ export default function OrganisationAuthorities() {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Min amount</label>
+                  <FieldLabelWithHelp helpKey="public.organisation_authorities.min_amount" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Min amount</FieldLabelWithHelp>
                   <input type="number" value={form.min_amount} onChange={(e) => setForm((f) => ({ ...f, min_amount: e.target.value }))} className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Max amount</label>
+                  <FieldLabelWithHelp helpKey="public.organisation_authorities.max_amount" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Max amount</FieldLabelWithHelp>
                   <input type="number" value={form.max_amount} onChange={(e) => setForm((f) => ({ ...f, max_amount: e.target.value }))} placeholder="No limit" className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Currency</label>
+                  <FieldLabelWithHelp helpKey="public.organisation_authorities.currency" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Currency</FieldLabelWithHelp>
                   <input type="text" value={form.currency} onChange={(e) => setForm((f) => ({ ...f, currency: e.target.value.toUpperCase() }))} maxLength={3} className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Approval level</label>
+                  <FieldLabelWithHelp helpKey="public.organisation_authorities.required_approval_level" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Approval level</FieldLabelWithHelp>
                   <input type="number" min={1} value={form.required_approval_level} onChange={(e) => setForm((f) => ({ ...f, required_approval_level: e.target.value }))} className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" />
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Delegated role</label>
+                  <FieldLabelWithHelp helpKey="public.organisation_authorities.delegated_role_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Delegated role</FieldLabelWithHelp>
                   <input type="text" value={form.delegated_role_name} onChange={(e) => setForm((f) => ({ ...f, delegated_role_name: e.target.value }))} placeholder="e.g. project_manager" className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Escalation role</label>
+                  <FieldLabelWithHelp helpKey="public.organisation_authorities.escalation_role_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Escalation role</FieldLabelWithHelp>
                   <input type="text" value={form.escalation_role_name} onChange={(e) => setForm((f) => ({ ...f, escalation_role_name: e.target.value }))} placeholder="e.g. pmo_admin" className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Escalate after (days)</label>
+                  <FieldLabelWithHelp helpKey="public.organisation_authorities.escalation_after_days" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Escalate after (days)</FieldLabelWithHelp>
                   <input type="number" min={1} value={form.escalation_after_days} onChange={(e) => setForm((f) => ({ ...f, escalation_after_days: e.target.value }))} className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</label>
+                <FieldLabelWithHelp helpKey="public.organisation_authorities.description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</FieldLabelWithHelp>
                 <textarea value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} rows={2} className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" />
               </div>
-              <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+              <FieldLabelWithHelp helpKey="public.organisation_authorities.is_active" className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
                 <input type="checkbox" checked={form.is_active} onChange={(e) => setForm((f) => ({ ...f, is_active: e.target.checked }))} className="rounded border-gray-300 dark:border-gray-600" />
                 Active
-              </label>
+              </FieldLabelWithHelp>
               <div className="flex gap-3 pt-2">
                 <button type="submit" disabled={saving} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50">
                   <Save className="h-4 w-4" /> {saving ? 'Saving…' : editing ? 'Save Changes' : 'Create'}
@@ -332,5 +334,20 @@ export default function OrganisationAuthorities() {
       </div>
       {successModal}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.organisation_authorities.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'authority_name', 'authority_type', 'min_amount', 'max_amount', 'currency', 'required_approval_level',
+  'delegated_role_name', 'escalation_role_name', 'escalation_after_days', 'description', 'is_active',
+].map((name) => `public.organisation_authorities.${name}`)
+
+export default function OrganisationAuthorities(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <OrganisationAuthoritiesBody {...props} />
+    </FieldHelpScope>
   )
 }

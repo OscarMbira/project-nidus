@@ -2,6 +2,8 @@
  * Practice Team create — /simulator/practice-teams/create
  */
 import { useMemo, useState } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
@@ -24,7 +26,7 @@ const EMPTY_FORM = {
   team_type: 'delivery',
 }
 
-export default function PracticeTeamCreate() {
+function PracticeTeamCreateBody() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const projectId = searchParams.get('projectId')
@@ -127,7 +129,7 @@ export default function PracticeTeamCreate() {
           onSubmit={save}
           className="mt-4 max-w-2xl space-y-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4"
         >
-          <label className="block text-xs text-gray-700 dark:text-gray-200">
+          <FieldLabelWithHelp helpKey="sim.practice_teams.team_name" className="block text-xs text-gray-700 dark:text-gray-200" required>
             Team name <span className="text-red-500">*</span>
             <input
               required
@@ -135,9 +137,9 @@ export default function PracticeTeamCreate() {
               onChange={(e) => setField('team_name', e.target.value)}
               className="mt-1 w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2"
             />
-          </label>
+          </FieldLabelWithHelp>
 
-          <label className="block text-xs text-gray-700 dark:text-gray-200">
+          <FieldLabelWithHelp helpKey="sim.practice_teams.team_description" className="block text-xs text-gray-700 dark:text-gray-200">
             Description
             <textarea
               value={form.team_description}
@@ -145,9 +147,9 @@ export default function PracticeTeamCreate() {
               rows={3}
               className="mt-1 w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2"
             />
-          </label>
+          </FieldLabelWithHelp>
 
-          <label className="block text-xs text-gray-700 dark:text-gray-200">
+          <FieldLabelWithHelp helpKey="sim.practice_teams.team_type" className="block text-xs text-gray-700 dark:text-gray-200">
             Team type
             <div className="mt-1">
               <SelectField
@@ -157,7 +159,7 @@ export default function PracticeTeamCreate() {
                 forceNative
               />
             </div>
-          </label>
+          </FieldLabelWithHelp>
 
           <div className="flex gap-2 pt-2">
             <button
@@ -184,5 +186,19 @@ export default function PracticeTeamCreate() {
         </p>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (sim.practice_teams.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'team_name', 'team_description', 'team_type',
+].map((name) => `sim.practice_teams.${name}`)
+
+export default function PracticeTeamCreate(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <PracticeTeamCreateBody {...props} />
+    </FieldHelpScope>
   )
 }

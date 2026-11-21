@@ -4,11 +4,13 @@
  */
 
 import { useState, useEffect } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Plus, X, Edit2, CheckCircle, Clock, User } from 'lucide-react'
 import { getRecommendations, addRecommendation, updateRecommendation, deleteRecommendation, syncRecommendationsFromLessons } from '../../services/lessonsReportRecommendationService'
 import { platformDb } from '@nidus/supabase'
 
-export default function LessonsReportRecommendationsSection({
+function LessonsReportRecommendationsSectionBody({
   reportId,
   readOnly = false
 }) {
@@ -292,9 +294,9 @@ export default function LessonsReportRecommendationsSection({
             </h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <FieldLabelWithHelp helpKey="public.lessons_report_recommendations.recommendation_title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
                   Recommendation Title <span className="text-red-500">*</span>
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   value={formData.recommendation_title}
@@ -304,9 +306,9 @@ export default function LessonsReportRecommendationsSection({
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <FieldLabelWithHelp helpKey="public.lessons_report_recommendations.recommendation_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
                   Description <span className="text-red-500">*</span>
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   value={formData.recommendation_description}
                   onChange={(e) => setFormData({ ...formData, recommendation_description: e.target.value })}
@@ -317,9 +319,9 @@ export default function LessonsReportRecommendationsSection({
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <FieldLabelWithHelp helpKey="public.lessons_report_recommendations.recommendation_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Type
-                  </label>
+                  </FieldLabelWithHelp>
                   <select
                     value={formData.recommendation_type}
                     onChange={(e) => setFormData({ ...formData, recommendation_type: e.target.value })}
@@ -333,9 +335,9 @@ export default function LessonsReportRecommendationsSection({
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <FieldLabelWithHelp helpKey="public.lessons_report_recommendations.priority" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Priority
-                  </label>
+                  </FieldLabelWithHelp>
                   <select
                     value={formData.priority}
                     onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
@@ -348,9 +350,9 @@ export default function LessonsReportRecommendationsSection({
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <FieldLabelWithHelp helpKey="public.lessons_report_recommendations.responsible_party_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" listOptions={false}>
                   Responsible Party
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   value={formData.responsible_party_id || ''}
                   onChange={(e) => setFormData({ ...formData, responsible_party_id: e.target.value || null })}
@@ -370,9 +372,9 @@ export default function LessonsReportRecommendationsSection({
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <FieldLabelWithHelp helpKey="public.lessons_report_recommendations.target_implementation_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Target Implementation Date
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="date"
                   value={formData.target_implementation_date || ''}
@@ -403,5 +405,20 @@ export default function LessonsReportRecommendationsSection({
         </div>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.lessons_report_recommendations.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'recommendation_title', 'recommendation_description', 'recommendation_type', 'priority',
+  'responsible_party_id', 'target_implementation_date',
+].map((name) => `public.lessons_report_recommendations.${name}`)
+
+export default function LessonsReportRecommendationsSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <LessonsReportRecommendationsSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

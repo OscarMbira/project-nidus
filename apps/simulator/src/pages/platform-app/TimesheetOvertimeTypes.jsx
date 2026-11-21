@@ -7,6 +7,8 @@
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { useNavigate } from 'react-router-dom';
 import { Plus, ArrowLeft, Save, X } from 'lucide-react';
 import { toast } from 'react-hot-toast';
@@ -30,7 +32,7 @@ const DEFAULT_FORM = {
   is_active: true,
 };
 
-export default function TimesheetOvertimeTypes() {
+function TimesheetOvertimeTypesBody() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [types, setTypes] = useState([]);
@@ -212,9 +214,9 @@ export default function TimesheetOvertimeTypes() {
             <form onSubmit={handleSubmit} className="space-y-4 mt-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="sim.timesheet_overtime_types.code" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                     Code *
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="text"
                     value={formData.code}
@@ -225,9 +227,9 @@ export default function TimesheetOvertimeTypes() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="sim.timesheet_overtime_types.name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                     Name *
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="text"
                     value={formData.name}
@@ -240,9 +242,9 @@ export default function TimesheetOvertimeTypes() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.timesheet_overtime_types.description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Description
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   value={formData.description}
                   onChange={(e) => handleFormChange('description', e.target.value)}
@@ -254,9 +256,9 @@ export default function TimesheetOvertimeTypes() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="sim.timesheet_overtime_types.sort_order" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Sort Order
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="number"
                     value={formData.sort_order}
@@ -273,9 +275,9 @@ export default function TimesheetOvertimeTypes() {
                     onChange={(e) => handleFormChange('is_active', e.target.checked)}
                     className="w-4 h-4 text-blue-600 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500"
                   />
-                  <label htmlFor="is_active" className="text-sm text-gray-700 dark:text-gray-300">
+                  <FieldLabelWithHelp helpKey="sim.timesheet_overtime_types.is_active" htmlFor="is_active" className="text-sm text-gray-700 dark:text-gray-300">
                     Active
-                  </label>
+                  </FieldLabelWithHelp>
                 </div>
               </div>
 
@@ -380,4 +382,21 @@ export default function TimesheetOvertimeTypes() {
       </div>
     </div>
   );
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.timesheet_overtime_types.code',
+  'sim.timesheet_overtime_types.name',
+  'sim.timesheet_overtime_types.description',
+  'sim.timesheet_overtime_types.sort_order',
+  'sim.timesheet_overtime_types.is_active',
+]
+
+export default function TimesheetOvertimeTypes(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <TimesheetOvertimeTypesBody {...props} />
+    </FieldHelpScope>
+  )
 }

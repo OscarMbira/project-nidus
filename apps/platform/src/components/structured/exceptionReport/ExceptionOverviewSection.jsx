@@ -1,6 +1,8 @@
 import { AlertTriangle, TrendingDown, TrendingUp } from 'lucide-react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
-export default function ExceptionOverviewSection({ formData, onChange, errors, mode, exceptionData }) {
+function ExceptionOverviewSectionBody({ formData, onChange, errors, mode, exceptionData }) {
   return (
     <div className="space-y-6">
       <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
@@ -16,9 +18,9 @@ export default function ExceptionOverviewSection({ formData, onChange, errors, m
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="public.exception_reports.exception_title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
           Exception Title *
-        </label>
+        </FieldLabelWithHelp>
         <input
           type="text"
           value={formData.exception_title || ''}
@@ -36,9 +38,9 @@ export default function ExceptionOverviewSection({ formData, onChange, errors, m
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="public.exception_reports.exception_summary" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Exception Summary
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={formData.exception_summary || ''}
           onChange={(e) => onChange('exception_summary', e.target.value)}
@@ -51,9 +53,9 @@ export default function ExceptionOverviewSection({ formData, onChange, errors, m
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.exception_reports.tolerance_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Tolerance Type *
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={formData.tolerance_type || ''}
             onChange={(e) => onChange('tolerance_type', e.target.value || null)}
@@ -78,9 +80,9 @@ export default function ExceptionOverviewSection({ formData, onChange, errors, m
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.exception_reports.is_forecast_breach" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Is Forecast Breach?
-          </label>
+          </FieldLabelWithHelp>
           <div className="flex items-center space-x-4 mt-2">
             <label className="flex items-center">
               <input
@@ -110,9 +112,9 @@ export default function ExceptionOverviewSection({ formData, onChange, errors, m
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.exception_reports.tolerance_threshold" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Tolerance Threshold
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             value={formData.tolerance_threshold || ''}
@@ -124,9 +126,9 @@ export default function ExceptionOverviewSection({ formData, onChange, errors, m
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.exception_reports.actual_value" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Actual Value
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             value={formData.actual_value || ''}
@@ -140,9 +142,9 @@ export default function ExceptionOverviewSection({ formData, onChange, errors, m
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.exception_reports.variance_amount" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" isAmount>
             Variance Amount
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             value={formData.variance_amount || ''}
@@ -154,9 +156,9 @@ export default function ExceptionOverviewSection({ formData, onChange, errors, m
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.exception_reports.variance_percentage" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Variance Percentage (%)
-          </label>
+          </FieldLabelWithHelp>
           <div className="relative">
             {formData.variance_percentage !== null && formData.variance_percentage !== undefined && (
               formData.variance_percentage >= 0 ? (
@@ -178,5 +180,20 @@ export default function ExceptionOverviewSection({ formData, onChange, errors, m
         </div>
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.exception_reports.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'exception_title', 'exception_summary', 'tolerance_type', 'is_forecast_breach', 'tolerance_threshold',
+  'actual_value', 'variance_amount', 'variance_percentage',
+].map((name) => `public.exception_reports.${name}`)
+
+export default function ExceptionOverviewSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ExceptionOverviewSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

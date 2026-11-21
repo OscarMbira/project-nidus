@@ -171,9 +171,9 @@ export default function BriefMetadataSection({ formData, onChange, errors = {}, 
 
         {/* Document Status */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.project_briefs.document_status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Status
-          </label>
+          </FieldLabelWithHelp>
           <p className="text-gray-900 dark:text-white capitalize">
             {formData.document_status || 'draft'}
           </p>

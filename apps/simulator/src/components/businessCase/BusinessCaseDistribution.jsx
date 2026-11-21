@@ -4,6 +4,8 @@
  */
 
 import { useEffect, useState, useCallback } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { Plus, Trash2, Share2, Loader2 } from 'lucide-react'
 import { getDistributionList, addDistributionEntry, removeDistributionEntry } from '../../services/businessCaseService'
 import { useToastContext } from '@nidus/shared/context/ToastContext'
@@ -23,7 +25,7 @@ const STATUS_COLORS = {
   acknowledged: 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200',
 }
 
-export default function BusinessCaseDistribution({ caseId, readOnly = false }) {
+function BusinessCaseDistributionBody({ caseId, readOnly = false }) {
   const toast = useToastContext()
   const [list, setList] = useState([])
   const [loading, setLoading] = useState(true)
@@ -159,22 +161,22 @@ export default function BusinessCaseDistribution({ caseId, readOnly = false }) {
           <h4 className="text-sm font-semibold text-blue-700 dark:text-blue-300 mb-3">Add Recipient</h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Recipient Name *</label>
+              <FieldLabelWithHelp helpKey="sim.business_case_distribution.recipient_name" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1" required>Recipient Name *</FieldLabelWithHelp>
               <input type="text" {...field('recipient_name')} placeholder="Full name"
                 className="w-full px-2 py-1.5 text-sm rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Title / Role</label>
+              <FieldLabelWithHelp helpKey="sim.business_case_distribution.recipient_title" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Title / Role</FieldLabelWithHelp>
               <input type="text" {...field('recipient_title')} placeholder="Job title"
                 className="w-full px-2 py-1.5 text-sm rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Version</label>
+              <FieldLabelWithHelp helpKey="sim.business_case_distribution.version_distributed" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Version</FieldLabelWithHelp>
               <input type="text" {...field('version_distributed')} placeholder="1.0"
                 className="w-full px-2 py-1.5 text-sm rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
+              <FieldLabelWithHelp helpKey="sim.business_case_distribution.distribution_status" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Status</FieldLabelWithHelp>
               <select {...field('distribution_status')}
                 className="w-full px-2 py-1.5 text-sm rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
                 <option value="sent">Sent</option>
@@ -196,5 +198,21 @@ export default function BusinessCaseDistribution({ caseId, readOnly = false }) {
         </div>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.business_case_distribution.recipient_name',
+  'sim.business_case_distribution.recipient_title',
+  'sim.business_case_distribution.version_distributed',
+  'sim.business_case_distribution.distribution_status',
+]
+
+export default function BusinessCaseDistribution(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <BusinessCaseDistributionBody {...props} />
+    </FieldHelpScope>
   )
 }

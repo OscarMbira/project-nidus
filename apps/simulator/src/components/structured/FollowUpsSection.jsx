@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { AlertCircle, CheckCircle, X, Plus } from 'lucide-react'
 import { getFollowUps, addFollowUp, updateFollowUp, markFollowUpComplete } from '../../services/checkpointReportFollowUpService'
 import { carryForwardFromPrevious } from '../../services/checkpointReportService'
 
-export default function FollowUpsSection({ reportId, followUps, onFollowUpsChange, previousReportId, mode }) {
+function FollowUpsSectionBody({ reportId, followUps, onFollowUpsChange, previousReportId, mode }) {
   const [showAddForm, setShowAddForm] = useState(false)
   const [newFollowUp, setNewFollowUp] = useState({
     follow_up_item: '',
@@ -161,9 +163,9 @@ export default function FollowUpsSection({ reportId, followUps, onFollowUpsChang
             <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-900">
               <div className="space-y-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <FieldLabelWithHelp helpKey="sim.checkpoint_report_follow_ups.follow_up_item" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
                     Follow-Up Item *
-                  </label>
+                  </FieldLabelWithHelp>
                   <textarea
                     value={newFollowUp.follow_up_item}
                     onChange={(e) => setNewFollowUp({ ...newFollowUp, follow_up_item: e.target.value })}
@@ -174,9 +176,9 @@ export default function FollowUpsSection({ reportId, followUps, onFollowUpsChang
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <FieldLabelWithHelp helpKey="sim.checkpoint_report_follow_ups.follow_up_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Type
-                    </label>
+                    </FieldLabelWithHelp>
                     <select
                       value={newFollowUp.follow_up_type}
                       onChange={(e) => setNewFollowUp({ ...newFollowUp, follow_up_type: e.target.value })}
@@ -190,9 +192,9 @@ export default function FollowUpsSection({ reportId, followUps, onFollowUpsChang
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <FieldLabelWithHelp helpKey="sim.checkpoint_report_follow_ups.due_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Due Date
-                    </label>
+                    </FieldLabelWithHelp>
                     <input
                       type="date"
                       value={newFollowUp.due_date || ''}
@@ -229,5 +231,20 @@ export default function FollowUpsSection({ reportId, followUps, onFollowUpsChang
         </>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.checkpoint_report_follow_ups.follow_up_item',
+  'sim.checkpoint_report_follow_ups.follow_up_type',
+  'sim.checkpoint_report_follow_ups.due_date',
+]
+
+export default function FollowUpsSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <FollowUpsSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

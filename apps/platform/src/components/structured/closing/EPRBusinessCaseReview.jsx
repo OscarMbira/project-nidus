@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Target, TrendingUp, TrendingDown, Plus, X, Edit2 } from 'lucide-react'
 import { addBenefitReview, updateBenefitReview, deleteBenefitReview, getBenefitsComparison, linkToBusinessCase } from '../../../services/eprBusinessCaseReviewService'
 import { getBusinessCaseForReview } from '../../../services/endProjectReportService'
 
-export default function EPRBusinessCaseReview({ reportId, businessCaseReviews, onBusinessCaseReviewsChange, projectId, businessCaseId, mode }) {
+function EPRBusinessCaseReviewBody({ reportId, businessCaseReviews, onBusinessCaseReviewsChange, projectId, businessCaseId, mode }) {
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [businessCase, setBusinessCase] = useState(null)
@@ -327,9 +329,9 @@ function BenefitReviewAddForm({ newReview, setNewReview, onAdd, onCancel }) {
   return (
     <div className="space-y-3">
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <FieldLabelWithHelp helpKey="public.end_project_report_business_case_review.benefit_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
           Benefit Description *
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={newReview.benefit_description}
           onChange={(e) => setNewReview({ ...newReview, benefit_description: e.target.value })}
@@ -340,9 +342,9 @@ function BenefitReviewAddForm({ newReview, setNewReview, onAdd, onCancel }) {
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <FieldLabelWithHelp helpKey="public.end_project_report_business_case_review.benefit_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
             Benefit Type *
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={newReview.benefit_type}
             onChange={(e) => setNewReview({ ...newReview, benefit_type: e.target.value })}
@@ -355,9 +357,9 @@ function BenefitReviewAddForm({ newReview, setNewReview, onAdd, onCancel }) {
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <FieldLabelWithHelp helpKey="public.end_project_report_business_case_review.measurement_unit" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Measurement Unit
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             value={newReview.measurement_unit}
@@ -369,9 +371,9 @@ function BenefitReviewAddForm({ newReview, setNewReview, onAdd, onCancel }) {
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <FieldLabelWithHelp helpKey="public.end_project_report_business_case_review.original_target_value" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Original Target Value
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="number"
             step="0.01"
@@ -381,9 +383,9 @@ function BenefitReviewAddForm({ newReview, setNewReview, onAdd, onCancel }) {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <FieldLabelWithHelp helpKey="public.end_project_report_business_case_review.actual_value" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Actual Value
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="number"
             step="0.01"
@@ -400,9 +402,9 @@ function BenefitReviewAddForm({ newReview, setNewReview, onAdd, onCancel }) {
           onChange={(e) => setNewReview({ ...newReview, is_post_project: e.target.checked })}
           className="rounded"
         />
-        <label className="text-sm text-gray-700 dark:text-gray-300">
+        <FieldLabelWithHelp helpKey="public.end_project_report_business_case_review.residual_benefit_post_project" className="text-sm text-gray-700 dark:text-gray-300">
           Residual benefit to be realized post-project
-        </label>
+        </FieldLabelWithHelp>
       </div>
       <div className="flex gap-2">
         <button
@@ -468,5 +470,20 @@ function BenefitReviewEditForm({ review, onSave, onCancel }) {
         </button>
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.end_project_report_business_case_review.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'benefit_description', 'benefit_type', 'measurement_unit', 'original_target_value', 'actual_value',
+  'residual_benefit_post_project',
+].map((name) => `public.end_project_report_business_case_review.${name}`)
+
+export default function EPRBusinessCaseReview(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <EPRBusinessCaseReviewBody {...props} />
+    </FieldHelpScope>
   )
 }

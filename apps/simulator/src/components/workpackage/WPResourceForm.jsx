@@ -4,6 +4,8 @@
  */
 
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { X, Save } from 'lucide-react'
 import { addResource, updateResource } from '../../services/wpResourcesService'
 import { supabase } from '../../services/supabaseClient'
@@ -14,7 +16,7 @@ import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
-export default function WPResourceForm({ wpId, resource = null, mode = 'create', onSave, onCancel }) {
+function WPResourceFormBody({ wpId, resource = null, mode = 'create', onSave, onCancel }) {
   const [formData, setFormData] = useState({
     resource_type: 'person',
     resource_name: '',
@@ -160,9 +162,9 @@ export default function WPResourceForm({ wpId, resource = null, mode = 'create',
         <>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <FieldLabelWithHelp helpKey="sim.wp_resources.resource_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Resource Type
-            </label>
+            </FieldLabelWithHelp>
             <select
               name="resource_type"
               value={formData.resource_type}
@@ -179,9 +181,9 @@ export default function WPResourceForm({ wpId, resource = null, mode = 'create',
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <FieldLabelWithHelp helpKey="sim.wp_resources.resource_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
               Resource Name <span className="text-red-500">*</span>
-            </label>
+            </FieldLabelWithHelp>
             <input
               type="text"
               name="resource_name"
@@ -198,9 +200,9 @@ export default function WPResourceForm({ wpId, resource = null, mode = 'create',
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <FieldLabelWithHelp helpKey="sim.wp_resources.resource_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Resource Description
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             name="resource_description"
             value={formData.resource_description}
@@ -213,9 +215,9 @@ export default function WPResourceForm({ wpId, resource = null, mode = 'create',
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <FieldLabelWithHelp helpKey="sim.wp_resources.quantity_required" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
               Quantity Required
-            </label>
+            </FieldLabelWithHelp>
             <input
               type="number"
               step="0.01"
@@ -228,9 +230,9 @@ export default function WPResourceForm({ wpId, resource = null, mode = 'create',
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <FieldLabelWithHelp helpKey="sim.wp_resources.unit_of_measure" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Unit of Measure
-            </label>
+            </FieldLabelWithHelp>
             <input
               type="text"
               name="unit_of_measure"
@@ -244,9 +246,9 @@ export default function WPResourceForm({ wpId, resource = null, mode = 'create',
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <FieldLabelWithHelp helpKey="sim.wp_resources.cost_estimate" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" isAmount>
               Estimated Cost
-            </label>
+            </FieldLabelWithHelp>
             <input
               type="number"
               step="0.01"
@@ -259,9 +261,9 @@ export default function WPResourceForm({ wpId, resource = null, mode = 'create',
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <FieldLabelWithHelp helpKey="sim.wp_resources.cost_actual" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" isAmount>
               Actual Cost
-            </label>
+            </FieldLabelWithHelp>
             <input
               type="number"
               step="0.01"
@@ -275,7 +277,7 @@ export default function WPResourceForm({ wpId, resource = null, mode = 'create',
         </div>
 
         <div className="flex items-center gap-4">
-          <label className="flex items-center gap-2">
+          <FieldLabelWithHelp helpKey="sim.wp_resources.allocated" className="flex items-center gap-2">
             <input
               type="checkbox"
               name="allocated"
@@ -284,13 +286,13 @@ export default function WPResourceForm({ wpId, resource = null, mode = 'create',
               className="w-4 h-4 text-blue-600 border-gray-300 rounded"
             />
             <span className="text-sm text-gray-700 dark:text-gray-300">Resource Allocated</span>
-          </label>
+          </FieldLabelWithHelp>
 
           {formData.allocated && (
             <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="sim.wp_resources.allocation_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Allocation Date
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="date"
                 name="allocation_date"
@@ -325,5 +327,26 @@ export default function WPResourceForm({ wpId, resource = null, mode = 'create',
         </div>
       </form>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.wp_resources.resource_type',
+  'sim.wp_resources.resource_name',
+  'sim.wp_resources.resource_description',
+  'sim.wp_resources.quantity_required',
+  'sim.wp_resources.unit_of_measure',
+  'sim.wp_resources.cost_estimate',
+  'sim.wp_resources.cost_actual',
+  'sim.wp_resources.allocated',
+  'sim.wp_resources.allocation_date',
+]
+
+export default function WPResourceForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <WPResourceFormBody {...props} />
+    </FieldHelpScope>
   )
 }

@@ -4,6 +4,8 @@
  */
 
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { X, Save } from 'lucide-react'
 import { addAcceptanceCriterion, updateAcceptanceCriterion } from '../../services/wpAcceptanceCriteriaService'
 import { supabase } from '../../services/supabaseClient'
@@ -14,7 +16,7 @@ import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
-export default function WPAcceptanceCriterionForm({ wpId, criterion = null, mode = 'create', onSave, onCancel }) {
+function WPAcceptanceCriterionFormBody({ wpId, criterion = null, mode = 'create', onSave, onCancel }) {
   const [formData, setFormData] = useState({
     criteria_title: '',
     criteria_description: '',
@@ -154,9 +156,9 @@ export default function WPAcceptanceCriterionForm({ wpId, criterion = null, mode
         {formTab === 'details' && (
         <>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <FieldLabelWithHelp helpKey="sim.wp_acceptance_criteria.criteria_title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
             Criteria Title <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             name="criteria_title"
@@ -172,9 +174,9 @@ export default function WPAcceptanceCriterionForm({ wpId, criterion = null, mode
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <FieldLabelWithHelp helpKey="sim.wp_acceptance_criteria.criteria_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
             Criteria Description <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             name="criteria_description"
             value={formData.criteria_description}
@@ -192,9 +194,9 @@ export default function WPAcceptanceCriterionForm({ wpId, criterion = null, mode
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <FieldLabelWithHelp helpKey="sim.wp_acceptance_criteria.criteria_category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Criteria Category
-            </label>
+            </FieldLabelWithHelp>
             <select
               name="criteria_category"
               value={formData.criteria_category}
@@ -214,9 +216,9 @@ export default function WPAcceptanceCriterionForm({ wpId, criterion = null, mode
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <FieldLabelWithHelp helpKey="sim.wp_acceptance_criteria.acceptance_status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Acceptance Status
-            </label>
+            </FieldLabelWithHelp>
             <select
               name="acceptance_status"
               value={formData.acceptance_status}
@@ -233,9 +235,9 @@ export default function WPAcceptanceCriterionForm({ wpId, criterion = null, mode
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <FieldLabelWithHelp helpKey="sim.wp_acceptance_criteria.acceptance_method" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Acceptance Method
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             name="acceptance_method"
             value={formData.acceptance_method}
@@ -247,9 +249,9 @@ export default function WPAcceptanceCriterionForm({ wpId, criterion = null, mode
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <FieldLabelWithHelp helpKey="sim.wp_acceptance_criteria.acceptance_responsible" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Acceptance Responsible
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             name="acceptance_responsible"
@@ -262,9 +264,9 @@ export default function WPAcceptanceCriterionForm({ wpId, criterion = null, mode
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <FieldLabelWithHelp helpKey="sim.wp_acceptance_criteria.acceptance_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Acceptance Date
-            </label>
+            </FieldLabelWithHelp>
             <input
               type="date"
               name="acceptance_date"
@@ -276,9 +278,9 @@ export default function WPAcceptanceCriterionForm({ wpId, criterion = null, mode
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <FieldLabelWithHelp helpKey="sim.wp_acceptance_criteria.acceptance_result" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Acceptance Result
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             name="acceptance_result"
             value={formData.acceptance_result}
@@ -312,5 +314,25 @@ export default function WPAcceptanceCriterionForm({ wpId, criterion = null, mode
         </div>
       </form>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.wp_acceptance_criteria.criteria_title',
+  'sim.wp_acceptance_criteria.criteria_description',
+  'sim.wp_acceptance_criteria.criteria_category',
+  'sim.wp_acceptance_criteria.acceptance_status',
+  'sim.wp_acceptance_criteria.acceptance_method',
+  'sim.wp_acceptance_criteria.acceptance_responsible',
+  'sim.wp_acceptance_criteria.acceptance_date',
+  'sim.wp_acceptance_criteria.acceptance_result',
+]
+
+export default function WPAcceptanceCriterionForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <WPAcceptanceCriterionFormBody {...props} />
+    </FieldHelpScope>
   )
 }

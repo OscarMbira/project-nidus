@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { supabase } from '../../services/supabaseClient'
 import { format } from 'date-fns'
 import { AlertCircle, CheckCircle, TrendingUp, TrendingDown, Plus, Settings } from 'lucide-react'
 
-export default function ToleranceDashboard({ projectId, stageBoundaryId }) {
+function ToleranceDashboardBody({ projectId, stageBoundaryId }) {
   const [tolerances, setTolerances] = useState([])
   const [loading, setLoading] = useState(true)
   const [showAddForm, setShowAddForm] = useState(false)
@@ -186,9 +188,9 @@ export default function ToleranceDashboard({ projectId, stageBoundaryId }) {
         <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 space-y-3">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.stage_tolerances.tolerance_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Tolerance Type
-              </label>
+              </FieldLabelWithHelp>
               <select
                 value={newTolerance.tolerance_type}
                 onChange={(e) => setNewTolerance({ ...newTolerance, tolerance_type: e.target.value })}
@@ -200,9 +202,9 @@ export default function ToleranceDashboard({ projectId, stageBoundaryId }) {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.stage_tolerances.tolerance_limit_value" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Tolerance Limit
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="number"
                 value={newTolerance.tolerance_limit_value}
@@ -212,9 +214,9 @@ export default function ToleranceDashboard({ projectId, stageBoundaryId }) {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.stage_tolerances.tolerance_limit_unit" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Unit
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="text"
                 value={newTolerance.tolerance_limit_unit}
@@ -328,3 +330,16 @@ export default function ToleranceDashboard({ projectId, stageBoundaryId }) {
   )
 }
 
+// v1345 slice 4: field help for this component (public.stage_tolerances.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'tolerance_type', 'tolerance_limit_value', 'tolerance_limit_unit',
+].map((name) => `public.stage_tolerances.${name}`)
+
+export default function ToleranceDashboard(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ToleranceDashboardBody {...props} />
+    </FieldHelpScope>
+  )
+}

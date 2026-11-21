@@ -1,11 +1,13 @@
 import { Info } from 'lucide-react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 
 /**
  * RiskComplexitySection Component
  * Captures Risk & Complexity Pre-Assessment fields for PMO project creation
  * Phase 2 - PMO Project Creation Governance Upgrade
  */
-export default function RiskComplexitySection({ formData, handleChange, errors, mode = 'all' }) {
+function RiskComplexitySectionBody({ formData, handleChange, errors, mode = 'all' }) {
   const showRisk = mode === 'all' || mode === 'risk'
   const showResources = mode === 'all' || mode === 'resources'
 
@@ -40,9 +42,9 @@ export default function RiskComplexitySection({ formData, handleChange, errors, 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Initial Risk Rating */}
             <div>
-              <label htmlFor="initial_risk_rating" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.projects.initial_risk_rating" htmlFor="initial_risk_rating" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Initial Risk Rating <span className="text-red-500">*</span>
-              </label>
+              </FieldLabelWithHelp>
               <select
                 id="initial_risk_rating"
                 name="initial_risk_rating"
@@ -68,9 +70,9 @@ export default function RiskComplexitySection({ formData, handleChange, errors, 
 
             {/* Complexity Rating */}
             <div>
-              <label htmlFor="complexity_rating" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.projects.complexity_rating" htmlFor="complexity_rating" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Complexity Rating <span className="text-red-500">*</span>
-              </label>
+              </FieldLabelWithHelp>
               <select
                 id="complexity_rating"
                 name="complexity_rating"
@@ -97,9 +99,9 @@ export default function RiskComplexitySection({ formData, handleChange, errors, 
 
           {/* Delivery Complexity */}
           <div>
-            <label htmlFor="delivery_complexity" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="sim.projects.delivery_complexity" htmlFor="delivery_complexity" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
               Delivery Complexity <span className="text-red-500">*</span>
-            </label>
+            </FieldLabelWithHelp>
             <select
               id="delivery_complexity"
               name="delivery_complexity"
@@ -125,9 +127,9 @@ export default function RiskComplexitySection({ formData, handleChange, errors, 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Regulatory Impact */}
             <div>
-              <label htmlFor="regulatory_impact" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.projects.regulatory_impact" htmlFor="regulatory_impact" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Regulatory / Compliance Impact <span className="text-red-500">*</span>
-              </label>
+              </FieldLabelWithHelp>
               <select
                 id="regulatory_impact"
                 name="regulatory_impact"
@@ -155,9 +157,9 @@ export default function RiskComplexitySection({ formData, handleChange, errors, 
 
             {/* Data Sensitivity */}
             <div>
-              <label htmlFor="data_sensitivity" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.projects.data_sensitivity" htmlFor="data_sensitivity" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Data Sensitivity Level <span className="text-red-500">*</span>
-              </label>
+              </FieldLabelWithHelp>
               <select
                 id="data_sensitivity"
                 name="data_sensitivity"
@@ -193,9 +195,9 @@ export default function RiskComplexitySection({ formData, handleChange, errors, 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
               {/* Estimated Effort */}
               <div>
-                <label htmlFor="estimated_effort" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.projects.estimated_effort" htmlFor="estimated_effort" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Estimated Effort
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   id="estimated_effort"
                   name="estimated_effort"
@@ -216,9 +218,9 @@ export default function RiskComplexitySection({ formData, handleChange, errors, 
 
               {/* External Vendors Required */}
               <div>
-                <label htmlFor="external_vendors_required" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.projects.external_vendors_required" htmlFor="external_vendors_required" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   External Vendors Required
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   id="external_vendors_required"
                   name="external_vendors_required"
@@ -242,9 +244,9 @@ export default function RiskComplexitySection({ formData, handleChange, errors, 
 
             {/* Key Skills Required */}
             <div className="mb-4">
-              <label htmlFor="key_skills_required" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.projects.key_skills_required" htmlFor="key_skills_required" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Key Skills Required
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 id="key_skills_required"
                 name="key_skills_required"
@@ -264,5 +266,25 @@ export default function RiskComplexitySection({ formData, handleChange, errors, 
           )}
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.projects.initial_risk_rating',
+  'sim.projects.complexity_rating',
+  'sim.projects.delivery_complexity',
+  'sim.projects.regulatory_impact',
+  'sim.projects.data_sensitivity',
+  'sim.projects.estimated_effort',
+  'sim.projects.external_vendors_required',
+  'sim.projects.key_skills_required',
+]
+
+export default function RiskComplexitySection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <RiskComplexitySectionBody {...props} />
+    </FieldHelpScope>
   )
 }

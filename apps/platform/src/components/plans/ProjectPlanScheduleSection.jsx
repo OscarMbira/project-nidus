@@ -3,12 +3,14 @@
  */
 
 import { useState } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Calendar, Plus, X } from 'lucide-react'
 import { addMilestone, deleteMilestone } from '../../services/planMilestoneService'
 import MilestoneForm from './MilestoneForm'
 import MilestoneCard from './MilestoneCard'
 
-export default function ProjectPlanScheduleSection({ 
+function ProjectPlanScheduleSectionBody({ 
   formData, 
   onChange, 
   errors, 
@@ -62,9 +64,9 @@ export default function ProjectPlanScheduleSection({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.plan_milestones.planned_start_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Planned Start Date <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="date"
             value={formData.planned_start_date || ''}
@@ -80,9 +82,9 @@ export default function ProjectPlanScheduleSection({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.plan_milestones.planned_end_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Planned End Date <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="date"
             value={formData.planned_end_date || ''}
@@ -150,5 +152,19 @@ export default function ProjectPlanScheduleSection({
         )}
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.plan_milestones.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'planned_start_date', 'planned_end_date',
+].map((name) => `public.plan_milestones.${name}`)
+
+export default function ProjectPlanScheduleSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ProjectPlanScheduleSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

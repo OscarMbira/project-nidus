@@ -9,6 +9,8 @@
  */
 
 import { useState, useEffect, memo } from 'react';
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { X, Save, AlertTriangle } from 'lucide-react';
 import { raiseException } from '../../../services/exceptionService';
 import { platformDb } from '@nidus/supabase';
@@ -132,9 +134,9 @@ const RaiseExceptionModal = memo(function RaiseExceptionModal({
           <div className="space-y-4">
             {/* Select Project */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="public.exceptions.project_id" className="block text-sm font-medium text-gray-300 mb-1" required listOptions={false}>
                 Project *
-              </label>
+              </FieldLabelWithHelp>
               <select
                 name="project_id"
                 value={formData.project_id}
@@ -157,9 +159,9 @@ const RaiseExceptionModal = memo(function RaiseExceptionModal({
 
             {/* Exception Title */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="public.exceptions.exception_title" className="block text-sm font-medium text-gray-300 mb-1" required>
                 Exception Title *
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="text"
                 name="exception_title"
@@ -173,9 +175,9 @@ const RaiseExceptionModal = memo(function RaiseExceptionModal({
 
             {/* Exception Level */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="public.exceptions.exception_level" className="block text-sm font-medium text-gray-300 mb-1" required>
                 Exception Level *
-              </label>
+              </FieldLabelWithHelp>
               <select
                 name="exception_level"
                 value={formData.exception_level}
@@ -192,9 +194,9 @@ const RaiseExceptionModal = memo(function RaiseExceptionModal({
 
             {/* Exception Category */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="public.exceptions.exception_category" className="block text-sm font-medium text-gray-300 mb-1">
                 Category
-              </label>
+              </FieldLabelWithHelp>
               <select
                 name="exception_category"
                 value={formData.exception_category}
@@ -214,9 +216,9 @@ const RaiseExceptionModal = memo(function RaiseExceptionModal({
 
             {/* Exception Reason */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="public.exceptions.exception_reason" className="block text-sm font-medium text-gray-300 mb-1" required>
                 Exception Reason *
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 name="exception_reason"
                 value={formData.exception_reason}
@@ -230,9 +232,9 @@ const RaiseExceptionModal = memo(function RaiseExceptionModal({
 
             {/* Exception Description */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="public.exceptions.exception_description" className="block text-sm font-medium text-gray-300 mb-1">
                 Additional Details
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 name="exception_description"
                 value={formData.exception_description}
@@ -268,4 +270,15 @@ const RaiseExceptionModal = memo(function RaiseExceptionModal({
   );
 });
 
-export default RaiseExceptionModal;
+// v1345 slice 4: field help for this dialog (public.exceptions.<column>), carried in its own scope.
+const HELP_KEYS = ['project_id', 'exception_title', 'exception_level', 'exception_category', 'exception_reason', 'exception_description'].map((name) => `public.exceptions.${name}`)
+
+function RaiseExceptionModalWithHelp(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <RaiseExceptionModal {...props} />
+    </FieldHelpScope>
+  )
+}
+
+export default RaiseExceptionModalWithHelp;

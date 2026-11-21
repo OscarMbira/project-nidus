@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Save, CheckCircle, Gavel } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -55,7 +57,7 @@ function Field({ label, name, value, onChange, type = 'text', options, rows }) {
   if (options) {
     return (
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">{label}</label>
+        <FieldLabelWithHelp helpKey={`sim.project_decisions.${name}`} className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1" required>{label}</FieldLabelWithHelp>
         <select name={name} value={value} onChange={onChange} className={base}>
           {options.map(o => <option key={o} value={o}>{o.charAt(0).toUpperCase() + o.slice(1)}</option>)}
         </select>
@@ -65,20 +67,20 @@ function Field({ label, name, value, onChange, type = 'text', options, rows }) {
   if (rows) {
     return (
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">{label}</label>
+        <FieldLabelWithHelp helpKey={`sim.project_decisions.${name}`} className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1" required>{label}</FieldLabelWithHelp>
         <textarea name={name} value={value} onChange={onChange} rows={rows} className={`${base} resize-y`} />
       </div>
     )
   }
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">{label}</label>
+      <FieldLabelWithHelp helpKey={`sim.project_decisions.${name}`} className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1" required>{label}</FieldLabelWithHelp>
       <input type={type} name={name} value={value} onChange={onChange} className={base} />
     </div>
   )
 }
 
-export default function DecisionLogForm() {
+function DecisionLogFormBody() {
   const { id } = useParams()
   // v1448: practice project from ?projectId= (sim.project_decisions), not a Platform project.
   const { projectId: resolvedProjectId, routeKey } = usePracticeProjectParam()
@@ -319,5 +321,25 @@ export default function DecisionLogForm() {
         {successModal}
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.project_decisions.decision_title',
+  'sim.project_decisions.description',
+  'sim.project_decisions.decision_date',
+  'sim.project_decisions.decided_by_name',
+  'sim.project_decisions.category',
+  'sim.project_decisions.status',
+  'sim.project_decisions.priority',
+  'sim.project_decisions.review_date',
+]
+
+export default function DecisionLogForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <DecisionLogFormBody {...props} />
+    </FieldHelpScope>
   )
 }

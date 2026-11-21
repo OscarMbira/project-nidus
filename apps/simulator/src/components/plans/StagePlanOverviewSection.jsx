@@ -3,9 +3,11 @@
  */
 
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { platformDb } from '@nidus/supabase'
 
-export default function StagePlanOverviewSection({ formData, onChange, errors, mode, projectId }) {
+function StagePlanOverviewSectionBody({ formData, onChange, errors, mode, projectId }) {
   const [stageBoundaries, setStageBoundaries] = useState([])
   const [projectPhases, setProjectPhases] = useState([])
   const [projectPlans, setProjectPlans] = useState([])
@@ -59,9 +61,9 @@ export default function StagePlanOverviewSection({ formData, onChange, errors, m
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.stage_plans.stage_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Stage Name <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             value={formData.stage_name || ''}
@@ -78,9 +80,9 @@ export default function StagePlanOverviewSection({ formData, onChange, errors, m
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.stage_plans.stage_number" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Stage Number
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="number"
             value={formData.stage_number || ''}
@@ -92,9 +94,9 @@ export default function StagePlanOverviewSection({ formData, onChange, errors, m
         </div>
 
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.stage_plans.stage_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Stage Description
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             value={formData.stage_description || ''}
             onChange={(e) => onChange('stage_description', e.target.value)}
@@ -106,9 +108,9 @@ export default function StagePlanOverviewSection({ formData, onChange, errors, m
         </div>
 
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.stage_plans.stage_objectives" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Stage Objectives
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             value={formData.stage_objectives || ''}
             onChange={(e) => onChange('stage_objectives', e.target.value)}
@@ -120,9 +122,9 @@ export default function StagePlanOverviewSection({ formData, onChange, errors, m
         </div>
 
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.stage_plans.plan_title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Plan Title <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             value={formData.plan_title || ''}
@@ -139,9 +141,9 @@ export default function StagePlanOverviewSection({ formData, onChange, errors, m
         </div>
 
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.stage_plans.plan_purpose" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Plan Purpose <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             value={formData.plan_purpose || ''}
             onChange={(e) => onChange('plan_purpose', e.target.value)}
@@ -158,9 +160,9 @@ export default function StagePlanOverviewSection({ formData, onChange, errors, m
         </div>
 
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.stage_plans.plan_scope" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Plan Scope <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             value={formData.plan_scope || ''}
             onChange={(e) => onChange('plan_scope', e.target.value)}
@@ -177,9 +179,9 @@ export default function StagePlanOverviewSection({ formData, onChange, errors, m
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.stage_plans.project_plan_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required listOptions={false}>
             Link to Project Plan <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={formData.project_plan_id || ''}
             onChange={(e) => onChange('project_plan_id', e.target.value || null)}
@@ -196,9 +198,9 @@ export default function StagePlanOverviewSection({ formData, onChange, errors, m
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.stage_plans.stage_boundary_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
             Link to Stage Boundary
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={formData.stage_boundary_id || ''}
             onChange={(e) => onChange('stage_boundary_id', e.target.value || null)}
@@ -215,9 +217,9 @@ export default function StagePlanOverviewSection({ formData, onChange, errors, m
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.stage_plans.author_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
             Author
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={formData.author_id || ''}
             onChange={(e) => onChange('author_id', e.target.value || null)}
@@ -234,9 +236,9 @@ export default function StagePlanOverviewSection({ formData, onChange, errors, m
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.stage_plans.owner_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
             Owner (Stage Manager)
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={formData.owner_id || ''}
             onChange={(e) => onChange('owner_id', e.target.value || null)}
@@ -253,5 +255,28 @@ export default function StagePlanOverviewSection({ formData, onChange, errors, m
         </div>
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.stage_plans.stage_name',
+  'sim.stage_plans.stage_number',
+  'sim.stage_plans.stage_description',
+  'sim.stage_plans.stage_objectives',
+  'sim.stage_plans.plan_title',
+  'sim.stage_plans.plan_purpose',
+  'sim.stage_plans.plan_scope',
+  'sim.stage_plans.project_plan_id',
+  'sim.stage_plans.stage_boundary_id',
+  'sim.stage_plans.author_id',
+  'sim.stage_plans.owner_id',
+]
+
+export default function StagePlanOverviewSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <StagePlanOverviewSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

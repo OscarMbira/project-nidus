@@ -3,7 +3,7 @@
  * Purpose, context, scope, and executive summary
  */
 
-export default function LessonsReportOverviewSection({
+function LessonsReportOverviewSectionBody({
   formData,
   onChange,
   errors = {},
@@ -22,9 +22,9 @@ export default function LessonsReportOverviewSection({
 
       {/* Purpose */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <FieldLabelWithHelp helpKey="sim.lessons_reports.purpose" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
           Purpose <span className="text-red-500">*</span>
-        </label>
+        </FieldLabelWithHelp>
         {readOnly ? (
           <p className="text-gray-900 dark:text-white whitespace-pre-wrap">
             {formData.purpose || 'Not specified'}
@@ -51,9 +51,9 @@ export default function LessonsReportOverviewSection({
 
       {/* Context */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <FieldLabelWithHelp helpKey="sim.lessons_reports.context" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Context
-        </label>
+        </FieldLabelWithHelp>
         {readOnly ? (
           <p className="text-gray-900 dark:text-white whitespace-pre-wrap">
             {formData.context || 'Not specified'}
@@ -71,9 +71,9 @@ export default function LessonsReportOverviewSection({
 
       {/* Scope */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <FieldLabelWithHelp helpKey="sim.lessons_reports.scope" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Scope
-        </label>
+        </FieldLabelWithHelp>
         {readOnly ? (
           <p className="text-gray-900 dark:text-white whitespace-pre-wrap">
             {formData.scope || 'Not specified'}
@@ -91,9 +91,9 @@ export default function LessonsReportOverviewSection({
 
       {/* Executive Summary */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <FieldLabelWithHelp helpKey="sim.lessons_reports.executive_summary" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
           Executive Summary <span className="text-red-500">*</span>
-        </label>
+        </FieldLabelWithHelp>
         {readOnly ? (
           <p className="text-gray-900 dark:text-white whitespace-pre-wrap">
             {formData.executive_summary || 'Not specified'}
@@ -118,5 +118,21 @@ export default function LessonsReportOverviewSection({
         )}
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.lessons_reports.purpose',
+  'sim.lessons_reports.context',
+  'sim.lessons_reports.scope',
+  'sim.lessons_reports.executive_summary',
+]
+
+export default function LessonsReportOverviewSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <LessonsReportOverviewSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

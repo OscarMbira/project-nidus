@@ -1,6 +1,8 @@
 import { Calendar } from 'lucide-react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
-export default function ReportingPeriodSection({ formData, onChange, errors, mode }) {
+function ReportingPeriodSectionBody({ formData, onChange, errors, mode }) {
   return (
     <div className="space-y-6">
       <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
@@ -12,10 +14,10 @@ export default function ReportingPeriodSection({ formData, onChange, errors, mod
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.checkpoint_reports.period_start_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             <Calendar className="h-4 w-4 inline mr-1" />
             Period Start Date *
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="date"
             value={formData.period_start_date || ''}
@@ -34,9 +36,9 @@ export default function ReportingPeriodSection({ formData, onChange, errors, mod
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.checkpoint_reports.period_end_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Period End Date *
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="date"
             value={formData.period_end_date || ''}
@@ -56,9 +58,9 @@ export default function ReportingPeriodSection({ formData, onChange, errors, mod
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.checkpoint_reports.date_of_next_revision" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Date of Next Revision
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="date"
             value={formData.date_of_next_revision || ''}
@@ -87,5 +89,19 @@ export default function ReportingPeriodSection({ formData, onChange, errors, mod
         </div>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.checkpoint_reports.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'period_start_date', 'period_end_date', 'date_of_next_revision',
+].map((name) => `public.checkpoint_reports.${name}`)
+
+export default function ReportingPeriodSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ReportingPeriodSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

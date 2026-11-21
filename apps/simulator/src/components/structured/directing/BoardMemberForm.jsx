@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { supabase } from '../../../services/supabaseClient';
 import { X, User, Calendar, FileText } from 'lucide-react';
 import { addBoardMember, updateBoardMember } from '../../../services/directingProjectService';
@@ -10,7 +12,7 @@ import AuditField from '@nidus/ui/AuditField';
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
 
-export default function BoardMemberForm({ boardId, member, onClose, onSuccess }) {
+function BoardMemberFormBody({ boardId, member, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [users, setUsers] = useState([]);
   const [formTab, setFormTab] = useState('details');
@@ -153,10 +155,10 @@ export default function BoardMemberForm({ boardId, member, onClose, onSuccess })
           <>
           {/* User Selection */}
           <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="sim.board_members.user_id" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required listOptions={false}>
               <User className="h-4 w-4" />
               User *
-            </label>
+            </FieldLabelWithHelp>
             <select
               value={formData.user_id}
               onChange={(e) => setFormData({ ...formData, user_id: e.target.value })}
@@ -178,10 +180,10 @@ export default function BoardMemberForm({ boardId, member, onClose, onSuccess })
 
           {/* Role on Board */}
           <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="sim.board_members.role_on_board" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
               <User className="h-4 w-4" />
               Role on Board *
-            </label>
+            </FieldLabelWithHelp>
             <select
               value={formData.role_on_board}
               onChange={(e) => setFormData({ ...formData, role_on_board: e.target.value })}
@@ -203,10 +205,10 @@ export default function BoardMemberForm({ boardId, member, onClose, onSuccess })
 
           {/* Appointment Date */}
           <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="sim.board_members.appointment_date" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
               <Calendar className="h-4 w-4" />
               Appointment Date *
-            </label>
+            </FieldLabelWithHelp>
             <input
               type="date"
               value={formData.appointment_date}
@@ -218,10 +220,10 @@ export default function BoardMemberForm({ boardId, member, onClose, onSuccess })
 
           {/* Responsibilities */}
           <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="sim.board_members.responsibilities" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               <FileText className="h-4 w-4" />
               Responsibilities
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               value={formData.responsibilities}
               onChange={(e) => setFormData({ ...formData, responsibilities: e.target.value })}
@@ -243,9 +245,9 @@ export default function BoardMemberForm({ boardId, member, onClose, onSuccess })
               onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
               className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
             />
-            <label htmlFor="is_active" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <FieldLabelWithHelp helpKey="sim.board_members.is_active" htmlFor="is_active" className="text-sm font-medium text-gray-700 dark:text-gray-300">
               Active member
-            </label>
+            </FieldLabelWithHelp>
           </div>
           </>
           )}
@@ -272,4 +274,21 @@ export default function BoardMemberForm({ boardId, member, onClose, onSuccess })
       </div>
     </div>
   );
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.board_members.user_id',
+  'sim.board_members.role_on_board',
+  'sim.board_members.appointment_date',
+  'sim.board_members.responsibilities',
+  'sim.board_members.is_active',
+]
+
+export default function BoardMemberForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <BoardMemberFormBody {...props} />
+    </FieldHelpScope>
+  )
 }

@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { supabase } from '../../services/supabaseClient'
 import { platformDb } from '@nidus/supabase'
 import { X, Save, Calendar, User, FileText } from 'lucide-react'
@@ -12,7 +14,7 @@ import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
-export default function WorkPackageForm({
+function WorkPackageFormBody({
   workPackage,
   projectId,
   stageBoundaries,
@@ -240,9 +242,9 @@ export default function WorkPackageForm({
           {/* Basic Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.work_packages.work_package_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Work Package Name *
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="text"
                 name="work_package_name"
@@ -253,9 +255,9 @@ export default function WorkPackageForm({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.work_packages.work_package_code" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Work Package Code
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="text"
                 name="work_package_code"
@@ -268,9 +270,9 @@ export default function WorkPackageForm({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="sim.work_packages.work_package_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Description
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               name="work_package_description"
               value={formData.work_package_description}
@@ -283,10 +285,10 @@ export default function WorkPackageForm({
           {/* Stage and Assignment */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.work_packages.stage_boundary_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                 <FileText className="h-4 w-4 inline mr-1" />
                 Stage
-              </label>
+              </FieldLabelWithHelp>
               <select
                 name="stage_boundary_id"
                 value={formData.stage_boundary_id}
@@ -302,10 +304,10 @@ export default function WorkPackageForm({
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.work_packages.assigned_to_user_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                 <User className="h-4 w-4 inline mr-1" />
                 Assign To (Team Manager/Lead)
-              </label>
+              </FieldLabelWithHelp>
               <select
                 name="assigned_to_user_id"
                 value={formData.assigned_to_user_id}
@@ -324,9 +326,9 @@ export default function WorkPackageForm({
 
           {/* Objectives */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="sim.work_packages.objectives" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Objectives
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               name="objectives"
               value={formData.objectives}
@@ -339,9 +341,9 @@ export default function WorkPackageForm({
 
           {/* Products/Deliverables */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="sim.work_packages.product_ids" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Products/Deliverables
-            </label>
+            </FieldLabelWithHelp>
             <div className="flex gap-2 mb-2">
               <input
                 type="text"
@@ -378,9 +380,9 @@ export default function WorkPackageForm({
           {/* Quality and Acceptance Criteria */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.work_packages.quality_criteria" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Quality Criteria
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 name="quality_criteria"
                 value={formData.quality_criteria}
@@ -390,9 +392,9 @@ export default function WorkPackageForm({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.work_packages.acceptance_criteria" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Acceptance Criteria
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 name="acceptance_criteria"
                 value={formData.acceptance_criteria}
@@ -406,10 +408,10 @@ export default function WorkPackageForm({
           {/* Dates and Cost */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.work_packages.planned_start_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 <Calendar className="h-4 w-4 inline mr-1" />
                 Planned Start Date
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="date"
                 name="planned_start_date"
@@ -419,10 +421,10 @@ export default function WorkPackageForm({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.work_packages.planned_end_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 <Calendar className="h-4 w-4 inline mr-1" />
                 Planned End Date
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="date"
                 name="planned_end_date"
@@ -432,9 +434,9 @@ export default function WorkPackageForm({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.work_packages.estimated_cost" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" isAmount>
                 Estimated Cost
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="number"
                 name="estimated_cost"
@@ -449,9 +451,9 @@ export default function WorkPackageForm({
 
           {/* Notes */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="sim.work_packages.notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Notes
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               name="notes"
               value={formData.notes}
@@ -504,3 +506,27 @@ export default function WorkPackageForm({
   )
 }
 
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.work_packages.work_package_name',
+  'sim.work_packages.work_package_code',
+  'sim.work_packages.work_package_description',
+  'sim.work_packages.stage_boundary_id',
+  'sim.work_packages.assigned_to_user_id',
+  'sim.work_packages.objectives',
+  'sim.work_packages.product_ids',
+  'sim.work_packages.quality_criteria',
+  'sim.work_packages.acceptance_criteria',
+  'sim.work_packages.planned_start_date',
+  'sim.work_packages.planned_end_date',
+  'sim.work_packages.estimated_cost',
+  'sim.work_packages.notes',
+]
+
+export default function WorkPackageForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <WorkPackageFormBody {...props} />
+    </FieldHelpScope>
+  )
+}

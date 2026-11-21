@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { supabase } from '../../../services/supabaseClient';
 import { X, FileText, Calendar, DollarSign, Target, Users, Shield } from 'lucide-react';
 import { createNextStagePlan, updateNextStagePlan, fetchStageBoundaries } from '../../../services/stageBoundariesService';
@@ -10,7 +12,7 @@ import AuditField from '@nidus/ui/AuditField';
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
 
-export default function NextStagePlanForm({ projectId, plan, onClose, onSuccess }) {
+function NextStagePlanFormBody({ projectId, plan, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [stageBoundaries, setStageBoundaries] = useState([]);
   const [activeSection, setActiveSection] = useState('basic');
@@ -179,7 +181,7 @@ export default function NextStagePlanForm({ projectId, plan, onClose, onSuccess 
           {activeSection === 'basic' && (
             <div className="space-y-6">
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Plan Title *</label>
+                <FieldLabelWithHelp helpKey="public.next_stage_plans.plan_title" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>Plan Title *</FieldLabelWithHelp>
                 <input
                   type="text"
                   value={formData.plan_title}
@@ -192,7 +194,7 @@ export default function NextStagePlanForm({ projectId, plan, onClose, onSuccess 
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Plan Date *</label>
+                  <FieldLabelWithHelp helpKey="public.next_stage_plans.plan_date" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>Plan Date *</FieldLabelWithHelp>
                   <input
                     type="date"
                     value={formData.plan_date}
@@ -203,7 +205,7 @@ export default function NextStagePlanForm({ projectId, plan, onClose, onSuccess 
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Current Stage</label>
+                  <FieldLabelWithHelp helpKey="public.next_stage_plans.current_stage_boundary_id" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" listOptions={false}>Current Stage</FieldLabelWithHelp>
                   <select
                     value={formData.current_stage_boundary_id}
                     onChange={(e) => setFormData({ ...formData, current_stage_boundary_id: e.target.value })}
@@ -219,7 +221,7 @@ export default function NextStagePlanForm({ projectId, plan, onClose, onSuccess 
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Next Stage Name *</label>
+                  <FieldLabelWithHelp helpKey="public.next_stage_plans.next_stage_name" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>Next Stage Name *</FieldLabelWithHelp>
                   <input
                     type="text"
                     value={formData.next_stage_name}
@@ -230,7 +232,7 @@ export default function NextStagePlanForm({ projectId, plan, onClose, onSuccess 
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Next Stage Number</label>
+                  <FieldLabelWithHelp helpKey="public.next_stage_plans.next_stage_number" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Next Stage Number</FieldLabelWithHelp>
                   <input
                     type="number"
                     min="1"
@@ -242,7 +244,7 @@ export default function NextStagePlanForm({ projectId, plan, onClose, onSuccess 
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Next Stage Description</label>
+                <FieldLabelWithHelp helpKey="public.next_stage_plans.next_stage_description" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Next Stage Description</FieldLabelWithHelp>
                 <textarea
                   value={formData.next_stage_description}
                   onChange={(e) => setFormData({ ...formData, next_stage_description: e.target.value })}
@@ -257,7 +259,7 @@ export default function NextStagePlanForm({ projectId, plan, onClose, onSuccess 
           {activeSection === 'planning' && (
             <div className="space-y-6">
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Stage Objectives</label>
+                <FieldLabelWithHelp helpKey="public.next_stage_plans.stage_objectives" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Stage Objectives</FieldLabelWithHelp>
                 <textarea
                   value={formData.stage_objectives}
                   onChange={(e) => setFormData({ ...formData, stage_objectives: e.target.value })}
@@ -269,10 +271,10 @@ export default function NextStagePlanForm({ projectId, plan, onClose, onSuccess 
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.next_stage_plans.planned_start_date" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     <Calendar className="h-4 w-4" />
                     Planned Start Date
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="date"
                     value={formData.planned_start_date}
@@ -282,10 +284,10 @@ export default function NextStagePlanForm({ projectId, plan, onClose, onSuccess 
                 </div>
 
                 <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.next_stage_plans.planned_end_date" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     <Calendar className="h-4 w-4" />
                     Planned End Date
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="date"
                     value={formData.planned_end_date}
@@ -296,10 +298,10 @@ export default function NextStagePlanForm({ projectId, plan, onClose, onSuccess 
               </div>
 
               <div>
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.next_stage_plans.stage_budget" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" isAmount>
                   <DollarSign className="h-4 w-4" />
                   Stage Budget ($)
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="number"
                   step="0.01"
@@ -311,7 +313,7 @@ export default function NextStagePlanForm({ projectId, plan, onClose, onSuccess 
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Scope Description</label>
+                <FieldLabelWithHelp helpKey="public.next_stage_plans.scope_description" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Scope Description</FieldLabelWithHelp>
                 <textarea
                   value={formData.scope_description}
                   onChange={(e) => setFormData({ ...formData, scope_description: e.target.value })}
@@ -326,10 +328,10 @@ export default function NextStagePlanForm({ projectId, plan, onClose, onSuccess 
           {activeSection === 'resources' && (
             <div className="space-y-6">
               <div>
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.next_stage_plans.resource_requirements" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   <Users className="h-4 w-4" />
                   Resource Requirements
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   value={formData.resource_requirements}
                   onChange={(e) => setFormData({ ...formData, resource_requirements: e.target.value })}
@@ -340,7 +342,7 @@ export default function NextStagePlanForm({ projectId, plan, onClose, onSuccess 
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Quality Expectations</label>
+                <FieldLabelWithHelp helpKey="public.next_stage_plans.quality_expectations" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Quality Expectations</FieldLabelWithHelp>
                 <textarea
                   value={formData.quality_expectations}
                   onChange={(e) => setFormData({ ...formData, quality_expectations: e.target.value })}
@@ -355,10 +357,10 @@ export default function NextStagePlanForm({ projectId, plan, onClose, onSuccess 
           {activeSection === 'risks' && (
             <div className="space-y-6">
               <div>
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.next_stage_plans.identified_risks" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   <Shield className="h-4 w-4" />
                   Identified Risks
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   value={formData.identified_risks}
                   onChange={(e) => setFormData({ ...formData, identified_risks: e.target.value })}
@@ -372,7 +374,7 @@ export default function NextStagePlanForm({ projectId, plan, onClose, onSuccess 
                 <h3 className="font-semibold text-gray-900 dark:text-white mb-3">Stage Tolerances</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Time Tolerance (Days)</label>
+                    <FieldLabelWithHelp helpKey="public.next_stage_plans.time_tolerance_days" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Time Tolerance (Days)</FieldLabelWithHelp>
                     <input
                       type="number"
                       min="0"
@@ -382,7 +384,7 @@ export default function NextStagePlanForm({ projectId, plan, onClose, onSuccess 
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Cost Tolerance ($)</label>
+                    <FieldLabelWithHelp helpKey="public.next_stage_plans.cost_tolerance_amount" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Cost Tolerance ($)</FieldLabelWithHelp>
                     <input
                       type="number"
                       step="0.01"
@@ -395,7 +397,7 @@ export default function NextStagePlanForm({ projectId, plan, onClose, onSuccess 
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Approval Status</label>
+                <FieldLabelWithHelp helpKey="public.next_stage_plans.approval_status" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Approval Status</FieldLabelWithHelp>
                 <select
                   value={formData.approval_status}
                   onChange={(e) => setFormData({ ...formData, approval_status: e.target.value })}
@@ -410,7 +412,7 @@ export default function NextStagePlanForm({ projectId, plan, onClose, onSuccess 
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Notes</label>
+                <FieldLabelWithHelp helpKey="public.next_stage_plans.notes" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Notes</FieldLabelWithHelp>
                 <textarea
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
@@ -443,4 +445,21 @@ export default function NextStagePlanForm({ projectId, plan, onClose, onSuccess 
       </div>
     </div>
   );
+}
+
+// v1345 slice 4: field help for this component (public.next_stage_plans.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'plan_title', 'plan_date', 'current_stage_boundary_id', 'next_stage_name', 'next_stage_number',
+  'next_stage_description', 'stage_objectives', 'planned_start_date', 'planned_end_date', 'stage_budget',
+  'scope_description', 'resource_requirements', 'quality_expectations', 'identified_risks',
+  'time_tolerance_days', 'cost_tolerance_amount', 'approval_status', 'notes',
+].map((name) => `public.next_stage_plans.${name}`)
+
+export default function NextStagePlanForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <NextStagePlanFormBody {...props} />
+    </FieldHelpScope>
+  )
 }

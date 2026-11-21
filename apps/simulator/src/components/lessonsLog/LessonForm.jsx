@@ -4,6 +4,8 @@
  */
 
 import { useState, useEffect } from 'react';
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { X, Save, AlertCircle } from 'lucide-react';
 import MultiLineListInput from '@nidus/ui/MultiLineListInput';
 import LessonScopeSelector from './LessonScopeSelector';
@@ -82,7 +84,7 @@ function LessonListField({ id, label, required, value, onChange, placeholder, er
   );
 }
 
-export default function LessonForm({ lesson, onSave, onCancel, projectId }) {
+function LessonFormBody({ lesson, onSave, onCancel, projectId }) {
   const [formData, setFormData] = useState({
     lesson_title: '',
     lesson_scope: 'project',
@@ -329,9 +331,9 @@ export default function LessonForm({ lesson, onSave, onCancel, projectId }) {
       {formTab === 'details' && (<>
       {/* Title */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <FieldLabelWithHelp helpKey="sim.lessons_learned.lesson_title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
           Lesson Title <span className="text-red-500">*</span>
-        </label>
+        </FieldLabelWithHelp>
         <input
           type="text"
           value={formData.lesson_title}
@@ -347,9 +349,9 @@ export default function LessonForm({ lesson, onSave, onCancel, projectId }) {
       {/* Scope, Category, Effect, Priority */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <FieldLabelWithHelp helpKey="sim.lessons_learned.lesson_scope" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
             Scope <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={formData.lesson_scope}
             onChange={(e) => setFormData({ ...formData, lesson_scope: e.target.value })}
@@ -362,9 +364,9 @@ export default function LessonForm({ lesson, onSave, onCancel, projectId }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <FieldLabelWithHelp helpKey="sim.lessons_learned.lesson_category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
             Category <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={formData.lesson_category}
             onChange={(e) => setFormData({ ...formData, lesson_category: e.target.value })}
@@ -383,9 +385,9 @@ export default function LessonForm({ lesson, onSave, onCancel, projectId }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <FieldLabelWithHelp helpKey="sim.lessons_learned.effect_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
             Effect Type <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={formData.effect_type}
             onChange={(e) => setFormData({ ...formData, effect_type: e.target.value })}
@@ -398,9 +400,9 @@ export default function LessonForm({ lesson, onSave, onCancel, projectId }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <FieldLabelWithHelp helpKey="sim.lessons_learned.priority" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
             Priority <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={formData.priority}
             onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
@@ -492,7 +494,7 @@ export default function LessonForm({ lesson, onSave, onCancel, projectId }) {
             itemColumnLabel="Practice"
           />
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Supporting Evidence</label>
+            <FieldLabelWithHelp helpKey="sim.lessons_learned.supporting_evidence" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Supporting Evidence</FieldLabelWithHelp>
             <textarea
               rows={3}
               value={formData.supporting_evidence}
@@ -502,7 +504,7 @@ export default function LessonForm({ lesson, onSave, onCancel, projectId }) {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Follow-up Action</label>
+            <FieldLabelWithHelp helpKey="sim.lessons_learned.follow_up_action" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Follow-up Action</FieldLabelWithHelp>
             <textarea
               rows={2}
               value={formData.follow_up_action}
@@ -513,7 +515,7 @@ export default function LessonForm({ lesson, onSave, onCancel, projectId }) {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Follow-up Due Date</label>
+              <FieldLabelWithHelp helpKey="sim.lessons_learned.follow_up_due_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Follow-up Due Date</FieldLabelWithHelp>
               <input
                 type="date"
                 value={formData.follow_up_due_date}
@@ -522,7 +524,7 @@ export default function LessonForm({ lesson, onSave, onCancel, projectId }) {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Follow-up Status</label>
+              <FieldLabelWithHelp helpKey="sim.lessons_learned.follow_up_status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Follow-up Status</FieldLabelWithHelp>
               <select
                 value={formData.follow_up_status}
                 onChange={(e) => setFormData({ ...formData, follow_up_status: e.target.value })}
@@ -536,7 +538,7 @@ export default function LessonForm({ lesson, onSave, onCancel, projectId }) {
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
-            <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+            <FieldLabelWithHelp helpKey="sim.lessons_learned.shared_with_organization" className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
               <input
                 type="checkbox"
                 checked={formData.shared_with_organization}
@@ -544,9 +546,9 @@ export default function LessonForm({ lesson, onSave, onCancel, projectId }) {
                 className="rounded border-gray-300 dark:border-gray-600"
               />
               Shared with the wider organisation
-            </label>
+            </FieldLabelWithHelp>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date Shared</label>
+              <FieldLabelWithHelp helpKey="sim.lessons_learned.sharing_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date Shared</FieldLabelWithHelp>
               <input
                 type="date"
                 value={formData.sharing_date}
@@ -561,7 +563,7 @@ export default function LessonForm({ lesson, onSave, onCancel, projectId }) {
       {formTab === 'details' && (<>
       {/* Risk Linkage */}
       <div className="border-t pt-4">
-        <label className="flex items-center gap-2 mb-2">
+        <FieldLabelWithHelp helpKey="sim.lessons_learned.was_identified_risk" className="flex items-center gap-2 mb-2">
           <input
             type="checkbox"
             checked={formData.was_identified_risk}
@@ -571,7 +573,7 @@ export default function LessonForm({ lesson, onSave, onCancel, projectId }) {
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
             Was this previously identified as a risk?
           </span>
-        </label>
+        </FieldLabelWithHelp>
         {formData.was_identified_risk && (
           <input
             type="text"
@@ -603,9 +605,9 @@ export default function LessonForm({ lesson, onSave, onCancel, projectId }) {
 
       {/* Date */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <FieldLabelWithHelp helpKey="sim.lessons_learned.lesson_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Lesson Date
-        </label>
+        </FieldLabelWithHelp>
         <input
           type="date"
           value={formData.lesson_date}
@@ -637,4 +639,29 @@ export default function LessonForm({ lesson, onSave, onCancel, projectId }) {
       )}
     </form>
   );
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.lessons_learned.lesson_title',
+  'sim.lessons_learned.lesson_scope',
+  'sim.lessons_learned.lesson_category',
+  'sim.lessons_learned.effect_type',
+  'sim.lessons_learned.priority',
+  'sim.lessons_learned.supporting_evidence',
+  'sim.lessons_learned.follow_up_action',
+  'sim.lessons_learned.follow_up_due_date',
+  'sim.lessons_learned.follow_up_status',
+  'sim.lessons_learned.shared_with_organization',
+  'sim.lessons_learned.sharing_date',
+  'sim.lessons_learned.was_identified_risk',
+  'sim.lessons_learned.lesson_date',
+]
+
+export default function LessonForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <LessonFormBody {...props} />
+    </FieldHelpScope>
+  )
 }

@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { MessageSquare, Calendar, TrendingUp, TrendingDown, Minus, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 import { getStakeholderEngagement, saveStakeholderEngagement } from '../../services/stakeholderService';
 import { platformDb } from '../../services/supabaseClient';
 import StakeholderAvatar from '@nidus/ui/StakeholderAvatar';
 
-export default function EngagementTracker({ projectId, stakeholders = [] }) {
+function EngagementTrackerBody({ projectId, stakeholders = [] }) {
   const [engagement, setEngagement] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState(null);
@@ -172,9 +174,9 @@ export default function EngagementTracker({ projectId, stakeholders = [] }) {
                     <div className="space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          <FieldLabelWithHelp helpKey="public.stakeholder_engagement.engagement_level" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                             Engagement Level *
-                          </label>
+                          </FieldLabelWithHelp>
                           <select
                             value={formData.engagement_level || latestEngagement?.engagement_level || ''}
                             onChange={(e) => setFormData({ ...formData, engagement_level: e.target.value })}
@@ -193,9 +195,9 @@ export default function EngagementTracker({ projectId, stakeholders = [] }) {
                         </div>
 
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          <FieldLabelWithHelp helpKey="public.stakeholder_engagement.satisfaction_level" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             Satisfaction (1-5)
-                          </label>
+                          </FieldLabelWithHelp>
                           <input
                             type="number"
                             min="1"
@@ -207,9 +209,9 @@ export default function EngagementTracker({ projectId, stakeholders = [] }) {
                         </div>
 
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          <FieldLabelWithHelp helpKey="public.stakeholder_engagement.support_level" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                             Support Level *
-                          </label>
+                          </FieldLabelWithHelp>
                           <select
                             value={formData.support_level || latestEngagement?.support_level || ''}
                             onChange={(e) => setFormData({ ...formData, support_level: e.target.value })}
@@ -227,9 +229,9 @@ export default function EngagementTracker({ projectId, stakeholders = [] }) {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        <FieldLabelWithHelp helpKey="public.stakeholder_engagement.engagement_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                           Engagement Date *
-                        </label>
+                        </FieldLabelWithHelp>
                         <input
                           type="date"
                           value={formData.engagement_date || latestEngagement?.engagement_date?.split('T')[0] || ''}
@@ -240,9 +242,9 @@ export default function EngagementTracker({ projectId, stakeholders = [] }) {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        <FieldLabelWithHelp helpKey="public.stakeholder_engagement.engagement_notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                           Notes
-                        </label>
+                        </FieldLabelWithHelp>
                         <textarea
                           value={formData.engagement_notes || latestEngagement?.engagement_notes || ''}
                           onChange={(e) => setFormData({ ...formData, engagement_notes: e.target.value })}
@@ -279,9 +281,9 @@ export default function EngagementTracker({ projectId, stakeholders = [] }) {
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
-                        <label className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">
+                        <FieldLabelWithHelp helpKey="public.stakeholder_engagement.engagement_level" className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">
                           Engagement Level
-                        </label>
+                        </FieldLabelWithHelp>
                         {latestEngagement?.engagement_level ? (
                           <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded capitalize ${getEngagementColor(latestEngagement.engagement_level)}`}>
                             {getEngagementIcon(latestEngagement.engagement_level)}
@@ -293,9 +295,9 @@ export default function EngagementTracker({ projectId, stakeholders = [] }) {
                       </div>
 
                       <div>
-                        <label className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">
+                        <FieldLabelWithHelp helpKey="public.stakeholder_engagement.satisfaction_level" className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">
                           Satisfaction
-                        </label>
+                        </FieldLabelWithHelp>
                         {latestEngagement?.satisfaction_level ? (
                           <div className="flex items-center gap-2">
                             <span className={`px-2 py-1 text-xs font-medium rounded ${getSatisfactionColor(latestEngagement.satisfaction_level)}`}>
@@ -308,9 +310,9 @@ export default function EngagementTracker({ projectId, stakeholders = [] }) {
                       </div>
 
                       <div>
-                        <label className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">
+                        <FieldLabelWithHelp helpKey="public.stakeholder_engagement.support_level" className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">
                           Support Level
-                        </label>
+                        </FieldLabelWithHelp>
                         {latestEngagement?.support_level ? (
                           <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded capitalize ${getEngagementColor(latestEngagement.support_level)}`}>
                             {latestEngagement.support_level?.replace('-', ' ')}
@@ -345,3 +347,16 @@ export default function EngagementTracker({ projectId, stakeholders = [] }) {
   );
 }
 
+// v1345 slice 4: field help for this component (public.stakeholder_engagement.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'engagement_level', 'satisfaction_level', 'support_level', 'engagement_date', 'engagement_notes',
+].map((name) => `public.stakeholder_engagement.${name}`)
+
+export default function EngagementTracker(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <EngagementTrackerBody {...props} />
+    </FieldHelpScope>
+  )
+}

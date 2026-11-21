@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { supabase } from '../../../services/supabaseClient';
 import { FileText, CheckCircle, Calendar, TrendingUp, Target, Users } from 'lucide-react';
 import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesContext';
@@ -115,10 +117,10 @@ function ApproverList({ users, value, onChange }) {
 
   return (
     <div className="space-y-3">
-      <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+      <FieldLabelWithHelp helpKey="sim.project_closures.approved_by" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
         <Users className="h-4 w-4" />
         Approved By
-      </label>
+      </FieldLabelWithHelp>
       {ids.length > 0 && (
         <ul className="divide-y divide-gray-200 dark:divide-gray-700 border border-gray-200 dark:border-gray-700 rounded-lg">
           {ids.map((id, index) => (
@@ -156,12 +158,12 @@ function ApproverList({ users, value, onChange }) {
   )
 }
 
-function ClosureListField({ label, required, viewModeId, value, onChange, placeholder, itemColumnLabel }) {
+function ClosureListField({ label, required, helpKey, viewModeId, value, onChange, placeholder, itemColumnLabel }) {
   return (
     <div>
-      <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+      <FieldLabelWithHelp helpKey={helpKey} className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
         {label}{required ? ' *' : ''}
-      </label>
+      </FieldLabelWithHelp>
       <MultiLineListInput
         viewModeId={viewModeId}
         value={value}
@@ -174,7 +176,7 @@ function ClosureListField({ label, required, viewModeId, value, onChange, placeh
   )
 }
 
-export default function ProjectClosureForm({ projectId, closure, onClose, onSuccess, initialSection = 'basic' }) {
+function ProjectClosureFormBody({ projectId, closure, onClose, onSuccess, initialSection = 'basic' }) {
   const [loading, setLoading] = useState(false);
   const [activeSection, setActiveSection] = useState(initialSection);
   const [auditUserLabels, setAuditUserLabels] = useState({});
@@ -390,9 +392,9 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                <FieldLabelWithHelp helpKey="sim.project_closures.closure_type" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>
                   Closure Type *
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   value={formData.closure_type}
                   onChange={(e) => setFormData({ ...formData, closure_type: e.target.value })}
@@ -406,9 +408,9 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                <FieldLabelWithHelp helpKey="sim.project_closures.closure_status" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>
                   Closure Status *
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   value={formData.closure_status}
                   onChange={(e) => setFormData({ ...formData, closure_status: e.target.value })}
@@ -425,9 +427,9 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                <FieldLabelWithHelp helpKey="sim.project_closures.closure_phase" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>
                   Closure Phase *
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   value={formData.closure_phase}
                   onChange={(e) => setFormData({ ...formData, closure_phase: e.target.value })}
@@ -442,9 +444,9 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                <FieldLabelWithHelp helpKey="sim.project_closures.project_board_id" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" listOptions={false}>
                   Project Board
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   value={formData.project_board_id}
                   onChange={(e) => setFormData({ ...formData, project_board_id: e.target.value })}
@@ -462,10 +464,10 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.project_closures.planned_closure_date" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   <Calendar className="h-4 w-4" />
                   Planned Closure Date
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="date"
                   value={formData.planned_closure_date}
@@ -475,10 +477,10 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
               </div>
 
               <div>
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.project_closures.actual_closure_date" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   <Calendar className="h-4 w-4" />
                   Actual Closure Date
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="date"
                   value={formData.actual_closure_date}
@@ -489,7 +491,7 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
             </div>
 
             <ClosureListField
-              label="Closure Reason"
+              label="Closure Reason" helpKey="sim.project_closures.closure_reason"
               required
               viewModeId="project-closure-reason"
               value={formData.closure_reason}
@@ -504,7 +506,7 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
         return (
           <div className="space-y-6">
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Project Success Rating</label>
+              <FieldLabelWithHelp helpKey="sim.project_closures.project_success_rating" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Project Success Rating</FieldLabelWithHelp>
               <select
                 value={formData.project_success_rating}
                 onChange={(e) => setFormData({ ...formData, project_success_rating: e.target.value })}
@@ -519,7 +521,7 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
               </select>
             </div>
             <ClosureListField
-              label="Performance Summary"
+              label="Performance Summary" helpKey="sim.project_closures.performance_summary"
               required
               viewModeId="project-closure-performance-summary"
               value={formData.performance_summary}
@@ -548,9 +550,9 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
         return (
           <div className="space-y-6">
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+              <FieldLabelWithHelp helpKey="sim.project_closures.benefits_transition_status" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                 Benefits Transition Status
-              </label>
+              </FieldLabelWithHelp>
               <select
                 value={formData.benefits_transition_status}
                 onChange={(e) => setFormData({ ...formData, benefits_transition_status: e.target.value })}
@@ -565,7 +567,7 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
               </p>
             </div>
 
-            <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+            <FieldLabelWithHelp helpKey="sim.project_closures.benefits_realized" className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
               <input
                 type="checkbox"
                 checked={!!formData.benefits_realized}
@@ -573,10 +575,10 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
                 className="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-blue-600"
               />
               Expected benefits have been realised (or their measurement is handed over)
-            </label>
+            </FieldLabelWithHelp>
 
             <ClosureListField
-              label="Benefits Realization Summary"
+              label="Benefits Realization Summary" helpKey="sim.project_closures.benefits_realization_summary"
               required
               viewModeId="project-closure-benefits-summary"
               value={formData.benefits_realization_summary}
@@ -605,7 +607,7 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
         return (
           <div className="space-y-6">
             <ClosureListField
-              label="Financial Closure Summary"
+              label="Financial Closure Summary" helpKey="sim.project_closures.financial_closure_summary"
               required
               viewModeId="project-closure-financial-summary"
               value={formData.financial_closure_summary}
@@ -615,7 +617,7 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
             />
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Final Budget</label>
+                <FieldLabelWithHelp helpKey="sim.project_closures.final_budget" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" isAmount>Final Budget</FieldLabelWithHelp>
                 <SmartAmountInput
                   value={formData.final_budget}
                   onChange={(final_budget) => setFormData({ ...formData, final_budget })}
@@ -624,7 +626,7 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
                 />
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Final Actual Cost</label>
+                <FieldLabelWithHelp helpKey="sim.project_closures.final_actual_cost" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" isAmount>Final Actual Cost</FieldLabelWithHelp>
                 <SmartAmountInput
                   value={formData.final_actual_cost}
                   onChange={(final_actual_cost) => setFormData({ ...formData, final_actual_cost })}
@@ -633,7 +635,7 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
                 />
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Cost Variance (budget − actual)</label>
+                <FieldLabelWithHelp helpKey="sim.project_closures.cost_variance" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" isAmount>Cost Variance (budget − actual)</FieldLabelWithHelp>
                 <p className="px-4 py-2 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700">
                   {formData.final_budget != null && formData.final_actual_cost != null
                     ? (Number(formData.final_budget) - Number(formData.final_actual_cost)).toLocaleString(undefined, { maximumFractionDigits: 2 })
@@ -642,7 +644,7 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
-            <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+            <FieldLabelWithHelp helpKey="sim.project_closures.financial_accounts_closed" className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
               <input
                 type="checkbox"
                 checked={!!formData.financial_accounts_closed}
@@ -650,9 +652,9 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
                 className="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-blue-600"
               />
               Project cost codes and accounts are closed
-            </label>
+            </FieldLabelWithHelp>
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Financial Closure Date</label>
+                <FieldLabelWithHelp helpKey="sim.project_closures.financial_closure_date" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Financial Closure Date</FieldLabelWithHelp>
                 <input
                   type="date"
                   value={formData.financial_closure_date}
@@ -668,9 +670,9 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
         return (
           <div className="space-y-6">
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+              <FieldLabelWithHelp helpKey="sim.project_closures.resource_release_status" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>
                 Resource Release Status *
-              </label>
+              </FieldLabelWithHelp>
               <select
                 value={formData.resource_release_status}
                 onChange={(e) => setFormData({ ...formData, resource_release_status: e.target.value })}
@@ -685,9 +687,9 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
             </div>
 
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+              <FieldLabelWithHelp helpKey="sim.project_closures.stakeholder_acceptance" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>
                 Stakeholder Acceptance *
-              </label>
+              </FieldLabelWithHelp>
               <select
                 value={formData.stakeholder_acceptance}
                 onChange={(e) => setFormData({ ...formData, stakeholder_acceptance: e.target.value })}
@@ -703,9 +705,9 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
             </div>
 
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+              <FieldLabelWithHelp helpKey="sim.project_closures.checklist_completion_percentage" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                 Checklist Completion: {formData.checklist_completion_percentage}%
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="range"
                 min="0"
@@ -725,7 +727,7 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
-            <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+            <FieldLabelWithHelp helpKey="sim.project_closures.resources_released" className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
               <input
                 type="checkbox"
                 checked={!!formData.resources_released}
@@ -733,9 +735,9 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
                 className="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-blue-600"
               />
               All project resources have been released
-            </label>
+            </FieldLabelWithHelp>
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Resources Release Date</label>
+                <FieldLabelWithHelp helpKey="sim.project_closures.resources_release_date" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Resources Release Date</FieldLabelWithHelp>
                 <input
                   type="date"
                   value={formData.resources_release_date}
@@ -745,7 +747,7 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
               </div>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Outstanding Resource Commitments</label>
+              <FieldLabelWithHelp helpKey="sim.project_closures.outstanding_resource_commitments" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Outstanding Resource Commitments</FieldLabelWithHelp>
               <textarea
                 rows={3}
                 value={formData.outstanding_resource_commitments}
@@ -774,7 +776,7 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
       case 'documentation':
         return (
           <div className="space-y-6">
-            <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+            <FieldLabelWithHelp helpKey="sim.project_closures.all_documentation_archived" className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
               <input
                 type="checkbox"
                 checked={!!formData.all_documentation_archived}
@@ -782,10 +784,10 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
                 className="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-blue-600"
               />
               All project documentation has been archived
-            </label>
+            </FieldLabelWithHelp>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Archive Location</label>
+                <FieldLabelWithHelp helpKey="sim.project_closures.documentation_archive_location" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Archive Location</FieldLabelWithHelp>
                 <input
                   type="text"
                   value={formData.documentation_archive_location}
@@ -795,7 +797,7 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
                 />
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Retention Period</label>
+                <FieldLabelWithHelp helpKey="sim.project_closures.documentation_retention_period" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Retention Period</FieldLabelWithHelp>
                 <input
                   type="text"
                   value={formData.documentation_retention_period}
@@ -806,7 +808,7 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
               </div>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Closure Document Link</label>
+              <FieldLabelWithHelp helpKey="sim.project_closures.closure_document_url" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Closure Document Link</FieldLabelWithHelp>
               <input
                 type="url"
                 value={formData.closure_document_url}
@@ -816,7 +818,7 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
               />
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Special Considerations</label>
+              <FieldLabelWithHelp helpKey="sim.project_closures.special_considerations" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Special Considerations</FieldLabelWithHelp>
               <textarea
                 rows={3}
                 value={formData.special_considerations}
@@ -832,10 +834,10 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
         return (
           <div className="space-y-6">
             <div>
-              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.project_closures.prepared_by" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 <Users className="h-4 w-4" />
                 Prepared By
-              </label>
+              </FieldLabelWithHelp>
               <SelectField
                 forceSearchable
                 value={formData.prepared_by}
@@ -845,10 +847,10 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
               />
             </div>
             <div>
-              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.project_closures.final_approval_date" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 <Calendar className="h-4 w-4" />
                 Final Approval Date
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="date"
                 value={formData.final_approval_date}
@@ -1024,4 +1026,44 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
         </form>
     </div>
   );
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.project_closures.approved_by',
+  'sim.project_closures.closure_type',
+  'sim.project_closures.closure_status',
+  'sim.project_closures.closure_phase',
+  'sim.project_closures.project_board_id',
+  'sim.project_closures.planned_closure_date',
+  'sim.project_closures.actual_closure_date',
+  'sim.project_closures.project_success_rating',
+  'sim.project_closures.benefits_transition_status',
+  'sim.project_closures.benefits_realized',
+  'sim.project_closures.final_budget',
+  'sim.project_closures.final_actual_cost',
+  'sim.project_closures.cost_variance',
+  'sim.project_closures.financial_accounts_closed',
+  'sim.project_closures.financial_closure_date',
+  'sim.project_closures.resource_release_status',
+  'sim.project_closures.stakeholder_acceptance',
+  'sim.project_closures.checklist_completion_percentage',
+  'sim.project_closures.resources_released',
+  'sim.project_closures.resources_release_date',
+  'sim.project_closures.outstanding_resource_commitments',
+  'sim.project_closures.all_documentation_archived',
+  'sim.project_closures.documentation_archive_location',
+  'sim.project_closures.documentation_retention_period',
+  'sim.project_closures.closure_document_url',
+  'sim.project_closures.special_considerations',
+  'sim.project_closures.prepared_by',
+  'sim.project_closures.final_approval_date',
+]
+
+export default function ProjectClosureForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ProjectClosureFormBody {...props} />
+    </FieldHelpScope>
+  )
 }

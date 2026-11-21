@@ -1,4 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { useParams, useNavigate } from 'react-router-dom'
 import { format } from 'date-fns'
 import { supabase } from '../services/supabaseClient'
@@ -25,7 +27,7 @@ const TASK_VIEW_SECTIONS = [
   ]}
 ]
 
-export default function TasksDetail() {
+function TasksDetailBody() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { showSuccess, modal } = useSuccessModal()
@@ -388,9 +390,9 @@ export default function TasksDetail() {
             ) : (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="sim.tasks.task_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                     Task Name <span className="text-red-500">*</span>
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="text"
                     name="task_name"
@@ -406,9 +408,9 @@ export default function TasksDetail() {
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="sim.tasks.task_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Task Description
-                  </label>
+                  </FieldLabelWithHelp>
                   <textarea
                     name="task_description"
                     value={formData.task_description}
@@ -582,9 +584,9 @@ export default function TasksDetail() {
         {editing ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.tasks.project_id" listOptions={false} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Project
-              </label>
+              </FieldLabelWithHelp>
               <p className="rounded-md border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/40 px-3 py-2 text-sm text-gray-900 dark:text-gray-100">
                 {task.projects
                   ? `${task.projects.project_name}${task.projects.project_code ? ` (${task.projects.project_code})` : ''}`
@@ -593,9 +595,9 @@ export default function TasksDetail() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.tasks.status_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Status <span className="text-red-500">*</span>
-              </label>
+              </FieldLabelWithHelp>
               <select
                 name="status_id"
                 value={formData.status_id}
@@ -618,9 +620,9 @@ export default function TasksDetail() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.tasks.priority" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Priority
-              </label>
+              </FieldLabelWithHelp>
               <select
                 name="priority"
                 value={formData.priority}
@@ -635,9 +637,9 @@ export default function TasksDetail() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.tasks.assigned_to_user_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                 Task owner
-              </label>
+              </FieldLabelWithHelp>
               <SelectField
                 id="assigned_to_user_id"
                 name="assigned_to_user_id"
@@ -653,9 +655,9 @@ export default function TasksDetail() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.tasks.functional_role_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                 Role
-              </label>
+              </FieldLabelWithHelp>
               <SelectField
                 id="functional_role_id"
                 name="functional_role_id"
@@ -685,9 +687,9 @@ export default function TasksDetail() {
             ) : null}
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.tasks.due_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Due Date
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="date"
                 name="due_date"
@@ -698,9 +700,9 @@ export default function TasksDetail() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.tasks.estimated_hours" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Estimated Hours
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="number"
                 name="estimated_hours"
@@ -713,9 +715,9 @@ export default function TasksDetail() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.tasks.estimated_duration_days" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Estimated Days
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="number"
                 name="estimated_duration_days"
@@ -727,9 +729,9 @@ export default function TasksDetail() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.tasks.percentage_complete" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Progress (%)
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="number"
                 name="percentage_complete"
@@ -821,5 +823,27 @@ export default function TasksDetail() {
       )}
       {modal}
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.tasks.task_name',
+  'sim.tasks.task_description',
+  'sim.tasks.status_id',
+  'sim.tasks.priority',
+  'sim.tasks.assigned_to_user_id',
+  'sim.tasks.functional_role_id',
+  'sim.tasks.due_date',
+  'sim.tasks.estimated_hours',
+  'sim.tasks.estimated_duration_days',
+  'sim.tasks.percentage_complete',
+]
+
+export default function TasksDetail(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <TasksDetailBody {...props} />
+    </FieldHelpScope>
   )
 }

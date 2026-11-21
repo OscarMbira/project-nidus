@@ -1,7 +1,9 @@
 import { useState } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Target, X, Plus } from 'lucide-react'
 
-export default function CauseAnalysisSection({ formData, onChange, errors, mode }) {
+function CauseAnalysisSectionBody({ formData, onChange, errors, mode }) {
   const [newFactor, setNewFactor] = useState('')
 
   const handleAddFactor = () => {
@@ -32,9 +34,9 @@ export default function CauseAnalysisSection({ formData, onChange, errors, mode 
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="public.exception_reports.cause_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
           Cause Description *
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={formData.cause_description || ''}
           onChange={(e) => onChange('cause_description', e.target.value)}
@@ -53,9 +55,9 @@ export default function CauseAnalysisSection({ formData, onChange, errors, mode 
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="public.exception_reports.root_cause_category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Root Cause Category
-        </label>
+        </FieldLabelWithHelp>
         <select
           value={formData.root_cause_category || ''}
           onChange={(e) => onChange('root_cause_category', e.target.value || null)}
@@ -74,9 +76,9 @@ export default function CauseAnalysisSection({ formData, onChange, errors, mode 
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="public.exception_reports.root_cause_analysis" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
           Root Cause Analysis *
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={formData.root_cause_analysis || ''}
           onChange={(e) => onChange('root_cause_analysis', e.target.value)}
@@ -95,9 +97,9 @@ export default function CauseAnalysisSection({ formData, onChange, errors, mode 
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="public.exception_reports.contributing_factors" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Contributing Factors
-        </label>
+        </FieldLabelWithHelp>
         <div className="space-y-2">
           {(formData.contributing_factors || []).map((factor, index) => (
             <div key={index} className="flex items-center space-x-2 bg-gray-50 dark:bg-gray-700 rounded-lg p-2">
@@ -133,5 +135,19 @@ export default function CauseAnalysisSection({ formData, onChange, errors, mode 
         </div>
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.exception_reports.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'cause_description', 'root_cause_category', 'root_cause_analysis', 'contributing_factors',
+].map((name) => `public.exception_reports.${name}`)
+
+export default function CauseAnalysisSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <CauseAnalysisSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

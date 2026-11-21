@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { supabase } from '../services/supabaseClient'
 import { X, Save, Calendar, User, Clock } from 'lucide-react'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import SelectField from '@nidus/ui/SelectField'
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
-export default function ResourceAssignment({ assignment, resourceId, onSave, onCancel }) {
+function ResourceAssignmentBody({ assignment, resourceId, onSave, onCancel }) {
   const { showSuccess, modal: successModal } = useSuccessModal()
   const [formData, setFormData] = useState({
     assignment_type: 'task',
@@ -213,9 +215,9 @@ export default function ResourceAssignment({ assignment, resourceId, onSave, onC
       <form onSubmit={handleSubmit} className="p-6 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.resource_assignments.assignment_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Assignment Type *
-              </label>
+              </FieldLabelWithHelp>
               <select
                 name="assignment_type"
                 value={formData.assignment_type}
@@ -231,9 +233,9 @@ export default function ResourceAssignment({ assignment, resourceId, onSave, onC
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.resource_assignments.assignment_target_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required listOptions={false}>
                 Assign To *
-              </label>
+              </FieldLabelWithHelp>
               <select
                 name="assignment_target_id"
                 value={formData.assignment_target_id}
@@ -253,10 +255,10 @@ export default function ResourceAssignment({ assignment, resourceId, onSave, onC
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.resource_assignments.assignment_start_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 <Calendar className="h-4 w-4 inline mr-1" />
                 Start Date *
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="date"
                 name="assignment_start_date"
@@ -267,10 +269,10 @@ export default function ResourceAssignment({ assignment, resourceId, onSave, onC
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.resource_assignments.assignment_end_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 <Calendar className="h-4 w-4 inline mr-1" />
                 End Date
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="date"
                 name="assignment_end_date"
@@ -288,9 +290,9 @@ export default function ResourceAssignment({ assignment, resourceId, onSave, onC
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.resource_assignments.allocated_hours_per_day" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Hours per Day
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="number"
                   name="allocated_hours_per_day"
@@ -303,9 +305,9 @@ export default function ResourceAssignment({ assignment, resourceId, onSave, onC
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.resource_assignments.total_allocated_hours" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Total Hours
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="number"
                   name="total_allocated_hours"
@@ -317,9 +319,9 @@ export default function ResourceAssignment({ assignment, resourceId, onSave, onC
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.resource_assignments.allocation_percentage" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Allocation %
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="number"
                   name="allocation_percentage"
@@ -336,9 +338,9 @@ export default function ResourceAssignment({ assignment, resourceId, onSave, onC
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.resource_assignments.assignment_status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Status
-              </label>
+              </FieldLabelWithHelp>
               <select
                 name="assignment_status"
                 value={formData.assignment_status}
@@ -353,9 +355,9 @@ export default function ResourceAssignment({ assignment, resourceId, onSave, onC
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.resource_assignments.role_in_assignment" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Role
-              </label>
+              </FieldLabelWithHelp>
               <SelectField
                 options={assignmentRoles.map((r) => ({ value: r.name, label: r.name }))}
                 value={formData.role_in_assignment}
@@ -368,9 +370,9 @@ export default function ResourceAssignment({ assignment, resourceId, onSave, onC
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="sim.resource_assignments.responsibility_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Responsibility Description
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               name="responsibility_description"
               value={formData.responsibility_description}
@@ -381,9 +383,9 @@ export default function ResourceAssignment({ assignment, resourceId, onSave, onC
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="sim.resource_assignments.notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Notes
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               name="notes"
               value={formData.notes}
@@ -416,3 +418,25 @@ export default function ResourceAssignment({ assignment, resourceId, onSave, onC
   )
 }
 
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.resource_assignments.assignment_type',
+  'sim.resource_assignments.assignment_target_id',
+  'sim.resource_assignments.assignment_start_date',
+  'sim.resource_assignments.assignment_end_date',
+  'sim.resource_assignments.allocated_hours_per_day',
+  'sim.resource_assignments.total_allocated_hours',
+  'sim.resource_assignments.allocation_percentage',
+  'sim.resource_assignments.assignment_status',
+  'sim.resource_assignments.role_in_assignment',
+  'sim.resource_assignments.responsibility_description',
+  'sim.resource_assignments.notes',
+]
+
+export default function ResourceAssignment(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ResourceAssignmentBody {...props} />
+    </FieldHelpScope>
+  )
+}

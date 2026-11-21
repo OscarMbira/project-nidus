@@ -4,10 +4,12 @@
  */
 
 import { useState, useEffect } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { FileText, Calendar, User } from 'lucide-react'
 import { generateReportReference } from '../../services/lessonsReportService'
 
-export default function LessonsReportDocumentInfoSection({
+function LessonsReportDocumentInfoSectionBody({
   formData,
   onChange,
   errors = {},
@@ -63,9 +65,9 @@ export default function LessonsReportDocumentInfoSection({
 
       {/* Report Reference */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <FieldLabelWithHelp helpKey="public.lessons_reports.report_reference" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
           Report Reference <span className="text-red-500">*</span>
-        </label>
+        </FieldLabelWithHelp>
         {readOnly ? (
           <p className="text-gray-900 dark:text-white font-mono">{reference || 'N/A'}</p>
         ) : (
@@ -94,9 +96,9 @@ export default function LessonsReportDocumentInfoSection({
 
       {/* Version Number */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <FieldLabelWithHelp helpKey="public.lessons_reports.version_no" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Version Number
-        </label>
+        </FieldLabelWithHelp>
         {readOnly ? (
           <p className="text-gray-900 dark:text-white">{formData.version_no || '1.0'}</p>
         ) : (
@@ -112,10 +114,10 @@ export default function LessonsReportDocumentInfoSection({
 
       {/* Report Date */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-2">
+        <FieldLabelWithHelp helpKey="public.lessons_reports.report_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-2" required>
           <Calendar className="w-4 h-4" />
           Report Date <span className="text-red-500">*</span>
-        </label>
+        </FieldLabelWithHelp>
         {readOnly ? (
           <p className="text-gray-900 dark:text-white">
             {formData.report_date ? new Date(formData.report_date).toLocaleDateString() : 'N/A'}
@@ -138,9 +140,9 @@ export default function LessonsReportDocumentInfoSection({
 
       {/* Report Type */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <FieldLabelWithHelp helpKey="public.lessons_reports.report_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
           Report Type <span className="text-red-500">*</span>
-        </label>
+        </FieldLabelWithHelp>
         {readOnly ? (
           <p className="text-gray-900 dark:text-white capitalize">{formData.report_type || 'N/A'}</p>
         ) : (
@@ -160,9 +162,9 @@ export default function LessonsReportDocumentInfoSection({
       {formData.report_type === 'stage' && (
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <FieldLabelWithHelp helpKey="public.lessons_reports.reporting_period_start" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Reporting Period Start
-            </label>
+            </FieldLabelWithHelp>
             {readOnly ? (
               <p className="text-gray-900 dark:text-white">
                 {formData.reporting_period_start ? new Date(formData.reporting_period_start).toLocaleDateString() : 'N/A'}
@@ -177,9 +179,9 @@ export default function LessonsReportDocumentInfoSection({
             )}
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <FieldLabelWithHelp helpKey="public.lessons_reports.reporting_period_end" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Reporting Period End
-            </label>
+            </FieldLabelWithHelp>
             {readOnly ? (
               <p className="text-gray-900 dark:text-white">
                 {formData.reporting_period_end ? new Date(formData.reporting_period_end).toLocaleDateString() : 'N/A'}
@@ -199,10 +201,10 @@ export default function LessonsReportDocumentInfoSection({
       {/* Author and Prepared By */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-2">
+          <FieldLabelWithHelp helpKey="public.lessons_reports.author_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-2">
             <User className="w-4 h-4" />
             Author
-          </label>
+          </FieldLabelWithHelp>
           {readOnly ? (
             <p className="text-gray-900 dark:text-white">
               {formData.author_name || formData.author?.full_name || 'N/A'}
@@ -218,9 +220,9 @@ export default function LessonsReportDocumentInfoSection({
           )}
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <FieldLabelWithHelp helpKey="public.lessons_reports.prepared_by_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Prepared By
-          </label>
+          </FieldLabelWithHelp>
           {readOnly ? (
             <p className="text-gray-900 dark:text-white">
               {formData.prepared_by_name || formData.prepared_by?.full_name || 'N/A'}
@@ -237,5 +239,20 @@ export default function LessonsReportDocumentInfoSection({
         </div>
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.lessons_reports.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'report_reference', 'version_no', 'report_date', 'report_type', 'reporting_period_start',
+  'reporting_period_end', 'author_name', 'prepared_by_name',
+].map((name) => `public.lessons_reports.${name}`)
+
+export default function LessonsReportDocumentInfoSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <LessonsReportDocumentInfoSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

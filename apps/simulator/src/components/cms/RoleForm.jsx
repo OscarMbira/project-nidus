@@ -4,6 +4,8 @@
  */
 
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { platformDb } from '../../services/supabaseClient'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
@@ -13,7 +15,7 @@ import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken } from '@nidus/shared/utils/auditDisplayUtils'
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
-export default function RoleForm({ roleData = {}, onChange, onCancel, onSubmit, isEditing = false }) {
+function RoleFormBody({ roleData = {}, onChange, onCancel, onSubmit, isEditing = false }) {
   const [users, setUsers] = useState([])
   const [loadingUsers, setLoadingUsers] = useState(false)
   const [formTab, setFormTab] = useState('details')
@@ -91,9 +93,9 @@ export default function RoleForm({ roleData = {}, onChange, onCancel, onSubmit, 
       <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.cms_roles_responsibilities.role_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Role Name <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             value={roleData.role_name || ''}
@@ -105,9 +107,9 @@ export default function RoleForm({ roleData = {}, onChange, onCancel, onSubmit, 
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.cms_roles_responsibilities.role_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Role Type <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={roleData.role_type || ''}
             onChange={(e) => handleChange('role_type', e.target.value)}
@@ -125,9 +127,9 @@ export default function RoleForm({ roleData = {}, onChange, onCancel, onSubmit, 
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="sim.cms_roles_responsibilities.role_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
           Description <span className="text-red-500">*</span>
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={roleData.role_description || ''}
           onChange={(e) => handleChange('role_description', e.target.value)}
@@ -139,9 +141,9 @@ export default function RoleForm({ roleData = {}, onChange, onCancel, onSubmit, 
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="sim.cms_roles_responsibilities.responsibilities" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
           Responsibilities <span className="text-red-500">*</span>
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={roleData.responsibilities || ''}
           onChange={(e) => handleChange('responsibilities', e.target.value)}
@@ -154,9 +156,9 @@ export default function RoleForm({ roleData = {}, onChange, onCancel, onSubmit, 
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.cms_roles_responsibilities.assigned_user_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
             Assigned User
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={roleData.assigned_user_id || ''}
             onChange={(e) => handleChange('assigned_user_id', e.target.value || null)}
@@ -173,9 +175,9 @@ export default function RoleForm({ roleData = {}, onChange, onCancel, onSubmit, 
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.cms_roles_responsibilities.authority_level" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Authority Level
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             value={roleData.authority_level || ''}
@@ -187,9 +189,9 @@ export default function RoleForm({ roleData = {}, onChange, onCancel, onSubmit, 
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="sim.cms_roles_responsibilities.required_skills" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
           Required Skills
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={roleData.required_skills || ''}
           onChange={(e) => handleChange('required_skills', e.target.value)}
@@ -217,5 +219,24 @@ export default function RoleForm({ roleData = {}, onChange, onCancel, onSubmit, 
         </button>
       </div>
     </form>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.cms_roles_responsibilities.role_name',
+  'sim.cms_roles_responsibilities.role_type',
+  'sim.cms_roles_responsibilities.role_description',
+  'sim.cms_roles_responsibilities.responsibilities',
+  'sim.cms_roles_responsibilities.assigned_user_id',
+  'sim.cms_roles_responsibilities.authority_level',
+  'sim.cms_roles_responsibilities.required_skills',
+]
+
+export default function RoleForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <RoleFormBody {...props} />
+    </FieldHelpScope>
   )
 }

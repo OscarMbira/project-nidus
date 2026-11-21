@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { platformDb } from '@nidus/supabase'
 import {
   DEFAULT_FORM_BULK_APPROVE_MAX,
@@ -16,7 +18,7 @@ const METHODOLOGY_OPTIONS = [
 /**
  * Organisation methodology settings (v673) + form bulk-approve cap (v860).
  */
-export default function OrganisationMethodologySettings({ accountId, onSaved }) {
+function OrganisationMethodologySettingsBody({ accountId, onSaved }) {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
@@ -102,12 +104,12 @@ export default function OrganisationMethodologySettings({ accountId, onSaved }) 
       </div>
 
       <div>
-        <label
+        <FieldLabelWithHelp helpKey="sim.accounts.default_methodology"
           htmlFor="org-default-methodology"
           className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
         >
           Default Methodology
-        </label>
+        </FieldLabelWithHelp>
         <select
           id="org-default-methodology"
           value={defaultMethodology}
@@ -122,7 +124,7 @@ export default function OrganisationMethodologySettings({ accountId, onSaved }) 
         </select>
       </div>
 
-      <label className="flex items-start gap-3 cursor-pointer">
+      <FieldLabelWithHelp helpKey="sim.accounts.allow_project_methodology_override" className="flex items-start gap-3 cursor-pointer">
         <input
           type="checkbox"
           checked={allowOverride}
@@ -132,15 +134,15 @@ export default function OrganisationMethodologySettings({ accountId, onSaved }) 
         <span className="text-sm text-gray-700 dark:text-gray-300">
           Allow delivery-level methodology override (Portfolio, Programme, or Project may set a track that differs from the organisation default).
         </span>
-      </label>
+      </FieldLabelWithHelp>
 
       <div>
-        <label
+        <FieldLabelWithHelp helpKey="sim.accounts.form_bulk_approve_max"
           htmlFor="org-form-bulk-approve-max"
           className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
         >
           Form bulk approve limit
-        </label>
+        </FieldLabelWithHelp>
         <input
           id="org-form-bulk-approve-max"
           type="number"
@@ -175,5 +177,20 @@ export default function OrganisationMethodologySettings({ accountId, onSaved }) 
         {saving ? 'Saving…' : 'Save Organisation Settings'}
       </button>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.accounts.default_methodology',
+  'sim.accounts.allow_project_methodology_override',
+  'sim.accounts.form_bulk_approve_max',
+]
+
+export default function OrganisationMethodologySettings(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <OrganisationMethodologySettingsBody {...props} />
+    </FieldHelpScope>
   )
 }

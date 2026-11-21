@@ -4,6 +4,8 @@
  */
 
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { Save } from 'lucide-react'
 import { platformDb } from '@nidus/supabase'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
@@ -43,7 +45,7 @@ function arrayToLines(value) {
   return value || ''
 }
 
-export default function CommunicationPlanForm({ plan, projectId, stakeholders = [], focusStakeholderId = '', readOnly = false, onSave, onCancel }) {
+function CommunicationPlanFormBody({ plan, projectId, stakeholders = [], focusStakeholderId = '', readOnly = false, onSave, onCancel }) {
   const [formData, setFormData] = useState({
     project_id: projectId || '',
     plan_name: '',
@@ -228,31 +230,31 @@ export default function CommunicationPlanForm({ plan, projectId, stakeholders = 
         {formTab === 'plan' && (
           <>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="communication-plan-name">Plan name</label>
+              <FieldLabelWithHelp helpKey="sim.stakeholder_communications.plan_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="communication-plan-name">Plan name</FieldLabelWithHelp>
               <input id="communication-plan-name" type="text" name="plan_name" value={formData.plan_name} onChange={handleChange} required className={fieldClass} />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="communication-plan-description">Description</label>
+              <FieldLabelWithHelp helpKey="sim.stakeholder_communications.plan_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="communication-plan-description">Description</FieldLabelWithHelp>
               <textarea id="communication-plan-description" name="plan_description" value={formData.plan_description} onChange={handleChange} rows={3} className={fieldClass} />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="communication-plan-status">Status</label>
+                <FieldLabelWithHelp helpKey="sim.stakeholder_communications.plan_status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="communication-plan-status">Status</FieldLabelWithHelp>
                 <select id="communication-plan-status" name="plan_status" value={formData.plan_status} onChange={handleChange} className={fieldClass}>
                   {STATUSES.map((status) => (<option key={status} value={status}>{status}</option>))}
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="communication-plan-start">Start date</label>
+                <FieldLabelWithHelp helpKey="sim.stakeholder_communications.plan_start_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="communication-plan-start">Start date</FieldLabelWithHelp>
                 <input id="communication-plan-start" type="date" name="plan_start_date" value={formData.plan_start_date} onChange={handleChange} required className={fieldClass} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="communication-plan-end">End date</label>
+                <FieldLabelWithHelp helpKey="sim.stakeholder_communications.plan_end_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="communication-plan-end">End date</FieldLabelWithHelp>
                 <input id="communication-plan-end" type="date" name="plan_end_date" value={formData.plan_end_date} onChange={handleChange} className={fieldClass} />
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="communication-plan-objectives">Objectives</label>
+              <FieldLabelWithHelp helpKey="sim.stakeholder_communications.communication_objectives" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="communication-plan-objectives">Objectives</FieldLabelWithHelp>
               <textarea id="communication-plan-objectives" name="communication_objectives" value={formData.communication_objectives} onChange={handleChange} rows={3} className={fieldClass} />
             </div>
           </>
@@ -290,7 +292,7 @@ export default function CommunicationPlanForm({ plan, projectId, stakeholders = 
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="communication-plan-language">Language</label>
+                <FieldLabelWithHelp helpKey="sim.stakeholder_communications.communication_language" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="communication-plan-language">Language</FieldLabelWithHelp>
                 <SelectField
                   id="communication-plan-language"
                   value={formData.communication_language}
@@ -313,7 +315,7 @@ export default function CommunicationPlanForm({ plan, projectId, stakeholders = 
                 )}
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="communication-plan-format">Format</label>
+                <FieldLabelWithHelp helpKey="sim.stakeholder_communications.communication_format" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="communication-plan-format">Format</FieldLabelWithHelp>
                 <SelectField
                   id="communication-plan-format"
                   value={formData.communication_format}
@@ -332,7 +334,7 @@ export default function CommunicationPlanForm({ plan, projectId, stakeholders = 
                 )}
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="communication-plan-detail">Level of detail</label>
+                <FieldLabelWithHelp helpKey="sim.stakeholder_communications.communication_detail_level" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="communication-plan-detail">Level of detail</FieldLabelWithHelp>
                 <SelectField
                   id="communication-plan-detail"
                   value={formData.communication_detail_level}
@@ -443,7 +445,7 @@ export default function CommunicationPlanForm({ plan, projectId, stakeholders = 
 
         {formTab === 'notes' && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="communication-plan-notes">Notes</label>
+            <FieldLabelWithHelp helpKey="sim.stakeholder_communications.notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="communication-plan-notes">Notes</FieldLabelWithHelp>
             <textarea id="communication-plan-notes" name="notes" value={formData.notes} onChange={handleChange} rows={4} className={fieldClass} />
           </div>
         )}
@@ -492,5 +494,27 @@ export default function CommunicationPlanForm({ plan, projectId, stakeholders = 
         </div>
       </form>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.stakeholder_communications.plan_name',
+  'sim.stakeholder_communications.plan_description',
+  'sim.stakeholder_communications.plan_status',
+  'sim.stakeholder_communications.plan_start_date',
+  'sim.stakeholder_communications.plan_end_date',
+  'sim.stakeholder_communications.communication_objectives',
+  'sim.stakeholder_communications.communication_language',
+  'sim.stakeholder_communications.communication_format',
+  'sim.stakeholder_communications.communication_detail_level',
+  'sim.stakeholder_communications.notes',
+]
+
+export default function CommunicationPlanForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <CommunicationPlanFormBody {...props} />
+    </FieldHelpScope>
   )
 }

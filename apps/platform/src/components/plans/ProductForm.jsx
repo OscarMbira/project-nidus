@@ -3,6 +3,8 @@
  */
 
 import { useState, useEffect } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { X, Save } from 'lucide-react'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
@@ -19,7 +21,7 @@ const PRODUCT_TYPES = [
   { value: 'other', label: 'Other' }
 ]
 
-export default function ProductForm({ product, onSubmit, onCancel, workPackages = [], ppdCompositionItems = [] }) {
+function ProductFormBody({ product, onSubmit, onCancel, workPackages = [], ppdCompositionItems = [] }) {
   const [formData, setFormData] = useState({
     product_name: '',
     product_description: '',
@@ -86,9 +88,9 @@ export default function ProductForm({ product, onSubmit, onCancel, workPackages 
       <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.stage_plan_products.product_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Product Name <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             value={formData.product_name}
@@ -100,9 +102,9 @@ export default function ProductForm({ product, onSubmit, onCancel, workPackages 
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.stage_plan_products.product_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Product Type
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={formData.product_type}
             onChange={(e) => setFormData({ ...formData, product_type: e.target.value })}
@@ -117,9 +119,9 @@ export default function ProductForm({ product, onSubmit, onCancel, workPackages 
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.stage_plan_products.planned_completion_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Planned Completion Date
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="date"
             value={formData.planned_completion_date}
@@ -129,9 +131,9 @@ export default function ProductForm({ product, onSubmit, onCancel, workPackages 
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.stage_plan_products.linked_work_package_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
             Link to Work Package
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={formData.linked_work_package_id || ''}
             onChange={(e) => setFormData({ ...formData, linked_work_package_id: e.target.value || null })}
@@ -147,9 +149,9 @@ export default function ProductForm({ product, onSubmit, onCancel, workPackages 
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.stage_plan_products.linked_ppd_composition_item_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
             Link to PPD Composition Item
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={formData.linked_ppd_composition_item_id || ''}
             onChange={(e) => setFormData({ ...formData, linked_ppd_composition_item_id: e.target.value || null })}
@@ -165,9 +167,9 @@ export default function ProductForm({ product, onSubmit, onCancel, workPackages 
         </div>
 
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.stage_plan_products.product_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Description
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             value={formData.product_description}
             onChange={(e) => setFormData({ ...formData, product_description: e.target.value })}
@@ -178,9 +180,9 @@ export default function ProductForm({ product, onSubmit, onCancel, workPackages 
         </div>
 
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.stage_plan_products.acceptance_criteria" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Acceptance Criteria
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             value={formData.acceptance_criteria}
             onChange={(e) => setFormData({ ...formData, acceptance_criteria: e.target.value })}
@@ -213,5 +215,20 @@ export default function ProductForm({ product, onSubmit, onCancel, workPackages 
         </button>
       </div>
     </form>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.stage_plan_products.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'product_name', 'product_type', 'planned_completion_date', 'linked_work_package_id',
+  'linked_ppd_composition_item_id', 'product_description', 'acceptance_criteria',
+].map((name) => `public.stage_plan_products.${name}`)
+
+export default function ProductForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ProductFormBody {...props} />
+    </FieldHelpScope>
   )
 }

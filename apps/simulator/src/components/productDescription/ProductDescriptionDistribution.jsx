@@ -3,11 +3,13 @@
  */
 
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { Mail, User, Plus, Send } from 'lucide-react'
 import { supabase } from '../../services/supabaseClient'
 import { getProductDescriptionById } from '../../services/productDescriptionService'
 
-export default function ProductDescriptionDistribution({ pdId }) {
+function ProductDescriptionDistributionBody({ pdId }) {
   const [distributions, setDistributions] = useState([])
   const [loading, setLoading] = useState(true)
   const [showAddForm, setShowAddForm] = useState(false)
@@ -145,9 +147,9 @@ export default function ProductDescriptionDistribution({ pdId }) {
           <form onSubmit={handleAddDistribution} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.pd_distribution.recipient_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                   Recipient (Team Member)
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   value={formData.recipient_id}
                   onChange={(e) => {
@@ -170,9 +172,9 @@ export default function ProductDescriptionDistribution({ pdId }) {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.pd_distribution.recipient_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Or Enter Recipient Name
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   value={formData.recipient_name}
@@ -183,9 +185,9 @@ export default function ProductDescriptionDistribution({ pdId }) {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.pd_distribution.recipient_title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Recipient Title
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   value={formData.recipient_title}
@@ -195,9 +197,9 @@ export default function ProductDescriptionDistribution({ pdId }) {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.pd_distribution.date_of_issue" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Date of Issue
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="date"
                   value={formData.date_of_issue}
@@ -286,3 +288,18 @@ export default function ProductDescriptionDistribution({ pdId }) {
   )
 }
 
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.pd_distribution.recipient_id',
+  'sim.pd_distribution.recipient_name',
+  'sim.pd_distribution.recipient_title',
+  'sim.pd_distribution.date_of_issue',
+]
+
+export default function ProductDescriptionDistribution(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ProductDescriptionDistributionBody {...props} />
+    </FieldHelpScope>
+  )
+}

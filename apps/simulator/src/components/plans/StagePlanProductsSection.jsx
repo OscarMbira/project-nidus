@@ -3,13 +3,15 @@
  */
 
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { Plus } from 'lucide-react'
 import { platformDb } from '@nidus/supabase'
 import { addProduct, deleteProduct } from '../../services/stagePlanProductService'
 import ProductForm from './ProductForm'
 import ProductCard from './ProductCard'
 
-export default function StagePlanProductsSection({ 
+function StagePlanProductsSectionBody({ 
   formData, 
   onChange, 
   products, 
@@ -101,9 +103,9 @@ export default function StagePlanProductsSection({
       <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Products & Deliverables</h2>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="sim.stage_plans.products_summary" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Products Summary
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={formData.products_summary || ''}
           onChange={(e) => onChange('products_summary', e.target.value)}
@@ -115,9 +117,9 @@ export default function StagePlanProductsSection({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="sim.stage_plans.acceptance_criteria" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Acceptance Criteria
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={formData.acceptance_criteria || ''}
           onChange={(e) => onChange('acceptance_criteria', e.target.value)}
@@ -181,5 +183,19 @@ export default function StagePlanProductsSection({
         )}
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.stage_plans.products_summary',
+  'sim.stage_plans.acceptance_criteria',
+]
+
+export default function StagePlanProductsSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <StagePlanProductsSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

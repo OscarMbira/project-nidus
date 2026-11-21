@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Link, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, Plus, Trash2, ChevronUp, ChevronDown, Save, GripVertical } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -152,7 +154,7 @@ function SortableSlotRow({
  * Document Signatory requirements (v868/v873/v880): Org defaults plus Portfolio /
  * Programme / Project overrides (inherit / none / custom full-replace).
  */
-export default function SignatoryRequirementsPage() {
+function SignatoryRequirementsPageBody() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [accountId, setAccountId] = useState(null)
   const [userId, setUserId] = useState(null)
@@ -630,7 +632,7 @@ export default function SignatoryRequirementsPage() {
 
       <div className="flex shrink-0 flex-wrap items-end gap-3 rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-900">
         <div>
-          <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Scope</label>
+          <FieldLabelWithHelp helpKey="sim.process_template_signatory_requirements.scope_type" className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Scope</FieldLabelWithHelp>
           <select
             value={scopeType}
             onChange={(e) => {
@@ -647,9 +649,9 @@ export default function SignatoryRequirementsPage() {
         </div>
         {needsEntity && (
           <div className="min-w-[16rem] flex-1">
-            <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">
+            <FieldLabelWithHelp helpKey="sim.process_template_signatory_requirements.scope_id" listOptions={false} className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">
               {scopeType === 'portfolio' ? 'Portfolio' : scopeType === 'programme' ? 'Programme' : 'Project'}
-            </label>
+            </FieldLabelWithHelp>
             <select
               value={scopeId}
               onChange={(e) => setScopeId(e.target.value)}
@@ -693,9 +695,9 @@ export default function SignatoryRequirementsPage() {
       <div className="grid min-h-0 grid-cols-1 items-stretch gap-6 lg:flex-1 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.25fr)]">
       <div className="flex min-h-0 min-w-0 flex-col rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-          <label className="block text-xs font-medium text-gray-500 dark:text-gray-400">
+          <FieldLabelWithHelp helpKey="sim.process_template_signatory_requirements.table_name" className="block text-xs font-medium text-gray-500 dark:text-gray-400">
             Document types ({selectedTables.length} selected)
-          </label>
+          </FieldLabelWithHelp>
           <div className="flex gap-2 text-xs">
             <button type="button" onClick={selectAllFiltered} className="text-blue-600 hover:underline dark:text-blue-400">
               Select all shown
@@ -840,5 +842,19 @@ export default function SignatoryRequirementsPage() {
 
       {successModal}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (sim.process_template_signatory_requirements.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'scope_type', 'scope_id', 'table_name',
+].map((name) => `sim.process_template_signatory_requirements.${name}`)
+
+export default function SignatoryRequirementsPage(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <SignatoryRequirementsPageBody {...props} />
+    </FieldHelpScope>
   )
 }

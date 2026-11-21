@@ -4,12 +4,14 @@
  */
 
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { Users, Plus, Trash2, Send, CheckCircle, Mail } from 'lucide-react'
 import { getDistributionList, addDistributionRecipient, removeDistributionRecipient, sendReportToDistribution } from '../../services/lessonsReportDistributionService'
 import { getApprovals, addApprover, approveReport, rejectReport, deferReport } from '../../services/lessonsReportApprovalService'
 import { platformDb } from '@nidus/supabase'
 
-export default function LessonsReportDistributionSection({
+function LessonsReportDistributionSectionBody({
   reportId,
   readOnly = false
 }) {
@@ -385,9 +387,9 @@ export default function LessonsReportDistributionSection({
             <h3 className="text-lg font-semibold mb-4">Add Distribution Recipient</h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <FieldLabelWithHelp helpKey="sim.lessons_report_distribution.recipient_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" listOptions={false}>
                   Select User
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   value={recipientForm.recipient_id || ''}
                   onChange={(e) => {
@@ -408,9 +410,9 @@ export default function LessonsReportDistributionSection({
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <FieldLabelWithHelp helpKey="sim.lessons_report_distribution.recipient_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Or Enter Name
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   value={recipientForm.recipient_name}
@@ -420,9 +422,9 @@ export default function LessonsReportDistributionSection({
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <FieldLabelWithHelp helpKey="sim.lessons_report_distribution.recipient_email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Email
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="email"
                   value={recipientForm.recipient_email}
@@ -432,9 +434,9 @@ export default function LessonsReportDistributionSection({
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <FieldLabelWithHelp helpKey="sim.lessons_report_distribution.distribution_method" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Distribution Method
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   value={recipientForm.distribution_method}
                   onChange={(e) => setRecipientForm({ ...recipientForm, distribution_method: e.target.value })}
@@ -473,9 +475,9 @@ export default function LessonsReportDistributionSection({
             <h3 className="text-lg font-semibold mb-4">Add Approver</h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <FieldLabelWithHelp helpKey="sim.lessons_report_distribution.recipient_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" listOptions={false}>
                   Select User
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   value={approverForm.approver_id || ''}
                   onChange={(e) => {
@@ -495,9 +497,9 @@ export default function LessonsReportDistributionSection({
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <FieldLabelWithHelp helpKey="sim.lessons_report_distribution.recipient_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Or Enter Name
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   value={approverForm.approver_name}
@@ -507,9 +509,9 @@ export default function LessonsReportDistributionSection({
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <FieldLabelWithHelp helpKey="sim.lessons_report_distribution.approver_role" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Approver Role
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   value={approverForm.approver_role}
                   onChange={(e) => setApproverForm({ ...approverForm, approver_role: e.target.value })}
@@ -543,5 +545,22 @@ export default function LessonsReportDistributionSection({
         </div>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.lessons_report_distribution.recipient_id',
+  'sim.lessons_report_distribution.recipient_name',
+  'sim.lessons_report_distribution.recipient_email',
+  'sim.lessons_report_distribution.distribution_method',
+  'sim.lessons_report_distribution.approver_role',
+]
+
+export default function LessonsReportDistributionSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <LessonsReportDistributionSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

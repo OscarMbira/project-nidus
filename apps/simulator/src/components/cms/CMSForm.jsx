@@ -5,6 +5,8 @@
  */
 
 import { useState } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { CheckCircle, FileText, MessageSquare, Users, Settings, Calendar, BarChart3, Shield, Megaphone } from 'lucide-react'
 import { HoldButton } from '../shared-app/HoldButton'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
@@ -14,7 +16,7 @@ import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken } from '@nidus/shared/utils/auditDisplayUtils'
 
-export default function CMSForm({
+function CMSFormBody({
   cmsData = {},
   cmsId = null,
   onChange,
@@ -52,9 +54,9 @@ export default function CMSForm({
         return (
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.communication_management_strategies.purpose" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Purpose <span className="text-red-500">*</span>
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={cmsData.purpose || ''}
                 onChange={(e) => handleChange('purpose', e.target.value)}
@@ -66,9 +68,9 @@ export default function CMSForm({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.communication_management_strategies.objectives" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Objectives <span className="text-red-500">*</span>
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={cmsData.objectives || ''}
                 onChange={(e) => handleChange('objectives', e.target.value)}
@@ -80,9 +82,9 @@ export default function CMSForm({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.communication_management_strategies.scope" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Scope <span className="text-red-500">*</span>
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={cmsData.scope || ''}
                 onChange={(e) => handleChange('scope', e.target.value)}
@@ -94,9 +96,9 @@ export default function CMSForm({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.communication_management_strategies.strategy_responsibility" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Strategy Responsibility
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={cmsData.strategy_responsibility || ''}
                 onChange={(e) => handleChange('strategy_responsibility', e.target.value)}
@@ -112,9 +114,9 @@ export default function CMSForm({
         return (
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.communication_management_strategies.communication_planning_approach" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Communication Planning Approach <span className="text-red-500">*</span>
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={cmsData.communication_planning_approach || ''}
                 onChange={(e) => handleChange('communication_planning_approach', e.target.value)}
@@ -126,9 +128,9 @@ export default function CMSForm({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.communication_management_strategies.communication_control_approach" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Communication Control Approach <span className="text-red-500">*</span>
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={cmsData.communication_control_approach || ''}
                 onChange={(e) => handleChange('communication_control_approach', e.target.value)}
@@ -140,9 +142,9 @@ export default function CMSForm({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.communication_management_strategies.communication_assurance_approach" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Communication Assurance Approach <span className="text-red-500">*</span>
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={cmsData.communication_assurance_approach || ''}
                 onChange={(e) => handleChange('communication_assurance_approach', e.target.value)}
@@ -154,9 +156,9 @@ export default function CMSForm({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.communication_management_strategies.corporate_communication_policy_reference" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Corporate Communication Policy Reference
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="text"
                 value={cmsData.corporate_communication_policy_reference || ''}
@@ -167,9 +169,9 @@ export default function CMSForm({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.communication_management_strategies.variance_from_corporate" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Variance from Corporate Standards (if any)
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={cmsData.variance_from_corporate || ''}
                 onChange={(e) => handleChange('variance_from_corporate', e.target.value)}
@@ -181,9 +183,9 @@ export default function CMSForm({
 
             {cmsData.variance_from_corporate && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.communication_management_strategies.variance_justification" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Variance Justification <span className="text-red-500">*</span>
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   value={cmsData.variance_justification || ''}
                   onChange={(e) => handleChange('variance_justification', e.target.value)}
@@ -387,5 +389,27 @@ export default function CMSForm({
       </>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.communication_management_strategies.purpose',
+  'sim.communication_management_strategies.objectives',
+  'sim.communication_management_strategies.scope',
+  'sim.communication_management_strategies.strategy_responsibility',
+  'sim.communication_management_strategies.communication_planning_approach',
+  'sim.communication_management_strategies.communication_control_approach',
+  'sim.communication_management_strategies.communication_assurance_approach',
+  'sim.communication_management_strategies.corporate_communication_policy_reference',
+  'sim.communication_management_strategies.variance_from_corporate',
+  'sim.communication_management_strategies.variance_justification',
+]
+
+export default function CMSForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <CMSFormBody {...props} />
+    </FieldHelpScope>
   )
 }

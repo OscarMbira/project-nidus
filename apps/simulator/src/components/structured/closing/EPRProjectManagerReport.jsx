@@ -1,6 +1,8 @@
 import { AlertTriangle } from 'lucide-react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 
-export default function EPRProjectManagerReport({ formData, onChange, errors, mode }) {
+function EPRProjectManagerReportBody({ formData, onChange, errors, mode }) {
   return (
     <div className="space-y-6">
       <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
@@ -11,9 +13,9 @@ export default function EPRProjectManagerReport({ formData, onChange, errors, mo
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="sim.end_project_reports.project_managers_report" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
           Project Manager's Report *
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={formData.project_managers_report || ''}
           onChange={(e) => onChange('project_managers_report', e.target.value)}
@@ -43,9 +45,9 @@ export default function EPRProjectManagerReport({ formData, onChange, errors, mo
           </div>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.end_project_reports.abnormal_situations" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Abnormal Situations Description *
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={formData.abnormal_situations || ''}
                 onChange={(e) => onChange('abnormal_situations', e.target.value)}
@@ -64,9 +66,9 @@ export default function EPRProjectManagerReport({ formData, onChange, errors, mo
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.end_project_reports.abnormal_situations_impact" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Impact of Abnormal Situations *
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={formData.abnormal_situations_impact || ''}
                 onChange={(e) => onChange('abnormal_situations_impact', e.target.value)}
@@ -86,9 +88,9 @@ export default function EPRProjectManagerReport({ formData, onChange, errors, mo
             </div>
             {formData.closure_type === 'premature' && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.end_project_reports.premature_closure_reason" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Premature Closure Reason
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   value={formData.premature_closure_reason || ''}
                   onChange={(e) => onChange('premature_closure_reason', e.target.value)}
@@ -118,5 +120,21 @@ export default function EPRProjectManagerReport({ formData, onChange, errors, mo
         </ul>
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.end_project_reports.project_managers_report',
+  'sim.end_project_reports.abnormal_situations',
+  'sim.end_project_reports.abnormal_situations_impact',
+  'sim.end_project_reports.premature_closure_reason',
+]
+
+export default function EPRProjectManagerReport(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <EPRProjectManagerReportBody {...props} />
+    </FieldHelpScope>
   )
 }

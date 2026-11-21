@@ -5,6 +5,8 @@
  */
 
 import { useState, useEffect, useMemo } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import {
@@ -99,7 +101,7 @@ function teamLeadLabel(team) {
   return lead.full_name || lead.email || ''
 }
 
-export default function Teams() {
+function TeamsBody() {
   const navigate = useNavigate()
   const { projectId: routeProjectId, routeKey, loading: projectLoading } = usePlatformProjectId()
   const { currentProjectId, currentProject, loading: ctxLoading } = useCurrentProject()
@@ -966,18 +968,18 @@ export default function Teams() {
           )}
           {editingDirectory && (
             <div className="p-3 rounded-lg border border-sky-200 dark:border-sky-800 bg-sky-50 dark:bg-sky-900/20 flex flex-wrap gap-2 items-end">
-              <label className="text-xs text-gray-700 dark:text-gray-200">
+              <FieldLabelWithHelp helpKey="public.users.job_title" className="text-xs text-gray-700 dark:text-gray-200">
                 Job title
                 <input value={editingDirectory.job_title} onChange={(e) => setEditingDirectory((d) => ({ ...d, job_title: e.target.value }))} className="mt-1 block w-44 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm" />
-              </label>
-              <label className="text-xs text-gray-700 dark:text-gray-200">
+              </FieldLabelWithHelp>
+              <FieldLabelWithHelp helpKey="public.users.department" className="text-xs text-gray-700 dark:text-gray-200">
                 Department
                 <input value={editingDirectory.department} onChange={(e) => setEditingDirectory((d) => ({ ...d, department: e.target.value }))} className="mt-1 block w-44 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm" />
-              </label>
-              <label className="text-xs text-gray-700 dark:text-gray-200">
+              </FieldLabelWithHelp>
+              <FieldLabelWithHelp helpKey="public.users.phone_number" className="text-xs text-gray-700 dark:text-gray-200">
                 Phone
                 <input value={editingDirectory.phone_number} onChange={(e) => setEditingDirectory((d) => ({ ...d, phone_number: e.target.value }))} className="mt-1 block w-40 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm" />
-              </label>
+              </FieldLabelWithHelp>
               <button type="button" onClick={handleSaveDirectory} className="px-3 py-2 rounded-lg bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium min-h-[40px]">Save</button>
               <button type="button" onClick={() => setEditingDirectory(null)} className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 text-sm min-h-[40px]">Cancel</button>
             </div>
@@ -1218,12 +1220,12 @@ export default function Teams() {
 
           {addingCapacity && (
             <div className="p-3 rounded-lg border border-sky-200 dark:border-sky-800 bg-sky-50 dark:bg-sky-900/20 flex flex-wrap gap-2 items-center">
-              <label className="text-sm text-gray-700 dark:text-gray-200">Hours/day
+              <FieldLabelWithHelp helpKey="public.users.default_hours_per_day" className="text-sm text-gray-700 dark:text-gray-200">Hours/day
                 <input type="number" min="0" max="24" value={newHoursPerDay} onChange={(e) => setNewHoursPerDay(e.target.value)} className="ml-2 w-20 px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm" />
-              </label>
-              <label className="text-sm text-gray-700 dark:text-gray-200">Hours/week
+              </FieldLabelWithHelp>
+              <FieldLabelWithHelp helpKey="public.users.default_hours_per_week" className="text-sm text-gray-700 dark:text-gray-200">Hours/week
                 <input type="number" min="0" max="168" value={newHoursPerWeek} onChange={(e) => setNewHoursPerWeek(e.target.value)} className="ml-2 w-20 px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm" />
-              </label>
+              </FieldLabelWithHelp>
               <button type="button" onClick={handleAddMyCapacity} className="px-3 py-2 rounded-lg bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium min-h-[40px]">{editingCapacity ? 'Update' : 'Save'}</button>
               <button type="button" onClick={() => { setAddingCapacity(false); setEditingCapacity(null) }} className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 text-sm min-h-[40px]">Cancel</button>
             </div>
@@ -1374,5 +1376,19 @@ export default function Teams() {
         </div>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.users.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'job_title', 'department', 'phone_number', 'default_hours_per_day', 'default_hours_per_week',
+].map((name) => `public.users.${name}`)
+
+export default function Teams(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <TeamsBody {...props} />
+    </FieldHelpScope>
   )
 }

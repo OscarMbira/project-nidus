@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Search, RefreshCw, AlertCircle, X, Pencil, Check } from 'lucide-react'
 import {
   getAllPortfolioGovernance,
@@ -34,7 +36,7 @@ const EMPTY_EDIT = {
   next_review_date: '', decision_authority: '', governance_notes: '',
 }
 
-export default function PortfolioGovernance() {
+function PortfolioGovernanceBody() {
   const [rows, setRows]         = useState([])
   const [portfolios, setPortfolios] = useState([])
   const [loading, setLoading]   = useState(true)
@@ -244,7 +246,7 @@ export default function PortfolioGovernance() {
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-gray-400 text-sm mb-1">Governance Model</label>
+                  <FieldLabelWithHelp helpKey="public.portfolio_governance.governance_model" className="block text-gray-400 text-sm mb-1">Governance Model</FieldLabelWithHelp>
                   <select value={form.governance_model} onChange={e => setForm(f => ({ ...f, governance_model: e.target.value }))}
                     className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:ring-1 focus:ring-teal-500">
                     <option value="">—</option>
@@ -252,7 +254,7 @@ export default function PortfolioGovernance() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-gray-400 text-sm mb-1">Review Frequency</label>
+                  <FieldLabelWithHelp helpKey="public.portfolio_governance.review_frequency" className="block text-gray-400 text-sm mb-1">Review Frequency</FieldLabelWithHelp>
                   <select value={form.review_frequency} onChange={e => setForm(f => ({ ...f, review_frequency: e.target.value }))}
                     className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:outline-none">
                     <option value="">—</option>
@@ -262,24 +264,24 @@ export default function PortfolioGovernance() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-gray-400 text-sm mb-1">Last Review Date</label>
+                  <FieldLabelWithHelp helpKey="public.portfolio_governance.last_review_date" className="block text-gray-400 text-sm mb-1">Last Review Date</FieldLabelWithHelp>
                   <input type="date" value={form.last_review_date} onChange={e => setForm(f => ({ ...f, last_review_date: e.target.value }))}
                     className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:outline-none" />
                 </div>
                 <div>
-                  <label className="block text-gray-400 text-sm mb-1">Next Review Date</label>
+                  <FieldLabelWithHelp helpKey="public.portfolio_governance.next_review_date" className="block text-gray-400 text-sm mb-1">Next Review Date</FieldLabelWithHelp>
                   <input type="date" value={form.next_review_date} onChange={e => setForm(f => ({ ...f, next_review_date: e.target.value }))}
                     className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:outline-none" />
                 </div>
               </div>
               <div>
-                <label className="block text-gray-400 text-sm mb-1">Decision Authority</label>
+                <FieldLabelWithHelp helpKey="public.portfolio_governance.decision_authority" className="block text-gray-400 text-sm mb-1">Decision Authority</FieldLabelWithHelp>
                 <input value={form.decision_authority} onChange={e => setForm(f => ({ ...f, decision_authority: e.target.value }))}
                   placeholder="e.g. Portfolio Board, PMO Director"
                   className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-teal-500" />
               </div>
               <div>
-                <label className="block text-gray-400 text-sm mb-1">Governance Notes</label>
+                <FieldLabelWithHelp helpKey="public.portfolio_governance.governance_notes" className="block text-gray-400 text-sm mb-1">Governance Notes</FieldLabelWithHelp>
                 <textarea value={form.governance_notes} onChange={e => setForm(f => ({ ...f, governance_notes: e.target.value }))}
                   rows={3} placeholder="Additional governance notes…"
                   className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none resize-y" />
@@ -298,5 +300,20 @@ export default function PortfolioGovernance() {
         </div>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.portfolio_governance.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'governance_model', 'review_frequency', 'last_review_date', 'next_review_date', 'decision_authority',
+  'governance_notes',
+].map((name) => `public.portfolio_governance.${name}`)
+
+export default function PortfolioGovernance(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <PortfolioGovernanceBody {...props} />
+    </FieldHelpScope>
   )
 }

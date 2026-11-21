@@ -553,7 +553,7 @@ export default function LocalRegisterForm() {
         {isTemplate && (
           <>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Template name *</label>
+              <FieldLabelWithHelp helpKey="public.local_register_templates.template_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Template name *</FieldLabelWithHelp>
               <input
                 type="text"
                 value={templateName}
@@ -563,7 +563,7 @@ export default function LocalRegisterForm() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Template description</label>
+              <FieldLabelWithHelp helpKey="public.local_register_templates.template_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Template description</FieldLabelWithHelp>
               <input
                 type="text"
                 value={templateDescription}
@@ -575,7 +575,7 @@ export default function LocalRegisterForm() {
           </>
         )}
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{isTemplate ? 'Title of new records *' : 'Title *'}</label>
+          <FieldLabelWithHelp helpKey="public.local_register_records.title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{isTemplate ? 'Title of new records *' : 'Title *'}</FieldLabelWithHelp>
           <input
             type="text"
             value={title}
@@ -585,7 +585,7 @@ export default function LocalRegisterForm() {
         </div>
 
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
+          <FieldLabelWithHelp helpKey="public.local_register_records.description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</FieldLabelWithHelp>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
@@ -596,7 +596,7 @@ export default function LocalRegisterForm() {
 
         {!isTemplate && (
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
+          <FieldLabelWithHelp helpKey="public.local_register_records.status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</FieldLabelWithHelp>
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value)}

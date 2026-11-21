@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Target, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
 import { syncBusinessCaseReview } from '../../../services/endStageReportService'
 import { getBusinessCaseForReview } from '../../../services/endStageReportService'
 
-export default function EndStageReportBusinessCaseSection({ reportId, formData, onChange, errors, mode, projectId }) {
+function EndStageReportBusinessCaseSectionBody({ reportId, formData, onChange, errors, mode, projectId }) {
   const [businessCase, setBusinessCase] = useState(null)
   const [loading, setLoading] = useState(false)
 
@@ -89,9 +91,9 @@ export default function EndStageReportBusinessCaseSection({ reportId, formData, 
       )}
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="public.end_stage_reports.business_case_review_summary" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
           Business Case Review Summary *
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={formData.business_case_review_summary || ''}
           onChange={(e) => onChange('business_case_review_summary', e.target.value)}
@@ -119,21 +121,21 @@ export default function EndStageReportBusinessCaseSection({ reportId, formData, 
           disabled={mode === 'view'}
           className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
         />
-        <label htmlFor="business_case_still_valid" className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
+        <FieldLabelWithHelp helpKey="public.end_stage_reports.business_case_changes_summary" htmlFor="business_case_still_valid" className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
           {formData.business_case_still_valid ? (
             <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
           ) : (
             <XCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
           )}
           Business Case Still Valid
-        </label>
+        </FieldLabelWithHelp>
       </div>
 
       {!formData.business_case_still_valid && (
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.end_stage_reports.business_case_changes_summary" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Changes to Business Case Assumptions
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             value={formData.business_case_changes_summary || ''}
             onChange={(e) => onChange('business_case_changes_summary', e.target.value)}
@@ -148,9 +150,9 @@ export default function EndStageReportBusinessCaseSection({ reportId, formData, 
       )}
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="public.end_stage_reports.benefits_realized_summary" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Benefits Realized Summary
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={formData.benefits_realized_summary || ''}
           onChange={(e) => onChange('benefits_realized_summary', e.target.value)}
@@ -164,9 +166,9 @@ export default function EndStageReportBusinessCaseSection({ reportId, formData, 
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="public.end_stage_reports.benefits_review_status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Benefits Review Status
-        </label>
+        </FieldLabelWithHelp>
         <select
           value={formData.benefits_review_status || 'on-track'}
           onChange={(e) => onChange('benefits_review_status', e.target.value)}
@@ -188,5 +190,20 @@ export default function EndStageReportBusinessCaseSection({ reportId, formData, 
         </div>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.end_stage_reports.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'business_case_review_summary', 'business_case_changes_summary', 'benefits_realized_summary',
+  'benefits_review_status',
+].map((name) => `public.end_stage_reports.${name}`)
+
+export default function EndStageReportBusinessCaseSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <EndStageReportBusinessCaseSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

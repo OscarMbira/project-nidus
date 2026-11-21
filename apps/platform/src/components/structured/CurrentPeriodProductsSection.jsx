@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Package, Plus, X, Edit2 } from 'lucide-react'
 import { getProductsByReport, addProduct, updateProduct, deleteProduct } from '../../services/checkpointReportProductsService'
 import { getWorkPackage } from '../../services/controllingStageService'
 
-export default function CurrentPeriodProductsSection({ reportId, products, onProductsChange, workPackageId, mode }) {
+function CurrentPeriodProductsSectionBody({ reportId, products, onProductsChange, workPackageId, mode }) {
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [wpProducts, setWpProducts] = useState([])
@@ -218,9 +220,9 @@ export default function CurrentPeriodProductsSection({ reportId, products, onPro
             <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-900">
               <div className="space-y-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <FieldLabelWithHelp helpKey="public.checkpoint_report_products.product_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
                     Product Name *
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="text"
                     value={newProduct.product_name}
@@ -230,9 +232,9 @@ export default function CurrentPeriodProductsSection({ reportId, products, onPro
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <FieldLabelWithHelp helpKey="public.checkpoint_report_products.product_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Description
-                  </label>
+                  </FieldLabelWithHelp>
                   <textarea
                     value={newProduct.product_description}
                     onChange={(e) => setNewProduct({ ...newProduct, product_description: e.target.value })}
@@ -242,9 +244,9 @@ export default function CurrentPeriodProductsSection({ reportId, products, onPro
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <FieldLabelWithHelp helpKey="public.checkpoint_report_products.product_status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Status
-                    </label>
+                    </FieldLabelWithHelp>
                     <select
                       value={newProduct.product_status}
                       onChange={(e) => setNewProduct({ ...newProduct, product_status: e.target.value })}
@@ -257,9 +259,9 @@ export default function CurrentPeriodProductsSection({ reportId, products, onPro
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <FieldLabelWithHelp helpKey="public.checkpoint_report_products.quality_status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Quality Status
-                    </label>
+                    </FieldLabelWithHelp>
                     <select
                       value={newProduct.quality_status}
                       onChange={(e) => setNewProduct({ ...newProduct, quality_status: e.target.value })}
@@ -353,5 +355,19 @@ function ProductEditForm({ product, onSave, onCancel }) {
         </button>
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.checkpoint_report_products.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'product_name', 'product_description', 'product_status', 'quality_status',
+].map((name) => `public.checkpoint_report_products.${name}`)
+
+export default function CurrentPeriodProductsSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <CurrentPeriodProductsSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

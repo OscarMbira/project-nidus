@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { useParams, useNavigate } from 'react-router-dom'
 
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
 import { supabase } from '../../services/supabaseClient'
 import { normalizeProjectDeliveryTrack } from '@nidus/config/methodologyMenuUtils'
 
-export default function InitiatingProject() {
+function InitiatingProjectBody() {
   const { projectId, routeKey } = usePlatformProjectId()
   const navigate = useNavigate()
   const [project, setProject] = useState(null)
@@ -354,9 +356,9 @@ function BusinessCaseTab({ projectId, businessCase, onSave }) {
 
       <div className="space-y-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.business_cases.case_title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Business Case Title *
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             name="case_title"
@@ -368,9 +370,9 @@ function BusinessCaseTab({ projectId, businessCase, onSave }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.business_cases.business_justification" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Business Justification
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             name="business_justification"
             value={formData.business_justification}
@@ -381,9 +383,9 @@ function BusinessCaseTab({ projectId, businessCase, onSave }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.business_cases.expected_benefits" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Expected Benefits
-          </label>
+          </FieldLabelWithHelp>
           <div className="space-y-2 mb-2">
             {formData.expected_benefits?.map((benefit, index) => (
               <div key={index} className="flex items-center gap-2">
@@ -418,9 +420,9 @@ function BusinessCaseTab({ projectId, businessCase, onSave }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.business_cases.expected_costs" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Expected Costs
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="number"
             name="expected_costs"
@@ -432,9 +434,9 @@ function BusinessCaseTab({ projectId, businessCase, onSave }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.business_cases.major_risks" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Major Risks
-          </label>
+          </FieldLabelWithHelp>
           <div className="space-y-2 mb-2">
             {formData.major_risks?.map((risk, index) => (
               <div key={index} className="flex items-center gap-2">
@@ -532,3 +534,19 @@ function PIDTab({ projectId, pid, businessCaseId, onSave, navigate }) {
   )
 }
 
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.business_cases.case_title',
+  'sim.business_cases.business_justification',
+  'sim.business_cases.expected_benefits',
+  'sim.business_cases.expected_costs',
+  'sim.business_cases.major_risks',
+]
+
+export default function InitiatingProject(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <InitiatingProjectBody {...props} />
+    </FieldHelpScope>
+  )
+}

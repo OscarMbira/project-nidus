@@ -5,6 +5,8 @@
  */
 
 import { useState, useEffect } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Save, ArrowRight, ArrowLeft, AlertTriangle, TrendingUp, FileText, Target, Users, CheckCircle } from 'lucide-react'
 import { platformDb } from '@nidus/supabase'
@@ -22,7 +24,7 @@ import SimilarRiskPanel from './SimilarRiskPanel'
 import { addRiskCategory, addRiskSubcategory, findSimilarRisks, getRiskCatalogueAccess, listRiskCatalogue } from '../../services/riskCategoryCatalogService'
 import { similarCatalogueNames } from '@nidus/shared/utils/riskCategoryMatch'
 
-export default function EnhancedRiskForm({ risk, projectId, riskRegisterId, onSave, onCancel, variant: variantProp, accountId: accountIdProp = null }) {
+function EnhancedRiskFormBody({ risk, projectId, riskRegisterId, onSave, onCancel, variant: variantProp, accountId: accountIdProp = null }) {
   const location = useLocation()
   const navigate = useNavigate()
   // PM/PMO register routes always use the in-page surface; default elsewhere is page too.
@@ -463,9 +465,9 @@ export default function EnhancedRiskForm({ risk, projectId, riskRegisterId, onSa
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.risks.risk_title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Risk Title * <span className="text-xs text-gray-500">(Brief summary, min 10 characters)</span>
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="text"
                 value={formData.risk_title}
@@ -481,9 +483,9 @@ export default function EnhancedRiskForm({ risk, projectId, riskRegisterId, onSa
 
             <div className="flex gap-4">
               <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.risks.risk_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Risk Type *
-                </label>
+                </FieldLabelWithHelp>
                 <div className="flex gap-4">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -510,9 +512,9 @@ export default function EnhancedRiskForm({ risk, projectId, riskRegisterId, onSa
                 </div>
               </div>
               <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.risks.risk_category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Category *
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   value={selectedCategory ? selectedCategory.category_name : formData.risk_category}
                   onChange={(e) => handleChange('risk_category', e.target.value)}
@@ -600,9 +602,9 @@ export default function EnhancedRiskForm({ risk, projectId, riskRegisterId, onSa
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.risks.sub_category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Sub-Category
-              </label>
+              </FieldLabelWithHelp>
               <select
                 value={formData.sub_category}
                 onChange={(e) => handleChange('sub_category', e.target.value)}
@@ -656,9 +658,9 @@ export default function EnhancedRiskForm({ risk, projectId, riskRegisterId, onSa
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.risks.tags" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Tags
-              </label>
+              </FieldLabelWithHelp>
               <div className="flex gap-2 mb-2">
                 <input
                   type="text"
@@ -711,9 +713,9 @@ export default function EnhancedRiskForm({ risk, projectId, riskRegisterId, onSa
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                <FieldLabelWithHelp helpKey="public.risks.pre_probability" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3" required>
                   Probability (1-5) *
-                </label>
+                </FieldLabelWithHelp>
                 <div className="flex items-center gap-3 mb-3">
                   <input
                     type="range"
@@ -741,9 +743,9 @@ export default function EnhancedRiskForm({ risk, projectId, riskRegisterId, onSa
               </div>
 
               <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                <FieldLabelWithHelp helpKey="public.risks.pre_impact" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3" required>
                   Impact (1-5) *
-                </label>
+                </FieldLabelWithHelp>
                 <div className="flex items-center gap-3 mb-3">
                   <input
                     type="range"
@@ -794,9 +796,9 @@ export default function EnhancedRiskForm({ risk, projectId, riskRegisterId, onSa
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.risks.pre_cost_impact" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" isAmount>
                   Estimated Cost Impact ($)
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="number"
                   value={formData.pre_cost_impact}
@@ -808,9 +810,9 @@ export default function EnhancedRiskForm({ risk, projectId, riskRegisterId, onSa
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.risks.pre_schedule_impact_days" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Estimated Schedule Impact (Days)
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="number"
                   value={formData.pre_schedule_impact_days}
@@ -853,9 +855,9 @@ export default function EnhancedRiskForm({ risk, projectId, riskRegisterId, onSa
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.risks.proximity" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Proximity *
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   value={formData.proximity}
                   onChange={(e) => handleChange('proximity', e.target.value)}
@@ -868,9 +870,9 @@ export default function EnhancedRiskForm({ risk, projectId, riskRegisterId, onSa
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.risks.proximity_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Proximity Date
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="date"
                   value={formData.proximity_date}
@@ -882,9 +884,9 @@ export default function EnhancedRiskForm({ risk, projectId, riskRegisterId, onSa
 
             {formData.proximity_notes && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.risks.proximity_notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Proximity Notes
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   value={formData.proximity_notes}
                   onChange={(e) => handleChange('proximity_notes', e.target.value)}
@@ -895,9 +897,9 @@ export default function EnhancedRiskForm({ risk, projectId, riskRegisterId, onSa
             )}
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.risks.response_category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Response Category * <span className="text-xs text-gray-500">({formData.risk_type === 'threat' ? 'Threat responses' : 'Opportunity responses'})</span>
-              </label>
+              </FieldLabelWithHelp>
               <select
                 value={formData.response_category}
                 onChange={(e) => handleChange('response_category', e.target.value)}
@@ -914,9 +916,9 @@ export default function EnhancedRiskForm({ risk, projectId, riskRegisterId, onSa
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.risks.response_strategy" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Response Strategy Description
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={formData.response_strategy}
                 onChange={(e) => handleChange('response_strategy', e.target.value)}
@@ -929,9 +931,9 @@ export default function EnhancedRiskForm({ risk, projectId, riskRegisterId, onSa
             {(formData.response_category === 'fallback' || formData.response_category === 'reduce') && (
               <>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.risks.contingency_plan" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Contingency Plan
-                  </label>
+                  </FieldLabelWithHelp>
                   <textarea
                     value={formData.contingency_plan}
                     onChange={(e) => handleChange('contingency_plan', e.target.value)}
@@ -941,9 +943,9 @@ export default function EnhancedRiskForm({ risk, projectId, riskRegisterId, onSa
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.risks.trigger_conditions" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Trigger Conditions
-                  </label>
+                  </FieldLabelWithHelp>
                   <textarea
                     value={formData.trigger_conditions}
                     onChange={(e) => handleChange('trigger_conditions', e.target.value)}
@@ -971,9 +973,9 @@ export default function EnhancedRiskForm({ risk, projectId, riskRegisterId, onSa
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.risks.date_registered" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Date Registered *
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="date"
                   value={formData.date_registered}
@@ -982,9 +984,9 @@ export default function EnhancedRiskForm({ risk, projectId, riskRegisterId, onSa
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.risks.risk_author_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required listOptions={false}>
                   Risk Author (Who raised it) *
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   value={formData.risk_author_id}
                   onChange={(e) => handleChange('risk_author_id', e.target.value)}
@@ -1002,9 +1004,9 @@ export default function EnhancedRiskForm({ risk, projectId, riskRegisterId, onSa
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.risks.risk_owner_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                   Risk Owner (Who manages it) * <span className="text-xs text-gray-500">Required</span>
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   value={formData.risk_owner_id}
                   onChange={(e) => handleChange('risk_owner_id', e.target.value)}
@@ -1022,9 +1024,9 @@ export default function EnhancedRiskForm({ risk, projectId, riskRegisterId, onSa
                 {errors.risk_owner_id && <p className="text-sm text-red-600 mt-1">{errors.risk_owner_id}</p>}
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.risks.risk_actionee_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                   Risk Actionee (Who implements response) <span className="text-xs text-gray-500">Optional</span>
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   value={formData.risk_actionee_id}
                   onChange={(e) => handleChange('risk_actionee_id', e.target.value)}
@@ -1248,5 +1250,22 @@ export default function EnhancedRiskForm({ risk, projectId, riskRegisterId, onSa
       </RecordLifecycleFieldLock>
       )}
     </FormSurface>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.risks.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'risk_title', 'risk_type', 'risk_category', 'sub_category', 'tags', 'pre_probability', 'pre_impact',
+  'pre_cost_impact', 'pre_schedule_impact_days', 'proximity', 'proximity_date', 'proximity_notes',
+  'response_category', 'response_strategy', 'contingency_plan', 'trigger_conditions', 'date_registered',
+  'risk_author_id', 'risk_owner_id', 'risk_actionee_id',
+].map((name) => `public.risks.${name}`)
+
+export default function EnhancedRiskForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <EnhancedRiskFormBody {...props} />
+    </FieldHelpScope>
   )
 }

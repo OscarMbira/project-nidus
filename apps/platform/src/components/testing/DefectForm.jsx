@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 import MultiLineListInput from '@nidus/ui/MultiLineListInput'
 import SelectField from '@nidus/ui/SelectField'
@@ -39,7 +41,7 @@ const SEVERITY = ['critical', 'high', 'medium', 'low', 'trivial']
 const PRIORITY = ['critical', 'high', 'medium', 'low']
 const STATUS = ['new', 'open', 'in_progress', 'resolved', 'closed', 'reopened', 'deferred', 'duplicate']
 
-export default function DefectForm({
+function DefectFormBody({
   defect,
   projectId,
   onSubmit,
@@ -125,7 +127,7 @@ export default function DefectForm({
 
   const field = (label, key, multiline = false) => (
     <div>
-      <label className={labelClass}>{label}</label>
+      <FieldLabelWithHelp helpKey={`public.defects.${key}`} className={labelClass}>{label}</FieldLabelWithHelp>
       {multiline ? (
         <textarea
           value={form[key]}
@@ -160,7 +162,7 @@ export default function DefectForm({
           {titleError && <p className="text-sm text-red-600 dark:text-red-400">{titleError}</p>}
           {field('Description', 'description', true)}
           <div>
-            <label className={labelClass} htmlFor="defect-test-case">Test case</label>
+            <FieldLabelWithHelp helpKey="public.defects.test_case_id" className={labelClass} htmlFor="defect-test-case" listOptions={false}>Test case</FieldLabelWithHelp>
             <SelectField
               id="defect-test-case"
               aria-label="Test case"
@@ -199,7 +201,7 @@ export default function DefectForm({
       {section === 'classification' && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
-            <label className={labelClass}>Severity</label>
+            <FieldLabelWithHelp helpKey="public.defects.severity" className={labelClass}>Severity</FieldLabelWithHelp>
             <select
               value={form.severity}
               onChange={(e) => setForm((f) => ({ ...f, severity: e.target.value }))}
@@ -212,7 +214,7 @@ export default function DefectForm({
             </select>
           </div>
           <div>
-            <label className={labelClass}>Priority</label>
+            <FieldLabelWithHelp helpKey="public.defects.priority" className={labelClass}>Priority</FieldLabelWithHelp>
             <select
               value={form.priority}
               onChange={(e) => setForm((f) => ({ ...f, priority: e.target.value }))}
@@ -225,7 +227,7 @@ export default function DefectForm({
             </select>
           </div>
           <div>
-            <label className={labelClass}>Status</label>
+            <FieldLabelWithHelp helpKey="public.defects.status" className={labelClass}>Status</FieldLabelWithHelp>
             <select
               value={form.status}
               onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
@@ -249,7 +251,7 @@ export default function DefectForm({
 
       {section === 'steps' && (
         <div>
-          <label className={labelClass}>Steps to reproduce</label>
+          <FieldLabelWithHelp helpKey="public.defects.steps_to_reproduce" className={labelClass}>Steps to reproduce</FieldLabelWithHelp>
           <MultiLineListInput
             viewModeId="defect-steps-to-reproduce"
             value={form.steps_to_reproduce}
@@ -265,7 +267,7 @@ export default function DefectForm({
       {section === 'result' && (
         <div className="space-y-4">
           <div>
-            <label className={labelClass}>Expected</label>
+            <FieldLabelWithHelp helpKey="public.defects.expected_behavior" className={labelClass}>Expected</FieldLabelWithHelp>
             <MultiLineListInput
               viewModeId="defect-expected-behavior"
               value={form.expected_behavior}
@@ -277,7 +279,7 @@ export default function DefectForm({
             />
           </div>
           <div>
-            <label className={labelClass}>Actual</label>
+            <FieldLabelWithHelp helpKey="public.defects.actual_behavior" className={labelClass}>Actual</FieldLabelWithHelp>
             <MultiLineListInput
               viewModeId="defect-actual-behavior"
               value={form.actual_behavior}
@@ -300,5 +302,20 @@ export default function DefectForm({
         </button>
       )}
     </form>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.defects.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'test_case_id', 'severity', 'priority', 'status', 'steps_to_reproduce', 'expected_behavior',
+  'actual_behavior',
+].map((name) => `public.defects.${name}`)
+
+export default function DefectForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <DefectFormBody {...props} />
+    </FieldHelpScope>
   )
 }

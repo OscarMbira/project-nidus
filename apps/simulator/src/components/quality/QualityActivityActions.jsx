@@ -4,11 +4,13 @@
  */
 
 import { useState, useEffect } from 'react';
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { AlertCircle, Plus, CheckCircle, XCircle, Clock, Flag } from 'lucide-react';
 import { getActions, addAction, completeAction, verifyAction, deleteAction } from '../../services/qualityActivityActionsService';
 import { supabase } from '../../services/supabaseClient';
 
-export default function QualityActivityActions({ activityType, activityId, onUpdate }) {
+function QualityActivityActionsBody({ activityType, activityId, onUpdate }) {
   const [actions, setActions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -192,9 +194,9 @@ export default function QualityActivityActions({ activityType, activityId, onUpd
         <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.quality_activity_actions.action_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Action Description *
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={newAction.action_description}
                 onChange={(e) => setNewAction({ ...newAction, action_description: e.target.value })}
@@ -205,9 +207,9 @@ export default function QualityActivityActions({ activityType, activityId, onUpd
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.quality_activity_actions.action_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Action Type
-              </label>
+              </FieldLabelWithHelp>
               <select
                 value={newAction.action_type}
                 onChange={(e) => setNewAction({ ...newAction, action_type: e.target.value })}
@@ -220,9 +222,9 @@ export default function QualityActivityActions({ activityType, activityId, onUpd
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.quality_activity_actions.priority" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Priority
-              </label>
+              </FieldLabelWithHelp>
               <select
                 value={newAction.priority}
                 onChange={(e) => setNewAction({ ...newAction, priority: e.target.value })}
@@ -235,9 +237,9 @@ export default function QualityActivityActions({ activityType, activityId, onUpd
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.quality_activity_actions.assigned_to_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                 Assigned To
-              </label>
+              </FieldLabelWithHelp>
               <select
                 value={newAction.assigned_to_id}
                 onChange={(e) => setNewAction({ ...newAction, assigned_to_id: e.target.value })}
@@ -252,9 +254,9 @@ export default function QualityActivityActions({ activityType, activityId, onUpd
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.quality_activity_actions.due_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Due Date
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="date"
                 value={newAction.due_date}
@@ -378,4 +380,21 @@ export default function QualityActivityActions({ activityType, activityId, onUpd
       )}
     </div>
   );
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.quality_activity_actions.action_description',
+  'sim.quality_activity_actions.action_type',
+  'sim.quality_activity_actions.priority',
+  'sim.quality_activity_actions.assigned_to_id',
+  'sim.quality_activity_actions.due_date',
+]
+
+export default function QualityActivityActions(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <QualityActivityActionsBody {...props} />
+    </FieldHelpScope>
+  )
 }

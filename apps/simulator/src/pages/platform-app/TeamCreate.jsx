@@ -3,6 +3,8 @@
  * Member roles come from the project Roles & skills catalog (v1084).
  */
 import { useEffect, useMemo, useState } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { Link, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { platformDb } from '@nidus/supabase'
@@ -99,7 +101,7 @@ function memberLabel(row) {
   return u.full_name || u.email || row?.user_id || 'Unknown'
 }
 
-export default function TeamCreate() {
+function TeamCreateBody() {
   const navigate = useNavigate()
   const { projectId, routeKey, loading: projectLoading, error: projectError } = usePlatformProjectId()
   const { showSuccess, modal } = useSuccessModal()
@@ -504,25 +506,25 @@ export default function TeamCreate() {
           <section className="space-y-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
             <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Team details</h2>
 
-            <label className="block text-xs text-gray-700 dark:text-gray-200">
+            <FieldLabelWithHelp helpKey="sim.teams.project_id" className="block text-xs text-gray-700 dark:text-gray-200" listOptions={false}>
               Project
               <input
                 readOnly
                 value={projectLabel}
                 className="mt-1 w-full rounded border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2"
               />
-            </label>
+            </FieldLabelWithHelp>
 
-            <label className="block text-xs text-gray-700 dark:text-gray-200">
+            <FieldLabelWithHelp helpKey="sim.teams.team_name" className="block text-xs text-gray-700 dark:text-gray-200" required>
               Team name <span className="text-red-500">*</span>
               <input
                 value={form.team_name}
                 onChange={(e) => setField('team_name', e.target.value)}
                 className="mt-1 w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2"
               />
-            </label>
+            </FieldLabelWithHelp>
 
-            <label className="block text-xs text-gray-700 dark:text-gray-200">
+            <FieldLabelWithHelp helpKey="sim.teams.team_description" className="block text-xs text-gray-700 dark:text-gray-200">
               Description
               <textarea
                 value={form.team_description}
@@ -530,9 +532,9 @@ export default function TeamCreate() {
                 rows={3}
                 className="mt-1 w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2"
               />
-            </label>
+            </FieldLabelWithHelp>
 
-            <label className="block text-xs text-gray-700 dark:text-gray-200">
+            <FieldLabelWithHelp helpKey="sim.teams.team_type" className="block text-xs text-gray-700 dark:text-gray-200" listOptions={false}>
               Team type
               <div className="mt-1">
                 <SelectField
@@ -549,9 +551,9 @@ export default function TeamCreate() {
               <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                 Search the list, or type a new type and choose “Use as custom value” — it is saved for all users.
               </p>
-            </label>
+            </FieldLabelWithHelp>
 
-            <label className="block text-xs text-gray-700 dark:text-gray-200">
+            <FieldLabelWithHelp helpKey="sim.teams.team_lead_user_id" className="block text-xs text-gray-700 dark:text-gray-200" listOptions={false}>
               Team lead (optional)
               <div className="mt-1">
                 <SelectField
@@ -562,9 +564,9 @@ export default function TeamCreate() {
                   forceSearchable={leadOptions.length >= 12}
                 />
               </div>
-            </label>
+            </FieldLabelWithHelp>
 
-            <label className="block text-xs text-gray-700 dark:text-gray-200">
+            <FieldLabelWithHelp helpKey="sim.teams.max_team_size" className="block text-xs text-gray-700 dark:text-gray-200">
               Max team size (optional)
               <input
                 type="number"
@@ -574,7 +576,7 @@ export default function TeamCreate() {
                 onChange={(e) => setField('max_team_size', e.target.value)}
                 className="mt-1 w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2"
               />
-            </label>
+            </FieldLabelWithHelp>
           </section>
         )}
 
@@ -597,7 +599,7 @@ export default function TeamCreate() {
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40 p-3">
-              <label className="block text-xs text-gray-700 dark:text-gray-200 md:col-span-2">
+              <FieldLabelWithHelp helpKey="sim.teams.user_id" className="block text-xs text-gray-700 dark:text-gray-200 md:col-span-2" listOptions={false}>
                 Member
                 <div className="mt-1">
                   <SelectField
@@ -609,9 +611,9 @@ export default function TeamCreate() {
                     disabled={!peopleOptions.length}
                   />
                 </div>
-              </label>
+              </FieldLabelWithHelp>
 
-              <label className="block text-xs text-gray-700 dark:text-gray-200 md:col-span-2">
+              <FieldLabelWithHelp helpKey="sim.teams.member_role" className="block text-xs text-gray-700 dark:text-gray-200 md:col-span-2">
                 Member role *
                 <div className="mt-1">
                   <SelectField
@@ -630,9 +632,9 @@ export default function TeamCreate() {
                 {memberDraft.member_role ? (
                   <RoleSkillsTable skills={skillsForRole(projectRoleRows, memberDraft.member_role)} />
                 ) : null}
-              </label>
+              </FieldLabelWithHelp>
 
-              <label className="block text-xs text-gray-700 dark:text-gray-200 md:col-span-2 max-w-xs">
+              <FieldLabelWithHelp helpKey="sim.teams.allocation_percentage" className="block text-xs text-gray-700 dark:text-gray-200 md:col-span-2 max-w-xs">
                 Allocation %
                 <input
                   type="number"
@@ -643,9 +645,9 @@ export default function TeamCreate() {
                   onChange={(e) => setDraftField('allocation_percentage', e.target.value)}
                   className="mt-1 w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2"
                 />
-              </label>
+              </FieldLabelWithHelp>
 
-              <label className="block text-xs text-gray-700 dark:text-gray-200">
+              <FieldLabelWithHelp helpKey="sim.teams.allocation_start_date" className="block text-xs text-gray-700 dark:text-gray-200">
                 Start date
                 <input
                   type="date"
@@ -653,9 +655,9 @@ export default function TeamCreate() {
                   onChange={(e) => setDraftField('allocation_start_date', e.target.value)}
                   className="mt-1 w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2"
                 />
-              </label>
+              </FieldLabelWithHelp>
 
-              <label className="block text-xs text-gray-700 dark:text-gray-200">
+              <FieldLabelWithHelp helpKey="sim.teams.allocation_end_date" className="block text-xs text-gray-700 dark:text-gray-200">
                 End date
                 <input
                   type="date"
@@ -664,9 +666,9 @@ export default function TeamCreate() {
                   onChange={(e) => setDraftField('allocation_end_date', e.target.value)}
                   className="mt-1 w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2"
                 />
-              </label>
+              </FieldLabelWithHelp>
 
-              <label className="block text-xs text-gray-700 dark:text-gray-200 md:col-span-2">
+              <FieldLabelWithHelp helpKey="sim.teams.member_comments" className="block text-xs text-gray-700 dark:text-gray-200 md:col-span-2">
                 Comments
                 <textarea
                   value={memberDraft.member_comments}
@@ -675,7 +677,7 @@ export default function TeamCreate() {
                   placeholder="Optional notes about this member on the team…"
                   className="mt-1 w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2"
                 />
-              </label>
+              </FieldLabelWithHelp>
 
               <div className="flex items-end md:col-span-2">
                 <button
@@ -789,5 +791,29 @@ export default function TeamCreate() {
         {activeTab !== 'audit' && actionBar}
       </form>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.teams.project_id',
+  'sim.teams.team_name',
+  'sim.teams.team_description',
+  'sim.teams.team_type',
+  'sim.teams.team_lead_user_id',
+  'sim.teams.max_team_size',
+  'sim.teams.user_id',
+  'sim.teams.member_role',
+  'sim.teams.allocation_percentage',
+  'sim.teams.allocation_start_date',
+  'sim.teams.allocation_end_date',
+  'sim.teams.member_comments',
+]
+
+export default function TeamCreate(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <TeamCreateBody {...props} />
+    </FieldHelpScope>
   )
 }

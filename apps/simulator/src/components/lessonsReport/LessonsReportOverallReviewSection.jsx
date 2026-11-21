@@ -3,7 +3,7 @@
  * What went well, what didn't go well, surprises, planned vs actual
  */
 
-export default function LessonsReportOverallReviewSection({
+function LessonsReportOverallReviewSectionBody({
   formData,
   onChange,
   errors = {},
@@ -22,9 +22,9 @@ export default function LessonsReportOverallReviewSection({
 
       {/* What Went Well */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <FieldLabelWithHelp helpKey="sim.lessons_reports.what_went_well_summary" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           What Went Well
-        </label>
+        </FieldLabelWithHelp>
         {readOnly ? (
           <p className="text-gray-900 dark:text-white whitespace-pre-wrap">
             {formData.what_went_well_summary || 'Not specified'}
@@ -42,9 +42,9 @@ export default function LessonsReportOverallReviewSection({
 
       {/* What Did Not Go Well */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <FieldLabelWithHelp helpKey="sim.lessons_reports.what_did_not_go_well_summary" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           What Did Not Go Well
-        </label>
+        </FieldLabelWithHelp>
         {readOnly ? (
           <p className="text-gray-900 dark:text-white whitespace-pre-wrap">
             {formData.what_did_not_go_well_summary || 'Not specified'}
@@ -65,9 +65,9 @@ export default function LessonsReportOverallReviewSection({
 
       {/* Surprises/Unexpected */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <FieldLabelWithHelp helpKey="sim.lessons_reports.surprises_unexpected_summary" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Surprises / Unexpected Events
-        </label>
+        </FieldLabelWithHelp>
         {readOnly ? (
           <p className="text-gray-900 dark:text-white whitespace-pre-wrap">
             {formData.surprises_unexpected_summary || 'Not specified'}
@@ -85,9 +85,9 @@ export default function LessonsReportOverallReviewSection({
 
       {/* Planned vs Actual */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <FieldLabelWithHelp helpKey="sim.lessons_reports.planned_vs_actual_analysis" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Planned vs Actual Analysis
-        </label>
+        </FieldLabelWithHelp>
         {readOnly ? (
           <p className="text-gray-900 dark:text-white whitespace-pre-wrap">
             {formData.planned_vs_actual_analysis || 'Not specified'}
@@ -103,5 +103,21 @@ export default function LessonsReportOverallReviewSection({
         )}
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.lessons_reports.what_went_well_summary',
+  'sim.lessons_reports.what_did_not_go_well_summary',
+  'sim.lessons_reports.surprises_unexpected_summary',
+  'sim.lessons_reports.planned_vs_actual_analysis',
+]
+
+export default function LessonsReportOverallReviewSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <LessonsReportOverallReviewSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

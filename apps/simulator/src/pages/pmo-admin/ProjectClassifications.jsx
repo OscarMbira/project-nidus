@@ -5,6 +5,8 @@
  * Route: /simulator/pmo/project-classifications
  */
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { useNavigate } from 'react-router-dom'
 import { Layers, Plus, LayoutGrid, List, Search, ArrowLeft, Save, X } from 'lucide-react'
 import { useViewMode } from '@nidus/shared/hooks/useViewMode'
@@ -36,7 +38,7 @@ const COMPLEXITY_LEVELS = [
 
 const EMPTY_FORM = { classification_code: '', classification_name: '', complexity_level: 'medium', description: '', color: '#3B82F6', is_active: true }
 
-export default function ProjectClassifications() {
+function ProjectClassificationsBody() {
   const navigate = useNavigate()
   const [viewMode, setViewMode] = useViewMode('pmo-project-classifications', 'list')
   const { showSuccess, modal: successModal } = useSuccessModal()
@@ -207,34 +209,34 @@ export default function ProjectClassifications() {
             <form onSubmit={handleSubmit} className="mt-4 space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Code *</label>
+                  <FieldLabelWithHelp helpKey="sim.project_classifications.classification_code" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>Code *</FieldLabelWithHelp>
                   <input type="text" value={form.classification_code} onChange={(e) => setForm((f) => ({ ...f, classification_code: e.target.value.toUpperCase() }))} required placeholder="e.g. STANDARD" className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Name *</label>
+                  <FieldLabelWithHelp helpKey="sim.project_classifications.classification_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>Name *</FieldLabelWithHelp>
                   <input type="text" value={form.classification_name} onChange={(e) => setForm((f) => ({ ...f, classification_name: e.target.value }))} required placeholder="e.g. Standard Complexity" className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" />
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Complexity level</label>
+                  <FieldLabelWithHelp helpKey="sim.project_classifications.complexity_level" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Complexity level</FieldLabelWithHelp>
                   <select value={form.complexity_level} onChange={(e) => setForm((f) => ({ ...f, complexity_level: e.target.value }))} className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
                     {COMPLEXITY_LEVELS.map((l) => <option key={l.value} value={l.value}>{l.label}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Colour</label>
+                  <FieldLabelWithHelp helpKey="sim.project_classifications.color" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Colour</FieldLabelWithHelp>
                   <input type="color" value={form.color} onChange={(e) => setForm((f) => ({ ...f, color: e.target.value }))} className="w-full h-10 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer" />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</label>
+                <FieldLabelWithHelp helpKey="sim.project_classifications.description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</FieldLabelWithHelp>
                 <textarea value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} rows={2} className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" />
               </div>
-              <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+              <FieldLabelWithHelp helpKey="sim.project_classifications.is_active" className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
                 <input type="checkbox" checked={form.is_active} onChange={(e) => setForm((f) => ({ ...f, is_active: e.target.checked }))} className="rounded border-gray-300 dark:border-gray-600" />
                 Active
-              </label>
+              </FieldLabelWithHelp>
               <div className="flex gap-3 pt-2">
                 <button type="submit" disabled={saving} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50">
                   <Save className="h-4 w-4" /> {saving ? 'Saving…' : editing ? 'Save Changes' : 'Create'}
@@ -338,5 +340,23 @@ export default function ProjectClassifications() {
       </div>
       {successModal}
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.project_classifications.classification_code',
+  'sim.project_classifications.classification_name',
+  'sim.project_classifications.complexity_level',
+  'sim.project_classifications.color',
+  'sim.project_classifications.description',
+  'sim.project_classifications.is_active',
+]
+
+export default function ProjectClassifications(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ProjectClassificationsBody {...props} />
+    </FieldHelpScope>
   )
 }

@@ -4,6 +4,8 @@
  */
 
 import { useState } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
 import AuditCard from '@nidus/ui/AuditCard'
@@ -11,7 +13,7 @@ import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken } from '@nidus/shared/utils/auditDisplayUtils'
 
-export default function ReportForm({ reportData = {}, onChange, onCancel, onSubmit, isEditing = false }) {
+function ReportFormBody({ reportData = {}, onChange, onCancel, onSubmit, isEditing = false }) {
   const [formTab, setFormTab] = useState('details')
 
   const handleChange = (field, value) => {
@@ -81,9 +83,9 @@ export default function ReportForm({ reportData = {}, onChange, onCancel, onSubm
       <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.cms_reports.report_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Report Name <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             value={reportData.report_name || ''}
@@ -95,9 +97,9 @@ export default function ReportForm({ reportData = {}, onChange, onCancel, onSubm
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.cms_reports.report_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Report Type <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={reportData.report_type || ''}
             onChange={(e) => handleChange('report_type', e.target.value)}
@@ -115,9 +117,9 @@ export default function ReportForm({ reportData = {}, onChange, onCancel, onSubm
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="sim.cms_reports.report_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
           Description <span className="text-red-500">*</span>
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={reportData.report_description || ''}
           onChange={(e) => handleChange('report_description', e.target.value)}
@@ -129,9 +131,9 @@ export default function ReportForm({ reportData = {}, onChange, onCancel, onSubm
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="sim.cms_reports.report_purpose" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
           Purpose <span className="text-red-500">*</span>
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={reportData.report_purpose || ''}
           onChange={(e) => handleChange('report_purpose', e.target.value)}
@@ -144,9 +146,9 @@ export default function ReportForm({ reportData = {}, onChange, onCancel, onSubm
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.cms_reports.frequency" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Frequency <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={reportData.frequency || ''}
             onChange={(e) => handleChange('frequency', e.target.value)}
@@ -163,9 +165,9 @@ export default function ReportForm({ reportData = {}, onChange, onCancel, onSubm
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.cms_reports.distribution_method" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Distribution Method
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={reportData.distribution_method || ''}
             onChange={(e) => handleChange('distribution_method', e.target.value)}
@@ -182,9 +184,9 @@ export default function ReportForm({ reportData = {}, onChange, onCancel, onSubm
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="sim.cms_reports.target_audience" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Target Audience
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={reportData.target_audience || ''}
           onChange={(e) => handleChange('target_audience', e.target.value)}
@@ -195,9 +197,9 @@ export default function ReportForm({ reportData = {}, onChange, onCancel, onSubm
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="sim.cms_reports.content_outline" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Content Outline
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={reportData.content_outline || ''}
           onChange={(e) => handleChange('content_outline', e.target.value)}
@@ -225,5 +227,25 @@ export default function ReportForm({ reportData = {}, onChange, onCancel, onSubm
         </button>
       </div>
     </form>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.cms_reports.report_name',
+  'sim.cms_reports.report_type',
+  'sim.cms_reports.report_description',
+  'sim.cms_reports.report_purpose',
+  'sim.cms_reports.frequency',
+  'sim.cms_reports.distribution_method',
+  'sim.cms_reports.target_audience',
+  'sim.cms_reports.content_outline',
+]
+
+export default function ReportForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ReportFormBody {...props} />
+    </FieldHelpScope>
   )
 }

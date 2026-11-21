@@ -2,13 +2,16 @@
  * Stage Plan Schedule Section
  */
 
+import PlanListTable from '@nidus/ui/PlanListTable'
 import { useState } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { Plus } from 'lucide-react'
 import { addMilestone, deleteMilestone } from '../../services/planMilestoneService'
 import MilestoneForm from './MilestoneForm'
 import MilestoneCard from './MilestoneCard'
 
-export default function StagePlanScheduleSection({ 
+function StagePlanScheduleSectionBody({ 
   formData, 
   onChange, 
   errors, 
@@ -62,9 +65,9 @@ export default function StagePlanScheduleSection({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.plan_milestones.planned_start_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Planned Start Date <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="date"
             value={formData.planned_start_date || ''}
@@ -80,9 +83,9 @@ export default function StagePlanScheduleSection({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.plan_milestones.planned_end_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Planned End Date <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="date"
             value={formData.planned_end_date || ''}
@@ -151,28 +154,32 @@ export default function StagePlanScheduleSection({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Dependencies (JSON Array)
-        </label>
-        <textarea
-          value={formData.dependencies ? JSON.stringify(formData.dependencies, null, 2) : ''}
-          onChange={(e) => {
-            try {
-              const parsed = JSON.parse(e.target.value)
-              onChange('dependencies', parsed)
-            } catch {
-              // Invalid JSON, ignore
-            }
-          }}
+        <FieldLabelWithHelp helpKey="sim.stage_plans.dependencies" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Dependencies
+        </FieldLabelWithHelp>
+        <PlanListTable
+          kind="stage"
+          listKey="dependencies"
+          value={formData.dependencies}
+          onChange={(rows) => onChange('dependencies', rows)}
           disabled={mode === 'view'}
-          rows={4}
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono text-sm"
-          placeholder='[{"dependency": "...", "type": "..."}, ...]'
         />
-        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-          Enter dependencies as JSON array
-        </p>
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.plan_milestones.planned_start_date',
+  'sim.plan_milestones.planned_end_date',
+  'sim.plan_milestones.dependencies',
+]
+
+export default function StagePlanScheduleSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <StagePlanScheduleSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

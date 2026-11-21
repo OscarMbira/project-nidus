@@ -5,6 +5,8 @@
  */
 
 import { useState } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { Plus, Trash2, CheckCircle } from 'lucide-react'
 import { addOption, updateOption, deleteOption } from '../../services/businessCaseService'
 import { useToastContext } from '@nidus/shared/context/ToastContext'
@@ -22,7 +24,7 @@ const SEVERITY_COLORS = {
   high: 'text-red-600 dark:text-red-400',
 }
 
-export default function BusinessCaseOptions({ caseId, options = [], readOnly = false, onRefresh }) {
+function BusinessCaseOptionsBody({ caseId, options = [], readOnly = false, onRefresh }) {
   const toast = useToastContext()
   const [adding, setAdding] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -210,7 +212,7 @@ export default function BusinessCaseOptions({ caseId, options = [], readOnly = f
             <h4 className="text-sm font-semibold text-blue-700 dark:text-blue-300 mb-3">New Option</h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Option Type *</label>
+                <FieldLabelWithHelp helpKey="sim.business_case_options.option_type" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1" required>Option Type *</FieldLabelWithHelp>
                 <select
                   value={newOption.option_type}
                   onChange={e => setNewOption(p => ({ ...p, option_type: e.target.value }))}
@@ -222,7 +224,7 @@ export default function BusinessCaseOptions({ caseId, options = [], readOnly = f
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Option Title *</label>
+                <FieldLabelWithHelp helpKey="sim.business_case_options.option_title" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1" required>Option Title *</FieldLabelWithHelp>
                 <input
                   type="text"
                   value={newOption.option_title}
@@ -232,7 +234,7 @@ export default function BusinessCaseOptions({ caseId, options = [], readOnly = f
                 />
               </div>
               <div className="sm:col-span-2">
-                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
+                <FieldLabelWithHelp helpKey="sim.business_case_options.description" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Description</FieldLabelWithHelp>
                 <textarea
                   rows={2}
                   value={newOption.description}
@@ -241,7 +243,7 @@ export default function BusinessCaseOptions({ caseId, options = [], readOnly = f
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Estimated Cost ($)</label>
+                <FieldLabelWithHelp helpKey="sim.business_case_options.estimated_cost" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1" isAmount>Estimated Cost ($)</FieldLabelWithHelp>
                 <input
                   type="number"
                   value={newOption.estimated_cost}
@@ -250,7 +252,7 @@ export default function BusinessCaseOptions({ caseId, options = [], readOnly = f
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Expected Benefits</label>
+                <FieldLabelWithHelp helpKey="sim.business_case_options.estimated_benefits" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Expected Benefits</FieldLabelWithHelp>
                 <input
                   type="text"
                   value={newOption.estimated_benefits}
@@ -260,7 +262,7 @@ export default function BusinessCaseOptions({ caseId, options = [], readOnly = f
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-green-600 dark:text-green-400 mb-1">Advantages</label>
+                <FieldLabelWithHelp helpKey="sim.business_case_options.advantages" className="block text-xs font-medium text-green-600 dark:text-green-400 mb-1">Advantages</FieldLabelWithHelp>
                 <textarea
                   rows={2}
                   value={newOption.advantages}
@@ -269,7 +271,7 @@ export default function BusinessCaseOptions({ caseId, options = [], readOnly = f
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-red-600 dark:text-red-400 mb-1">Disadvantages</label>
+                <FieldLabelWithHelp helpKey="sim.business_case_options.disadvantages" className="block text-xs font-medium text-red-600 dark:text-red-400 mb-1">Disadvantages</FieldLabelWithHelp>
                 <textarea
                   rows={2}
                   value={newOption.disadvantages}
@@ -278,7 +280,7 @@ export default function BusinessCaseOptions({ caseId, options = [], readOnly = f
                 />
               </div>
               <div className="sm:col-span-2">
-                <label className="block text-xs font-medium text-yellow-600 dark:text-yellow-400 mb-1">Key Risks</label>
+                <FieldLabelWithHelp helpKey="sim.business_case_options.risks_summary" className="block text-xs font-medium text-yellow-600 dark:text-yellow-400 mb-1">Key Risks</FieldLabelWithHelp>
                 <textarea
                   rows={2}
                   value={newOption.risks_summary}
@@ -294,9 +296,9 @@ export default function BusinessCaseOptions({ caseId, options = [], readOnly = f
                   onChange={e => setNewOption(p => ({ ...p, is_recommended: e.target.checked }))}
                   className="rounded"
                 />
-                <label htmlFor="is_recommended" className="text-sm text-gray-700 dark:text-gray-300">
+                <FieldLabelWithHelp helpKey="sim.business_case_options.is_recommended" htmlFor="is_recommended" className="text-sm text-gray-700 dark:text-gray-300">
                   Mark as recommended option
-                </label>
+                </FieldLabelWithHelp>
               </div>
             </div>
             <div className="flex justify-end gap-2 mt-3">
@@ -318,5 +320,26 @@ export default function BusinessCaseOptions({ caseId, options = [], readOnly = f
         )}
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.business_case_options.option_type',
+  'sim.business_case_options.option_title',
+  'sim.business_case_options.description',
+  'sim.business_case_options.estimated_cost',
+  'sim.business_case_options.estimated_benefits',
+  'sim.business_case_options.advantages',
+  'sim.business_case_options.disadvantages',
+  'sim.business_case_options.risks_summary',
+  'sim.business_case_options.is_recommended',
+]
+
+export default function BusinessCaseOptions(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <BusinessCaseOptionsBody {...props} />
+    </FieldHelpScope>
   )
 }

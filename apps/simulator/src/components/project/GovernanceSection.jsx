@@ -1,4 +1,6 @@
 import { Info } from 'lucide-react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 
 /**
  * GovernanceSection
@@ -6,7 +8,7 @@ import { Info } from 'lucide-react'
  * Executive, Funding Authority, and Approving Authority are simple text fields;
  * pre-filled from mandate when present, otherwise user enters the name.
  */
-export default function GovernanceSection({
+function GovernanceSectionBody({
   formData,
   handleChange,
   errors,
@@ -29,10 +31,10 @@ export default function GovernanceSection({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Project Executive / Sponsor — simple text */}
           <div>
-            <label htmlFor="executive_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="sim.projects.executive_name" htmlFor="executive_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required listOptions={false}>
               Project Executive / Sponsor <span className="text-red-500">*</span>
               <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">(Required for authorisation)</span>
-            </label>
+            </FieldLabelWithHelp>
             <input
               type="text"
               id="executive_name"
@@ -55,9 +57,9 @@ export default function GovernanceSection({
 
           {/* Board Required */}
           <div>
-            <label htmlFor="board_required" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="sim.projects.board_required" htmlFor="board_required" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
               Project Board Required <span className="text-red-500">*</span>
-            </label>
+            </FieldLabelWithHelp>
             <select
               id="board_required"
               name="board_required"
@@ -96,9 +98,9 @@ export default function GovernanceSection({
 
         {/* Funding Authority — simple text */}
         <div>
-          <label htmlFor="funding_authority_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.projects.funding_authority_name" htmlFor="funding_authority_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required listOptions={false}>
             Funding Authority <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             id="funding_authority_name"
@@ -121,9 +123,9 @@ export default function GovernanceSection({
 
         {/* Approving Authority — simple text */}
         <div>
-          <label htmlFor="approving_authority_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.projects.approving_authority_name" htmlFor="approving_authority_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required listOptions={false}>
             Approving Authority <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             id="approving_authority_name"
@@ -146,5 +148,21 @@ export default function GovernanceSection({
 
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.projects.executive_name',
+  'sim.projects.board_required',
+  'sim.projects.funding_authority_name',
+  'sim.projects.approving_authority_name',
+]
+
+export default function GovernanceSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <GovernanceSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

@@ -5,6 +5,8 @@
  */
 
 import { useState, useEffect, useMemo } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import {
@@ -89,7 +91,7 @@ function teamLeadLabel(team) {
   return lead.full_name || lead.email || ''
 }
 
-export default function Teams() {
+function TeamsBody() {
   const navigate = useNavigate()
   const { projectId: routeProjectId, routeKey, loading: projectLoading } = usePlatformProjectId()
   const { currentProjectId, currentProject, loading: ctxLoading } = useCurrentProject()
@@ -719,18 +721,18 @@ export default function Teams() {
           )}
           {editingDirectory && (
             <div className="p-3 rounded-lg border border-sky-200 dark:border-sky-800 bg-sky-50 dark:bg-sky-900/20 flex flex-wrap gap-2 items-end">
-              <label className="text-xs text-gray-700 dark:text-gray-200">
+              <FieldLabelWithHelp helpKey="sim.users.job_title" className="text-xs text-gray-700 dark:text-gray-200">
                 Job title
                 <input value={editingDirectory.job_title} onChange={(e) => setEditingDirectory((d) => ({ ...d, job_title: e.target.value }))} className="mt-1 block w-44 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm" />
-              </label>
-              <label className="text-xs text-gray-700 dark:text-gray-200">
+              </FieldLabelWithHelp>
+              <FieldLabelWithHelp helpKey="sim.users.department" className="text-xs text-gray-700 dark:text-gray-200">
                 Department
                 <input value={editingDirectory.department} onChange={(e) => setEditingDirectory((d) => ({ ...d, department: e.target.value }))} className="mt-1 block w-44 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm" />
-              </label>
-              <label className="text-xs text-gray-700 dark:text-gray-200">
+              </FieldLabelWithHelp>
+              <FieldLabelWithHelp helpKey="sim.users.phone_number" className="text-xs text-gray-700 dark:text-gray-200">
                 Phone
                 <input value={editingDirectory.phone_number} onChange={(e) => setEditingDirectory((d) => ({ ...d, phone_number: e.target.value }))} className="mt-1 block w-40 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm" />
-              </label>
+              </FieldLabelWithHelp>
               <button type="button" onClick={handleSaveDirectory} className="px-3 py-2 rounded-lg bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium min-h-[40px]">Save</button>
               <button type="button" onClick={() => setEditingDirectory(null)} className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 text-sm min-h-[40px]">Cancel</button>
             </div>
@@ -855,5 +857,20 @@ export default function Teams() {
         </div>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.users.job_title',
+  'sim.users.department',
+  'sim.users.phone_number',
+]
+
+export default function Teams(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <TeamsBody {...props} />
+    </FieldHelpScope>
   )
 }

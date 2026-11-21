@@ -2,18 +2,21 @@
  * Stage Plan Budget Section
  */
 
+import PlanListTable from '@nidus/ui/PlanListTable'
 import { SmartAmountInput } from '@nidus/ui/SmartAmountInput'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 
-export default function StagePlanBudgetSection({ formData, onChange, errors, mode }) {
+function StagePlanBudgetSectionBody({ formData, onChange, errors, mode }) {
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Budget</h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.stage_plans.stage_budget" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" isAmount>
             Stage Budget
-          </label>
+          </FieldLabelWithHelp>
           <div className="flex items-center">
             <select
               value={formData.budget_currency || 'USD'}
@@ -43,9 +46,9 @@ export default function StagePlanBudgetSection({ formData, onChange, errors, mod
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.stage_plans.contingency_amount" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" isAmount>
             Contingency Amount
-          </label>
+          </FieldLabelWithHelp>
           <SmartAmountInput
             value={formData.contingency_amount || null}
             onChange={(value) => onChange('contingency_amount', value)}
@@ -57,28 +60,32 @@ export default function StagePlanBudgetSection({ formData, onChange, errors, mod
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Budget Breakdown (JSON)
-        </label>
-        <textarea
-          value={formData.budget_breakdown ? JSON.stringify(formData.budget_breakdown, null, 2) : ''}
-          onChange={(e) => {
-            try {
-              const parsed = JSON.parse(e.target.value)
-              onChange('budget_breakdown', parsed)
-            } catch {
-              // Invalid JSON, ignore
-            }
-          }}
+        <FieldLabelWithHelp helpKey="sim.stage_plans.budget_breakdown" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Budget Breakdown
+        </FieldLabelWithHelp>
+        <PlanListTable
+          kind="stage"
+          listKey="budget_breakdown"
+          value={formData.budget_breakdown}
+          onChange={(rows) => onChange('budget_breakdown', rows)}
           disabled={mode === 'view'}
-          rows={6}
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono text-sm"
-          placeholder='{"work_package_1": 5000, "work_package_2": 3000, ...}'
         />
-        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-          Enter budget breakdown as JSON object (e.g., by work package or category)
-        </p>
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.stage_plans.stage_budget',
+  'sim.stage_plans.contingency_amount',
+  'sim.stage_plans.budget_breakdown',
+]
+
+export default function StagePlanBudgetSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <StagePlanBudgetSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

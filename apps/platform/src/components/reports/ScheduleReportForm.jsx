@@ -1,8 +1,10 @@
 import { useState } from 'react';
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Clock, Calendar, User, Mail } from 'lucide-react';
 import { supabase } from '../../services/supabaseClient';
 
-export default function ScheduleReportForm({ reportId, onSave, onCancel }) {
+function ScheduleReportFormBody({ reportId, onSave, onCancel }) {
   const [formData, setFormData] = useState({
     schedule_type: 'daily',
     schedule_time: '09:00',
@@ -90,9 +92,9 @@ export default function ScheduleReportForm({ reportId, onSave, onCancel }) {
       <div className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.report_schedules.schedule_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
               Schedule Type *
-            </label>
+            </FieldLabelWithHelp>
             <select
               name="schedule_type"
               value={formData.schedule_type}
@@ -110,9 +112,9 @@ export default function ScheduleReportForm({ reportId, onSave, onCancel }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.report_schedules.schedule_time" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
               Schedule Time *
-            </label>
+            </FieldLabelWithHelp>
             <input
               type="time"
               name="schedule_time"
@@ -125,9 +127,9 @@ export default function ScheduleReportForm({ reportId, onSave, onCancel }) {
 
           {formData.schedule_type === 'weekly' && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.report_schedules.schedule_day" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Day of Week *
-              </label>
+              </FieldLabelWithHelp>
               <select
                 name="schedule_day"
                 value={formData.schedule_day}
@@ -149,9 +151,9 @@ export default function ScheduleReportForm({ reportId, onSave, onCancel }) {
 
           {formData.schedule_type === 'monthly' && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.report_schedules.schedule_day_of_month" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Day of Month *
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="number"
                 name="schedule_day_of_month"
@@ -167,9 +169,9 @@ export default function ScheduleReportForm({ reportId, onSave, onCancel }) {
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.report_schedules.format" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
               Format *
-            </label>
+            </FieldLabelWithHelp>
             <select
               name="format"
               value={formData.format}
@@ -185,9 +187,9 @@ export default function ScheduleReportForm({ reportId, onSave, onCancel }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.report_schedules.send_as" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
               Send As *
-            </label>
+            </FieldLabelWithHelp>
             <select
               name="send_as"
               value={formData.send_as}
@@ -203,9 +205,9 @@ export default function ScheduleReportForm({ reportId, onSave, onCancel }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.report_schedules.recipient_user_ids" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
             Recipients (Users)
-          </label>
+          </FieldLabelWithHelp>
           <div className="space-y-2 max-h-48 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-lg p-3">
             {users.map(user => (
               <label key={user.id} className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 p-2 rounded">
@@ -230,9 +232,9 @@ export default function ScheduleReportForm({ reportId, onSave, onCancel }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.report_schedules.recipient_emails" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Recipients (Email Addresses)
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             value={formData.recipient_emails.join('\n')}
             onChange={(e) => setFormData({
@@ -256,9 +258,9 @@ export default function ScheduleReportForm({ reportId, onSave, onCancel }) {
             onChange={handleChange}
             className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
           />
-          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          <FieldLabelWithHelp helpKey="public.report_schedules.is_active" className="text-sm font-medium text-gray-700 dark:text-gray-300">
             Active Schedule
-          </label>
+          </FieldLabelWithHelp>
         </div>
 
         <div className="flex justify-end gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
@@ -284,3 +286,17 @@ export default function ScheduleReportForm({ reportId, onSave, onCancel }) {
   );
 }
 
+// v1345 slice 4: field help for this component (public.report_schedules.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'schedule_type', 'schedule_time', 'schedule_day', 'schedule_day_of_month', 'format', 'send_as',
+  'recipient_user_ids', 'recipient_emails', 'is_active',
+].map((name) => `public.report_schedules.${name}`)
+
+export default function ScheduleReportForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ScheduleReportFormBody {...props} />
+    </FieldHelpScope>
+  )
+}

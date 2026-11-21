@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { Network, X, Search } from 'lucide-react'
 import { getProgrammeList } from '../../services/programmeService'
 import { useAssignmentDropdownPlacement } from '@nidus/shared/hooks/useAssignmentDropdownPlacement'
@@ -16,7 +18,7 @@ function formatLoadError(err) {
  *   onChange       {(id, programme) => void}
  *   selection      {object|null} optional
  */
-export default function ProgrammeAssignmentSection({ programmeId, onChange, selection = null }) {
+function ProgrammeAssignmentSectionBody({ programmeId, onChange, selection = null }) {
   const [programmes, setProgrammes] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -98,7 +100,7 @@ export default function ProgrammeAssignmentSection({ programmeId, onChange, sele
   return (
     <div className="space-y-6">
       <div className="mb-4">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Programme Assignment</h2>
+        <FieldLabelWithHelp as="h2" helpKey="sim.projects.programme_id" className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Programme Assignment</FieldLabelWithHelp>
         <p className="text-sm text-gray-600 dark:text-gray-400">
           Optionally link this project to an existing programme. Leave blank if not applicable.
         </p>
@@ -133,13 +135,13 @@ export default function ProgrammeAssignmentSection({ programmeId, onChange, sele
         {selected && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Programme Code</label>
+              <FieldLabelWithHelp helpKey="sim.programmes.programme_code" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Programme Code</FieldLabelWithHelp>
               <div className="px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300 font-mono text-sm">
                 {selected.programme_code || '—'}
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Programme Name</label>
+              <FieldLabelWithHelp helpKey="sim.programmes.programme_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Programme Name</FieldLabelWithHelp>
               <div className="px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300 text-sm">
                 {selected.programme_name || '—'}
               </div>
@@ -233,5 +235,18 @@ export default function ProgrammeAssignmentSection({ programmeId, onChange, sele
         </div>
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.projects.programme_id',
+]
+
+export default function ProgrammeAssignmentSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ProgrammeAssignmentSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

@@ -2,16 +2,16 @@
  * Project Plan Approach Section
  */
 
-export default function ProjectPlanApproachSection({ formData, onChange, errors, mode }) {
+function ProjectPlanApproachSectionBody({ formData, onChange, errors, mode }) {
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Planning Approach</h2>
 
       <div className="space-y-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.project_plans.planning_approach" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Planning Approach
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             value={formData.planning_approach || ''}
             onChange={(e) => onChange('planning_approach', e.target.value)}
@@ -23,9 +23,9 @@ export default function ProjectPlanApproachSection({ formData, onChange, errors,
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.project_plans.planning_assumptions" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Planning Assumptions
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             value={formData.planning_assumptions || ''}
             onChange={(e) => onChange('planning_assumptions', e.target.value)}
@@ -37,9 +37,9 @@ export default function ProjectPlanApproachSection({ formData, onChange, errors,
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.project_plans.planning_constraints" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Planning Constraints
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             value={formData.planning_constraints || ''}
             onChange={(e) => onChange('planning_constraints', e.target.value)}
@@ -51,9 +51,9 @@ export default function ProjectPlanApproachSection({ formData, onChange, errors,
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.project_plans.planning_principles" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Planning Principles
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             value={formData.planning_principles || ''}
             onChange={(e) => onChange('planning_principles', e.target.value)}
@@ -65,5 +65,21 @@ export default function ProjectPlanApproachSection({ formData, onChange, errors,
         </div>
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.project_plans.planning_approach',
+  'sim.project_plans.planning_assumptions',
+  'sim.project_plans.planning_constraints',
+  'sim.project_plans.planning_principles',
+]
+
+export default function ProjectPlanApproachSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ProjectPlanApproachSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

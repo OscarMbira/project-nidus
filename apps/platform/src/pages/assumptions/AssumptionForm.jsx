@@ -3,6 +3,8 @@
  * rule 65 (no modal). Success modal (rule 16) and unsaved-changes guard (rule 52).
  */
 import { useState, useEffect, useMemo } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
@@ -35,7 +37,7 @@ const IMPACT_OPTIONS = [
   { value: 'critical', label: 'Critical' },
 ]
 
-export default function AssumptionForm() {
+function AssumptionFormBody() {
   const { id } = useParams()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -164,7 +166,7 @@ export default function AssumptionForm() {
 
       <div className="space-y-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Assumption *</label>
+          <FieldLabelWithHelp helpKey="public.assumptions.assumption_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>Assumption *</FieldLabelWithHelp>
           <textarea
             value={assumptionText}
             onChange={(e) => setAssumptionText(e.target.value)}
@@ -176,7 +178,7 @@ export default function AssumptionForm() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Validation Status</label>
+            <FieldLabelWithHelp helpKey="public.assumptions.status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Validation Status</FieldLabelWithHelp>
             <SelectField
               options={STATUS_OPTIONS}
               value={validationStatus}
@@ -185,7 +187,7 @@ export default function AssumptionForm() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Owner</label>
+            <FieldLabelWithHelp helpKey="public.assumptions.owner_user_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" listOptions={false}>Owner</FieldLabelWithHelp>
             <SelectField
               forceSearchable
               descriptionColumnLabel="Role"
@@ -203,7 +205,7 @@ export default function AssumptionForm() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Impact</label>
+            <FieldLabelWithHelp helpKey="public.assumptions.impact_severity" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Impact</FieldLabelWithHelp>
             <SelectField
               options={IMPACT_OPTIONS}
               value={impactSeverity}
@@ -212,7 +214,7 @@ export default function AssumptionForm() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Next review date</label>
+            <FieldLabelWithHelp helpKey="public.assumptions.next_review_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Next review date</FieldLabelWithHelp>
             <input
               type="date"
               value={nextReviewDate}
@@ -223,7 +225,7 @@ export default function AssumptionForm() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Impact if this assumption proves wrong</label>
+          <FieldLabelWithHelp helpKey="public.assumptions.impact_if_invalid" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Impact if this assumption proves wrong</FieldLabelWithHelp>
           <textarea
             value={impactIfInvalid}
             onChange={(e) => setImpactIfInvalid(e.target.value)}
@@ -234,7 +236,7 @@ export default function AssumptionForm() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</label>
+          <FieldLabelWithHelp helpKey="public.assumptions.validation_notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</FieldLabelWithHelp>
           <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className={inputClass} />
         </div>
       </div>
@@ -254,5 +256,20 @@ export default function AssumptionForm() {
       </div>
       {modal}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.assumptions.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'assumption_description', 'status', 'owner_user_id', 'impact_severity', 'next_review_date',
+  'impact_if_invalid', 'validation_notes',
+].map((name) => `public.assumptions.${name}`)
+
+export default function AssumptionForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <AssumptionFormBody {...props} />
+    </FieldHelpScope>
   )
 }

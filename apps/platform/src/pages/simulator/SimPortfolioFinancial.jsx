@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Plus, Search, RefreshCw, AlertCircle, X, Pencil, Trash2 } from 'lucide-react'
 import {
   getAllSimPortfolioBudgets,
@@ -42,7 +44,7 @@ function UtilBar({ approved, spent }) {
 
 const EMPTY_FORM = { practice_portfolio_id: '', budget_name: '', budget_type: '', budget_currency: 'USD', approved_amount: '', actual_spent: '', remaining_amount: '', budget_status: 'draft' }
 
-export default function SimPortfolioFinancial() {
+function SimPortfolioFinancialBody() {
   const [rows, setRows]         = useState([])
   const [portfolios, setPortfolios] = useState([])
   const [loading, setLoading]   = useState(true)
@@ -241,7 +243,7 @@ export default function SimPortfolioFinancial() {
             {formError && <p className="text-red-400 text-sm">{formError}</p>}
             <div className="space-y-3">
               <div>
-                <label className="block text-gray-400 text-sm mb-1">Portfolio *</label>
+                <FieldLabelWithHelp helpKey="sim.practice_portfolio_budgets.practice_portfolio_id" className="block text-gray-400 text-sm mb-1" required listOptions={false}>Portfolio *</FieldLabelWithHelp>
                 <select value={form.practice_portfolio_id} onChange={e => setForm(f => ({ ...f, practice_portfolio_id: e.target.value }))}
                   className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
                   <option value="">Select portfolio…</option>
@@ -249,13 +251,13 @@ export default function SimPortfolioFinancial() {
                 </select>
               </div>
               <div>
-                <label className="block text-gray-400 text-sm mb-1">Budget Name *</label>
+                <FieldLabelWithHelp helpKey="sim.practice_portfolio_budgets.budget_name" className="block text-gray-400 text-sm mb-1" required>Budget Name *</FieldLabelWithHelp>
                 <input value={form.budget_name} onChange={e => setForm(f => ({ ...f, budget_name: e.target.value }))} placeholder="e.g. FY2026 Capital Budget"
                   className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-gray-400 text-sm mb-1">Type</label>
+                  <FieldLabelWithHelp helpKey="sim.practice_portfolio_budgets.budget_type" className="block text-gray-400 text-sm mb-1">Type</FieldLabelWithHelp>
                   <select value={form.budget_type} onChange={e => setForm(f => ({ ...f, budget_type: e.target.value }))}
                     className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:outline-none">
                     <option value="">—</option>
@@ -263,7 +265,7 @@ export default function SimPortfolioFinancial() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-gray-400 text-sm mb-1">Currency</label>
+                  <FieldLabelWithHelp helpKey="sim.practice_portfolio_budgets.budget_currency" className="block text-gray-400 text-sm mb-1">Currency</FieldLabelWithHelp>
                   <select value={form.budget_currency} onChange={e => setForm(f => ({ ...f, budget_currency: e.target.value }))}
                     className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:outline-none">
                     {CURRENCIES.map(c => <option key={c} value={c}>{c}</option>)}
@@ -273,14 +275,14 @@ export default function SimPortfolioFinancial() {
               <div className="grid grid-cols-3 gap-3">
                 {[{ label: 'Approved Amount', key: 'approved_amount' }, { label: 'Actual Spent', key: 'actual_spent' }, { label: 'Remaining', key: 'remaining_amount' }].map(f => (
                   <div key={f.key}>
-                    <label className="block text-gray-400 text-sm mb-1">{f.label}</label>
+                    <FieldLabelWithHelp helpKey={`sim.practice_portfolio_budgets.${f.key}`} className="block text-gray-400 text-sm mb-1">{f.label}</FieldLabelWithHelp>
                     <input type="number" value={form[f.key]} onChange={e => setForm(prev => ({ ...prev, [f.key]: e.target.value }))}
                       className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:outline-none" />
                   </div>
                 ))}
               </div>
               <div>
-                <label className="block text-gray-400 text-sm mb-1">Status</label>
+                <FieldLabelWithHelp helpKey="sim.practice_portfolio_budgets.budget_status" className="block text-gray-400 text-sm mb-1">Status</FieldLabelWithHelp>
                 <select value={form.budget_status} onChange={e => setForm(f => ({ ...f, budget_status: e.target.value }))}
                   className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:outline-none">
                   {BUDGET_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
@@ -314,5 +316,19 @@ export default function SimPortfolioFinancial() {
         </div>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (sim.practice_portfolio_budgets.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'practice_portfolio_id', 'budget_name', 'budget_type', 'budget_currency', 'budget_status',
+].map((name) => `sim.practice_portfolio_budgets.${name}`)
+
+export default function SimPortfolioFinancial(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <SimPortfolioFinancialBody {...props} />
+    </FieldHelpScope>
   )
 }

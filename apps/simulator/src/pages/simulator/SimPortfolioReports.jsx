@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Plus, Search, RefreshCw, AlertCircle, X, Pencil, Trash2 } from 'lucide-react'
 import {
   getAllSimPortfolioReports,
@@ -47,7 +49,7 @@ const EMPTY_FORM = {
   report_date: '',
 }
 
-export default function SimPortfolioReports() {
+function SimPortfolioReportsBody() {
   const [rows, setRows] = useState([])
   const [portfolios, setPortfolios] = useState([])
   const [loading, setLoading] = useState(true)
@@ -363,7 +365,7 @@ export default function SimPortfolioReports() {
             {formError && <p className="text-red-400 text-sm">{formError}</p>}
             <div className="space-y-3">
               <div>
-                <label className="block text-gray-400 text-sm mb-1">Portfolio *</label>
+                <FieldLabelWithHelp helpKey="sim.practice_portfolio_reports.practice_portfolio_id" className="block text-gray-400 text-sm mb-1" required listOptions={false}>Portfolio *</FieldLabelWithHelp>
                 <select
                   value={form.practice_portfolio_id}
                   onChange={(e) =>
@@ -380,7 +382,7 @@ export default function SimPortfolioReports() {
                 </select>
               </div>
               <div>
-                <label className="block text-gray-400 text-sm mb-1">Report Name *</label>
+                <FieldLabelWithHelp helpKey="sim.practice_portfolio_reports.report_name" className="block text-gray-400 text-sm mb-1" required>Report Name *</FieldLabelWithHelp>
                 <input
                   value={form.report_name}
                   onChange={(e) => setForm((f) => ({ ...f, report_name: e.target.value }))}
@@ -390,7 +392,7 @@ export default function SimPortfolioReports() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-gray-400 text-sm mb-1">Type</label>
+                  <FieldLabelWithHelp helpKey="sim.practice_portfolio_reports.report_type" className="block text-gray-400 text-sm mb-1">Type</FieldLabelWithHelp>
                   <select
                     value={form.report_type}
                     onChange={(e) => setForm((f) => ({ ...f, report_type: e.target.value }))}
@@ -405,7 +407,7 @@ export default function SimPortfolioReports() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-gray-400 text-sm mb-1">Status</label>
+                  <FieldLabelWithHelp helpKey="sim.practice_portfolio_reports.generation_status" className="block text-gray-400 text-sm mb-1">Status</FieldLabelWithHelp>
                   <select
                     value={form.generation_status}
                     onChange={(e) =>
@@ -423,7 +425,7 @@ export default function SimPortfolioReports() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-gray-400 text-sm mb-1">Period</label>
+                  <FieldLabelWithHelp helpKey="sim.practice_portfolio_reports.report_period" className="block text-gray-400 text-sm mb-1">Period</FieldLabelWithHelp>
                   <input
                     value={form.report_period}
                     onChange={(e) => setForm((f) => ({ ...f, report_period: e.target.value }))}
@@ -432,7 +434,7 @@ export default function SimPortfolioReports() {
                   />
                 </div>
                 <div>
-                  <label className="block text-gray-400 text-sm mb-1">Report Date</label>
+                  <FieldLabelWithHelp helpKey="sim.practice_portfolio_reports.report_date" className="block text-gray-400 text-sm mb-1">Report Date</FieldLabelWithHelp>
                   <input
                     type="date"
                     value={form.report_date}
@@ -442,7 +444,7 @@ export default function SimPortfolioReports() {
                 </div>
               </div>
               <div>
-                <label className="block text-gray-400 text-sm mb-1">Summary</label>
+                <FieldLabelWithHelp helpKey="sim.practice_portfolio_reports.report_summary" className="block text-gray-400 text-sm mb-1">Summary</FieldLabelWithHelp>
                 <textarea
                   value={form.report_summary}
                   onChange={(e) => setForm((f) => ({ ...f, report_summary: e.target.value }))}
@@ -502,3 +504,17 @@ export default function SimPortfolioReports() {
   )
 }
 
+// v1345 slice 4: field help for this component (sim.practice_portfolio_reports.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'practice_portfolio_id', 'report_name', 'report_type', 'generation_status', 'report_period',
+  'report_date', 'report_summary',
+].map((name) => `sim.practice_portfolio_reports.${name}`)
+
+export default function SimPortfolioReports(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <SimPortfolioReportsBody {...props} />
+    </FieldHelpScope>
+  )
+}

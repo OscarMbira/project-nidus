@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { Info, Plus, Trash2 } from 'lucide-react'
 import { SmartAmountInput } from '@nidus/ui/SmartAmountInput'
 
@@ -6,7 +8,7 @@ import { SmartAmountInput } from '@nidus/ui/SmartAmountInput'
  * FinancialControlsSection
  * Single-value fields (Currency, Budget Type) at top; budget categories (name + amount + funding source) with live total; Budget Approval Status at bottom.
  */
-export default function FinancialControlsSection({
+function FinancialControlsSectionBody({
   formData,
   handleChange,
   errors,
@@ -43,9 +45,9 @@ export default function FinancialControlsSection({
         {/* 1. Single values at top: Currency, Budget Type */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label htmlFor="budget_currency" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="sim.projects.budget_currency" htmlFor="budget_currency" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
               Currency <span className="text-red-500">*</span>
-            </label>
+            </FieldLabelWithHelp>
             <select
               id="budget_currency"
               name="budget_currency"
@@ -61,9 +63,9 @@ export default function FinancialControlsSection({
             </select>
           </div>
           <div>
-            <label htmlFor="budget_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="sim.projects.budget_type" htmlFor="budget_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
               Budget Type <span className="text-red-500">*</span>
-            </label>
+            </FieldLabelWithHelp>
             <select
               id="budget_type"
               name="budget_type"
@@ -89,9 +91,9 @@ export default function FinancialControlsSection({
         {/* 2. Budget categories: category name, amount, funding source; total (hot) */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <FieldLabelWithHelp helpKey="sim.projects.budget_categories" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Budget Categories
-            </label>
+            </FieldLabelWithHelp>
             <button
               type="button"
               onClick={addCategory}
@@ -190,9 +192,9 @@ export default function FinancialControlsSection({
 
         {/* 3. Budget Approval Status */}
         <div>
-          <label htmlFor="budget_approval_status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.projects.budget_approval_status" htmlFor="budget_approval_status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Budget Approval Status <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <select
             id="budget_approval_status"
             name="budget_approval_status"
@@ -215,5 +217,21 @@ export default function FinancialControlsSection({
         </div>
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.projects.budget_currency',
+  'sim.projects.budget_type',
+  'sim.projects.budget_categories',
+  'sim.projects.budget_approval_status',
+]
+
+export default function FinancialControlsSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <FinancialControlsSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

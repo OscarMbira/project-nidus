@@ -5,6 +5,8 @@
  * back to the list regardless of which nav area (pm/pmo/platform) it was reached from.
  */
 import { useState, useEffect, useMemo } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
@@ -21,7 +23,7 @@ const RECURRENCE_PATTERNS = ['daily', 'weekly', 'biweekly', 'monthly', 'quarterl
 
 const inputClass = 'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm'
 
-export default function RecurringTaskForm() {
+function RecurringTaskFormBody() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { projectId } = usePlatformProjectId()
@@ -128,19 +130,19 @@ export default function RecurringTaskForm() {
 
       <div className="space-y-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Template name *</label>
+          <FieldLabelWithHelp helpKey="public.recurring_task_templates.template_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>Template name *</FieldLabelWithHelp>
           <input type="text" value={form.template_name} onChange={(e) => handleChange('template_name', e.target.value)} className={inputClass} />
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Entity type</label>
+            <FieldLabelWithHelp helpKey="public.recurring_task_templates.entity_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Entity type</FieldLabelWithHelp>
             <select value={form.entity_type} onChange={(e) => handleChange('entity_type', e.target.value)} className={inputClass}>
               {ENTITY_TYPES.map((t) => <option key={t} value={t}>{t.replace(/_/g, ' ')}</option>)}
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Recurrence pattern</label>
+            <FieldLabelWithHelp helpKey="public.recurring_task_templates.recurrence_pattern" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Recurrence pattern</FieldLabelWithHelp>
             <select value={form.recurrence_pattern} onChange={(e) => handleChange('recurrence_pattern', e.target.value)} className={inputClass}>
               {RECURRENCE_PATTERNS.map((p) => <option key={p} value={p}>{p}</option>)}
             </select>
@@ -149,17 +151,17 @@ export default function RecurringTaskForm() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Next run</label>
+            <FieldLabelWithHelp helpKey="public.recurring_task_templates.next_run_at" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Next run</FieldLabelWithHelp>
             <input type="datetime-local" value={form.next_run_at} onChange={(e) => handleChange('next_run_at', e.target.value)} className={inputClass} />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Timezone</label>
+            <FieldLabelWithHelp helpKey="public.recurring_task_templates.timezone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Timezone</FieldLabelWithHelp>
             <input type="text" value={form.timezone} onChange={(e) => handleChange('timezone', e.target.value)} className={inputClass} placeholder="UTC" />
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ends</label>
+          <FieldLabelWithHelp helpKey="public.recurring_task_templates.end_condition" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ends</FieldLabelWithHelp>
           <select value={form.end_condition} onChange={(e) => handleChange('end_condition', e.target.value)} className={inputClass}>
             <option value="never">Never</option>
             <option value="after_count">After a number of occurrences</option>
@@ -169,21 +171,21 @@ export default function RecurringTaskForm() {
 
         {form.end_condition === 'after_count' && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Number of occurrences</label>
+            <FieldLabelWithHelp helpKey="public.recurring_task_templates.max_occurrences" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Number of occurrences</FieldLabelWithHelp>
             <input type="number" min="1" value={form.max_occurrences} onChange={(e) => handleChange('max_occurrences', e.target.value)} className={inputClass} />
           </div>
         )}
         {form.end_condition === 'until_date' && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">End date</label>
+            <FieldLabelWithHelp helpKey="public.recurring_task_templates.end_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">End date</FieldLabelWithHelp>
             <input type="date" value={form.end_date} onChange={(e) => handleChange('end_date', e.target.value)} className={inputClass} />
           </div>
         )}
 
-        <label className="inline-flex items-center gap-2">
+        <FieldLabelWithHelp helpKey="public.recurring_task_templates.is_active" className="inline-flex items-center gap-2">
           <input type="checkbox" checked={form.is_active} onChange={(e) => handleChange('is_active', e.target.checked)} />
           <span className="text-sm text-gray-700 dark:text-gray-300">Active</span>
-        </label>
+        </FieldLabelWithHelp>
       </div>
 
       <div className="flex items-center gap-3">
@@ -196,5 +198,20 @@ export default function RecurringTaskForm() {
       </div>
       {modal}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.recurring_task_templates.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'template_name', 'entity_type', 'recurrence_pattern', 'next_run_at', 'timezone', 'end_condition',
+  'max_occurrences', 'end_date', 'is_active',
+].map((name) => `public.recurring_task_templates.${name}`)
+
+export default function RecurringTaskForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <RecurringTaskFormBody {...props} />
+    </FieldHelpScope>
   )
 }

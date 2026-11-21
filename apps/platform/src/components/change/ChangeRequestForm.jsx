@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { supabase } from '../../services/supabaseClient';
 import { platformDb } from '@nidus/supabase';
 import { FileText, AlertTriangle, Target, TrendingUp, BarChart3, CheckSquare } from 'lucide-react';
@@ -25,7 +27,7 @@ import {
 } from '../../services/changeRequestorCatalogueService';
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
-export default function ChangeRequestForm({
+function ChangeRequestFormBody({
   projectId,
   request,
   onClose,
@@ -394,9 +396,9 @@ export default function ChangeRequestForm({
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
               <div className="md:col-span-2">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                <FieldLabelWithHelp helpKey="public.change_requests.change_title" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>
                   Change Title *
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   value={formData.change_title}
@@ -408,9 +410,9 @@ export default function ChangeRequestForm({
               </div>
 
               <div className="md:col-span-3">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                <FieldLabelWithHelp helpKey="public.change_requests.change_description" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>
                   Change Description *
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   value={formData.change_description}
                   onChange={(e) => setFormData({ ...formData, change_description: e.target.value })}
@@ -424,9 +426,9 @@ export default function ChangeRequestForm({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                <FieldLabelWithHelp helpKey="public.change_requests.change_category" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>
                   Category *
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   value={formData.change_category}
                   onChange={(e) => setFormData({ ...formData, change_category: e.target.value })}
@@ -445,9 +447,9 @@ export default function ChangeRequestForm({
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                <FieldLabelWithHelp helpKey="public.change_requests.change_type" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>
                   Type *
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   value={formData.change_type}
                   onChange={(e) => setFormData({ ...formData, change_type: e.target.value })}
@@ -465,9 +467,9 @@ export default function ChangeRequestForm({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                <FieldLabelWithHelp helpKey="public.change_requests.submission_date" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>
                   Submission Date *
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="date"
                   value={formData.submission_date}
@@ -478,9 +480,9 @@ export default function ChangeRequestForm({
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                <FieldLabelWithHelp helpKey="public.change_requests.approval_required_by_date" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                   Decision Needed By
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="date"
                   value={formData.approval_required_by_date}
@@ -491,9 +493,9 @@ export default function ChangeRequestForm({
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                <FieldLabelWithHelp helpKey="public.change_requests.change_board_id" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" listOptions={false}>
                   Change Board
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   value={formData.change_board_id}
                   onChange={(e) => setFormData({ ...formData, change_board_id: e.target.value })}
@@ -511,9 +513,9 @@ export default function ChangeRequestForm({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                <FieldLabelWithHelp helpKey="public.change_requests.requestor_name" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                   Requestor Name
-                </label>
+                </FieldLabelWithHelp>
                 <SelectField
                   value={formData.requestor_name}
                   onChange={(value) => setFormData({ ...formData, requestor_name: value || '' })}
@@ -532,9 +534,9 @@ export default function ChangeRequestForm({
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                <FieldLabelWithHelp helpKey="public.change_requests.requestor_organization" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                   Requestor Organization
-                </label>
+                </FieldLabelWithHelp>
                 <SelectField
                   value={formData.requestor_organization}
                   onChange={(value) => setFormData({ ...formData, requestor_organization: value || '' })}
@@ -558,9 +560,9 @@ export default function ChangeRequestForm({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                <FieldLabelWithHelp helpKey="public.change_requests.owner_user_id" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" listOptions={false}>
                   Owner
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   value={formData.owner_user_id}
                   onChange={(e) => setFormData({ ...formData, owner_user_id: e.target.value })}
@@ -574,9 +576,9 @@ export default function ChangeRequestForm({
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                <FieldLabelWithHelp helpKey="public.change_requests.current_approver_user_id" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" listOptions={false}>
                   Approver
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   value={formData.current_approver_user_id}
                   onChange={(e) => setFormData({ ...formData, current_approver_user_id: e.target.value })}
@@ -596,9 +598,9 @@ export default function ChangeRequestForm({
         return (
           <div className="space-y-6">
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+              <FieldLabelWithHelp helpKey="public.change_requests.reason_for_change" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>
                 Reason for Change *
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={formData.reason_for_change}
                 onChange={(e) => setFormData({ ...formData, reason_for_change: e.target.value })}
@@ -610,9 +612,9 @@ export default function ChangeRequestForm({
             </div>
 
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+              <FieldLabelWithHelp helpKey="public.change_requests.business_rationale" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                 Business rationale
-              </label>
+              </FieldLabelWithHelp>
               <MultiLineListInput
                 viewModeId="change-request-business-rationale"
                 id="business_rationale"
@@ -625,9 +627,9 @@ export default function ChangeRequestForm({
             </div>
 
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+              <FieldLabelWithHelp helpKey="public.change_requests.current_situation" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>
                 Current Situation *
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={formData.current_situation}
                 onChange={(e) => setFormData({ ...formData, current_situation: e.target.value })}
@@ -656,9 +658,9 @@ export default function ChangeRequestForm({
         return (
           <div className="space-y-6">
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+              <FieldLabelWithHelp helpKey="public.change_requests.proposed_solution" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>
                 Proposed Solution *
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={formData.proposed_solution}
                 onChange={(e) => setFormData({ ...formData, proposed_solution: e.target.value })}
@@ -670,9 +672,9 @@ export default function ChangeRequestForm({
             </div>
 
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+              <FieldLabelWithHelp helpKey="public.change_requests.alternative_solutions" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                 Alternative Solutions
-              </label>
+              </FieldLabelWithHelp>
               <MultiLineListInput
                 viewModeId="change-request-alternative-solutions"
                 id="alternative_solutions"
@@ -704,9 +706,9 @@ export default function ChangeRequestForm({
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                <FieldLabelWithHelp helpKey="public.change_requests.priority" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>
                   Priority *
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   value={formData.priority}
                   onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
@@ -722,9 +724,9 @@ export default function ChangeRequestForm({
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                <FieldLabelWithHelp helpKey="public.change_requests.urgency" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>
                   Urgency *
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   value={formData.urgency}
                   onChange={(e) => setFormData({ ...formData, urgency: e.target.value })}
@@ -739,9 +741,9 @@ export default function ChangeRequestForm({
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                <FieldLabelWithHelp helpKey="public.change_requests.business_criticality" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>
                   Business Criticality *
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   value={formData.business_criticality}
                   onChange={(e) => setFormData({ ...formData, business_criticality: e.target.value })}
@@ -757,9 +759,9 @@ export default function ChangeRequestForm({
             </div>
 
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+              <FieldLabelWithHelp helpKey="public.change_requests.impact_summary" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                 Impact
-              </label>
+              </FieldLabelWithHelp>
               <MultiLineListInput
                 viewModeId="change-request-impact"
                 id="impact_summary"
@@ -776,9 +778,9 @@ export default function ChangeRequestForm({
 
             {relatedRequirements.available && (
               <div>
-                <label htmlFor="related_requirement_ids" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                <FieldLabelWithHelp helpKey="public.change_requests.related_requirement_ids" htmlFor="related_requirement_ids" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                   Related requirements
-                </label>
+                </FieldLabelWithHelp>
                 <MultiSelectDropdown
                   id="related_requirement_ids"
                   value={formData.related_requirement_ids}
@@ -795,9 +797,9 @@ export default function ChangeRequestForm({
             )}
 
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+              <FieldLabelWithHelp helpKey="public.change_requests.notes" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                 Additional Notes
-              </label>
+              </FieldLabelWithHelp>
               <MultiLineListInput
                 viewModeId="change-request-additional-notes"
                 id="notes"
@@ -811,9 +813,9 @@ export default function ChangeRequestForm({
 
             {request && (
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                <FieldLabelWithHelp helpKey="public.change_requests.status_reason" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                   Decision Notes
-                </label>
+                </FieldLabelWithHelp>
                 <MultiLineListInput
                   viewModeId="change-request-decision-notes"
                   id="status_reason"
@@ -859,9 +861,9 @@ export default function ChangeRequestForm({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                <FieldLabelWithHelp helpKey="public.change_requests.impact_level" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                   Overall Impact Level
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   value={assessmentData.impact_level}
                   onChange={(e) => setAssessmentData({ ...assessmentData, impact_level: e.target.value })}
@@ -877,9 +879,9 @@ export default function ChangeRequestForm({
             </div>
 
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+              <FieldLabelWithHelp helpKey="public.change_requests.impact_summary" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                 Impact Summary
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={assessmentData.impact_summary}
                 onChange={(e) => setAssessmentData({ ...assessmentData, impact_summary: e.target.value })}
@@ -898,9 +900,9 @@ export default function ChangeRequestForm({
             ].map(({ key, label }) => (
               <div key={key} className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-gray-200 dark:border-gray-700 pt-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                  <FieldLabelWithHelp helpKey={`public.change_requests.${key}_impact_level`} className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                     {label} Impact Level
-                  </label>
+                  </FieldLabelWithHelp>
                   <select
                     value={assessmentData[`${key}_impact_level`]}
                     onChange={(e) => setAssessmentData({ ...assessmentData, [`${key}_impact_level`]: e.target.value })}
@@ -910,9 +912,9 @@ export default function ChangeRequestForm({
                   </select>
                 </div>
                 <div className="md:col-span-2">
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                  <FieldLabelWithHelp helpKey={`public.change_requests.${key}_impact_description`} className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                     {label} Impact Description
-                  </label>
+                  </FieldLabelWithHelp>
                   <textarea
                     value={assessmentData[`${key}_impact_description`]}
                     onChange={(e) => setAssessmentData({ ...assessmentData, [`${key}_impact_description`]: e.target.value })}
@@ -925,9 +927,9 @@ export default function ChangeRequestForm({
             ))}
 
             <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+              <FieldLabelWithHelp helpKey="public.change_requests.risk_impact_description" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                 Risk Impact Description
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={assessmentData.risk_impact_description}
                 onChange={(e) => setAssessmentData({ ...assessmentData, risk_impact_description: e.target.value })}
@@ -959,9 +961,9 @@ export default function ChangeRequestForm({
             </div>
 
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+              <FieldLabelWithHelp helpKey="public.change_requests.feasibility_rating" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                 Feasibility Rating
-              </label>
+              </FieldLabelWithHelp>
               <select
                 value={assessmentData.feasibility_rating}
                 onChange={(e) => setAssessmentData({ ...assessmentData, feasibility_rating: e.target.value })}
@@ -975,9 +977,9 @@ export default function ChangeRequestForm({
             </div>
 
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+              <FieldLabelWithHelp helpKey="public.change_requests.recommendation" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                 Decision
-              </label>
+              </FieldLabelWithHelp>
               <select
                 value={assessmentData.recommendation}
                 onChange={(e) => setAssessmentData({ ...assessmentData, recommendation: e.target.value })}
@@ -992,9 +994,9 @@ export default function ChangeRequestForm({
             </div>
 
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+              <FieldLabelWithHelp helpKey="public.change_requests.recommendation_rationale" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                 Decision Rationale
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={assessmentData.recommendation_rationale}
                 onChange={(e) => setAssessmentData({ ...assessmentData, recommendation_rationale: e.target.value })}
@@ -1006,9 +1008,9 @@ export default function ChangeRequestForm({
 
             {assessmentData.recommendation === 'approve-with-conditions' && (
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                <FieldLabelWithHelp helpKey="public.change_requests.conditions" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                   Conditions
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   value={assessmentData.conditions}
                   onChange={(e) => setAssessmentData({ ...assessmentData, conditions: e.target.value })}
@@ -1109,4 +1111,26 @@ export default function ChangeRequestForm({
       </form>
     </FormSurface>
   );
+}
+
+// v1345 slice 4: field help for this component (public.change_requests.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'change_title', 'change_description', 'change_category', 'change_type', 'submission_date',
+  'approval_required_by_date', 'change_board_id', 'requestor_name', 'requestor_organization',
+  'owner_user_id', 'current_approver_user_id', 'reason_for_change', 'business_rationale',
+  'current_situation', 'proposed_solution', 'alternative_solutions', 'priority', 'urgency',
+  'business_criticality', 'impact_summary', 'related_requirement_ids', 'notes', 'status_reason',
+  'impact_level', 'risk_impact_description', 'feasibility_rating', 'recommendation',
+  'recommendation_rationale', 'conditions',
+  // the assessment grid builds these labels per impact area
+  ...['schedule', 'cost', 'scope', 'quality', 'resource'].flatMap((area) => [`${area}_impact_level`, `${area}_impact_description`]),
+].map((name) => `public.change_requests.${name}`)
+
+export default function ChangeRequestForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ChangeRequestFormBody {...props} />
+    </FieldHelpScope>
+  )
 }

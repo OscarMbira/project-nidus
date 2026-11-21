@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import { simDb } from '@nidus/supabase'
@@ -21,7 +23,7 @@ import { SIM_TESTING_BASE } from './simTestingPaths'
 const labelClass = 'mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200'
 const controlClass = 'w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100'
 
-export default function SimTestEnvironmentFormPage() {
+function SimTestEnvironmentFormPageBody() {
   const { environmentKey } = useParams()
   const isNew = !environmentKey
   return (
@@ -184,17 +186,17 @@ function Editor({ isNew, environmentKey, projectId }) {
           <form onSubmit={save} className="space-y-4 p-5">
             <fieldset disabled={!editing} className="space-y-4 disabled:opacity-80">
               <div>
-                <label className={labelClass} htmlFor="practice-environment-name">Name <span className="text-red-400">*</span></label>
+                <FieldLabelWithHelp helpKey="sim.practice_test_environments.name" className={labelClass} htmlFor="practice-environment-name" required>Name <span className="text-red-400">*</span></FieldLabelWithHelp>
                 <input id="practice-environment-name" value={name} onChange={(e) => { setName(e.target.value); setDirty(true) }} className={controlClass} required />
               </div>
               <div>
-                <label className={labelClass} htmlFor="practice-environment-description">Description</label>
+                <FieldLabelWithHelp helpKey="sim.practice_test_environments.description" className={labelClass} htmlFor="practice-environment-description">Description</FieldLabelWithHelp>
                 <textarea id="practice-environment-description" value={description} onChange={(e) => { setDescription(e.target.value); setDirty(true) }} rows={3} className={`${controlClass} resize-none`} />
               </div>
-              <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
+              <FieldLabelWithHelp helpKey="sim.practice_test_environments.is_active" className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
                 <input type="checkbox" checked={isActive} onChange={(e) => { setIsActive(e.target.checked); setDirty(true) }} />
                 Active
-              </label>
+              </FieldLabelWithHelp>
             </fieldset>
             {editing && (
               <div className="flex justify-end gap-3">
@@ -211,5 +213,19 @@ function Editor({ isNew, environmentKey, projectId }) {
         )}
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (sim.practice_test_environments.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'name', 'description', 'is_active',
+].map((name) => `sim.practice_test_environments.${name}`)
+
+export default function SimTestEnvironmentFormPage(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <SimTestEnvironmentFormPageBody {...props} />
+    </FieldHelpScope>
   )
 }

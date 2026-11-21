@@ -5,6 +5,8 @@
  * Route: /simulator/pmo/approval-chains
  */
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { useNavigate } from 'react-router-dom'
 import { GitBranch, Plus, ArrowLeft, Save, X, Trash2 } from 'lucide-react'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
@@ -29,7 +31,7 @@ import {
 const EMPTY_STEP = () => ({ role_name: '', role_label: '', approval_level: 1, is_mandatory: true })
 const EMPTY_FORM = { chain_name: '', description: '', is_active: true, steps: [EMPTY_STEP()] }
 
-export default function OrganisationApprovalChains() {
+function OrganisationApprovalChainsBody() {
   const navigate = useNavigate()
   const { showSuccess, modal: successModal } = useSuccessModal()
 
@@ -173,17 +175,17 @@ export default function OrganisationApprovalChains() {
           ) : (
             <form onSubmit={handleSubmit} className="mt-4 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Chain name *</label>
+                <FieldLabelWithHelp helpKey="sim.pmo_approval_chain_steps.chain_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>Chain name *</FieldLabelWithHelp>
                 <input type="text" value={form.chain_name} onChange={(e) => setForm((f) => ({ ...f, chain_name: e.target.value }))} required placeholder="e.g. Standard 3-Level Sign-off" className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</label>
+                <FieldLabelWithHelp helpKey="sim.pmo_approval_chain_steps.description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</FieldLabelWithHelp>
                 <textarea value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} rows={2} className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" />
               </div>
 
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Steps (in order)</label>
+                  <FieldLabelWithHelp helpKey="sim.pmo_approval_chain_steps.role_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Steps (in order)</FieldLabelWithHelp>
                   <button type="button" onClick={addStep} className="text-sm text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1">
                     <Plus className="h-3.5 w-3.5" /> Add step
                   </button>
@@ -195,10 +197,10 @@ export default function OrganisationApprovalChains() {
                       <input type="text" value={step.role_name} onChange={(e) => updateStep(index, 'role_name', e.target.value)} placeholder="Role name (e.g. project_manager)" className="flex-1 min-w-[160px] px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded text-sm dark:bg-gray-700 dark:text-white" />
                       <input type="text" value={step.role_label || ''} onChange={(e) => updateStep(index, 'role_label', e.target.value)} placeholder="Display label (optional)" className="flex-1 min-w-[160px] px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded text-sm dark:bg-gray-700 dark:text-white" />
                       <input type="number" min={1} value={step.approval_level} onChange={(e) => updateStep(index, 'approval_level', e.target.value)} className="w-20 px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded text-sm dark:bg-gray-700 dark:text-white" title="Approval level" />
-                      <label className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400">
+                      <FieldLabelWithHelp helpKey="sim.pmo_approval_chain_steps.is_mandatory" className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400">
                         <input type="checkbox" checked={step.is_mandatory !== false} onChange={(e) => updateStep(index, 'is_mandatory', e.target.checked)} className="rounded border-gray-300 dark:border-gray-600" />
                         Mandatory
-                      </label>
+                      </FieldLabelWithHelp>
                       <button type="button" onClick={() => removeStep(index)} className="text-red-500 hover:text-red-600 p-1" title="Remove step">
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -207,10 +209,10 @@ export default function OrganisationApprovalChains() {
                 </div>
               </div>
 
-              <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+              <FieldLabelWithHelp helpKey="sim.pmo_approval_chain_steps.is_active" className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
                 <input type="checkbox" checked={form.is_active} onChange={(e) => setForm((f) => ({ ...f, is_active: e.target.checked }))} className="rounded border-gray-300 dark:border-gray-600" />
                 Active
-              </label>
+              </FieldLabelWithHelp>
               <div className="flex gap-3 pt-2">
                 <button type="submit" disabled={saving} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50">
                   <Save className="h-4 w-4" /> {saving ? 'Saving…' : editing ? 'Save Changes' : 'Create'}
@@ -265,5 +267,22 @@ export default function OrganisationApprovalChains() {
       </div>
       {successModal}
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.pmo_approval_chain_steps.chain_name',
+  'sim.pmo_approval_chain_steps.description',
+  'sim.pmo_approval_chain_steps.role_name',
+  'sim.pmo_approval_chain_steps.is_mandatory',
+  'sim.pmo_approval_chain_steps.is_active',
+]
+
+export default function OrganisationApprovalChains(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <OrganisationApprovalChainsBody {...props} />
+    </FieldHelpScope>
   )
 }

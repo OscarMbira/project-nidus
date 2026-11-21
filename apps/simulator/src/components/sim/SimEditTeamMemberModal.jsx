@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { X, Loader } from 'lucide-react'
 import { listPracticeProjectFunctionalRoles, updateSimTeamMember } from '../../services/sim/simTeamService'
 import { useToast } from '@nidus/shared/hooks/useToast'
@@ -8,7 +10,7 @@ import AuditCard from '@nidus/ui/AuditCard'
 import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 
-export default function SimEditTeamMemberModal({
+function SimEditTeamMemberModalBody({
   isOpen,
   onClose,
   practiceTeamId,
@@ -143,7 +145,7 @@ export default function SimEditTeamMemberModal({
               />
             )}
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Allocation %</label>
+              <FieldLabelWithHelp helpKey="sim.practice_team_members.allocation_percentage" className="text-sm font-medium text-gray-700 dark:text-gray-300">Allocation %</FieldLabelWithHelp>
               <input
                 type="number"
                 min={0}
@@ -170,5 +172,18 @@ export default function SimEditTeamMemberModal({
         )}
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.practice_team_members.allocation_percentage',
+]
+
+export default function SimEditTeamMemberModal(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <SimEditTeamMemberModalBody {...props} />
+    </FieldHelpScope>
   )
 }

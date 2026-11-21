@@ -4,6 +4,8 @@
  * Routes: .../reporting/scheduled/create, .../reporting/scheduled/:id/edit
  */
 import { useEffect, useMemo, useState } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import { simDb } from '@nidus/supabase'
@@ -22,7 +24,7 @@ const FREQUENCIES = ['weekly', 'monthly', 'quarterly']
 
 const emptyForm = { schedule_name: '', frequency: 'weekly', recipient_emails: '', is_active: true }
 
-export default function ScheduledHealthReportForm() {
+function ScheduledHealthReportFormBody() {
   const { id } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
@@ -156,15 +158,15 @@ export default function ScheduledHealthReportForm() {
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
           {error && <p className="text-red-600 dark:text-red-400" role="alert">{error}</p>}
-          <label className="block">
+          <FieldLabelWithHelp helpKey="sim.scheduled_health_reports.schedule_name" className="block">
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Schedule name *</span>
             <input
               className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 min-h-[44px] text-gray-900 dark:text-gray-100"
               value={form.schedule_name}
               onChange={(e) => setForm((f) => ({ ...f, schedule_name: e.target.value }))}
             />
-          </label>
-          <label className="block">
+          </FieldLabelWithHelp>
+          <FieldLabelWithHelp helpKey="sim.scheduled_health_reports.frequency" className="block">
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Frequency</span>
             <select
               className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 min-h-[44px] text-gray-900 dark:text-gray-100"
@@ -175,8 +177,8 @@ export default function ScheduledHealthReportForm() {
                 <option key={f} value={f}>{f}</option>
               ))}
             </select>
-          </label>
-          <label className="block">
+          </FieldLabelWithHelp>
+          <FieldLabelWithHelp helpKey="sim.scheduled_health_reports.recipient_emails" className="block">
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Recipient emails (comma-separated)</span>
             <input
               className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 min-h-[44px] text-gray-900 dark:text-gray-100"
@@ -184,8 +186,8 @@ export default function ScheduledHealthReportForm() {
               onChange={(e) => setForm((f) => ({ ...f, recipient_emails: e.target.value }))}
               placeholder="pm@example.com, sponsor@example.com"
             />
-          </label>
-          <label className="flex items-center gap-2">
+          </FieldLabelWithHelp>
+          <FieldLabelWithHelp helpKey="sim.scheduled_health_reports.is_active" className="flex items-center gap-2">
             <input
               type="checkbox"
               checked={form.is_active}
@@ -193,7 +195,7 @@ export default function ScheduledHealthReportForm() {
               className="rounded border-gray-300 dark:border-gray-600"
             />
             <span className="text-sm text-gray-700 dark:text-gray-300">Active</span>
-          </label>
+          </FieldLabelWithHelp>
           <div className="flex justify-end pt-2">
             <button type="submit" disabled={saving} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50">
               <Save className="h-4 w-4" /> {isEdit ? 'Update' : 'Create'}
@@ -203,5 +205,21 @@ export default function ScheduledHealthReportForm() {
       )}
       {successModal}
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.scheduled_health_reports.schedule_name',
+  'sim.scheduled_health_reports.frequency',
+  'sim.scheduled_health_reports.recipient_emails',
+  'sim.scheduled_health_reports.is_active',
+]
+
+export default function ScheduledHealthReportForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ScheduledHealthReportFormBody {...props} />
+    </FieldHelpScope>
   )
 }

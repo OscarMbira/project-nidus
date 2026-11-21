@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { X, Loader } from 'lucide-react'
 import { getTeamFunctionalRoles, updateTeamMember } from '../../services/teamService'
 import { useToast } from '@nidus/shared/hooks/useToast'
@@ -10,7 +12,7 @@ import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
-export default function EditTeamMemberModal({ isOpen, onClose, teamId, member, onSuccess }) {
+function EditTeamMemberModalBody({ isOpen, onClose, teamId, member, onSuccess }) {
   const { showToast } = useToast()
   const [roles, setRoles] = useState([])
   const [roleMode, setRoleMode] = useState('preset')
@@ -161,7 +163,7 @@ export default function EditTeamMemberModal({ isOpen, onClose, teamId, member, o
               />
             )}
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Allocation %</label>
+              <FieldLabelWithHelp helpKey="sim.team_members.allocation_percentage" className="text-sm font-medium text-gray-700 dark:text-gray-300">Allocation %</FieldLabelWithHelp>
               <input
                 type="number"
                 min={0}
@@ -188,5 +190,18 @@ export default function EditTeamMemberModal({ isOpen, onClose, teamId, member, o
         )}
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.team_members.allocation_percentage',
+]
+
+export default function EditTeamMemberModal(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <EditTeamMemberModalBody {...props} />
+    </FieldHelpScope>
   )
 }

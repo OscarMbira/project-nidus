@@ -1,6 +1,8 @@
 import { CheckCircle, AlertCircle } from 'lucide-react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 
-export default function RecommendationSection({ formData, onChange, errors, mode, options }) {
+function RecommendationSectionBody({ formData, onChange, errors, mode, options }) {
   const recommendedOption = options?.find(opt => opt.is_recommended)
 
   return (
@@ -50,9 +52,9 @@ export default function RecommendationSection({ formData, onChange, errors, mode
       )}
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="sim.exception_reports.recommended_option_number" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Recommended Option Number
-        </label>
+        </FieldLabelWithHelp>
         <input
           type="number"
           value={formData.recommended_option_number || ''}
@@ -65,9 +67,9 @@ export default function RecommendationSection({ formData, onChange, errors, mode
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="sim.exception_reports.recommendation_summary" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
           Recommendation Summary *
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={formData.recommendation_summary || ''}
           onChange={(e) => onChange('recommendation_summary', e.target.value)}
@@ -86,9 +88,9 @@ export default function RecommendationSection({ formData, onChange, errors, mode
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="sim.exception_reports.recommendation_justification" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
           Recommendation Justification *
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={formData.recommendation_justification || ''}
           onChange={(e) => onChange('recommendation_justification', e.target.value)}
@@ -107,9 +109,9 @@ export default function RecommendationSection({ formData, onChange, errors, mode
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="sim.exception_reports.requested_decision" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Requested Decision
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={formData.requested_decision || ''}
           onChange={(e) => onChange('requested_decision', e.target.value)}
@@ -120,5 +122,21 @@ export default function RecommendationSection({ formData, onChange, errors, mode
         />
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.exception_reports.recommended_option_number',
+  'sim.exception_reports.recommendation_summary',
+  'sim.exception_reports.recommendation_justification',
+  'sim.exception_reports.requested_decision',
+]
+
+export default function RecommendationSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <RecommendationSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

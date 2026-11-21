@@ -5,6 +5,7 @@
  */
 
 import { platformDb } from './supabase/supabaseClient';
+import { splitPlanLists, savePlanLists, loadPlanLists } from '@nidus/shared/services/planListTablesService';
 
 /**
  * Create a new Stage Plan
@@ -49,8 +50,9 @@ export async function createStagePlan(projectId, stageNumber, planData) {
       return { success: false, error: 'Project Plan ID is required' };
     }
 
+    const { plan: planFields, lists } = splitPlanLists('stage', planData);
     const insertData = {
-      ...planData,
+      ...planFields,
       project_id: projectId,
       stage_number: stageNumber,
       author_id: planData.author_id || userData.id,
@@ -77,6 +79,8 @@ export async function createStagePlan(projectId, stageNumber, planData) {
       .single();
 
     if (error) throw error;
+    await savePlanLists(platformDb, 'stage', data.id, lists);
+    Object.assign(data, lists);
 
     return { success: true, data };
   } catch (error) {
@@ -154,6 +158,14 @@ export async function getStagePlanById(planId) {
       .single();
 
     if (error) throw error;
+    if (data) {
+      try {
+        Object.assign(data, await loadPlanLists(platformDb, 'stage', data.id));
+      } catch (listError) {
+        // Plan list tables not created yet (SQL v1542): the stored values are still shown.
+        console.warn('Plan lists not loaded:', listError.message);
+      }
+    }
 
     return { success: true, data };
   } catch (error) {
@@ -214,6 +226,14 @@ export async function getStagePlanByStage(stageBoundaryId) {
       .maybeSingle();
 
     if (error) throw error;
+    if (data) {
+      try {
+        Object.assign(data, await loadPlanLists(platformDb, 'stage', data.id));
+      } catch (listError) {
+        // Plan list tables not created yet (SQL v1542): the stored values are still shown.
+        console.warn('Plan lists not loaded:', listError.message);
+      }
+    }
 
     return { success: true, data };
   } catch (error) {
@@ -246,8 +266,9 @@ export async function updateStagePlan(planId, updates) {
       return { success: false, error: 'User not found' };
     }
 
+    const { plan: planFields, lists } = splitPlanLists('stage', updates);
     const updateData = {
-      ...updates,
+      ...planFields,
       updated_by: userData.id,
       updated_at: new Date().toISOString()
     };
@@ -266,6 +287,8 @@ export async function updateStagePlan(planId, updates) {
       .single();
 
     if (error) throw error;
+    await savePlanLists(platformDb, 'stage', data.id, lists);
+    Object.assign(data, lists);
 
     return { success: true, data };
   } catch (error) {

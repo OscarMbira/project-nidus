@@ -4,6 +4,8 @@
  */
 
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { Save } from 'lucide-react'
 import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesContext'
 import { salienceClassFromPLU } from '@nidus/shared/utils/salienceUtils'
@@ -76,7 +78,7 @@ function ScorePicker({ label, value, onChange }) {
   )
 }
 
-export default function StakeholderAnalysisForm({ analysis, stakeholderId, projectId, stakeholders = [], onSave, onCancel }) {
+function StakeholderAnalysisFormBody({ analysis, stakeholderId, projectId, stakeholders = [], onSave, onCancel }) {
   const [formData, setFormData] = useState({
     stakeholder_id: stakeholderId || '',
     project_id: projectId || '',
@@ -296,7 +298,7 @@ export default function StakeholderAnalysisForm({ analysis, stakeholderId, proje
           <>
             {!analysis && stakeholders.length > 0 && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Stakeholder</label>
+                <FieldLabelWithHelp helpKey="sim.stakeholder_analysis.stakeholder_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" listOptions={false}>Stakeholder</FieldLabelWithHelp>
                 <SelectField
                   required
                   value={formData.stakeholder_id}
@@ -329,15 +331,15 @@ export default function StakeholderAnalysisForm({ analysis, stakeholderId, proje
               <p className="px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg capitalize text-gray-900 dark:text-gray-100">{formData.salience_class || '—'}</p>
             </div>
             <div>
-              <label htmlFor="sa-power_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Why this power level</label>
+              <FieldLabelWithHelp helpKey="sim.stakeholder_analysis.power_description" htmlFor="sa-power_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Why this power level</FieldLabelWithHelp>
               <textarea id="sa-power_description" name="power_description" rows={2} value={formData.power_description} onChange={handleChange} placeholder="What gives this stakeholder their influence over the project" className={fieldClass} />
             </div>
             <div>
-              <label htmlFor="sa-interest_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Why this interest level</label>
+              <FieldLabelWithHelp helpKey="sim.stakeholder_analysis.interest_description" htmlFor="sa-interest_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Why this interest level</FieldLabelWithHelp>
               <textarea id="sa-interest_description" name="interest_description" rows={2} value={formData.interest_description} onChange={handleChange} placeholder="What this stakeholder cares about in the project" className={fieldClass} />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+              <FieldLabelWithHelp helpKey="sim.stakeholder_analysis.depends_on_project" className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
                 <input
                   type="checkbox"
                   checked={!!formData.depends_on_project}
@@ -345,8 +347,8 @@ export default function StakeholderAnalysisForm({ analysis, stakeholderId, proje
                   className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500"
                 />
                 This stakeholder depends on the project
-              </label>
-              <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+              </FieldLabelWithHelp>
+              <FieldLabelWithHelp helpKey="sim.stakeholder_analysis.project_depends_on_them" className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
                 <input
                   type="checkbox"
                   checked={!!formData.project_depends_on_them}
@@ -354,7 +356,7 @@ export default function StakeholderAnalysisForm({ analysis, stakeholderId, proje
                   className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500"
                 />
                 The project depends on this stakeholder
-              </label>
+              </FieldLabelWithHelp>
             </div>
           </>
         )}
@@ -363,26 +365,26 @@ export default function StakeholderAnalysisForm({ analysis, stakeholderId, proje
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Current attitude</label>
+                <FieldLabelWithHelp helpKey="sim.stakeholder_analysis.current_attitude" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Current attitude</FieldLabelWithHelp>
                 <select name="current_attitude" value={formData.current_attitude} onChange={handleChange} className={fieldClass}>
                   {ATTITUDES.map(a => (<option key={a} value={a}>{a}</option>))}
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Desired attitude</label>
+                <FieldLabelWithHelp helpKey="sim.stakeholder_analysis.desired_attitude" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Desired attitude</FieldLabelWithHelp>
                 <select name="desired_attitude" value={formData.desired_attitude} onChange={handleChange} className={fieldClass}>
                   {ATTITUDES.map(a => (<option key={a} value={a}>{a}</option>))}
                 </select>
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Engagement priority</label>
+              <FieldLabelWithHelp helpKey="sim.stakeholder_analysis.engagement_priority" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Engagement priority</FieldLabelWithHelp>
               <select name="engagement_priority" value={formData.engagement_priority} onChange={handleChange} className={fieldClass}>
                 {PRIORITIES.map(p => (<option key={p} value={p}>{p}</option>))}
               </select>
             </div>
             <div>
-              <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Power sources</span>
+              <FieldLabelWithHelp as="span" helpKey="sim.stakeholder_analysis.power_sources" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Power sources</FieldLabelWithHelp>
               <div className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                 {POWER_SOURCES.map((src, index) => (
                   <label key={src} className="flex items-center gap-3 px-4 py-3">
@@ -399,15 +401,15 @@ export default function StakeholderAnalysisForm({ analysis, stakeholderId, proje
               </div>
             </div>
             <div>
-              <label htmlFor="sa-attitude_notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Attitude notes</label>
+              <FieldLabelWithHelp helpKey="sim.stakeholder_analysis.attitude_notes" htmlFor="sa-attitude_notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Attitude notes</FieldLabelWithHelp>
               <textarea id="sa-attitude_notes" name="attitude_notes" rows={2} value={formData.attitude_notes} onChange={handleChange} placeholder="What shapes their current attitude" className={fieldClass} />
             </div>
             <div>
-              <label htmlFor="sa-support_rationale" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Reasons for support (or resistance)</label>
+              <FieldLabelWithHelp helpKey="sim.stakeholder_analysis.support_rationale" htmlFor="sa-support_rationale" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Reasons for support (or resistance)</FieldLabelWithHelp>
               <textarea id="sa-support_rationale" name="support_rationale" rows={2} value={formData.support_rationale} onChange={handleChange} placeholder="Why they support or resist the project" className={fieldClass} />
             </div>
             <div>
-              <label htmlFor="sa-potential_objections" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Potential objections</label>
+              <FieldLabelWithHelp helpKey="sim.stakeholder_analysis.potential_objections" htmlFor="sa-potential_objections" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Potential objections</FieldLabelWithHelp>
               <textarea id="sa-potential_objections" name="potential_objections" rows={2} value={formData.potential_objections} onChange={handleChange} placeholder="Concerns they are likely to raise" className={fieldClass} />
             </div>
           </>
@@ -444,20 +446,20 @@ export default function StakeholderAnalysisForm({ analysis, stakeholderId, proje
             />
             </div>
             <div>
-              <label htmlFor="sa-influence_strategy" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Influence strategy</label>
+              <FieldLabelWithHelp helpKey="sim.stakeholder_analysis.influence_strategy" htmlFor="sa-influence_strategy" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Influence strategy</FieldLabelWithHelp>
               <textarea id="sa-influence_strategy" name="influence_strategy" rows={2} value={formData.influence_strategy} onChange={handleChange} placeholder="How the project will move them toward the desired attitude" className={fieldClass} />
             </div>
             <div>
-              <label htmlFor="sa-engagement_approach" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Engagement approach</label>
+              <FieldLabelWithHelp helpKey="sim.stakeholder_analysis.engagement_approach" htmlFor="sa-engagement_approach" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Engagement approach</FieldLabelWithHelp>
               <textarea id="sa-engagement_approach" name="engagement_approach" rows={2} value={formData.engagement_approach} onChange={handleChange} placeholder="Who engages them, how and how often" className={fieldClass} />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Analysis date</label>
+                <FieldLabelWithHelp helpKey="sim.stakeholder_analysis.analysis_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Analysis date</FieldLabelWithHelp>
                 <input type="date" name="analysis_date" value={formData.analysis_date} onChange={handleChange} className={fieldClass} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Period</label>
+                <FieldLabelWithHelp helpKey="sim.stakeholder_analysis.analysis_period" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Period</FieldLabelWithHelp>
                 <SelectField
                   value={formData.analysis_period}
                   onChange={(value) => {
@@ -492,5 +494,33 @@ export default function StakeholderAnalysisForm({ analysis, stakeholderId, proje
         </div>
       </form>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.stakeholder_analysis.stakeholder_id',
+  'sim.stakeholder_analysis.power_description',
+  'sim.stakeholder_analysis.interest_description',
+  'sim.stakeholder_analysis.depends_on_project',
+  'sim.stakeholder_analysis.project_depends_on_them',
+  'sim.stakeholder_analysis.current_attitude',
+  'sim.stakeholder_analysis.desired_attitude',
+  'sim.stakeholder_analysis.engagement_priority',
+  'sim.stakeholder_analysis.power_sources',
+  'sim.stakeholder_analysis.attitude_notes',
+  'sim.stakeholder_analysis.support_rationale',
+  'sim.stakeholder_analysis.potential_objections',
+  'sim.stakeholder_analysis.influence_strategy',
+  'sim.stakeholder_analysis.engagement_approach',
+  'sim.stakeholder_analysis.analysis_date',
+  'sim.stakeholder_analysis.analysis_period',
+]
+
+export default function StakeholderAnalysisForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <StakeholderAnalysisFormBody {...props} />
+    </FieldHelpScope>
   )
 }

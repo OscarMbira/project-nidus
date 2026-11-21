@@ -4,12 +4,14 @@
  */
 
 import { useState, useEffect } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Plus, Users } from 'lucide-react'
 import { getSkills, deleteSkill } from '../../services/ppdSkillsService'
 import SkillCard from './SkillCard'
 import SkillForm from './SkillForm'
 
-export default function SkillsSection({ ppdId, mode = 'view', formData, onChange }) {
+function SkillsSectionBody({ ppdId, mode = 'view', formData, onChange }) {
   const [skills, setSkills] = useState([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -84,9 +86,9 @@ export default function SkillsSection({ ppdId, mode = 'view', formData, onChange
     <div className="space-y-6">
       {/* Development Skills Required (Text Field) */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="public.project_product_descriptions.development_skills_required" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Development Skills Required
-        </label>
+        </FieldLabelWithHelp>
         {mode === 'view' ? (
           <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
             {formData?.development_skills_required || 'Not defined'}
@@ -104,9 +106,9 @@ export default function SkillsSection({ ppdId, mode = 'view', formData, onChange
 
       {/* Resource Areas */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="public.project_product_descriptions.resource_areas" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Resource Areas
-        </label>
+        </FieldLabelWithHelp>
         {mode === 'view' ? (
           <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
             {formData?.resource_areas || 'Not defined'}
@@ -189,5 +191,19 @@ export default function SkillsSection({ ppdId, mode = 'view', formData, onChange
         )}
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.project_product_descriptions.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'development_skills_required', 'resource_areas',
+].map((name) => `public.project_product_descriptions.${name}`)
+
+export default function SkillsSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <SkillsSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

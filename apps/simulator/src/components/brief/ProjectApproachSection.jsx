@@ -4,8 +4,10 @@
  */
 
 import MultiLineListInput from '@nidus/ui/MultiLineListInput'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 
-export default function ProjectApproachSection({ formData, onChange, errors = {}, readOnly = false }) {
+function ProjectApproachSectionBody({ formData, onChange, errors = {}, readOnly = false }) {
   const handleChange = (e) => {
     onChange(e)
   }
@@ -27,9 +29,9 @@ export default function ProjectApproachSection({ formData, onChange, errors = {}
 
       {/* Approach Description */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="sim.project_briefs.project_approach_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
           Project Approach Description <span className="text-red-500">*</span>
-        </label>
+        </FieldLabelWithHelp>
         {readOnly ? (
           <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
             {formData.project_approach_description || 'Not specified'}
@@ -60,9 +62,9 @@ export default function ProjectApproachSection({ formData, onChange, errors = {}
       {/* Solution Type */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.project_briefs.solution_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Solution Type
-          </label>
+          </FieldLabelWithHelp>
           {readOnly ? (
             <p className="text-gray-900 dark:text-white capitalize">
               {formData.solution_type ? formData.solution_type.replace('_', ' ') : 'Not specified'}
@@ -84,9 +86,9 @@ export default function ProjectApproachSection({ formData, onChange, errors = {}
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.project_briefs.delivery_approach" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Delivery Approach
-          </label>
+          </FieldLabelWithHelp>
           {readOnly ? (
             <p className="text-gray-900 dark:text-white capitalize">
               {formData.delivery_approach ? formData.delivery_approach.replace('_', ' ') : 'Not specified'}
@@ -107,9 +109,9 @@ export default function ProjectApproachSection({ formData, onChange, errors = {}
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.project_briefs.development_approach" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Development Approach
-          </label>
+          </FieldLabelWithHelp>
           {readOnly ? (
             <p className="text-gray-900 dark:text-white capitalize">
               {formData.development_approach ? formData.development_approach.replace('_', ' ') : 'Not specified'}
@@ -132,9 +134,9 @@ export default function ProjectApproachSection({ formData, onChange, errors = {}
 
       {/* Operational Environment */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="sim.project_briefs.operational_environment" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Operational Environment
-        </label>
+        </FieldLabelWithHelp>
         {readOnly ? (
           <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
             {formData.operational_environment || 'Not specified'}
@@ -153,9 +155,9 @@ export default function ProjectApproachSection({ formData, onChange, errors = {}
 
       {/* Approach Justification */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <FieldLabelWithHelp helpKey="sim.project_briefs.approach_justification" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Approach Justification
-        </label>
+        </FieldLabelWithHelp>
         <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
           Why this approach was selected. Add one justification point per line.
         </p>
@@ -176,5 +178,23 @@ export default function ProjectApproachSection({ formData, onChange, errors = {}
         )}
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.project_briefs.project_approach_description',
+  'sim.project_briefs.solution_type',
+  'sim.project_briefs.delivery_approach',
+  'sim.project_briefs.development_approach',
+  'sim.project_briefs.operational_environment',
+  'sim.project_briefs.approach_justification',
+]
+
+export default function ProjectApproachSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ProjectApproachSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

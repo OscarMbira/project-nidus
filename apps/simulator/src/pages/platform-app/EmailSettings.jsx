@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { Link } from 'react-router-dom'
 import {
   Mail,
@@ -75,7 +77,7 @@ function applyConfigToState(cfg, setters) {
   }
 }
 
-export default function EmailSettings() {
+function EmailSettingsBody() {
   const [provider, setProvider] = useState('resend')
   const [smtpForm, setSmtpForm] = useState(SMTP_DEFAULTS)
   const [resendForm, setResendForm] = useState(RESEND_DEFAULTS)
@@ -338,7 +340,7 @@ export default function EmailSettings() {
                 <p>Use a From address on this domain (e.g. {RESEND_DEFAULT_FROM_EMAIL}). Emails are sent via the Supabase <code className="text-blue-300">send-email</code> Edge Function.</p>
               </div>
               <div className="space-y-1">
-                <label className="text-xs font-medium text-gray-400">Resend API Key *</label>
+                <FieldLabelWithHelp helpKey="sim.email_configurations.api_key" className="text-xs font-medium text-gray-400" required>Resend API Key *</FieldLabelWithHelp>
                 <div className="relative">
                   <input type={showApiKey ? 'text' : 'password'} value={resendForm.api_key}
                     onChange={e => handleResendChange('api_key', e.target.value)}
@@ -354,14 +356,14 @@ export default function EmailSettings() {
               <hr className="border-gray-700" />
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-gray-400">From Email *</label>
+                  <FieldLabelWithHelp helpKey="sim.email_configurations.from_email" className="text-xs font-medium text-gray-400" required>From Email *</FieldLabelWithHelp>
                   <input type="email" value={resendForm.from_email} disabled={formDisabled}
                     onChange={(e) => handleResendChange('from_email', e.target.value)}
                     placeholder={RESEND_DEFAULT_FROM_EMAIL}
                     className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 disabled:opacity-60" />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-gray-400">From Name</label>
+                  <FieldLabelWithHelp helpKey="sim.email_configurations.from_name" className="text-xs font-medium text-gray-400">From Name</FieldLabelWithHelp>
                   <input type="text" value={resendForm.from_name} disabled={formDisabled}
                     onChange={(e) => handleResendChange('from_name', e.target.value)}
                     placeholder="Project Nidus"
@@ -369,7 +371,7 @@ export default function EmailSettings() {
                 </div>
               </div>
               <div className="space-y-1">
-                <label className="text-xs font-medium text-gray-400">Reply-To Email <span className="text-gray-500">(optional)</span></label>
+                <FieldLabelWithHelp helpKey="sim.email_configurations.reply_to_email" className="text-xs font-medium text-gray-400">Reply-To Email <span className="text-gray-500">(optional)</span></FieldLabelWithHelp>
                 <input type="email" value={resendForm.reply_to_email} disabled={formDisabled}
                   onChange={(e) => handleResendChange('reply_to_email', e.target.value)}
                   placeholder="support@projectastute.com"
@@ -384,14 +386,14 @@ export default function EmailSettings() {
               </div>
               <div className="grid grid-cols-3 gap-4">
                 <div className="col-span-2 space-y-1">
-                  <label className="text-xs font-medium text-gray-400">SMTP Host *</label>
+                  <FieldLabelWithHelp helpKey="sim.email_configurations.smtp_host" className="text-xs font-medium text-gray-400" required>SMTP Host *</FieldLabelWithHelp>
                   <input type="text" value={smtpForm.host} disabled={formDisabled}
                     onChange={(e) => handleSmtpChange('host', e.target.value)}
                     placeholder="smtp.resend.com"
                     className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 disabled:opacity-60" />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-gray-400">Port *</label>
+                  <FieldLabelWithHelp helpKey="sim.email_configurations.smtp_port" className="text-xs font-medium text-gray-400" required>Port *</FieldLabelWithHelp>
                   <input type="number" value={smtpForm.port} disabled={formDisabled}
                     onChange={(e) => handleSmtpChange('port', e.target.value)}
                     placeholder="587"
@@ -400,13 +402,13 @@ export default function EmailSettings() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-gray-400">Username</label>
+                  <FieldLabelWithHelp helpKey="sim.email_configurations.smtp_username" className="text-xs font-medium text-gray-400">Username</FieldLabelWithHelp>
                   <input type="text" value={smtpForm.username} disabled={formDisabled}
                     onChange={(e) => handleSmtpChange('username', e.target.value)}
                     className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 disabled:opacity-60" />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-gray-400">Password</label>
+                  <FieldLabelWithHelp helpKey="sim.email_configurations.smtp_password" className="text-xs font-medium text-gray-400">Password</FieldLabelWithHelp>
                   <div className="relative">
                     <input type={showPassword ? 'text' : 'password'} value={smtpForm.password} disabled={formDisabled}
                       onChange={(e) => handleSmtpChange('password', e.target.value)}
@@ -430,20 +432,20 @@ export default function EmailSettings() {
               <hr className="border-gray-700" />
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-gray-400">From Email *</label>
+                  <FieldLabelWithHelp helpKey="sim.email_configurations.from_email" className="text-xs font-medium text-gray-400" required>From Email *</FieldLabelWithHelp>
                   <input type="email" value={smtpForm.from_email} disabled={formDisabled}
                     onChange={(e) => handleSmtpChange('from_email', e.target.value)}
                     className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 disabled:opacity-60" />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-gray-400">From Name</label>
+                  <FieldLabelWithHelp helpKey="sim.email_configurations.from_name" className="text-xs font-medium text-gray-400">From Name</FieldLabelWithHelp>
                   <input type="text" value={smtpForm.from_name} disabled={formDisabled}
                     onChange={(e) => handleSmtpChange('from_name', e.target.value)}
                     className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 disabled:opacity-60" />
                 </div>
               </div>
               <div className="space-y-1">
-                <label className="text-xs font-medium text-gray-400">Reply-To Email <span className="text-gray-500">(optional)</span></label>
+                <FieldLabelWithHelp helpKey="sim.email_configurations.reply_to_email" className="text-xs font-medium text-gray-400">Reply-To Email <span className="text-gray-500">(optional)</span></FieldLabelWithHelp>
                 <input type="email" value={smtpForm.reply_to_email} disabled={formDisabled}
                   onChange={(e) => handleSmtpChange('reply_to_email', e.target.value)}
                   className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 disabled:opacity-60" />
@@ -503,5 +505,25 @@ export default function EmailSettings() {
         </div>
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.email_configurations.api_key',
+  'sim.email_configurations.from_email',
+  'sim.email_configurations.from_name',
+  'sim.email_configurations.reply_to_email',
+  'sim.email_configurations.smtp_host',
+  'sim.email_configurations.smtp_port',
+  'sim.email_configurations.smtp_username',
+  'sim.email_configurations.smtp_password',
+]
+
+export default function EmailSettings(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <EmailSettingsBody {...props} />
+    </FieldHelpScope>
   )
 }

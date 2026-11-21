@@ -6,6 +6,8 @@
  * frontend consumer anywhere in the app.
  */
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { AlertOctagon, Plus } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
@@ -47,7 +49,7 @@ const NC_FORM_TABS = [
   { value: 'audit', label: 'Audit details' },
 ]
 
-export default function NonConformanceRegisterPage() {
+function NonConformanceRegisterPageBody() {
   const { projectId } = usePlatformProjectId()
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
@@ -152,13 +154,13 @@ export default function NonConformanceRegisterPage() {
 
             {formTab === 'details' && (
               <div className="grid grid-cols-1 gap-3">
-                <label htmlFor="nc-title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 -mb-1">Title *</label>
+                <FieldLabelWithHelp helpKey="public.quality_defects.defect_title" htmlFor="nc-title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 -mb-1" required>Title *</FieldLabelWithHelp>
                 <input id="nc-title" placeholder="Title *" value={form.defect_title} onChange={(e) => setForm({ ...form, defect_title: e.target.value })}
                   className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-950 px-3 py-2 text-sm" />
-                <label htmlFor="nc-description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 -mb-1">Description *</label>
+                <FieldLabelWithHelp helpKey="public.quality_defects.defect_description" htmlFor="nc-description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 -mb-1" required>Description *</FieldLabelWithHelp>
                 <textarea id="nc-description" placeholder="Description *" rows={2} value={form.defect_description} onChange={(e) => setForm({ ...form, defect_description: e.target.value })}
                   className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-950 px-3 py-2 text-sm" />
-                <label htmlFor="nc-status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 -mb-1">Status</label>
+                <FieldLabelWithHelp helpKey="public.quality_defects.status" htmlFor="nc-status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 -mb-1">Status</FieldLabelWithHelp>
                 <select id="nc-status" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}
                   className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-950 px-3 py-2 text-sm capitalize">
                   {['open', 'in-progress', 'resolved', 'verified', 'closed', 'deferred', 'wont-fix'].map((st) => (
@@ -265,5 +267,19 @@ export default function NonConformanceRegisterPage() {
         )}
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.quality_defects.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'defect_title', 'defect_description', 'status',
+].map((name) => `public.quality_defects.${name}`)
+
+export default function NonConformanceRegisterPage(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <NonConformanceRegisterPageBody {...props} />
+    </FieldHelpScope>
   )
 }

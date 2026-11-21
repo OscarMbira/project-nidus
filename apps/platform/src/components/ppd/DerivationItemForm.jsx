@@ -4,6 +4,8 @@
  */
 
 import { useState, useEffect } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { X, Save } from 'lucide-react'
 import { addDerivation, updateDerivation } from '../../services/ppdDerivationsService'
 import { supabase } from '../../services/supabaseClient'
@@ -14,7 +16,7 @@ import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
-export default function DerivationItemForm({ ppdId, derivation = null, mode = 'create', projectId, onSave, onCancel }) {
+function DerivationItemFormBody({ ppdId, derivation = null, mode = 'create', projectId, onSave, onCancel }) {
   const [formData, setFormData] = useState({
     derivation_type: 'project_mandate',
     derivation_title: '',
@@ -165,9 +167,9 @@ export default function DerivationItemForm({ ppdId, derivation = null, mode = 'c
         {formTab === 'details' && (
         <>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <FieldLabelWithHelp helpKey="public.ppd_derivations.derivation_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
             Derivation Type <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <select
             name="derivation_type"
             value={formData.derivation_type}
@@ -187,9 +189,9 @@ export default function DerivationItemForm({ ppdId, derivation = null, mode = 'c
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <FieldLabelWithHelp helpKey="public.ppd_derivations.derivation_title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
             Derivation Title <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             name="derivation_title"
@@ -205,9 +207,9 @@ export default function DerivationItemForm({ ppdId, derivation = null, mode = 'c
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <FieldLabelWithHelp helpKey="public.ppd_derivations.derivation_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Derivation Description
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             name="derivation_description"
             value={formData.derivation_description}
@@ -219,9 +221,9 @@ export default function DerivationItemForm({ ppdId, derivation = null, mode = 'c
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <FieldLabelWithHelp helpKey="public.ppd_derivations.derivation_reference" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Derivation Reference
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             name="derivation_reference"
@@ -234,9 +236,9 @@ export default function DerivationItemForm({ ppdId, derivation = null, mode = 'c
 
         {formData.derivation_type === 'project_mandate' && mandates.length > 0 && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <FieldLabelWithHelp helpKey="public.ppd_derivations.mandate_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" listOptions={false}>
               Link to Project Mandate
-            </label>
+            </FieldLabelWithHelp>
             <select
               name="mandate_id"
               value={formData.mandate_id || ''}
@@ -276,5 +278,19 @@ export default function DerivationItemForm({ ppdId, derivation = null, mode = 'c
         </div>
       </form>
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.ppd_derivations.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'derivation_type', 'derivation_title', 'derivation_description', 'derivation_reference', 'mandate_id',
+].map((name) => `public.ppd_derivations.${name}`)
+
+export default function DerivationItemForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <DerivationItemFormBody {...props} />
+    </FieldHelpScope>
   )
 }

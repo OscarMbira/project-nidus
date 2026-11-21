@@ -4,6 +4,8 @@
  */
 
 import { useState, useEffect, useCallback } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useNavigate } from 'react-router-dom'
 import { Clock, Loader, AlertCircle, CheckCircle } from 'lucide-react'
 import { platformDb } from '@nidus/supabase'
@@ -18,7 +20,7 @@ import {
   INVITE_EXPIRY_FALLBACK_DAYS,
 } from '../../services/invitationExpiryService'
 
-export default function InvitationExpirySettingsPage() {
+function InvitationExpirySettingsPageBody() {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -169,12 +171,12 @@ export default function InvitationExpirySettingsPage() {
             className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm p-6 space-y-6"
           >
             <div>
-              <label
+              <FieldLabelWithHelp helpKey="public.accounts.project_invitation_expiry_days"
                 htmlFor="invitation-expiry-days"
                 className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
               >
                 Default expiry (days)
-              </label>
+              </FieldLabelWithHelp>
               <input
                 id="invitation-expiry-days"
                 type="number"
@@ -224,5 +226,19 @@ export default function InvitationExpirySettingsPage() {
         </>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.accounts.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'project_invitation_expiry_days',
+].map((name) => `public.accounts.${name}`)
+
+export default function InvitationExpirySettingsPage(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <InvitationExpirySettingsPageBody {...props} />
+    </FieldHelpScope>
   )
 }

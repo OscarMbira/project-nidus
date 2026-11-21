@@ -4,8 +4,10 @@
  */
 
 import MultiLineListInput from '@nidus/ui/MultiLineListInput'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 
-export default function ProjectDefinitionSection({ formData, onChange, errors = {}, readOnly = false }) {
+function ProjectDefinitionSectionBody({ formData, onChange, errors = {}, readOnly = false }) {
   const setListField = (name, value) => {
     onChange({ target: { name, value } })
   }
@@ -22,9 +24,9 @@ export default function ProjectDefinitionSection({ formData, onChange, errors = 
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <FieldLabelWithHelp helpKey="sim.project_briefs.background" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
           Background <span className="text-red-500">*</span>
-        </label>
+        </FieldLabelWithHelp>
         <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
           Context from the mandate and additional detail. One point per line.
         </p>
@@ -44,9 +46,9 @@ export default function ProjectDefinitionSection({ formData, onChange, errors = 
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <FieldLabelWithHelp helpKey="sim.project_briefs.project_objectives" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
           Project objectives <span className="text-red-500">*</span>
-        </label>
+        </FieldLabelWithHelp>
         <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
           SMART objectives covering time, cost, quality, scope, risk, and benefits. One per line.
         </p>
@@ -66,9 +68,9 @@ export default function ProjectDefinitionSection({ formData, onChange, errors = 
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <FieldLabelWithHelp helpKey="sim.project_briefs.desired_outcomes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Desired outcomes
-        </label>
+        </FieldLabelWithHelp>
         <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
           What success looks like. One outcome per line.
         </p>
@@ -84,5 +86,20 @@ export default function ProjectDefinitionSection({ formData, onChange, errors = 
         />
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.project_briefs.background',
+  'sim.project_briefs.project_objectives',
+  'sim.project_briefs.desired_outcomes',
+]
+
+export default function ProjectDefinitionSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ProjectDefinitionSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

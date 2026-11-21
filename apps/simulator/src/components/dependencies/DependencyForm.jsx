@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { Link, useNavigate } from 'react-router-dom';
 import { X, Save, Link2, FolderKanban, Target, AlertTriangle, ArrowLeft } from 'lucide-react';
 import { saveInterProjectDependency, checkCircularDependency } from '../../services/dependencyService';
@@ -48,7 +50,7 @@ function withCurrentProject(rows, currentProject) {
   ];
 }
 
-export default function DependencyForm({ dependency, onSave, onCancel, onEdit, usePageLayout = false, readOnly = false, backToList = '' }) {
+function DependencyFormBody({ dependency, onSave, onCancel, onEdit, usePageLayout = false, readOnly = false, backToList = '' }) {
   const navigate = useNavigate();
   const { currentProjectId, currentProject } = useCurrentProject();
   const { showSuccess, modal: partySavedModal } = useSuccessModal();
@@ -483,9 +485,9 @@ export default function DependencyForm({ dependency, onSave, onCancel, onEdit, u
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.inter_project_dependencies.dependency_code" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Dependency Code
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   name="dependency_code"
@@ -497,9 +499,9 @@ export default function DependencyForm({ dependency, onSave, onCancel, onEdit, u
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.inter_project_dependencies.dependency_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Dependency Name *
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   name="dependency_name"
@@ -512,9 +514,9 @@ export default function DependencyForm({ dependency, onSave, onCancel, onEdit, u
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.inter_project_dependencies.dependency_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Description
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   name="dependency_description"
                   value={formData.dependency_description}
@@ -535,9 +537,9 @@ export default function DependencyForm({ dependency, onSave, onCancel, onEdit, u
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.inter_project_dependencies.source_project_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                   Source Project (Provides)
-                </label>
+                </FieldLabelWithHelp>
                 <SelectField
                   name="source_project_id"
                   value={formData.source_project_id}
@@ -556,9 +558,9 @@ export default function DependencyForm({ dependency, onSave, onCancel, onEdit, u
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.inter_project_dependencies.target_project_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                   Target Project (Depends On)
-                </label>
+                </FieldLabelWithHelp>
                 <SelectField
                   name="target_project_id"
                   value={formData.target_project_id}
@@ -580,10 +582,10 @@ export default function DependencyForm({ dependency, onSave, onCancel, onEdit, u
               Select at least one project. The project open in the header is the one this dependency is recorded against. Party names are stored once for that project’s organisation, so every project in the organisation can select them.
             </p>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.inter_project_dependencies.external_dependency" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Dependency party
                 {!(formData.source_project_id && formData.target_project_id) ? ' *' : ''}
-              </label>
+              </FieldLabelWithHelp>
               <SelectField
                 name="external_dependency"
                 value={formData.external_dependency}
@@ -636,10 +638,10 @@ export default function DependencyForm({ dependency, onSave, onCancel, onEdit, u
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+                <FieldLabelWithHelp helpKey="sim.inter_project_dependencies.portfolio_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2" listOptions={false}>
                   <Target className="h-4 w-4" />
                   Portfolio
-                </label>
+                </FieldLabelWithHelp>
                 <SelectField
                   name="portfolio_id"
                   value={formData.portfolio_id}
@@ -655,9 +657,9 @@ export default function DependencyForm({ dependency, onSave, onCancel, onEdit, u
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.inter_project_dependencies.programme_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                   Programme
-                </label>
+                </FieldLabelWithHelp>
                 <SelectField
                   name="programme_id"
                   value={formData.programme_id}
@@ -681,9 +683,9 @@ export default function DependencyForm({ dependency, onSave, onCancel, onEdit, u
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.inter_project_dependencies.dependency_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Dependency Type *
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="dependency_type"
                   value={formData.dependency_type}
@@ -703,9 +705,9 @@ export default function DependencyForm({ dependency, onSave, onCancel, onEdit, u
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.inter_project_dependencies.dependency_strength" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Strength *
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="dependency_strength"
                   value={formData.dependency_strength}
@@ -720,9 +722,9 @@ export default function DependencyForm({ dependency, onSave, onCancel, onEdit, u
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.inter_project_dependencies.dependency_criticality" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Criticality *
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="dependency_criticality"
                   value={formData.dependency_criticality}
@@ -738,9 +740,9 @@ export default function DependencyForm({ dependency, onSave, onCancel, onEdit, u
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.inter_project_dependencies.lag_days" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Lag Days
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="number"
                   name="lag_days"
@@ -753,9 +755,9 @@ export default function DependencyForm({ dependency, onSave, onCancel, onEdit, u
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.inter_project_dependencies.lead_days" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Lead Days
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="number"
                   name="lead_days"
@@ -768,9 +770,9 @@ export default function DependencyForm({ dependency, onSave, onCancel, onEdit, u
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.inter_project_dependencies.dependency_status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Status *
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="dependency_status"
                   value={formData.dependency_status}
@@ -796,9 +798,9 @@ export default function DependencyForm({ dependency, onSave, onCancel, onEdit, u
                   onChange={handleChange}
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 />
-                <label className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+                <FieldLabelWithHelp helpKey="sim.inter_project_dependencies.is_critical_path" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
                   On Critical Path
-                </label>
+                </FieldLabelWithHelp>
               </div>
             </div>
           </div>
@@ -810,9 +812,9 @@ export default function DependencyForm({ dependency, onSave, onCancel, onEdit, u
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.inter_project_dependencies.risk_level" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Risk Level
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="risk_level"
                   value={formData.risk_level || ''}
@@ -828,9 +830,9 @@ export default function DependencyForm({ dependency, onSave, onCancel, onEdit, u
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.inter_project_dependencies.probability_of_failure" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Probability of Failure (%)
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="number"
                   name="probability_of_failure"
@@ -844,9 +846,9 @@ export default function DependencyForm({ dependency, onSave, onCancel, onEdit, u
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.inter_project_dependencies.expected_impact_days" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Expected Impact (Days)
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="number"
                   name="expected_impact_days"
@@ -858,9 +860,9 @@ export default function DependencyForm({ dependency, onSave, onCancel, onEdit, u
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.inter_project_dependencies.risk_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Risk Description
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   name="risk_description"
                   value={formData.risk_description}
@@ -872,9 +874,9 @@ export default function DependencyForm({ dependency, onSave, onCancel, onEdit, u
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.inter_project_dependencies.impact_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Impact Description
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   name="impact_description"
                   value={formData.impact_description}
@@ -886,9 +888,9 @@ export default function DependencyForm({ dependency, onSave, onCancel, onEdit, u
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <FieldLabelWithHelp helpKey="sim.inter_project_dependencies.mitigation_plan" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Mitigation Plan
-                </label>
+                </FieldLabelWithHelp>
                 <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
                   Add one mitigation step per line. Press Enter or click Add after each.
                 </p>
@@ -994,3 +996,35 @@ export default function DependencyForm({ dependency, onSave, onCancel, onEdit, u
   );
 }
 
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.inter_project_dependencies.dependency_code',
+  'sim.inter_project_dependencies.dependency_name',
+  'sim.inter_project_dependencies.dependency_description',
+  'sim.inter_project_dependencies.source_project_id',
+  'sim.inter_project_dependencies.target_project_id',
+  'sim.inter_project_dependencies.external_dependency',
+  'sim.inter_project_dependencies.portfolio_id',
+  'sim.inter_project_dependencies.programme_id',
+  'sim.inter_project_dependencies.dependency_type',
+  'sim.inter_project_dependencies.dependency_strength',
+  'sim.inter_project_dependencies.dependency_criticality',
+  'sim.inter_project_dependencies.lag_days',
+  'sim.inter_project_dependencies.lead_days',
+  'sim.inter_project_dependencies.dependency_status',
+  'sim.inter_project_dependencies.is_critical_path',
+  'sim.inter_project_dependencies.risk_level',
+  'sim.inter_project_dependencies.probability_of_failure',
+  'sim.inter_project_dependencies.expected_impact_days',
+  'sim.inter_project_dependencies.risk_description',
+  'sim.inter_project_dependencies.impact_description',
+  'sim.inter_project_dependencies.mitigation_plan',
+]
+
+export default function DependencyForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <DependencyFormBody {...props} />
+    </FieldHelpScope>
+  )
+}

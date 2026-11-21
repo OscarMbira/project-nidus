@@ -3,6 +3,8 @@
  * Audit tab.
  */
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Save, Loader, Archive } from 'lucide-react';
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js';
@@ -16,7 +18,7 @@ import {
   updateProjectArchiveItem,
 } from '../../services/projectArchiveService';
 
-export default function ProjectArchiveItemForm({ forceEdit = false }) {
+function ProjectArchiveItemFormBody({ forceEdit = false }) {
   const { id } = useParams();
   const navigate = useNavigate();
   const { projectId } = usePlatformProjectId();
@@ -147,7 +149,7 @@ export default function ProjectArchiveItemForm({ forceEdit = false }) {
                 <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-800 dark:text-red-200">{error}</div>
               )}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Title *</label>
+                <FieldLabelWithHelp helpKey="public.project_archive_items.title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>Title *</FieldLabelWithHelp>
                 <input
                   type="text"
                   value={title}
@@ -158,7 +160,7 @@ export default function ProjectArchiveItemForm({ forceEdit = false }) {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Category</label>
+                  <FieldLabelWithHelp helpKey="public.project_archive_items.category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Category</FieldLabelWithHelp>
                   <select
                     value={category}
                     onChange={(e) => setCategory(e.target.value)}
@@ -170,7 +172,7 @@ export default function ProjectArchiveItemForm({ forceEdit = false }) {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Archived on</label>
+                  <FieldLabelWithHelp helpKey="public.project_archive_items.archived_on" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Archived on</FieldLabelWithHelp>
                   <input
                     type="date"
                     value={archivedDate}
@@ -180,7 +182,7 @@ export default function ProjectArchiveItemForm({ forceEdit = false }) {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Reference link</label>
+                <FieldLabelWithHelp helpKey="public.project_archive_items.reference_link" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Reference link</FieldLabelWithHelp>
                 <input
                   type="url"
                   value={referenceUrl}
@@ -190,7 +192,7 @@ export default function ProjectArchiveItemForm({ forceEdit = false }) {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Notes</label>
+                <FieldLabelWithHelp helpKey="public.project_archive_items.notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Notes</FieldLabelWithHelp>
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
@@ -238,4 +240,18 @@ export default function ProjectArchiveItemForm({ forceEdit = false }) {
       {successModal}
     </div>
   );
+}
+
+// v1345 slice 4: field help for this component (public.project_archive_items.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'title', 'category', 'archived_on', 'reference_link', 'notes',
+].map((name) => `public.project_archive_items.${name}`)
+
+export default function ProjectArchiveItemForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ProjectArchiveItemFormBody {...props} />
+    </FieldHelpScope>
+  )
 }

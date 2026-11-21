@@ -4,6 +4,8 @@
  */
 
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { getRoles, addRole, updateRole, deleteRole, assignRoleToUser } from '../../services/briefRolesService'
 import { supabase } from '../../services/supabaseClient'
 import RoleCard from './RoleCard'
@@ -20,7 +22,7 @@ const ROLE_CATEGORIES = [
   { value: 'other', label: 'Other' }
 ]
 
-export default function RoleDescriptionsSection({ briefId, readOnly = false }) {
+function RoleDescriptionsSectionBody({ briefId, readOnly = false }) {
   const [roles, setRoles] = useState([])
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(false)
@@ -176,9 +178,9 @@ export default function RoleDescriptionsSection({ briefId, readOnly = false }) {
         <form onSubmit={handleSubmit} className="bg-gray-50 dark:bg-gray-900 p-6 rounded-lg space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.brief_role_descriptions.role_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Role Name <span className="text-red-500">*</span>
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="text"
                 value={formData.role_name}
@@ -188,9 +190,9 @@ export default function RoleDescriptionsSection({ briefId, readOnly = false }) {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.brief_role_descriptions.role_category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Role Category <span className="text-red-500">*</span>
-              </label>
+              </FieldLabelWithHelp>
               <select
                 value={formData.role_category}
                 onChange={(e) => setFormData({ ...formData, role_category: e.target.value })}
@@ -204,9 +206,9 @@ export default function RoleDescriptionsSection({ briefId, readOnly = false }) {
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="sim.brief_role_descriptions.role_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Role Description
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               value={formData.role_description}
               onChange={(e) => setFormData({ ...formData, role_description: e.target.value })}
@@ -215,9 +217,9 @@ export default function RoleDescriptionsSection({ briefId, readOnly = false }) {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="sim.brief_role_descriptions.key_responsibilities" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Key Responsibilities
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               value={formData.key_responsibilities}
               onChange={(e) => setFormData({ ...formData, key_responsibilities: e.target.value })}
@@ -227,9 +229,9 @@ export default function RoleDescriptionsSection({ briefId, readOnly = false }) {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.brief_role_descriptions.authority_level" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Authority Level
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="text"
                 value={formData.authority_level}
@@ -239,9 +241,9 @@ export default function RoleDescriptionsSection({ briefId, readOnly = false }) {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.brief_role_descriptions.reporting_to" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Reporting To
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="text"
                 value={formData.reporting_to}
@@ -253,9 +255,9 @@ export default function RoleDescriptionsSection({ briefId, readOnly = false }) {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.brief_role_descriptions.required_skills" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Required Skills
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={formData.required_skills}
                 onChange={(e) => setFormData({ ...formData, required_skills: e.target.value })}
@@ -264,9 +266,9 @@ export default function RoleDescriptionsSection({ briefId, readOnly = false }) {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.brief_role_descriptions.required_experience" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Required Experience
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={formData.required_experience}
                 onChange={(e) => setFormData({ ...formData, required_experience: e.target.value })}
@@ -277,9 +279,9 @@ export default function RoleDescriptionsSection({ briefId, readOnly = false }) {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.brief_role_descriptions.time_commitment" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Time Commitment
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="text"
                 value={formData.time_commitment}
@@ -289,9 +291,9 @@ export default function RoleDescriptionsSection({ briefId, readOnly = false }) {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.brief_role_descriptions.assigned_to_user_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                 Assigned To
-              </label>
+              </FieldLabelWithHelp>
               <select
                 value={formData.assigned_to_user_id || ''}
                 onChange={(e) => {
@@ -313,7 +315,7 @@ export default function RoleDescriptionsSection({ briefId, readOnly = false }) {
               </select>
             </div>
             <div>
-              <label className="flex items-center mt-6">
+              <FieldLabelWithHelp helpKey="sim.brief_role_descriptions.is_mandatory" className="flex items-center mt-6">
                 <input
                   type="checkbox"
                   checked={formData.is_mandatory}
@@ -323,7 +325,7 @@ export default function RoleDescriptionsSection({ briefId, readOnly = false }) {
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   Mandatory Role
                 </span>
-              </label>
+              </FieldLabelWithHelp>
             </div>
           </div>
           <div className="flex gap-2">
@@ -411,5 +413,28 @@ export default function RoleDescriptionsSection({ briefId, readOnly = false }) {
         </div>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.brief_role_descriptions.role_name',
+  'sim.brief_role_descriptions.role_category',
+  'sim.brief_role_descriptions.role_description',
+  'sim.brief_role_descriptions.key_responsibilities',
+  'sim.brief_role_descriptions.authority_level',
+  'sim.brief_role_descriptions.reporting_to',
+  'sim.brief_role_descriptions.required_skills',
+  'sim.brief_role_descriptions.required_experience',
+  'sim.brief_role_descriptions.time_commitment',
+  'sim.brief_role_descriptions.assigned_to_user_id',
+  'sim.brief_role_descriptions.is_mandatory',
+]
+
+export default function RoleDescriptionsSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <RoleDescriptionsSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

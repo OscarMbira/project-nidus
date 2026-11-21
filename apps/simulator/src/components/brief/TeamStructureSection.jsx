@@ -4,6 +4,8 @@
  */
 
 import { useEffect, useRef, useState } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import toast from 'react-hot-toast'
 import { ClipboardPaste, Trash2, Upload } from 'lucide-react'
 import MultiLineListInput from '@nidus/ui/MultiLineListInput'
@@ -23,7 +25,7 @@ import TeamStructureChart from './TeamStructureChart'
 
 const UPLOAD_TIMEOUT_MS = 20000
 
-export default function TeamStructureSection({ formData, onChange, errors = {}, readOnly = false }) {
+function TeamStructureSectionBody({ formData, onChange, errors = {}, readOnly = false }) {
   const [showPasteHint, setShowPasteHint] = useState(false)
   const [busy, setBusy] = useState(false)
   const [displayUrl, setDisplayUrl] = useState(null)
@@ -142,9 +144,9 @@ export default function TeamStructureSection({ formData, onChange, errors = {}, 
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <FieldLabelWithHelp helpKey="sim.project_briefs.team_structure_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
           Team structure description <span className="text-red-500">*</span>
-        </label>
+        </FieldLabelWithHelp>
         <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
           Organisation, reporting lines, and structure. One point per line.
         </p>
@@ -248,5 +250,18 @@ export default function TeamStructureSection({ formData, onChange, errors = {}, 
         </div>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.project_briefs.team_structure_description',
+]
+
+export default function TeamStructureSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <TeamStructureSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

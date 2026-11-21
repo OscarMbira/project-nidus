@@ -49,6 +49,17 @@ vi.mock('@nidus/shared/utils/exportUtils', () => ({
   generateRecordPdfBlob: vi.fn().mockResolvedValue(new Blob(['%PDF'], { type: 'application/pdf' })),
 }))
 
+// v1345: these tests are about saving, not field help — render the help scope as a plain pass-through.
+vi.mock('@nidus/shared/context/FieldHelpContext', async () => {
+  const { createContext } = await import('react')
+  return {
+    default: createContext(null),
+    FieldHelpScope: ({ children }) => children,
+    useFieldHelpEntry: () => null,
+    useFieldHelpScope: () => null,
+  }
+})
+
 const closure = {
   id: 'closure-1',
   closure_type: 'planned',

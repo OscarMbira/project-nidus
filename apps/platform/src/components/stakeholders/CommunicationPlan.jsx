@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { MessageSquare, Plus, Edit2, Trash2, Send, Calendar, User, Mail } from 'lucide-react';
 import { supabase, platformDb } from '../../services/supabaseClient';
 import StakeholderAvatar from '@nidus/ui/StakeholderAvatar';
 import { getStakeholders } from '../../services/stakeholderService';
 
-export default function CommunicationPlan({ projectId }) {
+function CommunicationPlanBody({ projectId }) {
   const [plans, setPlans] = useState([]);
   const [stakeholders, setStakeholders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -297,9 +299,9 @@ export default function CommunicationPlan({ projectId }) {
 
             <div className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.stakeholder_communications.communication_title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Communication Title *
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   value={formData.communication_title}
@@ -312,9 +314,9 @@ export default function CommunicationPlan({ projectId }) {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.stakeholder_communications.communication_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                     Communication Type *
-                  </label>
+                  </FieldLabelWithHelp>
                   <select
                     value={formData.communication_type}
                     onChange={(e) => setFormData({ ...formData, communication_type: e.target.value })}
@@ -332,9 +334,9 @@ export default function CommunicationPlan({ projectId }) {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.stakeholder_communications.communication_channel" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                     Communication Channel *
-                  </label>
+                  </FieldLabelWithHelp>
                   <select
                     value={formData.communication_channel}
                     onChange={(e) => setFormData({ ...formData, communication_channel: e.target.value })}
@@ -351,9 +353,9 @@ export default function CommunicationPlan({ projectId }) {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.stakeholder_communications.frequency" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                     Frequency *
-                  </label>
+                  </FieldLabelWithHelp>
                   <select
                     value={formData.frequency}
                     onChange={(e) => setFormData({ ...formData, frequency: e.target.value })}
@@ -374,9 +376,9 @@ export default function CommunicationPlan({ projectId }) {
               {formData.frequency !== 'one-time' && formData.frequency !== 'as-needed' && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <FieldLabelWithHelp helpKey="public.stakeholder_communications.schedule_day" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Schedule Day
-                    </label>
+                    </FieldLabelWithHelp>
                     <select
                       value={formData.schedule_day}
                       onChange={(e) => setFormData({ ...formData, schedule_day: e.target.value })}
@@ -393,9 +395,9 @@ export default function CommunicationPlan({ projectId }) {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <FieldLabelWithHelp helpKey="public.stakeholder_communications.schedule_time" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Schedule Time
-                    </label>
+                    </FieldLabelWithHelp>
                     <input
                       type="time"
                       value={formData.schedule_time}
@@ -407,9 +409,9 @@ export default function CommunicationPlan({ projectId }) {
               )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.stakeholder_communications.target_audience" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Target Audience
-                </label>
+                </FieldLabelWithHelp>
                 <div className="space-y-2 max-h-48 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-lg p-3">
                   {stakeholders.map(stakeholder => (
                     <label key={stakeholder.id} className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 p-2 rounded">
@@ -438,9 +440,9 @@ export default function CommunicationPlan({ projectId }) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.stakeholder_communications.communication_objective" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Communication Objective
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   value={formData.communication_objective}
                   onChange={(e) => setFormData({ ...formData, communication_objective: e.target.value })}
@@ -451,9 +453,9 @@ export default function CommunicationPlan({ projectId }) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.stakeholder_communications.key_messages" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Key Messages
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   value={formData.key_messages}
                   onChange={(e) => setFormData({ ...formData, key_messages: e.target.value })}
@@ -464,9 +466,9 @@ export default function CommunicationPlan({ projectId }) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.stakeholder_communications.success_metrics" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Success Metrics
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   value={formData.success_metrics}
                   onChange={(e) => setFormData({ ...formData, success_metrics: e.target.value })}
@@ -477,9 +479,9 @@ export default function CommunicationPlan({ projectId }) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.stakeholder_communications.notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Notes
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
@@ -517,3 +519,18 @@ export default function CommunicationPlan({ projectId }) {
   );
 }
 
+// v1345 slice 4: field help for this component (public.stakeholder_communications.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'communication_title', 'communication_type', 'communication_channel', 'frequency', 'schedule_day',
+  'schedule_time', 'target_audience', 'communication_objective', 'key_messages', 'success_metrics',
+  'notes',
+].map((name) => `public.stakeholder_communications.${name}`)
+
+export default function CommunicationPlan(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <CommunicationPlanBody {...props} />
+    </FieldHelpScope>
+  )
+}

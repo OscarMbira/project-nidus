@@ -4,8 +4,10 @@
  */
 
 import MultiLineListInput from '@nidus/ui/MultiLineListInput'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 
-export default function StakeholdersSection({ formData, onChange, errors = {}, readOnly = false }) {
+function StakeholdersSectionBody({ formData, onChange, errors = {}, readOnly = false }) {
   const setListField = (name, value) => {
     onChange({ target: { name, value } })
   }
@@ -23,9 +25,9 @@ export default function StakeholdersSection({ formData, onChange, errors = {}, r
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <FieldLabelWithHelp helpKey="sim.project_briefs.users_and_interested_parties" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Stakeholders
-        </label>
+        </FieldLabelWithHelp>
         <MultiLineListInput
           viewModeId="brief-interested-parties"
           id="brief_users_and_interested_parties"
@@ -38,5 +40,18 @@ export default function StakeholdersSection({ formData, onChange, errors = {}, r
         />
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.project_briefs.users_and_interested_parties',
+]
+
+export default function StakeholdersSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <StakeholdersSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

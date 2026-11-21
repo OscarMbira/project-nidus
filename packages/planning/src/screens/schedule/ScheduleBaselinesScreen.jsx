@@ -10,6 +10,8 @@
  * baselines stay on the Platform's Planning > Baselines page.
  */
 import { useEffect, useState } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import PlanningTable from '../../components/PlanningTable.jsx'
 import ScheduleLayout, { ChooseProject, Loading } from '../../components/ScheduleLayout.jsx'
@@ -43,7 +45,7 @@ function ApproveDialog({ baseline, onCancel, onApprove, busy }) {
   )
 }
 
-export default function ScheduleBaselinesScreen() {
+function ScheduleBaselinesScreenBody() {
   const { projectId, loading: projectLoading } = useScheduleProjectId()
   const schedule = useSchedule(projectId, { withCalendar: false })
   const { showSuccess, modal } = useSuccessModal()
@@ -141,22 +143,22 @@ export default function ScheduleBaselinesScreen() {
                 ? 'Re-baseline: saves a new numbered baseline. It needs a reason, and approval before it can become active.'
                 : 'Save the original baseline (B0). It becomes the active baseline straight away.'}
             </p>
-            <label className="text-xs text-gray-600 dark:text-gray-400">Baseline name *
+            <FieldLabelWithHelp helpKey="public.schedule_baselines.name" className="text-xs text-gray-600 dark:text-gray-400" required>Baseline name *
               <input className={field} value={form.name} maxLength={255} onChange={set('name')} placeholder={isRebaseline ? 'e.g. Re-plan after CR-0012' : 'e.g. Approved plan'} />
-            </label>
+            </FieldLabelWithHelp>
             {isRebaseline && (
-              <label className="text-xs text-gray-600 dark:text-gray-400">Change request (optional)
+              <FieldLabelWithHelp helpKey="public.schedule_baselines.change" className="text-xs text-gray-600 dark:text-gray-400">Change request (optional)
                 <input className={field} value={form.changeRequestRef} maxLength={50} onChange={set('changeRequestRef')} placeholder="e.g. CR-0012" />
-              </label>
+              </FieldLabelWithHelp>
             )}
             {isRebaseline && (
-              <label className="md:col-span-2 text-xs text-gray-600 dark:text-gray-400">Reason for re-baselining *
+              <FieldLabelWithHelp helpKey="public.schedule_baselines.reason" className="md:col-span-2 text-xs text-gray-600 dark:text-gray-400" required>Reason for re-baselining *
                 <textarea className={field} rows={2} maxLength={1000} value={form.reason} onChange={set('reason')} placeholder="e.g. Scope change approved by the steering committee" />
-              </label>
+              </FieldLabelWithHelp>
             )}
-            <label className="text-xs text-gray-600 dark:text-gray-400">Comments
+            <FieldLabelWithHelp helpKey="public.schedule_baselines.comments" className="text-xs text-gray-600 dark:text-gray-400">Comments
               <input className={field} value={form.comments} onChange={set('comments')} />
-            </label>
+            </FieldLabelWithHelp>
             <button type="button" onClick={save} disabled={saving || !canSave} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm disabled:opacity-50">
               {saving ? 'Saving…' : 'Save current dates as baseline'}
             </button>
@@ -208,5 +210,19 @@ export default function ScheduleBaselinesScreen() {
       {approving && <ApproveDialog baseline={approving} busy={busy} onCancel={() => setApproving(null)} onApprove={approve} />}
       {modal}
     </ScheduleLayout>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.schedule_baselines.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'name', 'change', 'reason', 'comments',
+].map((name) => `public.schedule_baselines.${name}`)
+
+export default function ScheduleBaselinesScreen(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ScheduleBaselinesScreenBody {...props} />
+    </FieldHelpScope>
   )
 }

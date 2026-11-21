@@ -5,6 +5,8 @@
  */
 
 import { useState } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { CheckCircle, FileText, Settings, Package, Hash, GitBranch, BarChart3, Layers, Shield, Wrench, FolderArchive, Calendar, Users } from 'lucide-react'
 import { HoldButton } from '../shared-app/HoldButton'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
@@ -13,7 +15,7 @@ import AuditCard from '@nidus/ui/AuditCard'
 import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 
-export default function ConfigurationMSForm({
+function ConfigurationMSFormBody({
   cfgMsData = {},
   onChange,
   errors = {},
@@ -54,9 +56,9 @@ export default function ConfigurationMSForm({
         return (
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.configuration_management_strategies.purpose" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Purpose <span className="text-red-500">*</span>
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={cfgMsData.purpose || ''}
                 onChange={(e) => handleChange('purpose', e.target.value)}
@@ -68,9 +70,9 @@ export default function ConfigurationMSForm({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.configuration_management_strategies.objectives" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Objectives <span className="text-red-500">*</span>
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={cfgMsData.objectives || ''}
                 onChange={(e) => handleChange('objectives', e.target.value)}
@@ -82,9 +84,9 @@ export default function ConfigurationMSForm({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.configuration_management_strategies.scope" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Scope <span className="text-red-500">*</span>
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={cfgMsData.scope || ''}
                 onChange={(e) => handleChange('scope', e.target.value)}
@@ -96,9 +98,9 @@ export default function ConfigurationMSForm({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.configuration_management_strategies.strategy_responsibility" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Strategy Responsibility
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={cfgMsData.strategy_responsibility || ''}
                 onChange={(e) => handleChange('strategy_responsibility', e.target.value)}
@@ -114,9 +116,9 @@ export default function ConfigurationMSForm({
         return (
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.configuration_management_strategies.configuration_planning_approach" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Configuration Planning Approach <span className="text-red-500">*</span>
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={cfgMsData.configuration_planning_approach || ''}
                 onChange={(e) => handleChange('configuration_planning_approach', e.target.value)}
@@ -128,9 +130,9 @@ export default function ConfigurationMSForm({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.configuration_management_strategies.configuration_control_approach" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Configuration Control Approach <span className="text-red-500">*</span>
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={cfgMsData.configuration_control_approach || ''}
                 onChange={(e) => handleChange('configuration_control_approach', e.target.value)}
@@ -142,9 +144,9 @@ export default function ConfigurationMSForm({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.configuration_management_strategies.configuration_assurance_approach" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Configuration Assurance Approach <span className="text-red-500">*</span>
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={cfgMsData.configuration_assurance_approach || ''}
                 onChange={(e) => handleChange('configuration_assurance_approach', e.target.value)}
@@ -156,9 +158,9 @@ export default function ConfigurationMSForm({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.configuration_management_strategies.corporate_configuration_policy_reference" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Corporate Configuration Policy Reference
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="text"
                 value={cfgMsData.corporate_configuration_policy_reference || ''}
@@ -169,9 +171,9 @@ export default function ConfigurationMSForm({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.configuration_management_strategies.variance_from_corporate" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Variance from Corporate Standards (if any)
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={cfgMsData.variance_from_corporate || ''}
                 onChange={(e) => handleChange('variance_from_corporate', e.target.value)}
@@ -183,9 +185,9 @@ export default function ConfigurationMSForm({
 
             {cfgMsData.variance_from_corporate && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.configuration_management_strategies.variance_justification" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Variance Justification <span className="text-red-500">*</span>
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   value={cfgMsData.variance_justification || ''}
                   onChange={(e) => handleChange('variance_justification', e.target.value)}
@@ -392,5 +394,27 @@ export default function ConfigurationMSForm({
       </>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.configuration_management_strategies.purpose',
+  'sim.configuration_management_strategies.objectives',
+  'sim.configuration_management_strategies.scope',
+  'sim.configuration_management_strategies.strategy_responsibility',
+  'sim.configuration_management_strategies.configuration_planning_approach',
+  'sim.configuration_management_strategies.configuration_control_approach',
+  'sim.configuration_management_strategies.configuration_assurance_approach',
+  'sim.configuration_management_strategies.corporate_configuration_policy_reference',
+  'sim.configuration_management_strategies.variance_from_corporate',
+  'sim.configuration_management_strategies.variance_justification',
+]
+
+export default function ConfigurationMSForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ConfigurationMSFormBody {...props} />
+    </FieldHelpScope>
   )
 }

@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { FileText, User, Calendar } from 'lucide-react'
 import { supabase } from '../../services/supabaseClient'
 
-export default function CheckpointReportHeader({ formData, onChange, errors, mode }) {
+function CheckpointReportHeaderBody({ formData, onChange, errors, mode }) {
   const [users, setUsers] = useState([])
 
   useEffect(() => {
@@ -35,10 +37,10 @@ export default function CheckpointReportHeader({ formData, onChange, errors, mod
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.checkpoint_reports.checkpoint_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             <Calendar className="h-4 w-4 inline mr-1" />
             Checkpoint Date *
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="date"
             value={formData.checkpoint_date || ''}
@@ -57,9 +59,9 @@ export default function CheckpointReportHeader({ formData, onChange, errors, mod
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.checkpoint_reports.report_title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Report Title
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             value={formData.report_title || ''}
@@ -76,10 +78,10 @@ export default function CheckpointReportHeader({ formData, onChange, errors, mod
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="sim.checkpoint_reports.report_summary" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
           <FileText className="h-4 w-4 inline mr-1" />
           Report Summary *
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={formData.report_summary || ''}
           onChange={(e) => onChange('report_summary', e.target.value)}
@@ -102,9 +104,9 @@ export default function CheckpointReportHeader({ formData, onChange, errors, mod
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="sim.checkpoint_reports.progress_summary" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
           Progress Summary *
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={formData.progress_summary || ''}
           onChange={(e) => onChange('progress_summary', e.target.value)}
@@ -125,10 +127,10 @@ export default function CheckpointReportHeader({ formData, onChange, errors, mod
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.checkpoint_reports.author_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
             <User className="h-4 w-4 inline mr-1" />
             Author
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={formData.author_id || ''}
             onChange={(e) => onChange('author_id', e.target.value || null)}
@@ -147,9 +149,9 @@ export default function CheckpointReportHeader({ formData, onChange, errors, mod
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.checkpoint_reports.owner_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
             Owner (Team Manager)
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={formData.owner_id || ''}
             onChange={(e) => onChange('owner_id', e.target.value || null)}
@@ -168,9 +170,9 @@ export default function CheckpointReportHeader({ formData, onChange, errors, mod
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.checkpoint_reports.client_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
             Client (Project Manager)
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={formData.client_id || ''}
             onChange={(e) => onChange('client_id', e.target.value || null)}
@@ -204,5 +206,24 @@ export default function CheckpointReportHeader({ formData, onChange, errors, mod
         </div>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.checkpoint_reports.checkpoint_date',
+  'sim.checkpoint_reports.report_title',
+  'sim.checkpoint_reports.report_summary',
+  'sim.checkpoint_reports.progress_summary',
+  'sim.checkpoint_reports.author_id',
+  'sim.checkpoint_reports.owner_id',
+  'sim.checkpoint_reports.client_id',
+]
+
+export default function CheckpointReportHeader(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <CheckpointReportHeaderBody {...props} />
+    </FieldHelpScope>
   )
 }

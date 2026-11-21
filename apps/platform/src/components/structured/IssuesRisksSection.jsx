@@ -1,6 +1,8 @@
 import { AlertCircle } from 'lucide-react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
-export default function IssuesRisksSection({ formData, onChange, errors, mode }) {
+function IssuesRisksSectionBody({ formData, onChange, errors, mode }) {
   return (
     <div className="space-y-6">
       <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
@@ -11,10 +13,10 @@ export default function IssuesRisksSection({ formData, onChange, errors, mode })
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="public.checkpoint_reports.issues_summary" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           <AlertCircle className="h-4 w-4 inline mr-1" />
           Issues Summary
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={formData.issues_summary || ''}
           onChange={(e) => onChange('issues_summary', e.target.value)}
@@ -33,9 +35,9 @@ export default function IssuesRisksSection({ formData, onChange, errors, mode })
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="public.checkpoint_reports.risks_summary" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Risks Summary
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={formData.risks_summary || ''}
           onChange={(e) => onChange('risks_summary', e.target.value)}
@@ -54,9 +56,9 @@ export default function IssuesRisksSection({ formData, onChange, errors, mode })
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="public.checkpoint_reports.changes_summary" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Changes Summary
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={formData.changes_summary || ''}
           onChange={(e) => onChange('changes_summary', e.target.value)}
@@ -76,9 +78,9 @@ export default function IssuesRisksSection({ formData, onChange, errors, mode })
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.checkpoint_reports.quality_status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Quality Status
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             value={formData.quality_status || ''}
             onChange={(e) => onChange('quality_status', e.target.value)}
@@ -92,9 +94,9 @@ export default function IssuesRisksSection({ formData, onChange, errors, mode })
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.checkpoint_reports.quality_concerns" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Quality Concerns
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             value={formData.quality_concerns || ''}
             onChange={(e) => onChange('quality_concerns', e.target.value)}
@@ -110,9 +112,9 @@ export default function IssuesRisksSection({ formData, onChange, errors, mode })
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.checkpoint_reports.budget_status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Budget Status
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             value={formData.budget_status || ''}
             onChange={(e) => onChange('budget_status', e.target.value)}
@@ -126,9 +128,9 @@ export default function IssuesRisksSection({ formData, onChange, errors, mode })
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.checkpoint_reports.schedule_status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Schedule Status
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             value={formData.schedule_status || ''}
             onChange={(e) => onChange('schedule_status', e.target.value)}
@@ -142,9 +144,9 @@ export default function IssuesRisksSection({ formData, onChange, errors, mode })
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.checkpoint_reports.variance_analysis" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Variance Analysis
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             value={formData.variance_analysis || ''}
             onChange={(e) => onChange('variance_analysis', e.target.value)}
@@ -158,5 +160,20 @@ export default function IssuesRisksSection({ formData, onChange, errors, mode })
         </div>
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.checkpoint_reports.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'issues_summary', 'risks_summary', 'changes_summary', 'quality_status', 'quality_concerns',
+  'budget_status', 'schedule_status', 'variance_analysis',
+].map((name) => `public.checkpoint_reports.${name}`)
+
+export default function IssuesRisksSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <IssuesRisksSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

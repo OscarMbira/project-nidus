@@ -5,6 +5,8 @@
  */
 
 import { useState, useEffect } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Target, Save, User, Calendar, DollarSign, Trash2, Info } from 'lucide-react'
 import { platformDb } from '@nidus/supabase'
@@ -45,12 +47,12 @@ function SectionHeading({ icon: Icon, title }) {
   )
 }
 
-function Field({ label, required, children }) {
+function Field({ label, required, helpKey, listOptions, children }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+      <FieldLabelWithHelp helpKey={helpKey} listOptions={listOptions} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
         {label}{required && ' *'}
-      </label>
+      </FieldLabelWithHelp>
       {children}
     </div>
   )
@@ -58,7 +60,7 @@ function Field({ label, required, children }) {
 
 const INPUT_CLS = 'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm'
 
-export default function ProgrammeCreatePage() {
+function ProgrammeCreatePageBody() {
   const navigate = useNavigate()
 
   const [formData, setFormData] = useState(EMPTY_FORM)
@@ -243,7 +245,7 @@ export default function ProgrammeCreatePage() {
           <SectionHeading title="Basic Information" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Row 1: Code | Name */}
-            <Field label="Programme Code">
+            <Field label="Programme Code" helpKey="public.programmes.programme_code">
               <input
                 type="text"
                 name="programme_code"
@@ -253,7 +255,7 @@ export default function ProgrammeCreatePage() {
               />
             </Field>
 
-            <Field label="Programme Name" required>
+            <Field label="Programme Name" helpKey="public.programmes.programme_name" required>
               <input
                 type="text"
                 name="programme_name"
@@ -265,7 +267,7 @@ export default function ProgrammeCreatePage() {
             </Field>
 
             {/* Row 2: Status | Type */}
-            <Field label="Status" required>
+            <Field label="Status" helpKey="public.programmes.programme_status" required>
               <select name="programme_status" value={formData.programme_status} onChange={handleChange} required className={INPUT_CLS}>
                 <option value="planning">Planning</option>
                 <option value="active">Active</option>
@@ -275,7 +277,7 @@ export default function ProgrammeCreatePage() {
               </select>
             </Field>
 
-            <Field label="Programme Type" required>
+            <Field label="Programme Type" helpKey="public.programmes.programme_type" required>
               <select name="programme_type" value={formData.programme_type} onChange={handleChange} required className={INPUT_CLS}>
                 <option value="business_transformation">Business Transformation</option>
                 <option value="technology">Technology</option>
@@ -287,7 +289,7 @@ export default function ProgrammeCreatePage() {
             </Field>
 
             {/* Row 3: Category | Portfolio */}
-            <Field label="Category">
+            <Field label="Category" helpKey="public.programmes.programme_category">
               <SearchableSelect
                 options={categories.map(c => ({
                   value: c.code || c.name,
@@ -300,7 +302,7 @@ export default function ProgrammeCreatePage() {
               />
             </Field>
 
-            <Field label="Portfolio (optional)">
+            <Field label="Portfolio (optional)" helpKey="public.programmes.portfolio_id" listOptions={false}>
               <SearchableSelect
                 options={portfolios.map(p => ({
                   value: p.id,
@@ -315,7 +317,7 @@ export default function ProgrammeCreatePage() {
 
             {/* Row 4: Description (full width) */}
             <div className="md:col-span-2">
-              <Field label="Description">
+              <Field label="Description" helpKey="public.programmes.programme_description">
                 <textarea
                   name="programme_description"
                   value={formData.programme_description}
@@ -327,7 +329,7 @@ export default function ProgrammeCreatePage() {
             </div>
 
             {/* Row 5: Mission | Vision */}
-            <Field label="Mission">
+            <Field label="Mission" helpKey="public.programmes.programme_mission">
               <textarea
                 name="programme_mission"
                 value={formData.programme_mission}
@@ -338,7 +340,7 @@ export default function ProgrammeCreatePage() {
               />
             </Field>
 
-            <Field label="Vision">
+            <Field label="Vision" helpKey="public.programmes.programme_vision">
               <textarea
                 name="programme_vision"
                 value={formData.programme_vision}
@@ -353,7 +355,7 @@ export default function ProgrammeCreatePage() {
             <div className="md:col-span-2 pt-4 mt-4 border-t border-gray-200 dark:border-gray-700 space-y-4">
               <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Governance</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Field label="Governance Model">
+                <Field label="Governance Model" helpKey="public.programmes.governance_model">
                   <select name="governance_model" value={formData.governance_model} onChange={handleChange} className={INPUT_CLS}>
                     <option value="centralized">Centralized</option>
                     <option value="decentralized">Decentralized</option>
@@ -361,7 +363,7 @@ export default function ProgrammeCreatePage() {
                     <option value="steering_committee">Steering Committee</option>
                   </select>
                 </Field>
-                <Field label="Review Frequency">
+                <Field label="Review Frequency" helpKey="public.programmes.review_frequency">
                   <select name="review_frequency" value={formData.review_frequency} onChange={handleChange} className={INPUT_CLS}>
                     <option value="weekly">Weekly</option>
                     <option value="bi-weekly">Bi-weekly</option>
@@ -380,7 +382,7 @@ export default function ProgrammeCreatePage() {
         <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 space-y-4">
           <SectionHeading icon={User} title="Ownership & Management" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Field label="Programme Owner">
+            <Field label="Programme Owner" helpKey="public.programmes.programme_owner_user_id" listOptions={false}>
               <select name="programme_owner_user_id" value={formData.programme_owner_user_id} onChange={handleChange} className={INPUT_CLS} disabled={loadingLookups}>
                 <option value="">{loadingLookups ? 'Loading…' : 'Select Owner'}</option>
                 {users.map(u => (
@@ -389,7 +391,7 @@ export default function ProgrammeCreatePage() {
               </select>
             </Field>
 
-            <Field label="Programme Manager">
+            <Field label="Programme Manager" helpKey="public.programmes.programme_manager_user_id" listOptions={false}>
               <select name="programme_manager_user_id" value={formData.programme_manager_user_id} onChange={handleChange} className={INPUT_CLS} disabled={loadingLookups}>
                 <option value="">{loadingLookups ? 'Loading…' : 'Select Manager'}</option>
                 {users.map(u => (
@@ -407,10 +409,10 @@ export default function ProgrammeCreatePage() {
         <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 space-y-4">
           <SectionHeading icon={Calendar} title="Timeline" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Field label="Start Date">
+            <Field label="Start Date" helpKey="public.programmes.programme_start_date">
               <input type="date" name="programme_start_date" value={formData.programme_start_date} onChange={handleChange} className={INPUT_CLS} />
             </Field>
-            <Field label="End Date">
+            <Field label="End Date" helpKey="public.programmes.programme_end_date">
               <input type="date" name="programme_end_date" value={formData.programme_end_date} onChange={handleChange} className={INPUT_CLS} />
             </Field>
           </div>
@@ -424,7 +426,7 @@ export default function ProgrammeCreatePage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Reporting Currency</label>
+              <FieldLabelWithHelp helpKey="public.programmes.budget_currency" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Reporting Currency</FieldLabelWithHelp>
               <select name="budget_currency" value={formData.budget_currency} onChange={handleChange} className={INPUT_CLS}>
                 <option value="USD">USD ($)</option>
                 <option value="EUR">EUR (€)</option>
@@ -435,7 +437,7 @@ export default function ProgrammeCreatePage() {
               <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Primary reporting currency. Line items can use their own currency.</p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Budget Type</label>
+              <FieldLabelWithHelp helpKey="public.programmes.budget_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Budget Type</FieldLabelWithHelp>
               <select value={formData.budget_type || ''} onChange={e => setFormData(prev => ({ ...prev, budget_type: e.target.value }))} className={INPUT_CLS}>
                 <option value="">Select Budget Type...</option>
                 <option value="capex">CapEx (Capital Expenditure)</option>
@@ -451,7 +453,7 @@ export default function ProgrammeCreatePage() {
 
           <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-900">
             <div className="flex items-center justify-between mb-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Budget Categories</label>
+              <FieldLabelWithHelp helpKey="public.programmes.budget_categories" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Budget Categories</FieldLabelWithHelp>
               <button type="button" onClick={addBudgetItem} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition-colors">
                 <DollarSign className="h-4 w-4" />
                 Add category
@@ -542,7 +544,7 @@ export default function ProgrammeCreatePage() {
 
         {/* Actions */}
         <div className="space-y-3 pb-8">
-          <label className="flex items-start gap-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/60 p-3 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
+          <FieldLabelWithHelp helpKey="public.programmes.apply_field_template_inheritance" className="flex items-start gap-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/60 p-3 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
             <input
               type="checkbox"
               className="mt-0.5 rounded border-gray-300 dark:border-gray-600"
@@ -555,7 +557,7 @@ export default function ProgrammeCreatePage() {
                 Opt-in: attach the portfolio / PMO field template and copy default values onto this programme. Off by default.
               </span>
             </span>
-          </label>
+          </FieldLabelWithHelp>
           <div className="flex justify-end gap-3">
           <button
             type="button"
@@ -576,5 +578,19 @@ export default function ProgrammeCreatePage() {
         </div>
       </form>
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.programmes.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'budget_currency', 'budget_type', 'budget_categories',
+].map((name) => `public.programmes.${name}`)
+
+export default function ProgrammeCreatePage(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ProgrammeCreatePageBody {...props} />
+    </FieldHelpScope>
   )
 }

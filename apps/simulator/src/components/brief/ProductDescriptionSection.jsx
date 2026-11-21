@@ -4,11 +4,13 @@
  */
 
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { getProducts, addProduct, updateProduct, deleteProduct } from '../../services/briefProductService'
 import ProductCard from './ProductCard'
 import { Plus } from 'lucide-react'
 
-export default function ProductDescriptionSection({ briefId, readOnly = false }) {
+function ProductDescriptionSectionBody({ briefId, readOnly = false }) {
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(false)
   const [editingId, setEditingId] = useState(null)
@@ -150,9 +152,9 @@ export default function ProductDescriptionSection({ briefId, readOnly = false })
         <form onSubmit={handleSubmit} className="bg-gray-50 dark:bg-gray-900 p-6 rounded-lg space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.brief_product_descriptions.product_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Product Name <span className="text-red-500">*</span>
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="text"
                 value={formData.product_name}
@@ -162,7 +164,7 @@ export default function ProductDescriptionSection({ briefId, readOnly = false })
               />
             </div>
             <div>
-              <label className="flex items-center mt-6">
+              <FieldLabelWithHelp helpKey="sim.brief_product_descriptions.is_main_product" className="flex items-center mt-6">
                 <input
                   type="checkbox"
                   checked={formData.is_main_product}
@@ -172,13 +174,13 @@ export default function ProductDescriptionSection({ briefId, readOnly = false })
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   Main Project Product
                 </span>
-              </label>
+              </FieldLabelWithHelp>
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="sim.brief_product_descriptions.product_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
               Product Description <span className="text-red-500">*</span>
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               value={formData.product_description}
               onChange={(e) => setFormData({ ...formData, product_description: e.target.value })}
@@ -188,9 +190,9 @@ export default function ProductDescriptionSection({ briefId, readOnly = false })
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="sim.brief_product_descriptions.purpose" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Purpose
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               value={formData.purpose}
               onChange={(e) => setFormData({ ...formData, purpose: e.target.value })}
@@ -201,9 +203,9 @@ export default function ProductDescriptionSection({ briefId, readOnly = false })
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.brief_product_descriptions.composition" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Composition
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={formData.composition}
                 onChange={(e) => setFormData({ ...formData, composition: e.target.value })}
@@ -213,9 +215,9 @@ export default function ProductDescriptionSection({ briefId, readOnly = false })
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.brief_product_descriptions.derivation" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Derivation
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={formData.derivation}
                 onChange={(e) => setFormData({ ...formData, derivation: e.target.value })}
@@ -226,9 +228,9 @@ export default function ProductDescriptionSection({ briefId, readOnly = false })
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="sim.brief_product_descriptions.quality_criteria" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
               Quality Criteria <span className="text-red-500">*</span>
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               value={formData.quality_criteria}
               onChange={(e) => setFormData({ ...formData, quality_criteria: e.target.value })}
@@ -239,9 +241,9 @@ export default function ProductDescriptionSection({ briefId, readOnly = false })
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.brief_product_descriptions.quality_tolerance" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Quality Tolerance
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="text"
                 value={formData.quality_tolerance}
@@ -250,9 +252,9 @@ export default function ProductDescriptionSection({ briefId, readOnly = false })
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.brief_product_descriptions.quality_method" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Quality Method
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="text"
                 value={formData.quality_method}
@@ -262,9 +264,9 @@ export default function ProductDescriptionSection({ briefId, readOnly = false })
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="sim.brief_product_descriptions.format_presentation" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Format/Presentation
-            </label>
+            </FieldLabelWithHelp>
             <input
               type="text"
               value={formData.format_presentation}
@@ -356,5 +358,27 @@ export default function ProductDescriptionSection({ briefId, readOnly = false })
         </div>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.brief_product_descriptions.product_name',
+  'sim.brief_product_descriptions.is_main_product',
+  'sim.brief_product_descriptions.product_description',
+  'sim.brief_product_descriptions.purpose',
+  'sim.brief_product_descriptions.composition',
+  'sim.brief_product_descriptions.derivation',
+  'sim.brief_product_descriptions.quality_criteria',
+  'sim.brief_product_descriptions.quality_tolerance',
+  'sim.brief_product_descriptions.quality_method',
+  'sim.brief_product_descriptions.format_presentation',
+]
+
+export default function ProductDescriptionSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ProductDescriptionSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

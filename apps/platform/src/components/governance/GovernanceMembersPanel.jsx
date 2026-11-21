@@ -2,6 +2,8 @@
  * Shared roster CRUD panel for Governance bodies (Steering Committee / Project Board).
  */
 import { useState, useEffect, useCallback } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Link } from 'react-router-dom'
 import { ArrowLeft, Plus, Star, Upload } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -40,7 +42,7 @@ const BULK_PATH = {
 const inputClass =
   'w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-gray-100'
 
-export default function GovernanceMembersPanel({ bodyType, title, description, backTo }) {
+function GovernanceMembersPanelBody({ bodyType, title, description, backTo }) {
   const { projectId } = usePlatformProjectId()
   const { showSuccess, modal } = useSuccessModal()
 
@@ -188,7 +190,7 @@ export default function GovernanceMembersPanel({ bodyType, title, description, b
         {formOpen && formTab === 'details' && (
           <form onSubmit={handleSubmit} className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Name *</label>
+              <FieldLabelWithHelp helpKey="public.project_governance_members.member_name" className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1" required>Name *</FieldLabelWithHelp>
               <input
                 placeholder="Name"
                 value={form.member_name}
@@ -198,7 +200,7 @@ export default function GovernanceMembersPanel({ bodyType, title, description, b
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Role</label>
+              <FieldLabelWithHelp helpKey="public.project_governance_members.role_title" className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Role</FieldLabelWithHelp>
               <input
                 placeholder="Role"
                 value={form.role_title}
@@ -207,7 +209,7 @@ export default function GovernanceMembersPanel({ bodyType, title, description, b
               />
             </div>
             <div className="md:col-span-2">
-              <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Organisation</label>
+              <FieldLabelWithHelp helpKey="public.project_governance_members.organisation" className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Organisation</FieldLabelWithHelp>
               <input
                 placeholder="Organisation"
                 value={form.organisation}
@@ -216,7 +218,7 @@ export default function GovernanceMembersPanel({ bodyType, title, description, b
               />
             </div>
             <div className="md:col-span-2 space-y-1">
-              <label className="block text-xs font-medium text-gray-600 dark:text-gray-300">Email</label>
+              <FieldLabelWithHelp helpKey="public.project_governance_members.email" className="block text-xs font-medium text-gray-600 dark:text-gray-300">Email</FieldLabelWithHelp>
               <MultiLineListInput
                 viewModeId={`gov-member-email-${bodyType}`}
                 value={form.email}
@@ -228,7 +230,7 @@ export default function GovernanceMembersPanel({ bodyType, title, description, b
               />
             </div>
             <div className="md:col-span-2 space-y-1">
-              <label className="block text-xs font-medium text-gray-600 dark:text-gray-300">Phone</label>
+              <FieldLabelWithHelp helpKey="public.project_governance_members.phone" className="block text-xs font-medium text-gray-600 dark:text-gray-300">Phone</FieldLabelWithHelp>
               <MultiLineListInput
                 viewModeId={`gov-member-phone-${bodyType}`}
                 value={form.phone}
@@ -240,7 +242,7 @@ export default function GovernanceMembersPanel({ bodyType, title, description, b
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Appointed date</label>
+              <FieldLabelWithHelp helpKey="public.project_governance_members.appointed_date" className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Appointed date</FieldLabelWithHelp>
               <input
                 type="date"
                 value={form.appointed_date}
@@ -249,7 +251,7 @@ export default function GovernanceMembersPanel({ bodyType, title, description, b
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">End date</label>
+              <FieldLabelWithHelp helpKey="public.project_governance_members.end_date" className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">End date</FieldLabelWithHelp>
               <input
                 type="date"
                 value={form.end_date}
@@ -257,12 +259,12 @@ export default function GovernanceMembersPanel({ bodyType, title, description, b
                 className={inputClass}
               />
             </div>
-            <label className="flex items-center gap-2 text-sm md:col-span-2">
+            <FieldLabelWithHelp helpKey="public.project_governance_members.is_chair" className="flex items-center gap-2 text-sm md:col-span-2">
               <input type="checkbox" checked={form.is_chair} onChange={(e) => setForm({ ...form, is_chair: e.target.checked })} />
               Chair
-            </label>
+            </FieldLabelWithHelp>
             <div className="md:col-span-2">
-              <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Notes</label>
+              <FieldLabelWithHelp helpKey="public.project_governance_members.notes" className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Notes</FieldLabelWithHelp>
               <textarea
                 placeholder="Notes"
                 value={form.notes}
@@ -329,5 +331,20 @@ export default function GovernanceMembersPanel({ bodyType, title, description, b
       </div>
       {modal}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.project_governance_members.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'member_name', 'role_title', 'organisation', 'email', 'phone', 'appointed_date', 'end_date', 'is_chair',
+  'notes',
+].map((name) => `public.project_governance_members.${name}`)
+
+export default function GovernanceMembersPanel(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <GovernanceMembersPanelBody {...props} />
+    </FieldHelpScope>
   )
 }

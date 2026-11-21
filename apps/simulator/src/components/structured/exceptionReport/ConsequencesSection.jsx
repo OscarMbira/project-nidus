@@ -1,6 +1,8 @@
 import { AlertTriangle } from 'lucide-react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 
-export default function ConsequencesSection({ formData, onChange, errors, mode }) {
+function ConsequencesSectionBody({ formData, onChange, errors, mode }) {
   return (
     <div className="space-y-6">
       <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
@@ -16,9 +18,9 @@ export default function ConsequencesSection({ formData, onChange, errors, mode }
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="sim.exception_reports.project_consequences" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
           Project Consequences *
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={formData.project_consequences || ''}
           onChange={(e) => onChange('project_consequences', e.target.value)}
@@ -37,9 +39,9 @@ export default function ConsequencesSection({ formData, onChange, errors, mode }
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="sim.exception_reports.programme_consequences" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Programme Consequences
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={formData.programme_consequences || ''}
           onChange={(e) => onChange('programme_consequences', e.target.value)}
@@ -51,9 +53,9 @@ export default function ConsequencesSection({ formData, onChange, errors, mode }
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="sim.exception_reports.corporate_consequences" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Corporate Consequences
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={formData.corporate_consequences || ''}
           onChange={(e) => onChange('corporate_consequences', e.target.value)}
@@ -65,9 +67,9 @@ export default function ConsequencesSection({ formData, onChange, errors, mode }
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="sim.exception_reports.consequences_if_not_addressed" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Consequences if Not Addressed
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={formData.consequences_if_not_addressed || ''}
           onChange={(e) => onChange('consequences_if_not_addressed', e.target.value)}
@@ -80,9 +82,9 @@ export default function ConsequencesSection({ formData, onChange, errors, mode }
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.exception_reports.impact_on_business_case" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Impact on Business Case
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             value={formData.impact_on_business_case || ''}
             onChange={(e) => onChange('impact_on_business_case', e.target.value)}
@@ -93,9 +95,9 @@ export default function ConsequencesSection({ formData, onChange, errors, mode }
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.exception_reports.impact_on_project_plan" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Impact on Project Plan
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             value={formData.impact_on_project_plan || ''}
             onChange={(e) => onChange('impact_on_project_plan', e.target.value)}
@@ -107,5 +109,23 @@ export default function ConsequencesSection({ formData, onChange, errors, mode }
         </div>
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.exception_reports.project_consequences',
+  'sim.exception_reports.programme_consequences',
+  'sim.exception_reports.corporate_consequences',
+  'sim.exception_reports.consequences_if_not_addressed',
+  'sim.exception_reports.impact_on_business_case',
+  'sim.exception_reports.impact_on_project_plan',
+]
+
+export default function ConsequencesSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ConsequencesSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

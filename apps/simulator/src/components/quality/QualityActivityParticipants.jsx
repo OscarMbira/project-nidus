@@ -4,10 +4,12 @@
  */
 
 import { useState, useEffect } from 'react';
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { Users, UserPlus, X, Save } from 'lucide-react';
 import { supabase } from '../../services/supabaseClient';
 
-export default function QualityActivityParticipants({ 
+function QualityActivityParticipantsBody({ 
   activityType, 
   activityId, 
   participants = [],
@@ -131,9 +133,9 @@ export default function QualityActivityParticipants({
         <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.quality_activity_participants.user_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required listOptions={false}>
                 User *
-              </label>
+              </FieldLabelWithHelp>
               <select
                 value={newParticipant.user_id}
                 onChange={(e) => setNewParticipant({ ...newParticipant, user_id: e.target.value })}
@@ -148,9 +150,9 @@ export default function QualityActivityParticipants({
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.quality_activity_participants.participant_role" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Role *
-              </label>
+              </FieldLabelWithHelp>
               <select
                 value={newParticipant.participant_role}
                 onChange={(e) => setNewParticipant({ ...newParticipant, participant_role: e.target.value })}
@@ -175,9 +177,9 @@ export default function QualityActivityParticipants({
               </select>
             </div>
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.quality_activity_participants.responsibilities" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Responsibilities
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={newParticipant.responsibilities}
                 onChange={(e) => setNewParticipant({ ...newParticipant, responsibilities: e.target.value })}
@@ -241,4 +243,19 @@ export default function QualityActivityParticipants({
       )}
     </div>
   );
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.quality_activity_participants.user_id',
+  'sim.quality_activity_participants.participant_role',
+  'sim.quality_activity_participants.responsibilities',
+]
+
+export default function QualityActivityParticipants(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <QualityActivityParticipantsBody {...props} />
+    </FieldHelpScope>
+  )
 }

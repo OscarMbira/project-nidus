@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { platformDb } from '@nidus/supabase'
 import { X, Save, FileText, Settings, Target, BarChart3, Shield, Users, Calendar, CheckCircle, ArrowRight, ArrowLeft, AlertTriangle } from 'lucide-react'
 import { createRMS, updateRMS, createRMSForProject, createRMSFromTemplate } from '../../services/riskManagementStrategyService'
@@ -10,7 +12,7 @@ import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
-export default function RMSForm({ rms, projectId, onSave, onCancel, onHoldComplete }) {
+function RMSFormBody({ rms, projectId, onSave, onCancel, onHoldComplete }) {
   const [formData, setFormData] = useState({
     purpose: '',
     objectives: '',
@@ -218,9 +220,9 @@ export default function RMSForm({ rms, projectId, onSave, onCancel, onHoldComple
         return (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.risk_management_strategies.purpose" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Purpose <span className="text-red-500">*</span>
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 name="purpose"
                 value={formData.purpose}
@@ -238,9 +240,9 @@ export default function RMSForm({ rms, projectId, onSave, onCancel, onHoldComple
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.risk_management_strategies.objectives" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Objectives <span className="text-red-500">*</span>
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 name="objectives"
                 value={formData.objectives}
@@ -258,9 +260,9 @@ export default function RMSForm({ rms, projectId, onSave, onCancel, onHoldComple
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.risk_management_strategies.scope" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Scope <span className="text-red-500">*</span>
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 name="scope"
                 value={formData.scope}
@@ -278,9 +280,9 @@ export default function RMSForm({ rms, projectId, onSave, onCancel, onHoldComple
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.risk_management_strategies.strategy_responsibility" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Strategy Responsibility
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="text"
                 name="strategy_responsibility"
@@ -297,9 +299,9 @@ export default function RMSForm({ rms, projectId, onSave, onCancel, onHoldComple
         return (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.risk_management_strategies.risk_identification_approach" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Risk Identification Approach <span className="text-red-500">*</span>
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 name="risk_identification_approach"
                 value={formData.risk_identification_approach}
@@ -317,9 +319,9 @@ export default function RMSForm({ rms, projectId, onSave, onCancel, onHoldComple
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.risk_management_strategies.risk_assessment_approach" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Risk Assessment Approach <span className="text-red-500">*</span>
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 name="risk_assessment_approach"
                 value={formData.risk_assessment_approach}
@@ -337,9 +339,9 @@ export default function RMSForm({ rms, projectId, onSave, onCancel, onHoldComple
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.risk_management_strategies.risk_response_approach" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Risk Response Approach <span className="text-red-500">*</span>
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 name="risk_response_approach"
                 value={formData.risk_response_approach}
@@ -357,9 +359,9 @@ export default function RMSForm({ rms, projectId, onSave, onCancel, onHoldComple
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.risk_management_strategies.risk_monitoring_approach" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Risk Monitoring Approach
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 name="risk_monitoring_approach"
                 value={formData.risk_monitoring_approach}
@@ -371,9 +373,9 @@ export default function RMSForm({ rms, projectId, onSave, onCancel, onHoldComple
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.risk_management_strategies.variance_from_corporate" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Variance from Corporate Standards
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 name="variance_from_corporate"
                 value={formData.variance_from_corporate}
@@ -385,9 +387,9 @@ export default function RMSForm({ rms, projectId, onSave, onCancel, onHoldComple
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.risk_management_strategies.variance_justification" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Variance Justification
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 name="variance_justification"
                 value={formData.variance_justification}
@@ -410,9 +412,9 @@ export default function RMSForm({ rms, projectId, onSave, onCancel, onHoldComple
         return (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.risk_management_strategies.customer_risk_standards_reference" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Customer Risk Standards Reference
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 name="customer_risk_standards_reference"
                 value={formData.customer_risk_standards_reference}
@@ -424,9 +426,9 @@ export default function RMSForm({ rms, projectId, onSave, onCancel, onHoldComple
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.risk_management_strategies.supplier_risk_standards_reference" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Supplier Risk Standards Reference
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 name="supplier_risk_standards_reference"
                 value={formData.supplier_risk_standards_reference}
@@ -438,9 +440,9 @@ export default function RMSForm({ rms, projectId, onSave, onCancel, onHoldComple
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.risk_management_strategies.corporate_risk_policy_reference" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Corporate Risk Policy Reference
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 name="corporate_risk_policy_reference"
                 value={formData.corporate_risk_policy_reference}
@@ -452,9 +454,9 @@ export default function RMSForm({ rms, projectId, onSave, onCancel, onHoldComple
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.risk_management_strategies.programme_risk_policy_reference" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Programme Risk Policy Reference
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 name="programme_risk_policy_reference"
                 value={formData.programme_risk_policy_reference}
@@ -471,9 +473,9 @@ export default function RMSForm({ rms, projectId, onSave, onCancel, onHoldComple
         return (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.risk_management_strategies.author_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                 Author
-              </label>
+              </FieldLabelWithHelp>
               <select
                 name="author_id"
                 value={formData.author_id}
@@ -490,9 +492,9 @@ export default function RMSForm({ rms, projectId, onSave, onCancel, onHoldComple
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.risk_management_strategies.owner_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                 Owner
-              </label>
+              </FieldLabelWithHelp>
               <select
                 name="owner_id"
                 value={formData.owner_id}
@@ -509,9 +511,9 @@ export default function RMSForm({ rms, projectId, onSave, onCancel, onHoldComple
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.risk_management_strategies.client_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                 Client
-              </label>
+              </FieldLabelWithHelp>
               <select
                 name="client_id"
                 value={formData.client_id}
@@ -739,5 +741,23 @@ export default function RMSForm({ rms, projectId, onSave, onCancel, onHoldComple
         )}
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.risk_management_strategies.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'purpose', 'objectives', 'scope', 'strategy_responsibility', 'risk_identification_approach',
+  'risk_assessment_approach', 'risk_response_approach', 'risk_monitoring_approach',
+  'variance_from_corporate', 'variance_justification', 'customer_risk_standards_reference',
+  'supplier_risk_standards_reference', 'corporate_risk_policy_reference',
+  'programme_risk_policy_reference', 'author_id', 'owner_id', 'client_id',
+].map((name) => `public.risk_management_strategies.${name}`)
+
+export default function RMSForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <RMSFormBody {...props} />
+    </FieldHelpScope>
   )
 }

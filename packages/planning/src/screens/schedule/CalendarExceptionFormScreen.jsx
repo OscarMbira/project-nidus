@@ -4,6 +4,8 @@
  * Exceptions have no display ID, so the URL carries the UUID (rule 16.3 allows this).
  */
 import { useEffect, useState } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { Save } from 'lucide-react'
 import { RowActionButton } from '@nidus/ui'
@@ -21,7 +23,7 @@ import { useScheduleData, useScheduleLinks, useScheduleProjectId } from '../../h
 const EMPTY = { exception_date: '', exception_type: 'holiday', is_working_day: false, description: '' }
 const input = 'mt-1 w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white'
 
-export default function CalendarExceptionFormScreen() {
+function CalendarExceptionFormScreenBody() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const { exceptionId } = useParams()
@@ -123,28 +125,42 @@ export default function CalendarExceptionFormScreen() {
           </div>
         ) : (
           <fieldset disabled={!isEdit || saving} className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <label className="text-xs text-gray-600 dark:text-gray-400">Date *
+            <FieldLabelWithHelp helpKey="public.project_calendar_exceptions.exception_date" className="text-xs text-gray-600 dark:text-gray-400">Date *
               <input type="date" className={input} value={form.exception_date} onChange={(e) => setForm({ ...form, exception_date: e.target.value })} />
-            </label>
-            <label className="text-xs text-gray-600 dark:text-gray-400">Type
+            </FieldLabelWithHelp>
+            <FieldLabelWithHelp helpKey="public.project_calendar_exceptions.exception_type" className="text-xs text-gray-600 dark:text-gray-400">Type
               <select className={input} value={form.exception_type} onChange={(e) => setForm({ ...form, exception_type: e.target.value, is_working_day: e.target.value === 'holiday' ? false : form.is_working_day })}>
                 <option value="holiday">Holiday (day off)</option>
                 <option value="other">Other</option>
               </select>
-            </label>
+            </FieldLabelWithHelp>
             {form.exception_type === 'other' && (
-              <label className="sm:col-span-2 flex items-center gap-2 text-sm text-gray-800 dark:text-gray-200">
+              <FieldLabelWithHelp helpKey="public.project_calendar_exceptions.is_working_day" className="sm:col-span-2 flex items-center gap-2 text-sm text-gray-800 dark:text-gray-200">
                 <input type="checkbox" checked={form.is_working_day} onChange={(e) => setForm({ ...form, is_working_day: e.target.checked })} />
                 This is an extra working day (for example, weekend work)
-              </label>
+              </FieldLabelWithHelp>
             )}
-            <label className="sm:col-span-2 text-xs text-gray-600 dark:text-gray-400">Description
+            <FieldLabelWithHelp helpKey="public.project_calendar_exceptions.description" className="sm:col-span-2 text-xs text-gray-600 dark:text-gray-400">Description
               <input className={input} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-            </label>
+            </FieldLabelWithHelp>
           </fieldset>
         )}
       </div>
       {modal}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.project_calendar_exceptions.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'exception_date', 'exception_type', 'is_working_day', 'description',
+].map((name) => `public.project_calendar_exceptions.${name}`)
+
+export default function CalendarExceptionFormScreen(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <CalendarExceptionFormScreenBody {...props} />
+    </FieldHelpScope>
   )
 }

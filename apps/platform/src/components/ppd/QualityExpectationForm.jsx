@@ -4,6 +4,8 @@
  */
 
 import { useState, useEffect } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { X, Save } from 'lucide-react'
 import { addExpectation, updateExpectation } from '../../services/ppdQualityExpectationsService'
 import { supabase } from '../../services/supabaseClient'
@@ -14,7 +16,7 @@ import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
-export default function QualityExpectationForm({ ppdId, expectation = null, mode = 'create', onSave, onCancel }) {
+function QualityExpectationFormBody({ ppdId, expectation = null, mode = 'create', onSave, onCancel }) {
   const [formData, setFormData] = useState({
     expectation_category: 'performance',
     expectation_description: '',
@@ -145,9 +147,9 @@ export default function QualityExpectationForm({ ppdId, expectation = null, mode
         {formTab === 'details' && (
         <>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <FieldLabelWithHelp helpKey="public.ppd_quality_expectations.expectation_category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
             Category <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <select
             name="expectation_category"
             value={formData.expectation_category}
@@ -168,9 +170,9 @@ export default function QualityExpectationForm({ ppdId, expectation = null, mode
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <FieldLabelWithHelp helpKey="public.ppd_quality_expectations.expectation_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
             Expectation Description <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             name="expectation_description"
             value={formData.expectation_description}
@@ -187,9 +189,9 @@ export default function QualityExpectationForm({ ppdId, expectation = null, mode
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <FieldLabelWithHelp helpKey="public.ppd_quality_expectations.priority" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Priority
-            </label>
+            </FieldLabelWithHelp>
             <select
               name="priority"
               value={formData.priority}
@@ -204,9 +206,9 @@ export default function QualityExpectationForm({ ppdId, expectation = null, mode
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <FieldLabelWithHelp helpKey="public.ppd_quality_expectations.source" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Source
-            </label>
+            </FieldLabelWithHelp>
             <input
               type="text"
               name="source"
@@ -219,9 +221,9 @@ export default function QualityExpectationForm({ ppdId, expectation = null, mode
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <FieldLabelWithHelp helpKey="public.ppd_quality_expectations.standard_reference" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Standard Reference
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             name="standard_reference"
@@ -255,5 +257,19 @@ export default function QualityExpectationForm({ ppdId, expectation = null, mode
         </div>
       </form>
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.ppd_quality_expectations.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'expectation_category', 'expectation_description', 'priority', 'source', 'standard_reference',
+].map((name) => `public.ppd_quality_expectations.${name}`)
+
+export default function QualityExpectationForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <QualityExpectationFormBody {...props} />
+    </FieldHelpScope>
   )
 }

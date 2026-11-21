@@ -1,10 +1,12 @@
 import { useState } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Package, CheckCircle, XCircle, AlertTriangle, Plus, X, Edit2 } from 'lucide-react'
 import { addQualityRecord, updateQualityRecord, deleteQualityRecord, getQualityRecords } from '../../../services/eprProductsReviewService'
 import { addApprovalRecord, updateApprovalRecord, getApprovalRecords } from '../../../services/eprProductsReviewService'
 import { addOffSpecification, updateOffSpecification, grantConcession, getOffSpecifications } from '../../../services/eprProductsReviewService'
 
-export default function EPRProductsReview({
+function EPRProductsReviewBody({
   reportId,
   qualityRecords,
   approvalRecords,
@@ -213,9 +215,9 @@ function QualityRecordsTab({ reportId, qualityRecords, onQualityRecordsChange, p
             <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-900">
               <div className="space-y-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <FieldLabelWithHelp helpKey="public.end_project_report_quality_records.activity_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
                     Activity Name *
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="text"
                     value={newRecord.activity_name}
@@ -225,9 +227,9 @@ function QualityRecordsTab({ reportId, qualityRecords, onQualityRecordsChange, p
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <FieldLabelWithHelp helpKey="public.end_project_report_quality_records.activity_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Activity Type
-                    </label>
+                    </FieldLabelWithHelp>
                     <select
                       value={newRecord.activity_type}
                       onChange={(e) => setNewRecord({ ...newRecord, activity_type: e.target.value })}
@@ -242,9 +244,9 @@ function QualityRecordsTab({ reportId, qualityRecords, onQualityRecordsChange, p
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <FieldLabelWithHelp helpKey="public.end_project_report_quality_records.status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Status
-                    </label>
+                    </FieldLabelWithHelp>
                     <select
                       value={newRecord.status}
                       onChange={(e) => setNewRecord({ ...newRecord, status: e.target.value })}
@@ -373,9 +375,9 @@ function ApprovalRecordsTab({ reportId, approvalRecords, onApprovalRecordsChange
             <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-900">
               <div className="space-y-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <FieldLabelWithHelp helpKey="public.end_project_report_quality_records.product_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
                     Product Name *
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="text"
                     value={newRecord.product_name}
@@ -384,9 +386,9 @@ function ApprovalRecordsTab({ reportId, approvalRecords, onApprovalRecordsChange
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <FieldLabelWithHelp helpKey="public.end_project_report_quality_records.approval_status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Approval Status
-                  </label>
+                  </FieldLabelWithHelp>
                   <select
                     value={newRecord.approval_status}
                     onChange={(e) => setNewRecord({ ...newRecord, approval_status: e.target.value })}
@@ -547,9 +549,9 @@ function OffSpecificationsTab({ reportId, offSpecifications, onOffSpecifications
             <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-900">
               <div className="space-y-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <FieldLabelWithHelp helpKey="public.end_project_report_quality_records.off_spec_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
                     Off-Spec Type *
-                  </label>
+                  </FieldLabelWithHelp>
                   <select
                     value={newOffSpec.off_spec_type}
                     onChange={(e) => setNewOffSpec({ ...newOffSpec, off_spec_type: e.target.value })}
@@ -562,9 +564,9 @@ function OffSpecificationsTab({ reportId, offSpecifications, onOffSpecifications
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <FieldLabelWithHelp helpKey="public.end_project_report_quality_records.original_requirement" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
                     Original Requirement *
-                  </label>
+                  </FieldLabelWithHelp>
                   <textarea
                     value={newOffSpec.original_requirement}
                     onChange={(e) => setNewOffSpec({ ...newOffSpec, original_requirement: e.target.value })}
@@ -573,9 +575,9 @@ function OffSpecificationsTab({ reportId, offSpecifications, onOffSpecifications
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <FieldLabelWithHelp helpKey="public.end_project_report_quality_records.deviation_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
                     Deviation Description *
-                  </label>
+                  </FieldLabelWithHelp>
                   <textarea
                     value={newOffSpec.deviation_description}
                     onChange={(e) => setNewOffSpec({ ...newOffSpec, deviation_description: e.target.value })}
@@ -611,5 +613,20 @@ function OffSpecificationsTab({ reportId, offSpecifications, onOffSpecifications
         </>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.end_project_report_quality_records.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'activity_name', 'activity_type', 'status', 'product_name', 'approval_status', 'off_spec_type',
+  'original_requirement', 'deviation_description',
+].map((name) => `public.end_project_report_quality_records.${name}`)
+
+export default function EPRProductsReview(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <EPRProductsReviewBody {...props} />
+    </FieldHelpScope>
   )
 }

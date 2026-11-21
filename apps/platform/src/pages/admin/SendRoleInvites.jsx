@@ -6,6 +6,8 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useNavigate } from 'react-router-dom'
 import {
   Mail,
@@ -69,7 +71,7 @@ async function fetchInviterFullName(fallbackEmail, userMeta = {}) {
   }
 }
 
-export default function SendRoleInvites() {
+function SendRoleInvitesBody() {
   const navigate = useNavigate()
   /** Session + PMO gate only — lets the page shell render before projects/roles */
   const [loadingAuth, setLoadingAuth] = useState(true)
@@ -808,9 +810,9 @@ export default function SendRoleInvites() {
             <form onSubmit={handleSendInvite} className="space-y-4 sm:space-y-5 md:space-y-6">
               {canInviteOrgPmoAdmin && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.organisation_invitations.invitation_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Invitation type
-                  </label>
+                  </FieldLabelWithHelp>
                   <div className="flex flex-wrap gap-2">
                     <button
                       type="button"
@@ -865,12 +867,12 @@ export default function SendRoleInvites() {
 
               {isOrgPmoAdminInvite ? (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.organisation_invitations.role_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     <span className="flex items-center gap-2">
                       <Shield className="h-4 w-4 flex-shrink-0" />
                       Role
                     </span>
-                  </label>
+                  </FieldLabelWithHelp>
                   <div className="w-full px-3 sm:px-4 py-2.5 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300">
                     PMO Administrator — standard (no billing access)
                   </div>
@@ -878,12 +880,12 @@ export default function SendRoleInvites() {
               ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.organisation_invitations.project_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required listOptions={false}>
                     <span className="flex items-center">
                       <FolderKanban className="h-4 w-4 mr-2 flex-shrink-0" />
                       <span>Select Project *</span>
                     </span>
-                  </label>
+                  </FieldLabelWithHelp>
                   <SearchableSelect
                     options={projectSelectOptions}
                     value={selectedProject}
@@ -902,12 +904,12 @@ export default function SendRoleInvites() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.organisation_invitations.role_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                     <span className="flex items-center">
                       <Shield className="h-4 w-4 mr-2 flex-shrink-0" />
                       <span>Select Role *</span>
                     </span>
-                  </label>
+                  </FieldLabelWithHelp>
                   <SearchableSelect
                     options={roleSelectOptions}
                     value={selectedRole}
@@ -934,12 +936,12 @@ export default function SendRoleInvites() {
               {/* Organisation field — read-only */}
               {(selectedProject || isOrgPmoAdminInvite) && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.organisation_invitations.company_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     <span className="flex items-center gap-2">
                       <Building2 className="h-4 w-4 flex-shrink-0" />
                       Organisation / Company
                     </span>
-                  </label>
+                  </FieldLabelWithHelp>
                   <div className="w-full px-3 sm:px-4 py-2.5 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300 flex items-center gap-2">
                     {organisationName ? (
                       <>
@@ -988,12 +990,12 @@ export default function SendRoleInvites() {
                 <>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      <FieldLabelWithHelp helpKey="public.organisation_invitations.invited_first_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                         <span className="flex items-center">
                           <UserPlus className="h-4 w-4 mr-2 flex-shrink-0" />
                           <span>Invitee first name *</span>
                         </span>
-                      </label>
+                      </FieldLabelWithHelp>
                       <input
                         type="text"
                         value={inviteeFirstName}
@@ -1005,9 +1007,9 @@ export default function SendRoleInvites() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      <FieldLabelWithHelp helpKey="public.organisation_invitations.invited_last_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                         <span>Invitee surname *</span>
-                      </label>
+                      </FieldLabelWithHelp>
                       <input
                         type="text"
                         value={inviteeLastName}
@@ -1022,12 +1024,12 @@ export default function SendRoleInvites() {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      <FieldLabelWithHelp helpKey="public.organisation_invitations.email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                         <span className="flex items-center">
                           <Mail className="h-4 w-4 mr-2 flex-shrink-0" />
                           <span>Email address *</span>
                         </span>
-                      </label>
+                      </FieldLabelWithHelp>
                       <input
                         type="email"
                         value={email}
@@ -1038,9 +1040,9 @@ export default function SendRoleInvites() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      <FieldLabelWithHelp helpKey="public.organisation_invitations.invitation_expires_at" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Invitation expires after
-                      </label>
+                      </FieldLabelWithHelp>
                       <select
                         value={inviteExpirySelect}
                         onChange={(e) => setInviteExpirySelect(e.target.value)}
@@ -1080,9 +1082,9 @@ export default function SendRoleInvites() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <FieldLabelWithHelp helpKey="public.organisation_invitations.invitation_message" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Message (Optional)
-                    </label>
+                    </FieldLabelWithHelp>
                     <textarea
                       value={message}
                       onChange={(e) => setMessage(e.target.value)}
@@ -1183,5 +1185,20 @@ export default function SendRoleInvites() {
         </>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.organisation_invitations.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'invitation_type', 'role_id', 'project_id', 'company_name', 'invited_first_name', 'invited_last_name',
+  'email', 'invitation_expires_at', 'invitation_message',
+].map((name) => `public.organisation_invitations.${name}`)
+
+export default function SendRoleInvites(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <SendRoleInvitesBody {...props} />
+    </FieldHelpScope>
   )
 }

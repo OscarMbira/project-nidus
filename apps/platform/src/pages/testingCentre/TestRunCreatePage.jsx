@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import * as platform from '../../services/testingCentreService'
 import * as sim from '../../services/simTestingCentreService'
 
-export default function TestRunCreatePage({ pathPrefix = '/platform/testing-centre', mode = 'platform' }) {
+function TestRunCreatePageBody({ pathPrefix = '/platform/testing-centre', mode = 'platform' }) {
   const navigate = useNavigate()
   const svc = mode === 'sim' ? sim : platform
   const [access, setAccess] = useState('checking')
@@ -62,7 +64,7 @@ export default function TestRunCreatePage({ pathPrefix = '/platform/testing-cent
       {access === 'granted' && (
         <div className="max-w-xl space-y-4">
           <div>
-            <label htmlFor="run-suite" className="block text-sm font-medium mb-1">Test suite</label>
+            <FieldLabelWithHelp helpKey="public.tc_test_runs.suite_id" htmlFor="run-suite" className="block text-sm font-medium mb-1">Test suite</FieldLabelWithHelp>
             <select
               id="run-suite"
               aria-label="Test suite"
@@ -77,7 +79,7 @@ export default function TestRunCreatePage({ pathPrefix = '/platform/testing-cent
             </select>
           </div>
           <div>
-            <label htmlFor="run-environment" className="block text-sm font-medium mb-1">Environment</label>
+            <FieldLabelWithHelp helpKey="public.tc_test_runs.environment_id" htmlFor="run-environment" className="block text-sm font-medium mb-1">Environment</FieldLabelWithHelp>
             <select
               id="run-environment"
               aria-label="Environment"
@@ -103,5 +105,19 @@ export default function TestRunCreatePage({ pathPrefix = '/platform/testing-cent
         </div>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.tc_test_runs.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'suite_id', 'environment_id',
+].map((name) => `public.tc_test_runs.${name}`)
+
+export default function TestRunCreatePage(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <TestRunCreatePageBody {...props} />
+    </FieldHelpScope>
   )
 }

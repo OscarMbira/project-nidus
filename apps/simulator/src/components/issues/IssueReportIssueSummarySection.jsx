@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { AlertTriangle, RefreshCw, ExternalLink } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
-export default function IssueReportIssueSummarySection({
+function IssueReportIssueSummarySectionBody({
   formData,
   onChange,
   errors = {},
@@ -97,9 +99,9 @@ export default function IssueReportIssueSummarySection({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Issue Identifier */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.issue_reports.issue_identifier" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Issue Identifier
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             value={formData.issue_identifier || ''}
@@ -116,9 +118,9 @@ export default function IssueReportIssueSummarySection({
 
         {/* Issue Type */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.issue_reports.issue_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Issue Type
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             value={formData.issue_type || ''}
@@ -136,9 +138,9 @@ export default function IssueReportIssueSummarySection({
 
       {/* Issue Title */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="sim.issue_reports.issue_title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
           Issue Title <span className="text-red-500">*</span>
-        </label>
+        </FieldLabelWithHelp>
         <input
           type="text"
           value={formData.issue_title || ''}
@@ -158,9 +160,9 @@ export default function IssueReportIssueSummarySection({
 
       {/* Issue Description */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="sim.issue_reports.issue_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
           Issue Description <span className="text-red-500">*</span>
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={formData.issue_description || ''}
           onChange={(e) => onChange('issue_description', e.target.value)}
@@ -205,5 +207,21 @@ export default function IssueReportIssueSummarySection({
         </div>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.issue_reports.issue_identifier',
+  'sim.issue_reports.issue_type',
+  'sim.issue_reports.issue_title',
+  'sim.issue_reports.issue_description',
+]
+
+export default function IssueReportIssueSummarySection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <IssueReportIssueSummarySectionBody {...props} />
+    </FieldHelpScope>
   )
 }

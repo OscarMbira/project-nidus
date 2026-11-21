@@ -24,7 +24,7 @@ import { fileURLToPath } from 'node:url'
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const ALLOWLIST = path.join(ROOT, 'scripts', 'field-help-allowlist.json')
-const CODE_DIRS = ['apps/platform/src', 'apps/simulator/src', 'apps/planner/src', 'packages/ui/src', 'packages/shared/src', 'packages/planning/src']
+const CODE_DIRS = ['apps/platform/src', 'apps/simulator/src', 'apps/planner/src', 'packages/ui/src', 'packages/shared/src', 'packages/planning/src', 'packages/modules']
 
 /** Help keys referenced in one source file. */
 export function extractUsedKeys(source) {

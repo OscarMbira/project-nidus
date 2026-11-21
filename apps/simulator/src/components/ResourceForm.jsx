@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { supabase } from '../services/supabaseClient'
 import { getResourceCategories, createResourceCategory } from '../services/crossResourceService'
 import { X, Save, User, DollarSign, Calendar } from 'lucide-react'
@@ -12,7 +14,7 @@ import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
-export default function ResourceForm({ resource, onSave, onCancel }) {
+function ResourceFormBody({ resource, onSave, onCancel }) {
   const { showSuccess, modal: successModal } = useSuccessModal()
   const [formTab, setFormTab] = useState('details')
   const [auditUserLabels, setAuditUserLabels] = useState({})
@@ -241,9 +243,9 @@ export default function ResourceForm({ resource, onSave, onCancel }) {
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="sim.resources.resource_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                     Resource Name *
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="text"
                     name="resource_name"
@@ -254,9 +256,9 @@ export default function ResourceForm({ resource, onSave, onCancel }) {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="sim.resources.resource_code" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Resource Code
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="text"
                     name="resource_code"
@@ -270,9 +272,9 @@ export default function ResourceForm({ resource, onSave, onCancel }) {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="sim.resources.resource_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                     Resource Type *
-                  </label>
+                  </FieldLabelWithHelp>
                   <select
                     name="resource_type"
                     value={formData.resource_type}
@@ -287,9 +289,9 @@ export default function ResourceForm({ resource, onSave, onCancel }) {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="sim.resources.resource_category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Resource Category
-                  </label>
+                  </FieldLabelWithHelp>
                   <SelectField
                     options={categories.map((c) => ({ value: c.category_name, label: c.category_name }))}
                     value={formData.resource_category}
@@ -308,9 +310,9 @@ export default function ResourceForm({ resource, onSave, onCancel }) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.resources.resource_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Description
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   name="resource_description"
                   value={formData.resource_description}
@@ -329,9 +331,9 @@ export default function ResourceForm({ resource, onSave, onCancel }) {
                     onChange={handleChange}
                     className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                   />
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <FieldLabelWithHelp helpKey="sim.resources.is_active" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                     Active
-                  </label>
+                  </FieldLabelWithHelp>
                 </div>
                 <div className="flex items-center gap-2">
                   <input
@@ -341,9 +343,9 @@ export default function ResourceForm({ resource, onSave, onCancel }) {
                     onChange={handleChange}
                     className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                   />
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <FieldLabelWithHelp helpKey="sim.resources.is_available" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                     Available
-                  </label>
+                  </FieldLabelWithHelp>
                 </div>
               </div>
             </>
@@ -356,9 +358,9 @@ export default function ResourceForm({ resource, onSave, onCancel }) {
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="sim.resources.default_capacity_hours_per_day" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Hours per Day
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="number"
                     name="default_capacity_hours_per_day"
@@ -371,9 +373,9 @@ export default function ResourceForm({ resource, onSave, onCancel }) {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="sim.resources.default_capacity_days_per_week" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Days per Week
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="number"
                     name="default_capacity_days_per_week"
@@ -385,9 +387,9 @@ export default function ResourceForm({ resource, onSave, onCancel }) {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="sim.resources.default_capacity_percentage" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Capacity Percentage (%)
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="number"
                     name="default_capacity_percentage"
@@ -411,9 +413,9 @@ export default function ResourceForm({ resource, onSave, onCancel }) {
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="sim.resources.hourly_rate" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" isAmount>
                     Hourly Rate
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="number"
                     name="hourly_rate"
@@ -425,9 +427,9 @@ export default function ResourceForm({ resource, onSave, onCancel }) {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="sim.resources.daily_rate" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" isAmount>
                     Daily Rate
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="number"
                     name="daily_rate"
@@ -439,9 +441,9 @@ export default function ResourceForm({ resource, onSave, onCancel }) {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="sim.resources.currency_code" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Currency
-                  </label>
+                  </FieldLabelWithHelp>
                   <SelectField
                     options={currencies.map((c) => ({ value: c.code, label: `${c.code} — ${c.name}` }))}
                     value={formData.currency_code}
@@ -463,9 +465,9 @@ export default function ResourceForm({ resource, onSave, onCancel }) {
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="sim.resources.user_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                     Link to User
-                  </label>
+                  </FieldLabelWithHelp>
                   <select
                     name="user_id"
                     value={formData.user_id}
@@ -481,9 +483,9 @@ export default function ResourceForm({ resource, onSave, onCancel }) {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="sim.resources.team_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                     Link to Team
-                  </label>
+                  </FieldLabelWithHelp>
                   <select
                     name="team_id"
                     value={formData.team_id}
@@ -523,5 +525,32 @@ export default function ResourceForm({ resource, onSave, onCancel }) {
         </form>
         )}
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.resources.resource_name',
+  'sim.resources.resource_code',
+  'sim.resources.resource_type',
+  'sim.resources.resource_category',
+  'sim.resources.resource_description',
+  'sim.resources.is_active',
+  'sim.resources.is_available',
+  'sim.resources.default_capacity_hours_per_day',
+  'sim.resources.default_capacity_days_per_week',
+  'sim.resources.default_capacity_percentage',
+  'sim.resources.hourly_rate',
+  'sim.resources.daily_rate',
+  'sim.resources.currency_code',
+  'sim.resources.user_id',
+  'sim.resources.team_id',
+]
+
+export default function ResourceForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ResourceFormBody {...props} />
+    </FieldHelpScope>
   )
 }

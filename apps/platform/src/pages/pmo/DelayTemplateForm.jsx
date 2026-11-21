@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { X } from 'lucide-react'
 import toast from 'react-hot-toast'
 import * as delayApi from '../../services/delayService'
@@ -12,7 +14,7 @@ import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
-export default function DelayTemplateForm({ open, onClose, onSaved, initial, accountId, userId, isSim, canEdit, variant = 'modal' }) {
+function DelayTemplateFormBody({ open, onClose, onSaved, initial, accountId, userId, isSim, canEdit, variant = 'modal' }) {
   const [form, setForm] = useState({})
   const [saving, setSaving] = useState(false)
   const [done, setDone] = useState(null)
@@ -141,54 +143,54 @@ export default function DelayTemplateForm({ open, onClose, onSaved, initial, acc
         <div className="px-4 pb-4 space-y-3">
           {step === 0 && (
             <>
-              <label className="block text-sm">
+              <FieldLabelWithHelp helpKey="public.delay_templates.name" className="block text-sm">
                 Name *
                 <input className="mt-1 w-full rounded bg-slate-800 border border-slate-600 px-3 py-2" value={form.name || ''} disabled={!canEdit} onChange={(e) => set('name', e.target.value)} />
-              </label>
-              <label className="block text-sm">
+              </FieldLabelWithHelp>
+              <FieldLabelWithHelp helpKey="public.delay_templates.delay_category" className="block text-sm">
                 Category
                 <select className="mt-1 w-full rounded bg-slate-800 border border-slate-600 px-3 py-2" value={form.delay_category || 'other'} disabled={!canEdit} onChange={(e) => set('delay_category', e.target.value)}>
                   {DELAY_CATEGORIES.map((c) => (
                     <option key={c.value} value={c.value}>{c.label}</option>
                   ))}
                 </select>
-              </label>
-              <label className="block text-sm">
+              </FieldLabelWithHelp>
+              <FieldLabelWithHelp helpKey="public.delay_templates.default_severity" className="block text-sm">
                 Default severity
                 <select className="mt-1 w-full rounded bg-slate-800 border border-slate-600 px-3 py-2" value={form.default_severity || 'medium'} disabled={!canEdit} onChange={(e) => set('default_severity', e.target.value)}>
                   {DELAY_SEVERITIES.map((s) => (
                     <option key={s} value={s}>{s}</option>
                   ))}
                 </select>
-              </label>
-              <label className="block text-sm">
+              </FieldLabelWithHelp>
+              <FieldLabelWithHelp helpKey="public.delay_templates.tags" className="block text-sm">
                 Tags (comma-separated)
                 <input className="mt-1 w-full rounded bg-slate-800 border border-slate-600 px-3 py-2" value={Array.isArray(form.tags) ? form.tags.join(', ') : form.tags || ''} disabled={!canEdit} onChange={(e) => set('tags', e.target.value)} />
-              </label>
-              <label className="block text-sm">
+              </FieldLabelWithHelp>
+              <FieldLabelWithHelp helpKey="public.delay_templates.status" className="block text-sm">
                 Status
                 <select className="mt-1 w-full rounded bg-slate-800 border border-slate-600 px-3 py-2" value={form.status || 'draft'} disabled={!canEdit} onChange={(e) => set('status', e.target.value)}>
                   {TEMPLATE_STATUSES.map((s) => (
                     <option key={s} value={s}>{s}</option>
                   ))}
                 </select>
-              </label>
+              </FieldLabelWithHelp>
             </>
           )}
           {step === 1 && (
             <>
-              <label className="block text-sm">
+              <FieldLabelWithHelp helpKey="public.delay_templates.delay_cause" className="block text-sm">
                 Typical delay cause
                 <textarea className="mt-1 w-full rounded bg-slate-800 border border-slate-600 px-3 py-2" rows={3} value={form.delay_cause || ''} disabled={!canEdit} onChange={(e) => set('delay_cause', e.target.value)} />
-              </label>
-              <label className="block text-sm">
+              </FieldLabelWithHelp>
+              <FieldLabelWithHelp helpKey="public.delay_templates.responsible_party" className="block text-sm">
                 Responsible party (typical)
                 <input className="mt-1 w-full rounded bg-slate-800 border border-slate-600 px-3 py-2" value={form.responsible_party || ''} disabled={!canEdit} onChange={(e) => set('responsible_party', e.target.value)} />
-              </label>
-              <label className="block text-sm">
+              </FieldLabelWithHelp>
+              <FieldLabelWithHelp helpKey="public.delay_templates.resolution_plan_template" className="block text-sm">
                 Resolution plan template
                 <textarea className="mt-1 w-full rounded bg-slate-800 border border-slate-600 px-3 py-2" rows={4} value={form.resolution_plan_template || ''} disabled={!canEdit} onChange={(e) => set('resolution_plan_template', e.target.value)} />
-              </label>
+              </FieldLabelWithHelp>
             </>
           )}
           {canEdit && (
@@ -211,5 +213,20 @@ export default function DelayTemplateForm({ open, onClose, onSaved, initial, acc
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
       {panel}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.delay_templates.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'name', 'delay_category', 'default_severity', 'tags', 'status', 'delay_cause', 'responsible_party',
+  'resolution_plan_template',
+].map((name) => `public.delay_templates.${name}`)
+
+export default function DelayTemplateForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <DelayTemplateFormBody {...props} />
+    </FieldHelpScope>
   )
 }

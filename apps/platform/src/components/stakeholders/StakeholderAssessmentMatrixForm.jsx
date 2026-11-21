@@ -1,4 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Save, PauseCircle } from 'lucide-react'
 import { SEAM_LEVELS, prettySeamLevel } from '@nidus/shared/utils/stakeholderSEAMUtils'
 import { saveDraft } from '../../services/draftQueueService'
@@ -22,7 +24,7 @@ function formSnapshot(data) {
   })
 }
 
-export default function StakeholderAssessmentMatrixForm({
+function StakeholderAssessmentMatrixFormBody({
   record,
   projectId,
   stakeholders = [],
@@ -195,7 +197,7 @@ export default function StakeholderAssessmentMatrixForm({
             </p>
           )}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Stakeholder *</label>
+            <FieldLabelWithHelp helpKey="public.stakeholder_assessment_matrix.stakeholder_id" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1" required listOptions={false}>Stakeholder *</FieldLabelWithHelp>
             <SelectField
               value={formData.stakeholder_id}
               onChange={(value) => setFormData((prev) => ({ ...prev, stakeholder_id: value }))}
@@ -205,7 +207,7 @@ export default function StakeholderAssessmentMatrixForm({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Assessment date *</label>
+            <FieldLabelWithHelp helpKey="public.stakeholder_assessment_matrix.assessment_date" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1" required>Assessment date *</FieldLabelWithHelp>
             <input
               type="date"
               name="assessment_date"
@@ -217,7 +219,7 @@ export default function StakeholderAssessmentMatrixForm({
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Current level (C) *</label>
+              <FieldLabelWithHelp helpKey="public.stakeholder_assessment_matrix.current_level" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1" required>Current level (C) *</FieldLabelWithHelp>
               <select
                 name="current_level"
                 value={formData.current_level}
@@ -232,7 +234,7 @@ export default function StakeholderAssessmentMatrixForm({
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Desired level (D) *</label>
+              <FieldLabelWithHelp helpKey="public.stakeholder_assessment_matrix.desired_level" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1" required>Desired level (D) *</FieldLabelWithHelp>
               <select
                 name="desired_level"
                 value={formData.desired_level}
@@ -248,7 +250,7 @@ export default function StakeholderAssessmentMatrixForm({
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Notes</label>
+            <FieldLabelWithHelp helpKey="public.stakeholder_assessment_matrix.notes" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Notes</FieldLabelWithHelp>
             <textarea
               name="notes"
               value={formData.notes}
@@ -291,5 +293,19 @@ export default function StakeholderAssessmentMatrixForm({
           </div>
         </form>
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.stakeholder_assessment_matrix.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'stakeholder_id', 'assessment_date', 'current_level', 'desired_level', 'notes',
+].map((name) => `public.stakeholder_assessment_matrix.${name}`)
+
+export default function StakeholderAssessmentMatrixForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <StakeholderAssessmentMatrixFormBody {...props} />
+    </FieldHelpScope>
   )
 }

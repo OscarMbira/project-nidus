@@ -4,10 +4,12 @@
  */
 
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { supabase } from '../../services/supabaseClient'
 import { Plus, Trash2, Mail, CheckCircle, Clock } from 'lucide-react'
 
-export default function BriefDistribution({ briefId, readOnly = false }) {
+function BriefDistributionBody({ briefId, readOnly = false }) {
   const [distributions, setDistributions] = useState([])
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(false)
@@ -164,9 +166,9 @@ export default function BriefDistribution({ briefId, readOnly = false }) {
         <form onSubmit={handleSubmit} className="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.brief_distribution.recipient_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                 Recipient
-              </label>
+              </FieldLabelWithHelp>
               <select
                 value={formData.recipient_id || ''}
                 onChange={(e) => {
@@ -188,9 +190,9 @@ export default function BriefDistribution({ briefId, readOnly = false }) {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.brief_distribution.recipient_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Or Enter External Name
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="text"
                 value={formData.recipient_name}
@@ -202,9 +204,9 @@ export default function BriefDistribution({ briefId, readOnly = false }) {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.brief_distribution.recipient_title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Title
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="text"
                 value={formData.recipient_title}
@@ -213,9 +215,9 @@ export default function BriefDistribution({ briefId, readOnly = false }) {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.brief_distribution.version_distributed" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Version Distributed
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="text"
                 value={formData.version_distributed}
@@ -301,5 +303,21 @@ export default function BriefDistribution({ briefId, readOnly = false }) {
         </div>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.brief_distribution.recipient_id',
+  'sim.brief_distribution.recipient_name',
+  'sim.brief_distribution.recipient_title',
+  'sim.brief_distribution.version_distributed',
+]
+
+export default function BriefDistribution(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <BriefDistributionBody {...props} />
+    </FieldHelpScope>
   )
 }

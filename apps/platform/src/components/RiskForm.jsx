@@ -1,4 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { supabase } from '../services/supabaseClient'
 import { format } from 'date-fns'
 import { X, Save, User, Calendar, AlertTriangle, TrendingUp } from 'lucide-react'
@@ -86,7 +88,7 @@ function riskToFormData(risk, linkedTaskId, linkedWorkPackageId) {
   }
 }
 
-export default function RiskForm({ risk, projectId, onSave, onCancel, onHoldComplete, linkedTaskId, linkedWorkPackageId, variant = 'modal' }) {
+function RiskFormBody({ risk, projectId, onSave, onCancel, onHoldComplete, linkedTaskId, linkedWorkPackageId, variant = 'modal' }) {
   const [formData, setFormData] = useState(EMPTY_RISK_FORM)
   const [baselineSnapshot, setBaselineSnapshot] = useState('')
   const [teamMembers, setTeamMembers] = useState([])
@@ -323,9 +325,9 @@ export default function RiskForm({ risk, projectId, onSave, onCancel, onHoldComp
           <>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.risks.risk_title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Risk Title *
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="text"
                 name="risk_title"
@@ -336,9 +338,9 @@ export default function RiskForm({ risk, projectId, onSave, onCancel, onHoldComp
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.risks.risk_code" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Risk Code
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="text"
                 name="risk_code"
@@ -351,9 +353,9 @@ export default function RiskForm({ risk, projectId, onSave, onCancel, onHoldComp
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.risks.risk_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
               Risk Description *
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               name="risk_description"
               value={formData.risk_description}
@@ -366,9 +368,9 @@ export default function RiskForm({ risk, projectId, onSave, onCancel, onHoldComp
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.risks.risk_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Risk Type
-              </label>
+              </FieldLabelWithHelp>
               <select
                 name="risk_type"
                 value={formData.risk_type}
@@ -380,9 +382,9 @@ export default function RiskForm({ risk, projectId, onSave, onCancel, onHoldComp
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.risks.risk_category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Category
-              </label>
+              </FieldLabelWithHelp>
               <select
                 name="risk_category"
                 value={formData.risk_category}
@@ -401,9 +403,9 @@ export default function RiskForm({ risk, projectId, onSave, onCancel, onHoldComp
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.risks.response_strategy" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Response Strategy
-              </label>
+              </FieldLabelWithHelp>
               <select
                 name="response_strategy"
                 value={formData.response_strategy}
@@ -427,9 +429,9 @@ export default function RiskForm({ risk, projectId, onSave, onCancel, onHoldComp
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.risks.probability" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Probability (1-5) *
-                </label>
+                </FieldLabelWithHelp>
                 <div className="flex items-center gap-2">
                   <input
                     type="range"
@@ -449,9 +451,9 @@ export default function RiskForm({ risk, projectId, onSave, onCancel, onHoldComp
                 </p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.risks.impact" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Impact (1-5) *
-                </label>
+                </FieldLabelWithHelp>
                 <div className="flex items-center gap-2">
                   <input
                     type="range"
@@ -492,10 +494,10 @@ export default function RiskForm({ risk, projectId, onSave, onCancel, onHoldComp
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.risks.risk_owner_user_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                 <User className="h-4 w-4 inline mr-1" />
                 Risk Owner
-              </label>
+              </FieldLabelWithHelp>
               <select
                 name="risk_owner_user_id"
                 value={formData.risk_owner_user_id}
@@ -511,9 +513,9 @@ export default function RiskForm({ risk, projectId, onSave, onCancel, onHoldComp
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.risks.response_strategy_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Response Strategy Description
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 name="response_strategy_description"
                 value={formData.response_strategy_description}
@@ -526,10 +528,10 @@ export default function RiskForm({ risk, projectId, onSave, onCancel, onHoldComp
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.risks.target_mitigation_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 <Calendar className="h-4 w-4 inline mr-1" />
                 Target Mitigation Date
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="date"
                 name="target_mitigation_date"
@@ -539,10 +541,10 @@ export default function RiskForm({ risk, projectId, onSave, onCancel, onHoldComp
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.risks.next_review_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 <Calendar className="h-4 w-4 inline mr-1" />
                 Next Review Date
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="date"
                 name="next_review_date"
@@ -554,9 +556,9 @@ export default function RiskForm({ risk, projectId, onSave, onCancel, onHoldComp
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.risks.impact_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Impact Description
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               name="impact_description"
               value={formData.impact_description}
@@ -567,9 +569,9 @@ export default function RiskForm({ risk, projectId, onSave, onCancel, onHoldComp
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.risks.potential_consequences" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Potential Consequences
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               name="potential_consequences"
               value={formData.potential_consequences}
@@ -586,9 +588,9 @@ export default function RiskForm({ risk, projectId, onSave, onCancel, onHoldComp
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.risks.task_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                   Link to Task
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="task_id"
                   value={formData.task_id}
@@ -604,9 +606,9 @@ export default function RiskForm({ risk, projectId, onSave, onCancel, onHoldComp
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.risks.work_package_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                   Link to Work Package
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="work_package_id"
                   value={formData.work_package_id}
@@ -625,9 +627,9 @@ export default function RiskForm({ risk, projectId, onSave, onCancel, onHoldComp
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.risks.affected_areas" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Affected Areas
-            </label>
+            </FieldLabelWithHelp>
             <div className="flex gap-2 mb-2">
               <input
                 type="text"
@@ -696,3 +698,19 @@ export default function RiskForm({ risk, projectId, onSave, onCancel, onHoldComp
   )
 }
 
+// v1345 slice 4: field help for this component (public.risks.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'risk_title', 'risk_code', 'risk_description', 'risk_type', 'risk_category', 'response_strategy',
+  'probability', 'impact', 'risk_owner_user_id', 'response_strategy_description', 'target_mitigation_date',
+  'next_review_date', 'impact_description', 'potential_consequences', 'task_id', 'work_package_id',
+  'affected_areas',
+].map((name) => `public.risks.${name}`)
+
+export default function RiskForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <RiskFormBody {...props} />
+    </FieldHelpScope>
+  )
+}

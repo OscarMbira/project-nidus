@@ -3,9 +3,11 @@
  */
 
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { platformDb } from '@nidus/supabase'
 
-export default function ProjectPlanOverviewSection({ formData, onChange, errors, mode, projectId }) {
+function ProjectPlanOverviewSectionBody({ formData, onChange, errors, mode, projectId }) {
   const [pids, setPids] = useState([])
   const [businessCases, setBusinessCases] = useState([])
   const [ppds, setPpds] = useState([])
@@ -63,9 +65,9 @@ export default function ProjectPlanOverviewSection({ formData, onChange, errors,
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.project_plans.plan_title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Plan Title <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             value={formData.plan_title || ''}
@@ -82,9 +84,9 @@ export default function ProjectPlanOverviewSection({ formData, onChange, errors,
         </div>
 
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.project_plans.plan_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Plan Description
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             value={formData.plan_description || ''}
             onChange={(e) => onChange('plan_description', e.target.value)}
@@ -96,9 +98,9 @@ export default function ProjectPlanOverviewSection({ formData, onChange, errors,
         </div>
 
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.project_plans.plan_purpose" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Plan Purpose <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             value={formData.plan_purpose || ''}
             onChange={(e) => onChange('plan_purpose', e.target.value)}
@@ -115,9 +117,9 @@ export default function ProjectPlanOverviewSection({ formData, onChange, errors,
         </div>
 
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.project_plans.plan_scope" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Plan Scope <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             value={formData.plan_scope || ''}
             onChange={(e) => onChange('plan_scope', e.target.value)}
@@ -134,9 +136,9 @@ export default function ProjectPlanOverviewSection({ formData, onChange, errors,
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.project_plans.pid_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
             Link to PID
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={formData.pid_id || ''}
             onChange={(e) => onChange('pid_id', e.target.value || null)}
@@ -153,9 +155,9 @@ export default function ProjectPlanOverviewSection({ formData, onChange, errors,
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.project_plans.business_case_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
             Link to Business Case
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={formData.business_case_id || ''}
             onChange={(e) => onChange('business_case_id', e.target.value || null)}
@@ -172,9 +174,9 @@ export default function ProjectPlanOverviewSection({ formData, onChange, errors,
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.project_plans.project_product_description_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
             Link to PPD
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={formData.project_product_description_id || ''}
             onChange={(e) => onChange('project_product_description_id', e.target.value || null)}
@@ -191,9 +193,9 @@ export default function ProjectPlanOverviewSection({ formData, onChange, errors,
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.project_plans.author_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
             Author
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={formData.author_id || ''}
             onChange={(e) => onChange('author_id', e.target.value || null)}
@@ -210,9 +212,9 @@ export default function ProjectPlanOverviewSection({ formData, onChange, errors,
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.project_plans.owner_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
             Owner (Project Manager)
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={formData.owner_id || ''}
             onChange={(e) => onChange('owner_id', e.target.value || null)}
@@ -229,5 +231,26 @@ export default function ProjectPlanOverviewSection({ formData, onChange, errors,
         </div>
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.project_plans.plan_title',
+  'sim.project_plans.plan_description',
+  'sim.project_plans.plan_purpose',
+  'sim.project_plans.plan_scope',
+  'sim.project_plans.pid_id',
+  'sim.project_plans.business_case_id',
+  'sim.project_plans.project_product_description_id',
+  'sim.project_plans.author_id',
+  'sim.project_plans.owner_id',
+]
+
+export default function ProjectPlanOverviewSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ProjectPlanOverviewSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

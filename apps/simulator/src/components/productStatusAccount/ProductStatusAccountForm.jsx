@@ -4,6 +4,8 @@
  */
 
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { X, Save, Calendar, User, Package } from 'lucide-react'
 import { createProductStatusAccount, updateProductStatusAccount, getProductStatusAccountById } from '../../services/productStatusAccountService'
 import { supabase } from '../../services/supabaseClient'
@@ -16,7 +18,7 @@ import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
-export default function ProductStatusAccountForm({
+function ProductStatusAccountFormBody({
   projectId,
   psaId = null,
   productDeliverableId = null,
@@ -279,9 +281,9 @@ export default function ProductStatusAccountForm({
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="sim.product_status_accounts.product_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
                 Product Name <span className="text-red-500">*</span>
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="text"
                 name="product_name"
@@ -296,9 +298,9 @@ export default function ProductStatusAccountForm({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="sim.product_status_accounts.report_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
                 Report Date <span className="text-red-500">*</span>
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="date"
                 name="report_date"
@@ -310,9 +312,9 @@ export default function ProductStatusAccountForm({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="sim.product_status_accounts.product_reference" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Product Reference
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="text"
                 name="product_reference"
@@ -323,9 +325,9 @@ export default function ProductStatusAccountForm({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="sim.product_status_accounts.product_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Product Type
-              </label>
+              </FieldLabelWithHelp>
               <select
                 name="product_type"
                 value={formData.product_type}
@@ -345,9 +347,9 @@ export default function ProductStatusAccountForm({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="sim.product_status_accounts.product_deliverable_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" listOptions={false}>
                 Link to Product Deliverable
-              </label>
+              </FieldLabelWithHelp>
               <select
                 name="product_deliverable_id"
                 value={formData.product_deliverable_id || ''}
@@ -364,9 +366,9 @@ export default function ProductStatusAccountForm({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="sim.product_status_accounts.product_description_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" listOptions={false}>
                 Link to Product Description
-              </label>
+              </FieldLabelWithHelp>
               <select
                 name="product_description_id"
                 value={formData.product_description_id || ''}
@@ -390,9 +392,9 @@ export default function ProductStatusAccountForm({
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="sim.product_status_accounts.current_status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Status
-              </label>
+              </FieldLabelWithHelp>
               <select
                 name="current_status"
                 value={formData.current_status}
@@ -414,9 +416,9 @@ export default function ProductStatusAccountForm({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="sim.product_status_accounts.status_notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Status Notes
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 name="status_notes"
                 value={formData.status_notes}
@@ -434,9 +436,9 @@ export default function ProductStatusAccountForm({
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="sim.product_status_accounts.progress_percentage" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Progress Percentage (0-100)
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="number"
                 name="progress_percentage"
@@ -450,9 +452,9 @@ export default function ProductStatusAccountForm({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="sim.product_status_accounts.progress_indicator" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Progress Indicator
-              </label>
+              </FieldLabelWithHelp>
               <select
                 name="progress_indicator"
                 value={formData.progress_indicator}
@@ -467,9 +469,9 @@ export default function ProductStatusAccountForm({
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="sim.product_status_accounts.progress_notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Progress Notes
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 name="progress_notes"
                 value={formData.progress_notes}
@@ -487,9 +489,9 @@ export default function ProductStatusAccountForm({
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="sim.product_status_accounts.planned_start_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Planned Start Date
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="date"
                 name="planned_start_date"
@@ -500,9 +502,9 @@ export default function ProductStatusAccountForm({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="sim.product_status_accounts.actual_start_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Actual Start Date
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="date"
                 name="actual_start_date"
@@ -513,9 +515,9 @@ export default function ProductStatusAccountForm({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="sim.product_status_accounts.planned_completion_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Planned Completion Date
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="date"
                 name="planned_completion_date"
@@ -526,9 +528,9 @@ export default function ProductStatusAccountForm({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="sim.product_status_accounts.forecast_completion_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Forecast Completion Date
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="date"
                 name="forecast_completion_date"
@@ -539,9 +541,9 @@ export default function ProductStatusAccountForm({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="sim.product_status_accounts.actual_completion_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Actual Completion Date
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="date"
                 name="actual_completion_date"
@@ -558,9 +560,9 @@ export default function ProductStatusAccountForm({
           <h3 className="text-lg font-medium text-gray-900 dark:text-white">Status Summary</h3>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <FieldLabelWithHelp helpKey="sim.product_status_accounts.status_summary" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Overall Status Summary
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               name="status_summary"
               value={formData.status_summary}
@@ -572,9 +574,9 @@ export default function ProductStatusAccountForm({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <FieldLabelWithHelp helpKey="sim.product_status_accounts.key_achievements" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Key Achievements
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               name="key_achievements"
               value={formData.key_achievements}
@@ -586,9 +588,9 @@ export default function ProductStatusAccountForm({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <FieldLabelWithHelp helpKey="sim.product_status_accounts.next_milestones" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Next Milestones
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               name="next_milestones"
               value={formData.next_milestones}
@@ -600,9 +602,9 @@ export default function ProductStatusAccountForm({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <FieldLabelWithHelp helpKey="sim.product_status_accounts.risks_and_issues" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Risks and Issues
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               name="risks_and_issues"
               value={formData.risks_and_issues}
@@ -614,9 +616,9 @@ export default function ProductStatusAccountForm({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <FieldLabelWithHelp helpKey="sim.product_status_accounts.actions_required" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
               Actions Required
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               name="actions_required"
               value={formData.actions_required}
@@ -652,5 +654,38 @@ export default function ProductStatusAccountForm({
         </div>
       </div>
     </form>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.product_status_accounts.product_name',
+  'sim.product_status_accounts.report_date',
+  'sim.product_status_accounts.product_reference',
+  'sim.product_status_accounts.product_type',
+  'sim.product_status_accounts.product_deliverable_id',
+  'sim.product_status_accounts.product_description_id',
+  'sim.product_status_accounts.current_status',
+  'sim.product_status_accounts.status_notes',
+  'sim.product_status_accounts.progress_percentage',
+  'sim.product_status_accounts.progress_indicator',
+  'sim.product_status_accounts.progress_notes',
+  'sim.product_status_accounts.planned_start_date',
+  'sim.product_status_accounts.actual_start_date',
+  'sim.product_status_accounts.planned_completion_date',
+  'sim.product_status_accounts.forecast_completion_date',
+  'sim.product_status_accounts.actual_completion_date',
+  'sim.product_status_accounts.status_summary',
+  'sim.product_status_accounts.key_achievements',
+  'sim.product_status_accounts.next_milestones',
+  'sim.product_status_accounts.risks_and_issues',
+  'sim.product_status_accounts.actions_required',
+]
+
+export default function ProductStatusAccountForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ProductStatusAccountFormBody {...props} />
+    </FieldHelpScope>
   )
 }

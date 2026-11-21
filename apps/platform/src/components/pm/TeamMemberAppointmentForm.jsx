@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { TIME_COMMITMENT_OPTIONS, WORKING_ARRANGEMENT_OPTIONS } from '@nidus/shared/utils/appointmentRoleUtils'
 import MultiLineListInput from '../project/MultiLineListInput'
 
@@ -25,7 +27,7 @@ const INPUT_CLASS =
   'w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm'
 const LABEL_CLASS = 'block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1'
 
-export default function TeamMemberAppointmentForm({
+function TeamMemberAppointmentFormBody({
   value = EMPTY,
   onChange,
   eligibleUsers = [],
@@ -92,7 +94,7 @@ export default function TeamMemberAppointmentForm({
       {activeTab === 'assignment' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="md:col-span-2">
-            <label className={LABEL_CLASS}>Role / position title</label>
+            <FieldLabelWithHelp helpKey="public.team_member_appointment_records.role_title" className={LABEL_CLASS}>Role / position title</FieldLabelWithHelp>
             <input
               type="text"
               value={form.roleTitle}
@@ -102,7 +104,7 @@ export default function TeamMemberAppointmentForm({
             />
           </div>
           <div>
-            <label className={LABEL_CLASS}>Start date</label>
+            <FieldLabelWithHelp helpKey="public.team_member_appointment_records.assignment_start_date" className={LABEL_CLASS}>Start date</FieldLabelWithHelp>
             <input
               type="date"
               value={form.assignmentStartDate}
@@ -111,7 +113,7 @@ export default function TeamMemberAppointmentForm({
             />
           </div>
           <div>
-            <label className={LABEL_CLASS}>End date</label>
+            <FieldLabelWithHelp helpKey="public.team_member_appointment_records.assignment_end_date" className={LABEL_CLASS}>End date</FieldLabelWithHelp>
             <input
               type="date"
               value={form.assignmentEndDate}
@@ -120,7 +122,7 @@ export default function TeamMemberAppointmentForm({
             />
           </div>
           <div>
-            <label className={LABEL_CLASS}>Time commitment %</label>
+            <FieldLabelWithHelp helpKey="public.team_member_appointment_records.time_commitment_pct" className={LABEL_CLASS}>Time commitment %</FieldLabelWithHelp>
             <select
               value={form.timeCommitmentPct}
               onChange={(e) => patch({ timeCommitmentPct: Number(e.target.value) })}
@@ -134,7 +136,7 @@ export default function TeamMemberAppointmentForm({
             </select>
           </div>
           <div>
-            <label className={LABEL_CLASS}>Reporting to</label>
+            <FieldLabelWithHelp helpKey="public.team_member_appointment_records.reporting_to_user_id" className={LABEL_CLASS} listOptions={false}>Reporting to</FieldLabelWithHelp>
             <select
               value={form.reportingToUserId}
               onChange={(e) => patch({ reportingToUserId: e.target.value })}
@@ -149,7 +151,7 @@ export default function TeamMemberAppointmentForm({
             </select>
           </div>
           <div>
-            <label className={LABEL_CLASS}>Working arrangement</label>
+            <FieldLabelWithHelp helpKey="public.team_member_appointment_records.working_arrangement" className={LABEL_CLASS}>Working arrangement</FieldLabelWithHelp>
             <select
               value={form.workingArrangement}
               onChange={(e) => patch({ workingArrangement: e.target.value })}
@@ -164,7 +166,7 @@ export default function TeamMemberAppointmentForm({
           </div>
           {(form.workingArrangement === 'onsite' || form.workingArrangement === 'hybrid') && (
             <div>
-              <label className={LABEL_CLASS}>Work location</label>
+              <FieldLabelWithHelp helpKey="public.team_member_appointment_records.work_location" className={LABEL_CLASS}>Work location</FieldLabelWithHelp>
               <input
                 type="text"
                 value={form.workLocation}
@@ -179,7 +181,7 @@ export default function TeamMemberAppointmentForm({
       {activeTab === 'responsibilities' && (
         <div className="space-y-4">
           <div>
-            <label className={LABEL_CLASS}>Primary responsibilities</label>
+            <FieldLabelWithHelp helpKey="public.team_member_appointment_records.primary_responsibilities" className={LABEL_CLASS}>Primary responsibilities</FieldLabelWithHelp>
             <MultiLineListInput
               viewModeId="team-appt-primary-responsibilities"
               id="team_appt_primary_responsibilities"
@@ -191,7 +193,7 @@ export default function TeamMemberAppointmentForm({
             />
           </div>
           <div>
-            <label className={LABEL_CLASS}>Required skills</label>
+            <FieldLabelWithHelp helpKey="public.team_member_appointment_records.required_skills" className={LABEL_CLASS}>Required skills</FieldLabelWithHelp>
             <MultiLineListInput
               viewModeId="team-appt-required-skills"
               id="team_appt_required_skills"
@@ -207,7 +209,7 @@ export default function TeamMemberAppointmentForm({
 
       {activeTab === 'message' && (
         <div>
-          <label className={LABEL_CLASS}>Invitation message</label>
+          <FieldLabelWithHelp helpKey="public.team_member_appointment_records.appointment_message" className={LABEL_CLASS}>Invitation message</FieldLabelWithHelp>
           <textarea
             rows={3}
             value={form.appointmentMessage}
@@ -221,3 +223,19 @@ export default function TeamMemberAppointmentForm({
 }
 
 export { EMPTY as TEAM_MEMBER_APPOINTMENT_EMPTY }
+
+// v1345 slice 4: field help for this component (public.team_member_appointment_records.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'role_title', 'assignment_start_date', 'assignment_end_date', 'time_commitment_pct',
+  'reporting_to_user_id', 'working_arrangement', 'work_location', 'primary_responsibilities',
+  'required_skills', 'appointment_message',
+].map((name) => `public.team_member_appointment_records.${name}`)
+
+export default function TeamMemberAppointmentForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <TeamMemberAppointmentFormBody {...props} />
+    </FieldHelpScope>
+  )
+}

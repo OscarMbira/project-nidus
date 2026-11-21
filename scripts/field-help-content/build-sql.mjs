@@ -50,6 +50,23 @@ ON CONFLICT (alias_key) DO UPDATE SET help_key = EXCLUDED.help_key;
 }
 
 export function buildSql({ rows, moduleCode, title, prerequisites, sourceFile, aliases = [] }) {
+  // Aliases-only file (e.g. Simulator parity pass): no help rows to insert.
+  if (!rows.length) {
+    if (!aliases.length) throw new Error('Nothing to write: no rows and no aliases')
+    return `-- ============================================================================
+-- ${title}
+-- ============================================================================
+-- Generated from ${sourceFile} by scripts/field-help-content/build-sql.mjs (v1345).
+-- ${aliases.length} Simulator aliases only: each sim.* key reads the Platform help it names.
+-- Idempotent. Prerequisites: ${prerequisites}.
+-- ============================================================================
+${buildAliasesSql(aliases)}
+-- Check: aliases whose Platform help is missing (expect 0 rows)
+SELECT a.alias_key, a.help_key FROM public.field_help_aliases a
+LEFT JOIN public.field_help h ON h.help_key = a.help_key AND h.is_active
+WHERE h.help_key IS NULL;
+`
+  }
   return `-- ============================================================================
 -- ${title}
 -- ============================================================================

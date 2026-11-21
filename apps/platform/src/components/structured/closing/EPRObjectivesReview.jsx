@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { TrendingUp, CheckCircle, XCircle, AlertCircle, Plus, X, Edit2, Target } from 'lucide-react'
 import { addObjectiveReview, updateObjectiveReview, deleteObjectiveReview } from '../../../services/eprObjectivesReviewService'
 
@@ -11,7 +13,7 @@ const OBJECTIVE_AREAS = [
   { value: 'risk', label: 'Risk', icon: AlertCircle }
 ]
 
-export default function EPRObjectivesReview({ reportId, objectivesReviews, onObjectivesReviewsChange, mode }) {
+function EPRObjectivesReviewBody({ reportId, objectivesReviews, onObjectivesReviewsChange, mode }) {
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [newReview, setNewReview] = useState({
@@ -244,9 +246,9 @@ export default function EPRObjectivesReview({ reportId, objectivesReviews, onObj
             <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-900">
               <div className="space-y-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <FieldLabelWithHelp helpKey="public.end_project_report_objectives_review.objective_area" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
                     Objective Area *
-                  </label>
+                  </FieldLabelWithHelp>
                   <select
                     value={newReview.objective_area}
                     onChange={(e) => setNewReview({ ...newReview, objective_area: e.target.value })}
@@ -258,9 +260,9 @@ export default function EPRObjectivesReview({ reportId, objectivesReviews, onObj
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <FieldLabelWithHelp helpKey="public.end_project_report_objectives_review.objective_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
                     Objective Description *
-                  </label>
+                  </FieldLabelWithHelp>
                   <textarea
                     value={newReview.objective_description}
                     onChange={(e) => setNewReview({ ...newReview, objective_description: e.target.value })}
@@ -271,9 +273,9 @@ export default function EPRObjectivesReview({ reportId, objectivesReviews, onObj
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <FieldLabelWithHelp helpKey="public.end_project_report_objectives_review.original_target" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Original Target
-                    </label>
+                    </FieldLabelWithHelp>
                     <input
                       type="text"
                       value={newReview.original_target}
@@ -282,9 +284,9 @@ export default function EPRObjectivesReview({ reportId, objectivesReviews, onObj
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <FieldLabelWithHelp helpKey="public.end_project_report_objectives_review.actual_value" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Actual Value
-                    </label>
+                    </FieldLabelWithHelp>
                     <input
                       type="text"
                       value={newReview.actual_value}
@@ -295,9 +297,9 @@ export default function EPRObjectivesReview({ reportId, objectivesReviews, onObj
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <FieldLabelWithHelp helpKey="public.end_project_report_objectives_review.tolerance_plus" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Tolerance (+)
-                    </label>
+                    </FieldLabelWithHelp>
                     <input
                       type="number"
                       step="0.01"
@@ -307,9 +309,9 @@ export default function EPRObjectivesReview({ reportId, objectivesReviews, onObj
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <FieldLabelWithHelp helpKey="public.end_project_report_objectives_review.tolerance_minus" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Tolerance (-)
-                    </label>
+                    </FieldLabelWithHelp>
                     <input
                       type="number"
                       step="0.01"
@@ -320,9 +322,9 @@ export default function EPRObjectivesReview({ reportId, objectivesReviews, onObj
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <FieldLabelWithHelp helpKey="public.end_project_report_objectives_review.performance_rating" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Performance Rating
-                  </label>
+                  </FieldLabelWithHelp>
                   <select
                     value={newReview.performance_rating || ''}
                     onChange={(e) => setNewReview({ ...newReview, performance_rating: e.target.value || null })}
@@ -336,9 +338,9 @@ export default function EPRObjectivesReview({ reportId, objectivesReviews, onObj
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <FieldLabelWithHelp helpKey="public.end_project_report_objectives_review.strategy_effectiveness" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Strategy Effectiveness
-                  </label>
+                  </FieldLabelWithHelp>
                   <textarea
                     value={newReview.strategy_effectiveness}
                     onChange={(e) => setNewReview({ ...newReview, strategy_effectiveness: e.target.value })}
@@ -424,5 +426,20 @@ function ObjectiveReviewEditForm({ review, onSave, onCancel }) {
         </button>
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.end_project_report_objectives_review.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'objective_area', 'objective_description', 'original_target', 'actual_value', 'tolerance_plus',
+  'tolerance_minus', 'performance_rating', 'strategy_effectiveness',
+].map((name) => `public.end_project_report_objectives_review.${name}`)
+
+export default function EPRObjectivesReview(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <EPRObjectivesReviewBody {...props} />
+    </FieldHelpScope>
   )
 }

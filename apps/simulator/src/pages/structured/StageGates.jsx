@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { useParams, useNavigate } from 'react-router-dom'
 
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
@@ -17,7 +19,7 @@ import {
   CheckSquare
 } from 'lucide-react'
 
-export default function StageGates() {
+function StageGatesBody() {
   const { projectId, routeKey } = usePlatformProjectId()
   const navigate = useNavigate()
   const [project, setProject] = useState(null)
@@ -400,9 +402,9 @@ function CreateGateModal({ projectId, newGate, setNewGate, onSubmit, onClose, ne
           </h2>
           <form onSubmit={onSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.stage_boundaries.stage_number" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Stage Number
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="number"
                 value={newGate.stage_number || nextStageNumber}
@@ -413,9 +415,9 @@ function CreateGateModal({ projectId, newGate, setNewGate, onSubmit, onClose, ne
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.stage_boundaries.gate_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Gate Name *
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="text"
                 value={newGate.gate_name}
@@ -426,9 +428,9 @@ function CreateGateModal({ projectId, newGate, setNewGate, onSubmit, onClose, ne
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.stage_boundaries.stage_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Stage Name *
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="text"
                 value={newGate.stage_name}
@@ -439,9 +441,9 @@ function CreateGateModal({ projectId, newGate, setNewGate, onSubmit, onClose, ne
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.stage_boundaries.stage_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Stage Description
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={newGate.stage_description}
                 onChange={(e) => setNewGate({ ...newGate, stage_description: e.target.value })}
@@ -451,9 +453,9 @@ function CreateGateModal({ projectId, newGate, setNewGate, onSubmit, onClose, ne
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.stage_boundaries.gate_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Gate Type
-              </label>
+              </FieldLabelWithHelp>
               <select
                 value={newGate.gate_type}
                 onChange={(e) => setNewGate({ ...newGate, gate_type: e.target.value })}
@@ -465,9 +467,9 @@ function CreateGateModal({ projectId, newGate, setNewGate, onSubmit, onClose, ne
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.stage_boundaries.planned_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Planned Date
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="date"
                 value={newGate.planned_date}
@@ -777,3 +779,20 @@ function GateDetailsModal({ gate, projectId, onClose, onUpdate }) {
   )
 }
 
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.stage_boundaries.stage_number',
+  'sim.stage_boundaries.gate_name',
+  'sim.stage_boundaries.stage_name',
+  'sim.stage_boundaries.stage_description',
+  'sim.stage_boundaries.gate_type',
+  'sim.stage_boundaries.planned_date',
+]
+
+export default function StageGates(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <StageGatesBody {...props} />
+    </FieldHelpScope>
+  )
+}

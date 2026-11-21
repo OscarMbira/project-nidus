@@ -3,6 +3,8 @@
  * apps/platform/src/pages/milestones/MilestoneForm.jsx against sim.milestones.
  */
 import { useState, useEffect, useMemo } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
@@ -20,7 +22,7 @@ const STATUS_LABELS = {
   slipped: 'Slipped',
 }
 
-export default function MilestoneForm() {
+function MilestoneFormBody() {
   const { projectId, id } = useParams()
   const navigate = useNavigate()
   const { showSuccess, modal } = useSuccessModal()
@@ -127,32 +129,32 @@ export default function MilestoneForm() {
 
       <div className="space-y-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Milestone Name *</label>
+          <FieldLabelWithHelp helpKey="sim.milestones.milestone_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>Milestone Name *</FieldLabelWithHelp>
           <input type="text" value={milestoneName} onChange={(e) => setMilestoneName(e.target.value)} placeholder="e.g. Design Sign-off" className={inputClass} />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
+          <FieldLabelWithHelp helpKey="sim.milestones.description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</FieldLabelWithHelp>
           <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className={inputClass} />
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Target Date *</label>
+            <FieldLabelWithHelp helpKey="sim.milestones.target_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>Target Date *</FieldLabelWithHelp>
             <input type="date" value={targetDate} onChange={(e) => setTargetDate(e.target.value)} className={inputClass} />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Forecast Date</label>
+            <FieldLabelWithHelp helpKey="sim.milestones.forecast_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Forecast Date</FieldLabelWithHelp>
             <input type="date" value={forecastDate} onChange={(e) => setForecastDate(e.target.value)} className={inputClass} />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Actual Date</label>
+            <FieldLabelWithHelp helpKey="sim.milestones.actual_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Actual Date</FieldLabelWithHelp>
             <input type="date" value={actualDate} onChange={(e) => setActualDate(e.target.value)} className={inputClass} />
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
+          <FieldLabelWithHelp helpKey="sim.milestones.status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</FieldLabelWithHelp>
           <select value={status} onChange={(e) => setStatus(e.target.value)} className={inputClass}>
             {MILESTONE_STATUSES.map((s) => (
               <option key={s} value={s}>{STATUS_LABELS[s] || s}</option>
@@ -161,7 +163,7 @@ export default function MilestoneForm() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</label>
+          <FieldLabelWithHelp helpKey="sim.milestones.notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</FieldLabelWithHelp>
           <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className={inputClass} />
         </div>
       </div>
@@ -181,5 +183,24 @@ export default function MilestoneForm() {
       </div>
       {modal}
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.milestones.milestone_name',
+  'sim.milestones.description',
+  'sim.milestones.target_date',
+  'sim.milestones.forecast_date',
+  'sim.milestones.actual_date',
+  'sim.milestones.status',
+  'sim.milestones.notes',
+]
+
+export default function MilestoneForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <MilestoneFormBody {...props} />
+    </FieldHelpScope>
   )
 }

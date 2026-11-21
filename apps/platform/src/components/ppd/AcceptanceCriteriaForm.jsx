@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { supabase } from '../../services/supabaseClient'
 import { X, Save, Target, CheckCircle } from 'lucide-react'
 import { addCriteria, updateCriteria } from '../../services/ppdAcceptanceCriteriaService'
@@ -9,7 +11,7 @@ import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
-export default function AcceptanceCriteriaForm({ criterion, ppdId, onSave, onCancel }) {
+function AcceptanceCriteriaFormBody({ criterion, ppdId, onSave, onCancel }) {
   const [formData, setFormData] = useState({
     criteria_title: '',
     criteria_description: '',
@@ -160,9 +162,9 @@ export default function AcceptanceCriteriaForm({ criterion, ppdId, onSave, onCan
           {formTab === 'details' && (
           <>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.ppd_acceptance_criteria.criteria_title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
               Criterion Title *
-            </label>
+            </FieldLabelWithHelp>
             <input
               type="text"
               name="criteria_title"
@@ -179,9 +181,9 @@ export default function AcceptanceCriteriaForm({ criterion, ppdId, onSave, onCan
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.ppd_acceptance_criteria.criteria_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
               Description *
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               name="criteria_description"
               value={formData.criteria_description}
@@ -199,9 +201,9 @@ export default function AcceptanceCriteriaForm({ criterion, ppdId, onSave, onCan
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.ppd_acceptance_criteria.criteria_category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Category *
-              </label>
+              </FieldLabelWithHelp>
               <select
                 name="criteria_category"
                 value={formData.criteria_category}
@@ -221,9 +223,9 @@ export default function AcceptanceCriteriaForm({ criterion, ppdId, onSave, onCan
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.ppd_acceptance_criteria.stakeholder_group" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Stakeholder Group *
-              </label>
+              </FieldLabelWithHelp>
               <select
                 name="stakeholder_group"
                 value={formData.stakeholder_group}
@@ -240,9 +242,9 @@ export default function AcceptanceCriteriaForm({ criterion, ppdId, onSave, onCan
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.ppd_acceptance_criteria.priority" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Priority *
-              </label>
+              </FieldLabelWithHelp>
               <select
                 name="priority"
                 value={formData.priority}
@@ -264,10 +266,10 @@ export default function AcceptanceCriteriaForm({ criterion, ppdId, onSave, onCan
             </h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.ppd_acceptance_criteria.measurement_method" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Measurement Method *
                   {formData.priority === 'must_have' && <span className="text-red-500"> *</span>}
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   name="measurement_method"
                   value={formData.measurement_method}
@@ -285,9 +287,9 @@ export default function AcceptanceCriteriaForm({ criterion, ppdId, onSave, onCan
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.ppd_acceptance_criteria.target_value" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Target Value
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="text"
                     name="target_value"
@@ -299,9 +301,9 @@ export default function AcceptanceCriteriaForm({ criterion, ppdId, onSave, onCan
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.ppd_acceptance_criteria.unit_of_measure" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Unit of Measure
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="text"
                     name="unit_of_measure"
@@ -315,9 +317,9 @@ export default function AcceptanceCriteriaForm({ criterion, ppdId, onSave, onCan
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.ppd_acceptance_criteria.tolerance_lower" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Lower Tolerance
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="text"
                     name="tolerance_lower"
@@ -329,9 +331,9 @@ export default function AcceptanceCriteriaForm({ criterion, ppdId, onSave, onCan
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.ppd_acceptance_criteria.tolerance_upper" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Upper Tolerance
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="text"
                     name="tolerance_upper"
@@ -355,16 +357,16 @@ export default function AcceptanceCriteriaForm({ criterion, ppdId, onSave, onCan
                 onChange={handleChange}
                 className="h-4 w-4 text-blue-600 rounded border-gray-300"
               />
-              <label className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+              <FieldLabelWithHelp helpKey="public.ppd_acceptance_criteria.is_provable_in_project" className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                 Can be proven during project
-              </label>
+              </FieldLabelWithHelp>
             </div>
 
             {!formData.is_provable_in_project && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.ppd_acceptance_criteria.proxy_measure" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Proxy Measure *
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   name="proxy_measure"
                   value={formData.proxy_measure}
@@ -383,9 +385,9 @@ export default function AcceptanceCriteriaForm({ criterion, ppdId, onSave, onCan
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.ppd_acceptance_criteria.validation_notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Validation Notes
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               name="validation_notes"
               value={formData.validation_notes}
@@ -418,5 +420,21 @@ export default function AcceptanceCriteriaForm({ criterion, ppdId, onSave, onCan
         </form>
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.ppd_acceptance_criteria.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'criteria_title', 'criteria_description', 'criteria_category', 'stakeholder_group', 'priority',
+  'measurement_method', 'target_value', 'unit_of_measure', 'tolerance_lower', 'tolerance_upper',
+  'is_provable_in_project', 'proxy_measure', 'validation_notes',
+].map((name) => `public.ppd_acceptance_criteria.${name}`)
+
+export default function AcceptanceCriteriaForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <AcceptanceCriteriaFormBody {...props} />
+    </FieldHelpScope>
   )
 }

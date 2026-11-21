@@ -3,6 +3,8 @@
  * Route: /pmo/planning/governance-rules
  */
 import { useState, useEffect, useCallback } from 'react';
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Sliders, Plus, Edit2, Trash2, Search } from 'lucide-react';
 import { platformDb } from '@nidus/supabase';
 
@@ -10,7 +12,7 @@ const inp = 'w-full rounded-lg border border-gray-600 bg-gray-700 text-gray-100 
 const lbl = 'block text-sm font-medium text-gray-300 mb-1';
 const EMPTY = { rule_name:'', rule_type:'threshold', threshold_value:'', applies_to:'', description:'' };
 
-export default function GovernanceRulesConfigPage() {
+function GovernanceRulesConfigPageBody() {
   const [rules,setRules]=useState([]); const [search,setSearch]=useState(''); const [loading,setLoading]=useState(true);
   const [editing,setEditing]=useState(null); const [form,setForm]=useState(EMPTY); const [saving,setSaving]=useState(false);
 
@@ -45,14 +47,14 @@ export default function GovernanceRulesConfigPage() {
         <form onSubmit={handleSave} className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-5 mb-6 space-y-4">
           <h2 className="font-semibold text-sm text-gray-800 dark:text-gray-200">{editing==='new'?'New':'Edit'} Governance Rule</h2>
           <div className="grid grid-cols-2 gap-4">
-            <div><label className={lbl}>Rule Name <span className="text-red-400">*</span></label><input className={inp} value={form.rule_name} onChange={set('rule_name')} required/></div>
-            <div><label className={lbl}>Rule Type</label><select className={inp} value={form.rule_type} onChange={set('rule_type')}>{['threshold','alert','escalation','compliance_check'].map(t=><option key={t} value={t}>{t}</option>)}</select></div>
+            <div><FieldLabelWithHelp helpKey="public.governance_rules.rule_name" className={lbl} required>Rule Name <span className="text-red-400">*</span></FieldLabelWithHelp><input className={inp} value={form.rule_name} onChange={set('rule_name')} required/></div>
+            <div><FieldLabelWithHelp helpKey="public.governance_rules.rule_type" className={lbl}>Rule Type</FieldLabelWithHelp><select className={inp} value={form.rule_type} onChange={set('rule_type')}>{['threshold','alert','escalation','compliance_check'].map(t=><option key={t} value={t}>{t}</option>)}</select></div>
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <div><label className={lbl}>Threshold Value</label><input className={inp} value={form.threshold_value} onChange={set('threshold_value')} placeholder="e.g. 3 days, 80%"/></div>
-            <div><label className={lbl}>Applies To</label><input className={inp} value={form.applies_to} onChange={set('applies_to')} placeholder="e.g. all_projects, risk_register"/></div>
+            <div><FieldLabelWithHelp helpKey="public.governance_rules.threshold_value" className={lbl}>Threshold Value</FieldLabelWithHelp><input className={inp} value={form.threshold_value} onChange={set('threshold_value')} placeholder="e.g. 3 days, 80%"/></div>
+            <div><FieldLabelWithHelp helpKey="public.governance_rules.applies_to" className={lbl}>Applies To</FieldLabelWithHelp><input className={inp} value={form.applies_to} onChange={set('applies_to')} placeholder="e.g. all_projects, risk_register"/></div>
           </div>
-          <div><label className={lbl}>Description</label><textarea className={`${inp} h-16 resize-none`} value={form.description} onChange={set('description')}/></div>
+          <div><FieldLabelWithHelp helpKey="public.governance_rules.description" className={lbl}>Description</FieldLabelWithHelp><textarea className={`${inp} h-16 resize-none`} value={form.description} onChange={set('description')}/></div>
           <div className="flex gap-3">
             <button type="submit" disabled={saving} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-lg text-sm font-medium">{saving?'Saving…':'Save'}</button>
             <button type="button" onClick={()=>setEditing(null)} className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm">Cancel</button>
@@ -85,4 +87,18 @@ export default function GovernanceRulesConfigPage() {
       )}
     </div>
   );
+}
+
+// v1345 slice 4: field help for this component (public.governance_rules.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'rule_name', 'rule_type', 'threshold_value', 'applies_to', 'description',
+].map((name) => `public.governance_rules.${name}`)
+
+export default function GovernanceRulesConfigPage(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <GovernanceRulesConfigPageBody {...props} />
+    </FieldHelpScope>
+  )
 }

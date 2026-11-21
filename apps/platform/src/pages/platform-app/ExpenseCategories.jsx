@@ -5,6 +5,8 @@
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useNavigate } from 'react-router-dom';
 import { Plus, Edit, Trash2, ArrowLeft, Save, X } from 'lucide-react';
 import { toast } from 'react-hot-toast';
@@ -26,7 +28,7 @@ import { resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
 
 const defaultFormData = { category_code: '', category_name: '', category_description: '', is_active: true };
 
-export default function ExpenseCategories() {
+function ExpenseCategoriesBody() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState([]);
@@ -210,9 +212,9 @@ export default function ExpenseCategories() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor="category_code" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <FieldLabelWithHelp helpKey="public.expense_categories.category_code" htmlFor="category_code" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                       Category Code *
-                    </label>
+                    </FieldLabelWithHelp>
                     <input
                       id="category_code"
                       type="text"
@@ -224,9 +226,9 @@ export default function ExpenseCategories() {
                     />
                   </div>
                   <div>
-                    <label htmlFor="category_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <FieldLabelWithHelp helpKey="public.expense_categories.category_name" htmlFor="category_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                       Category Name *
-                    </label>
+                    </FieldLabelWithHelp>
                     <input
                       id="category_name"
                       type="text"
@@ -240,9 +242,9 @@ export default function ExpenseCategories() {
                 </div>
 
                 <div>
-                  <label htmlFor="category_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.expense_categories.category_description" htmlFor="category_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Description
-                  </label>
+                  </FieldLabelWithHelp>
                   <textarea
                     id="category_description"
                     value={formData.category_description}
@@ -261,9 +263,9 @@ export default function ExpenseCategories() {
                     onChange={(e) => handleFormChange('is_active', e.target.checked)}
                     className="w-4 h-4 text-blue-600 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500"
                   />
-                  <label htmlFor="is_active" className="text-sm text-gray-700 dark:text-gray-300">
+                  <FieldLabelWithHelp helpKey="public.expense_categories.is_active" htmlFor="is_active" className="text-sm text-gray-700 dark:text-gray-300">
                     Active
-                  </label>
+                  </FieldLabelWithHelp>
                 </div>
 
                 <div className="flex items-center gap-3 pt-4">
@@ -359,4 +361,18 @@ export default function ExpenseCategories() {
       </div>
     </div>
   );
+}
+
+// v1345 slice 4: field help for this component (public.expense_categories.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'category_code', 'category_name', 'category_description', 'is_active',
+].map((name) => `public.expense_categories.${name}`)
+
+export default function ExpenseCategories(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ExpenseCategoriesBody {...props} />
+    </FieldHelpScope>
+  )
 }

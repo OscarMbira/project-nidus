@@ -4,6 +4,8 @@
  */
 
 import { useState, useEffect } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { platformDb } from '@nidus/supabase'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
@@ -12,7 +14,7 @@ import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
-export default function MethodForm({ methodData = {}, onChange, onCancel, onSubmit, isEditing = false }) {
+function MethodFormBody({ methodData = {}, onChange, onCancel, onSubmit, isEditing = false }) {
   const [formTab, setFormTab] = useState('details')
   const [auditUserLabels, setAuditUserLabels] = useState({})
 
@@ -74,9 +76,9 @@ export default function MethodForm({ methodData = {}, onChange, onCancel, onSubm
       <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.rms_identification_methods.method_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Method Name <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             value={methodData.method_name || ''}
@@ -88,9 +90,9 @@ export default function MethodForm({ methodData = {}, onChange, onCancel, onSubm
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.rms_identification_methods.method_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Method Type <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={methodData.method_type || 'workshop'}
             onChange={(e) => handleChange('method_type', e.target.value)}
@@ -107,9 +109,9 @@ export default function MethodForm({ methodData = {}, onChange, onCancel, onSubm
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="public.rms_identification_methods.method_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
           Description <span className="text-red-500">*</span>
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={methodData.method_description || ''}
           onChange={(e) => handleChange('method_description', e.target.value)}
@@ -121,9 +123,9 @@ export default function MethodForm({ methodData = {}, onChange, onCancel, onSubm
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="public.rms_identification_methods.when_to_use" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           When to Use
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={methodData.when_to_use || ''}
           onChange={(e) => handleChange('when_to_use', e.target.value)}
@@ -135,9 +137,9 @@ export default function MethodForm({ methodData = {}, onChange, onCancel, onSubm
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.rms_identification_methods.participants_required" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Required Participants
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             value={methodData.participants_required || ''}
@@ -148,9 +150,9 @@ export default function MethodForm({ methodData = {}, onChange, onCancel, onSubm
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.rms_identification_methods.frequency" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Frequency
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             value={methodData.frequency || ''}
@@ -162,9 +164,9 @@ export default function MethodForm({ methodData = {}, onChange, onCancel, onSubm
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="public.rms_identification_methods.documentation_required" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Documentation Required
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={methodData.documentation_required || ''}
           onChange={(e) => handleChange('documentation_required', e.target.value)}
@@ -182,9 +184,9 @@ export default function MethodForm({ methodData = {}, onChange, onCancel, onSubm
           onChange={(e) => handleChange('is_mandatory', e.target.checked)}
           className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
         />
-        <label htmlFor="is_mandatory" className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+        <FieldLabelWithHelp helpKey="public.rms_identification_methods.is_mandatory" htmlFor="is_mandatory" className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
           Mandatory method
-        </label>
+        </FieldLabelWithHelp>
       </div>
       </>
       )}
@@ -205,5 +207,20 @@ export default function MethodForm({ methodData = {}, onChange, onCancel, onSubm
         </button>
       </div>
     </form>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.rms_identification_methods.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'method_name', 'method_type', 'method_description', 'when_to_use', 'participants_required', 'frequency',
+  'documentation_required', 'is_mandatory',
+].map((name) => `public.rms_identification_methods.${name}`)
+
+export default function MethodForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <MethodFormBody {...props} />
+    </FieldHelpScope>
   )
 }

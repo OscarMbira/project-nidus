@@ -1,4 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { platformDb } from '../services/supabaseClient'
 import { updateUserProfile } from '../services/userProfileService'
@@ -19,7 +21,7 @@ import {
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
-export default function Settings() {
+function SettingsBody() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [user, setUser] = useState(null)
@@ -293,9 +295,9 @@ export default function Settings() {
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <FieldLabelWithHelp helpKey="sim.users.full_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Full Name
-                    </label>
+                    </FieldLabelWithHelp>
                     <input
                       type="text"
                       value={profileData.full_name}
@@ -304,9 +306,9 @@ export default function Settings() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <FieldLabelWithHelp helpKey="sim.users.email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Email
-                    </label>
+                    </FieldLabelWithHelp>
                     <input
                       type="email"
                       value={profileData.email}
@@ -318,9 +320,9 @@ export default function Settings() {
                     </p>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <FieldLabelWithHelp helpKey="sim.users.phone_number" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Phone
-                    </label>
+                    </FieldLabelWithHelp>
                     <input
                       type="tel"
                       value={profileData.phone}
@@ -329,9 +331,9 @@ export default function Settings() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <FieldLabelWithHelp helpKey="sim.users.job_title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Job Title
-                    </label>
+                    </FieldLabelWithHelp>
                     <input
                       type="text"
                       value={profileData.job_title}
@@ -340,9 +342,9 @@ export default function Settings() {
                     />
                   </div>
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <FieldLabelWithHelp helpKey="sim.users.bio" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Bio
-                    </label>
+                    </FieldLabelWithHelp>
                     <textarea
                       value={profileData.bio}
                       onChange={(e) => setProfileData({ ...profileData, bio: e.target.value })}
@@ -428,9 +430,9 @@ export default function Settings() {
                 </h2>
                 <div className="space-y-4 max-w-md">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <FieldLabelWithHelp helpKey="sim.users.current_password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Current Password
-                    </label>
+                    </FieldLabelWithHelp>
                     <div className="relative">
                       <input
                         type={showPassword ? 'text' : 'password'}
@@ -448,9 +450,9 @@ export default function Settings() {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <FieldLabelWithHelp helpKey="sim.users.new_password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       New Password
-                    </label>
+                    </FieldLabelWithHelp>
                     <input
                       type={showPassword ? 'text' : 'password'}
                       value={passwordData.new_password}
@@ -459,9 +461,9 @@ export default function Settings() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <FieldLabelWithHelp helpKey="sim.users.confirm_password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Confirm New Password
-                    </label>
+                    </FieldLabelWithHelp>
                     <input
                       type={showPassword ? 'text' : 'password'}
                       value={passwordData.confirm_password}
@@ -535,3 +537,22 @@ export default function Settings() {
   )
 }
 
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.users.full_name',
+  'sim.users.email',
+  'sim.users.phone_number',
+  'sim.users.job_title',
+  'sim.users.bio',
+  'sim.users.current_password',
+  'sim.users.new_password',
+  'sim.users.confirm_password',
+]
+
+export default function Settings(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <SettingsBody {...props} />
+    </FieldHelpScope>
+  )
+}

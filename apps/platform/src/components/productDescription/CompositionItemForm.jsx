@@ -3,6 +3,8 @@
  */
 
 import { useState, useEffect } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { X, Save } from 'lucide-react'
 import { supabase } from '../../services/supabaseClient'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
@@ -22,7 +24,7 @@ const SUB_PRODUCT_TYPES = [
   { value: 'other', label: 'Other' }
 ]
 
-export default function CompositionItemForm({ item, onSubmit, onCancel, projectId }) {
+function CompositionItemFormBody({ item, onSubmit, onCancel, projectId }) {
   const [formData, setFormData] = useState({
     sub_product_name: '',
     sub_product_description: '',
@@ -122,9 +124,9 @@ export default function CompositionItemForm({ item, onSubmit, onCancel, projectI
       <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.pd_composition_items.sub_product_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Sub-Product Name <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             value={formData.sub_product_name}
@@ -136,9 +138,9 @@ export default function CompositionItemForm({ item, onSubmit, onCancel, projectI
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.pd_composition_items.sub_product_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Sub-Product Type
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={formData.sub_product_type}
             onChange={(e) => setFormData({ ...formData, sub_product_type: e.target.value })}
@@ -153,9 +155,9 @@ export default function CompositionItemForm({ item, onSubmit, onCancel, projectI
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.pd_composition_items.linked_product_description_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
             Link to Product Description
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={formData.linked_product_description_id || ''}
             onChange={(e) => setFormData({ ...formData, linked_product_description_id: e.target.value || null })}
@@ -171,9 +173,9 @@ export default function CompositionItemForm({ item, onSubmit, onCancel, projectI
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.pd_composition_items.linked_product_deliverable_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
             Link to Product Deliverable
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={formData.linked_product_deliverable_id || ''}
             onChange={(e) => setFormData({ ...formData, linked_product_deliverable_id: e.target.value || null })}
@@ -189,9 +191,9 @@ export default function CompositionItemForm({ item, onSubmit, onCancel, projectI
         </div>
 
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.pd_composition_items.sub_product_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Description
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             value={formData.sub_product_description}
             onChange={(e) => setFormData({ ...formData, sub_product_description: e.target.value })}
@@ -202,7 +204,7 @@ export default function CompositionItemForm({ item, onSubmit, onCancel, projectI
         </div>
 
         <div className="md:col-span-2">
-          <label className="flex items-center">
+          <FieldLabelWithHelp helpKey="public.pd_composition_items.is_mandatory" className="flex items-center">
             <input
               type="checkbox"
               checked={formData.is_mandatory}
@@ -212,7 +214,7 @@ export default function CompositionItemForm({ item, onSubmit, onCancel, projectI
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
               Mandatory (must be delivered)
             </span>
-          </label>
+          </FieldLabelWithHelp>
         </div>
       </div>
       </>
@@ -238,5 +240,20 @@ export default function CompositionItemForm({ item, onSubmit, onCancel, projectI
         </button>
       </div>
     </form>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.pd_composition_items.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'sub_product_name', 'sub_product_type', 'linked_product_description_id', 'linked_product_deliverable_id',
+  'sub_product_description', 'is_mandatory',
+].map((name) => `public.pd_composition_items.${name}`)
+
+export default function CompositionItemForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <CompositionItemFormBody {...props} />
+    </FieldHelpScope>
   )
 }

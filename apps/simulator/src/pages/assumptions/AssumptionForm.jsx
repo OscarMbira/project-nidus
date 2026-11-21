@@ -3,6 +3,8 @@
  * apps/platform/src/pages/assumptions/AssumptionForm.jsx against sim.assumptions.
  */
 import { useState, useEffect, useMemo } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
@@ -34,7 +36,7 @@ const IMPACT_OPTIONS = [
   { value: 'critical', label: 'Critical' },
 ]
 
-export default function AssumptionForm() {
+function AssumptionFormBody() {
   const { projectId, assumptionId } = useParams()
   const navigate = useNavigate()
   const { showSuccess, modal } = useSuccessModal()
@@ -169,7 +171,7 @@ export default function AssumptionForm() {
 
       <div className="space-y-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Assumption *</label>
+          <FieldLabelWithHelp helpKey="sim.assumptions.assumption_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>Assumption *</FieldLabelWithHelp>
           <textarea
             value={assumptionText}
             onChange={(e) => setAssumptionText(e.target.value)}
@@ -181,7 +183,7 @@ export default function AssumptionForm() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Validation Status</label>
+            <FieldLabelWithHelp helpKey="sim.assumptions.status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Validation Status</FieldLabelWithHelp>
             <SelectField
               options={STATUS_OPTIONS}
               value={validationStatus}
@@ -190,7 +192,7 @@ export default function AssumptionForm() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Owner</label>
+            <FieldLabelWithHelp helpKey="sim.assumptions.owner_user_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" listOptions={false}>Owner</FieldLabelWithHelp>
             <SelectField
               forceSearchable
               descriptionColumnLabel="Role"
@@ -201,7 +203,7 @@ export default function AssumptionForm() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Impact</label>
+            <FieldLabelWithHelp helpKey="sim.assumptions.impact_severity" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Impact</FieldLabelWithHelp>
             <SelectField
               options={IMPACT_OPTIONS}
               value={impactSeverity}
@@ -210,7 +212,7 @@ export default function AssumptionForm() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Next review date</label>
+            <FieldLabelWithHelp helpKey="sim.assumptions.next_review_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Next review date</FieldLabelWithHelp>
             <input
               type="date"
               value={nextReviewDate}
@@ -221,7 +223,7 @@ export default function AssumptionForm() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Impact if this assumption proves wrong</label>
+          <FieldLabelWithHelp helpKey="sim.assumptions.impact_if_invalid" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Impact if this assumption proves wrong</FieldLabelWithHelp>
           <textarea
             value={impactIfInvalid}
             onChange={(e) => setImpactIfInvalid(e.target.value)}
@@ -232,7 +234,7 @@ export default function AssumptionForm() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</label>
+          <FieldLabelWithHelp helpKey="sim.assumptions.validation_notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</FieldLabelWithHelp>
           <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className={inputClass} />
         </div>
       </div>
@@ -252,5 +254,24 @@ export default function AssumptionForm() {
       </div>
       {modal}
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.assumptions.assumption_description',
+  'sim.assumptions.status',
+  'sim.assumptions.owner_user_id',
+  'sim.assumptions.impact_severity',
+  'sim.assumptions.next_review_date',
+  'sim.assumptions.impact_if_invalid',
+  'sim.assumptions.validation_notes',
+]
+
+export default function AssumptionForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <AssumptionFormBody {...props} />
+    </FieldHelpScope>
   )
 }

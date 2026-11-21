@@ -1,4 +1,6 @@
 import { useNavigate, useParams } from 'react-router-dom'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { useEffect, useMemo, useState } from 'react'
 import { ArrowLeft } from 'lucide-react'
 import { useAppRoutePrefix } from '@nidus/shared/hooks/useAppRoutePrefix'
@@ -27,7 +29,7 @@ function toLocalInput(value) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
 }
 
-export default function MeetingSchedule() {
+function MeetingScheduleBody() {
   const navigate = useNavigate()
   const { meetingId } = useParams()
   const basePath = `${useAppRoutePrefix()}/comms`
@@ -205,7 +207,7 @@ export default function MeetingSchedule() {
         </div>
       ) : (
       <form onSubmit={submit} className="mt-4 space-y-4">
-        <label className="block text-sm text-gray-700 dark:text-gray-300">
+        <FieldLabelWithHelp helpKey="sim.comm_meetings.title" className="block text-sm text-gray-700 dark:text-gray-300">
           Title
           <input
             required
@@ -213,9 +215,9 @@ export default function MeetingSchedule() {
             onChange={(e) => setTitle(e.target.value)}
             className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2"
           />
-        </label>
+        </FieldLabelWithHelp>
         {isSim ? (
-          <label className="block text-sm text-gray-700 dark:text-gray-300">
+          <FieldLabelWithHelp helpKey="sim.comm_meetings.simulation_run_id" className="block text-sm text-gray-700 dark:text-gray-300" listOptions={false}>
             Simulation run (optional)
             <select value={runId} onChange={(e) => setRunId(e.target.value)} className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2">
               <option value="">—</option>
@@ -225,9 +227,9 @@ export default function MeetingSchedule() {
                 </option>
               ))}
             </select>
-          </label>
+          </FieldLabelWithHelp>
         ) : (
-          <label className="block text-sm text-gray-700 dark:text-gray-300">
+          <FieldLabelWithHelp helpKey="sim.comm_meetings.project_id" className="block text-sm text-gray-700 dark:text-gray-300" listOptions={false}>
             Project (optional)
             <select value={projectId} onChange={(e) => setProjectId(e.target.value)} className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2">
               <option value="">—</option>
@@ -242,9 +244,9 @@ export default function MeetingSchedule() {
                 )
               })}
             </select>
-          </label>
+          </FieldLabelWithHelp>
         )}
-        <label className="block text-sm text-gray-700 dark:text-gray-300">
+        <FieldLabelWithHelp helpKey="sim.comm_meetings.scheduled_start" className="block text-sm text-gray-700 dark:text-gray-300">
           Start
           <input
             type="datetime-local"
@@ -252,7 +254,7 @@ export default function MeetingSchedule() {
             onChange={(e) => setStart(e.target.value)}
             className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2"
           />
-        </label>
+        </FieldLabelWithHelp>
         {err && <p className="text-red-600 text-sm">{err}</p>}
         <button
           type="submit"
@@ -265,5 +267,21 @@ export default function MeetingSchedule() {
       )}
       {successModal}
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.comm_meetings.title',
+  'sim.comm_meetings.simulation_run_id',
+  'sim.comm_meetings.project_id',
+  'sim.comm_meetings.scheduled_start',
+]
+
+export default function MeetingSchedule(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <MeetingScheduleBody {...props} />
+    </FieldHelpScope>
   )
 }

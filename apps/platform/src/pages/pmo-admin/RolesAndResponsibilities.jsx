@@ -5,6 +5,8 @@
  * Route: /platform/pmo-admin/roles-responsibilities
  */
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useNavigate } from 'react-router-dom'
 import { Users, Plus, ArrowLeft, Save, X, Shield } from 'lucide-react'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
@@ -28,7 +30,7 @@ import {
 const RACI_LABELS = { R: 'Responsible', A: 'Accountable', C: 'Consulted', I: 'Informed' }
 const EMPTY_FORM = { record_type: '', role_name: '', raci_code: 'R', notes: '', is_active: true }
 
-export default function RolesAndResponsibilities() {
+function RolesAndResponsibilitiesBody() {
   const navigate = useNavigate()
   const { showSuccess, modal: successModal } = useSuccessModal()
 
@@ -178,28 +180,28 @@ export default function RolesAndResponsibilities() {
             <form onSubmit={handleSubmit} className="mt-4 space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Record type *</label>
+                  <FieldLabelWithHelp helpKey="public.pmo_role_responsibilities.record_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>Record type *</FieldLabelWithHelp>
                   <input type="text" value={form.record_type} onChange={(e) => setForm((f) => ({ ...f, record_type: e.target.value }))} required placeholder="e.g. risks, change_requests" className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Role *</label>
+                  <FieldLabelWithHelp helpKey="public.pmo_role_responsibilities.role_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>Role *</FieldLabelWithHelp>
                   <input type="text" value={form.role_name} onChange={(e) => setForm((f) => ({ ...f, role_name: e.target.value }))} required placeholder="e.g. project_manager" className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">RACI</label>
+                  <FieldLabelWithHelp helpKey="public.pmo_role_responsibilities.raci_code" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">RACI</FieldLabelWithHelp>
                   <select value={form.raci_code} onChange={(e) => setForm((f) => ({ ...f, raci_code: e.target.value }))} className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
                     {Object.entries(RACI_LABELS).map(([code, label]) => <option key={code} value={code}>{code} — {label}</option>)}
                   </select>
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Notes</label>
+                <FieldLabelWithHelp helpKey="public.pmo_role_responsibilities.notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Notes</FieldLabelWithHelp>
                 <textarea value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} rows={2} className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" />
               </div>
-              <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+              <FieldLabelWithHelp helpKey="public.pmo_role_responsibilities.is_active" className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
                 <input type="checkbox" checked={form.is_active} onChange={(e) => setForm((f) => ({ ...f, is_active: e.target.checked }))} className="rounded border-gray-300 dark:border-gray-600" />
                 Active
-              </label>
+              </FieldLabelWithHelp>
               <div className="flex gap-3 pt-2">
                 <button type="submit" disabled={saving} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50">
                   <Save className="h-4 w-4" /> {saving ? 'Saving…' : editing ? 'Save Changes' : 'Create'}
@@ -256,5 +258,19 @@ export default function RolesAndResponsibilities() {
       </div>
       {successModal}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.pmo_role_responsibilities.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'record_type', 'role_name', 'raci_code', 'notes', 'is_active',
+].map((name) => `public.pmo_role_responsibilities.${name}`)
+
+export default function RolesAndResponsibilities(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <RolesAndResponsibilitiesBody {...props} />
+    </FieldHelpScope>
   )
 }

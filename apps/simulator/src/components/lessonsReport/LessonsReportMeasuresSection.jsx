@@ -1,9 +1,10 @@
 /**
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
  * Lessons Report Measures Section
  * Review of Six Variables: Time, Cost, Quality, Scope, Risk, Benefits
  */
 
-export default function LessonsReportMeasuresSection({
+function LessonsReportMeasuresSectionBody({
   formData,
   onChange,
   errors = {},
@@ -57,9 +58,9 @@ export default function LessonsReportMeasuresSection({
       <div className="space-y-6">
         {measures.map((measure) => (
           <div key={measure.key} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-            <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
+            <FieldLabelWithHelp helpKey={`sim.lessons_reports.${measure.key}`} className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
               {measure.label}
-            </label>
+            </FieldLabelWithHelp>
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">{measure.description}</p>
             {readOnly ? (
               <p className="text-gray-900 dark:text-white whitespace-pre-wrap">
@@ -80,9 +81,9 @@ export default function LessonsReportMeasuresSection({
 
       {/* Baseline vs Actual Analysis */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <FieldLabelWithHelp helpKey="sim.lessons_reports.baseline_vs_actual_analysis" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Baseline vs Actual Analysis
-        </label>
+        </FieldLabelWithHelp>
         {readOnly ? (
           <p className="text-gray-900 dark:text-white whitespace-pre-wrap">
             {formData.baseline_vs_actual_analysis || 'Not specified'}
@@ -100,9 +101,9 @@ export default function LessonsReportMeasuresSection({
 
       {/* Variance Analysis */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <FieldLabelWithHelp helpKey="sim.lessons_reports.variance_analysis" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Variance Analysis
-        </label>
+        </FieldLabelWithHelp>
         {readOnly ? (
           <p className="text-gray-900 dark:text-white whitespace-pre-wrap">
             {formData.variance_analysis || 'Not specified'}
@@ -126,5 +127,19 @@ export default function LessonsReportMeasuresSection({
         </div>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.lessons_reports.baseline_vs_actual_analysis',
+  'sim.lessons_reports.variance_analysis',
+]
+
+export default function LessonsReportMeasuresSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <LessonsReportMeasuresSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

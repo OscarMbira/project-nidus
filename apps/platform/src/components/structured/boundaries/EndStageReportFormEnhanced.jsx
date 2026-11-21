@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { FileText, User, Target, TrendingUp, Package, AlertTriangle, Lightbulb, ArrowRight, CheckCircle, X, Save, ArrowLeft } from 'lucide-react'
 import { useThemeContext } from '@nidus/shared/context/ThemeContext'
 import { HoldButton } from '../../shared-app/HoldButton'
@@ -30,7 +32,7 @@ const FORM_STEPS = [
   { id: 'approval', label: 'Approval', icon: CheckCircle, description: 'Approval and distribution' },
 ]
 
-export default function EndStageReportFormEnhanced({
+function EndStageReportFormEnhancedBody({
   projectId,
   stageBoundaryId = null,
   reportId = null,
@@ -250,9 +252,9 @@ export default function EndStageReportFormEnhanced({
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.end_stage_reports.stage_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Stage Name *
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   value={formData.stage_name || ''}
@@ -263,9 +265,9 @@ export default function EndStageReportFormEnhanced({
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.end_stage_reports.stage_number" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Stage Number *
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="number"
                   min="1"
@@ -278,9 +280,9 @@ export default function EndStageReportFormEnhanced({
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.end_stage_reports.stage_objectives_summary" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Stage Objectives Summary *
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={formData.stage_objectives_summary || ''}
                 onChange={(e) => handleChange('stage_objectives_summary', e.target.value)}
@@ -536,5 +538,19 @@ export default function EndStageReportFormEnhanced({
       </>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.end_stage_reports.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'stage_name', 'stage_number', 'stage_objectives_summary',
+].map((name) => `public.end_stage_reports.${name}`)
+
+export default function EndStageReportFormEnhanced(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <EndStageReportFormEnhancedBody {...props} />
+    </FieldHelpScope>
   )
 }

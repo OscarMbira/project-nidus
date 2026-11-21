@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { Save, Search, Calendar, User, Target, AlertTriangle, CheckCircle } from 'lucide-react';
 import { saveQualityInspection } from '../../services/qualityManagementService';
 import { supabase } from '../../services/supabaseClient';
@@ -15,7 +17,7 @@ import AuditField from '@nidus/ui/AuditField';
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
 
-export default function QualityInspectionForm({
+function QualityInspectionFormBody({
   inspection,
   projectId,
   qualityRegisterId,
@@ -278,9 +280,9 @@ export default function QualityInspectionForm({
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.quality_inspections.inspection_reference" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Inspection Reference
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   name="inspection_reference"
@@ -292,9 +294,9 @@ export default function QualityInspectionForm({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.quality_inspections.inspection_title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Inspection Title *
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   name="inspection_title"
@@ -307,9 +309,9 @@ export default function QualityInspectionForm({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.quality_inspections.inspection_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Inspection Type *
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="inspection_type"
                   value={formData.inspection_type}
@@ -326,9 +328,9 @@ export default function QualityInspectionForm({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.quality_inspections.inspection_method" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Inspection Method
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="inspection_method"
                   value={formData.inspection_method}
@@ -344,9 +346,9 @@ export default function QualityInspectionForm({
 
               {qualityRegisterItems.length > 0 && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="sim.quality_inspections.quality_register_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                     Quality Register Item
-                  </label>
+                  </FieldLabelWithHelp>
                   <select
                     name="quality_register_id"
                     value={qualityRegisterId || formData.quality_register_id || ''}
@@ -364,9 +366,9 @@ export default function QualityInspectionForm({
               )}
 
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.quality_inspections.inspection_scope" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Inspection Scope
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   name="inspection_scope"
                   value={formData.inspection_scope}
@@ -387,9 +389,9 @@ export default function QualityInspectionForm({
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.quality_inspections.inspection_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Inspection Date *
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="date"
                   name="inspection_date"
@@ -401,9 +403,9 @@ export default function QualityInspectionForm({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.quality_inspections.forecast_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Forecast Date
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="date"
                   name="forecast_date"
@@ -414,9 +416,9 @@ export default function QualityInspectionForm({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.quality_inspections.sign_off_planned_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Sign-Off Planned Date
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="date"
                   name="sign_off_planned_date"
@@ -427,9 +429,9 @@ export default function QualityInspectionForm({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.quality_inspections.sign_off_forecast_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Sign-Off Forecast Date
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="date"
                   name="sign_off_forecast_date"
@@ -440,9 +442,9 @@ export default function QualityInspectionForm({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.quality_inspections.inspector_user_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required listOptions={false}>
                   Inspector *
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="inspector_user_id"
                   value={formData.inspector_user_id}
@@ -460,9 +462,9 @@ export default function QualityInspectionForm({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.quality_inspections.inspection_location" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Location
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   name="inspection_location"
@@ -474,9 +476,9 @@ export default function QualityInspectionForm({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.quality_inspections.pass_threshold" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Pass Threshold (%)
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="number"
                   name="pass_threshold"
@@ -499,9 +501,9 @@ export default function QualityInspectionForm({
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.quality_inspections.defects_found_count" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Total Defects
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="number"
                   name="defects_found_count"
@@ -513,9 +515,9 @@ export default function QualityInspectionForm({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.quality_inspections.critical_defects_count" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Critical Defects
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="number"
                   name="critical_defects_count"
@@ -527,9 +529,9 @@ export default function QualityInspectionForm({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.quality_inspections.major_defects_count" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Major Defects
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="number"
                   name="major_defects_count"
@@ -541,9 +543,9 @@ export default function QualityInspectionForm({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.quality_inspections.minor_defects_count" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Minor Defects
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="number"
                   name="minor_defects_count"
@@ -555,9 +557,9 @@ export default function QualityInspectionForm({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.quality_inspections.inspection_score" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Inspection Score (%)
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="number"
                   name="inspection_score"
@@ -571,9 +573,9 @@ export default function QualityInspectionForm({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.quality_inspections.inspection_result" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Inspection Result *
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="inspection_result"
                   value={formData.inspection_result}
@@ -590,9 +592,9 @@ export default function QualityInspectionForm({
 
               {programmes.length > 0 && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="sim.quality_inspections.programme_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                     Programme (Optional)
-                  </label>
+                  </FieldLabelWithHelp>
                   <select
                     name="programme_id"
                     value={formData.programme_id}
@@ -611,9 +613,9 @@ export default function QualityInspectionForm({
 
               {qmsMethods.length > 0 && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="sim.quality_inspections.qms_method_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                     QMS Quality Method (Optional)
-                  </label>
+                  </FieldLabelWithHelp>
                   <select
                     name="qms_method_id"
                     value={formData.qms_method_id}
@@ -632,9 +634,9 @@ export default function QualityInspectionForm({
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.quality_inspections.inspection_findings" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Inspection Findings
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 name="inspection_findings"
                 value={formData.inspection_findings}
@@ -661,9 +663,9 @@ export default function QualityInspectionForm({
                   onChange={handleChange}
                   className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                 />
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <FieldLabelWithHelp helpKey="sim.quality_inspections.corrective_actions_required" className="text-sm font-medium text-gray-700 dark:text-gray-300" required>
                   Corrective Actions Required
-                </label>
+                </FieldLabelWithHelp>
               </div>
 
               <div className="flex items-center gap-2">
@@ -674,16 +676,16 @@ export default function QualityInspectionForm({
                   onChange={handleChange}
                   className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                 />
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <FieldLabelWithHelp helpKey="sim.quality_inspections.follow_up_inspection_required" className="text-sm font-medium text-gray-700 dark:text-gray-300" required>
                   Follow-up Inspection Required
-                </label>
+                </FieldLabelWithHelp>
               </div>
 
               {formData.follow_up_inspection_required && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="sim.quality_inspections.follow_up_inspection_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Follow-up Inspection Date
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="date"
                     name="follow_up_inspection_date"
@@ -752,3 +754,39 @@ export default function QualityInspectionForm({
   );
 }
 
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.quality_inspections.inspection_reference',
+  'sim.quality_inspections.inspection_title',
+  'sim.quality_inspections.inspection_type',
+  'sim.quality_inspections.inspection_method',
+  'sim.quality_inspections.quality_register_id',
+  'sim.quality_inspections.inspection_scope',
+  'sim.quality_inspections.inspection_date',
+  'sim.quality_inspections.forecast_date',
+  'sim.quality_inspections.sign_off_planned_date',
+  'sim.quality_inspections.sign_off_forecast_date',
+  'sim.quality_inspections.inspector_user_id',
+  'sim.quality_inspections.inspection_location',
+  'sim.quality_inspections.pass_threshold',
+  'sim.quality_inspections.defects_found_count',
+  'sim.quality_inspections.critical_defects_count',
+  'sim.quality_inspections.major_defects_count',
+  'sim.quality_inspections.minor_defects_count',
+  'sim.quality_inspections.inspection_score',
+  'sim.quality_inspections.inspection_result',
+  'sim.quality_inspections.programme_id',
+  'sim.quality_inspections.qms_method_id',
+  'sim.quality_inspections.inspection_findings',
+  'sim.quality_inspections.corrective_actions_required',
+  'sim.quality_inspections.follow_up_inspection_required',
+  'sim.quality_inspections.follow_up_inspection_date',
+]
+
+export default function QualityInspectionForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <QualityInspectionFormBody {...props} />
+    </FieldHelpScope>
+  )
+}

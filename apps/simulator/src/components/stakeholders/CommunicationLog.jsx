@@ -4,6 +4,8 @@
  */
 
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { Star, Pencil } from 'lucide-react'
 import { getStakeholderCommunications, getStakeholders, saveStakeholderCommunication } from '../../services/stakeholderService'
 import { platformDb } from '../../services/supabaseClient'
@@ -26,7 +28,7 @@ function StarRating({ value, max = 5, size = 'sm' }) {
   )
 }
 
-export default function CommunicationLog({ projectId }) {
+function CommunicationLogBody({ projectId }) {
   const [logs, setLogs] = useState([])
   const [people, setPeople] = useState([])
   const [loading, setLoading] = useState(true)
@@ -196,7 +198,7 @@ export default function CommunicationLog({ projectId }) {
             <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-3">Edit response & effectiveness</h4>
             <div className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Summary</label>
+                <FieldLabelWithHelp helpKey="sim.stakeholder_communication_log.communication_summary" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Summary</FieldLabelWithHelp>
                 <textarea
                   value={editForm.communication_summary}
                   onChange={(e) => setEditForm(f => ({ ...f, communication_summary: e.target.value }))}
@@ -207,7 +209,7 @@ export default function CommunicationLog({ projectId }) {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Meeting length (minutes)</label>
+                  <FieldLabelWithHelp helpKey="sim.stakeholder_communication_log.meeting_duration_minutes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Meeting length (minutes)</FieldLabelWithHelp>
                   <input
                     type="number"
                     min="0"
@@ -216,7 +218,7 @@ export default function CommunicationLog({ projectId }) {
                     className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
                   />
                 </div>
-                <label className="flex items-center gap-2 mt-6">
+                <FieldLabelWithHelp helpKey="sim.stakeholder_communication_log.is_confidential" className="flex items-center gap-2 mt-6">
                   <input
                     type="checkbox"
                     checked={editForm.is_confidential}
@@ -224,9 +226,9 @@ export default function CommunicationLog({ projectId }) {
                     className="rounded border-gray-300 dark:border-gray-600"
                   />
                   <span className="text-sm text-gray-700 dark:text-gray-300">Confidential</span>
-                </label>
+                </FieldLabelWithHelp>
               </div>
-              <label className="flex items-center gap-2">
+              <FieldLabelWithHelp helpKey="sim.stakeholder_communication_log.response_required" className="flex items-center gap-2" required>
                 <input
                   type="checkbox"
                   checked={editForm.response_required}
@@ -234,10 +236,10 @@ export default function CommunicationLog({ projectId }) {
                   className="rounded border-gray-300 dark:border-gray-600"
                 />
                 <span className="text-sm text-gray-700 dark:text-gray-300">Response required</span>
-              </label>
+              </FieldLabelWithHelp>
               {editForm.response_required && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Response due by</label>
+                  <FieldLabelWithHelp helpKey="sim.stakeholder_communication_log.response_due_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Response due by</FieldLabelWithHelp>
                   <input
                     type="date"
                     value={editForm.response_due_date}
@@ -246,7 +248,7 @@ export default function CommunicationLog({ projectId }) {
                   />
                 </div>
               )}
-              <label className="flex items-center gap-2">
+              <FieldLabelWithHelp helpKey="sim.stakeholder_communication_log.response_received" className="flex items-center gap-2">
                 <input
                   type="checkbox"
                   checked={editForm.response_received}
@@ -254,9 +256,9 @@ export default function CommunicationLog({ projectId }) {
                   className="rounded border-gray-300 dark:border-gray-600"
                 />
                 <span className="text-sm text-gray-700 dark:text-gray-300">Response received</span>
-              </label>
+              </FieldLabelWithHelp>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Response notes</label>
+                <FieldLabelWithHelp helpKey="sim.stakeholder_communication_log.response_notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Response notes</FieldLabelWithHelp>
                 <textarea
                   value={editForm.response_notes}
                   onChange={(e) => setEditForm(f => ({ ...f, response_notes: e.target.value }))}
@@ -265,7 +267,7 @@ export default function CommunicationLog({ projectId }) {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Feedback received</label>
+                <FieldLabelWithHelp helpKey="sim.stakeholder_communication_log.feedback_received" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Feedback received</FieldLabelWithHelp>
                 <textarea
                   value={editForm.feedback_received}
                   onChange={(e) => setEditForm(f => ({ ...f, feedback_received: e.target.value }))}
@@ -274,7 +276,7 @@ export default function CommunicationLog({ projectId }) {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Effectiveness (1–5)</label>
+                <FieldLabelWithHelp helpKey="sim.stakeholder_communication_log.effectiveness_rating" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Effectiveness (1–5)</FieldLabelWithHelp>
                 <select
                   value={editForm.effectiveness_rating === '' || editForm.effectiveness_rating == null ? '' : editForm.effectiveness_rating}
                   onChange={(e) => setEditForm(f => ({ ...f, effectiveness_rating: e.target.value === '' ? null : e.target.value }))}
@@ -285,7 +287,7 @@ export default function CommunicationLog({ projectId }) {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Next action</label>
+                <FieldLabelWithHelp helpKey="sim.stakeholder_communication_log.next_action" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Next action</FieldLabelWithHelp>
                 <input
                   type="text"
                   value={editForm.next_action}
@@ -295,7 +297,7 @@ export default function CommunicationLog({ projectId }) {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Next action due date</label>
+                <FieldLabelWithHelp helpKey="sim.stakeholder_communication_log.next_action_due_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Next action due date</FieldLabelWithHelp>
                 <input
                   type="date"
                   value={editForm.next_action_due_date}
@@ -304,7 +306,7 @@ export default function CommunicationLog({ projectId }) {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Follow-up date</label>
+                <FieldLabelWithHelp helpKey="sim.stakeholder_communication_log.follow_up_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Follow-up date</FieldLabelWithHelp>
                 <input
                   type="date"
                   value={editForm.follow_up_date}
@@ -330,5 +332,29 @@ export default function CommunicationLog({ projectId }) {
         </>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.stakeholder_communication_log.communication_summary',
+  'sim.stakeholder_communication_log.meeting_duration_minutes',
+  'sim.stakeholder_communication_log.is_confidential',
+  'sim.stakeholder_communication_log.response_required',
+  'sim.stakeholder_communication_log.response_due_date',
+  'sim.stakeholder_communication_log.response_received',
+  'sim.stakeholder_communication_log.response_notes',
+  'sim.stakeholder_communication_log.feedback_received',
+  'sim.stakeholder_communication_log.effectiveness_rating',
+  'sim.stakeholder_communication_log.next_action',
+  'sim.stakeholder_communication_log.next_action_due_date',
+  'sim.stakeholder_communication_log.follow_up_date',
+]
+
+export default function CommunicationLog(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <CommunicationLogBody {...props} />
+    </FieldHelpScope>
   )
 }

@@ -4,10 +4,12 @@
  */
 
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { Plus, X, Edit2, FileText, Link as LinkIcon } from 'lucide-react'
 import { getAppendices, addAppendix, updateAppendix, deleteAppendix } from '../../services/lessonsReportAppendixService'
 
-export default function LessonsReportAppendicesSection({
+function LessonsReportAppendicesSectionBody({
   reportId,
   readOnly = false
 }) {
@@ -227,9 +229,9 @@ export default function LessonsReportAppendicesSection({
             </h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <FieldLabelWithHelp helpKey="sim.lessons_report_appendices.appendix_title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
                   Appendix Title <span className="text-red-500">*</span>
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   value={formData.appendix_title}
@@ -239,9 +241,9 @@ export default function LessonsReportAppendicesSection({
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <FieldLabelWithHelp helpKey="sim.lessons_report_appendices.appendix_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Appendix Type
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   value={formData.appendix_type}
                   onChange={(e) => setFormData({ ...formData, appendix_type: e.target.value })}
@@ -255,9 +257,9 @@ export default function LessonsReportAppendicesSection({
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <FieldLabelWithHelp helpKey="sim.lessons_report_appendices.content" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Content
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   value={formData.content}
                   onChange={(e) => setFormData({ ...formData, content: e.target.value })}
@@ -267,9 +269,9 @@ export default function LessonsReportAppendicesSection({
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <FieldLabelWithHelp helpKey="sim.lessons_report_appendices.document_url" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Document URL
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="url"
                   value={formData.document_url}
@@ -279,9 +281,9 @@ export default function LessonsReportAppendicesSection({
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <FieldLabelWithHelp helpKey="sim.lessons_report_appendices.references" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   References (comma-separated)
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   value={formData.references.join(', ')}
@@ -313,5 +315,22 @@ export default function LessonsReportAppendicesSection({
         </div>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.lessons_report_appendices.appendix_title',
+  'sim.lessons_report_appendices.appendix_type',
+  'sim.lessons_report_appendices.content',
+  'sim.lessons_report_appendices.document_url',
+  'sim.lessons_report_appendices.references',
+]
+
+export default function LessonsReportAppendicesSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <LessonsReportAppendicesSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

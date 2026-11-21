@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Save, Trash2 } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -134,7 +136,7 @@ function buildDocumentData(fields, types) {
  * level templates (v805 decision 4) rather than 24 bespoke document forms.
  * Routes: /app/pmo/organisational-templates/:nodeId · /platform/templates/organisational|project/:nodeId
  */
-export default function OrganisationalTemplateDetailPage() {
+function OrganisationalTemplateDetailPageBody() {
   const { nodeId: nodeIdOrReference } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
@@ -706,15 +708,15 @@ export default function OrganisationalTemplateDetailPage() {
           <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Template metadata</h2>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
-              <label className={labelClass}>Name</label>
+              <FieldLabelWithHelp helpKey="sim.pm_template_nodes.name" className={labelClass}>Name</FieldLabelWithHelp>
               <input className={inputClass} value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
             </div>
             <div>
-              <label className={labelClass}>Category</label>
+              <FieldLabelWithHelp helpKey="sim.pm_template_nodes.category" className={labelClass}>Category</FieldLabelWithHelp>
               <input className={inputClass} value={form.category} onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))} />
             </div>
             <div className="md:col-span-2">
-              <label className={labelClass}>Description</label>
+              <FieldLabelWithHelp helpKey="sim.pm_template_nodes.description" className={labelClass}>Description</FieldLabelWithHelp>
               <textarea
                 className={inputClass}
                 rows={3}
@@ -909,11 +911,11 @@ export default function OrganisationalTemplateDetailPage() {
         <div className="space-y-4 rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
           <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">OPA content</h2>
           <div>
-            <label className={labelClass}>Title</label>
+            <FieldLabelWithHelp helpKey="sim.organisational_process_assets.title" className={labelClass}>Title</FieldLabelWithHelp>
             <input className={inputClass} value={contentForm.title} onChange={(e) => setContentForm((f) => ({ ...f, title: e.target.value }))} />
           </div>
           <div>
-            <label className={labelClass}>Description</label>
+            <FieldLabelWithHelp helpKey="sim.organisational_process_assets.description" className={labelClass}>Description</FieldLabelWithHelp>
             <textarea
               className={inputClass}
               rows={4}
@@ -950,11 +952,11 @@ export default function OrganisationalTemplateDetailPage() {
           </div>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
-              <label className={labelClass}>Title</label>
+              <FieldLabelWithHelp helpKey="sim.organisational_process_assets.title" className={labelClass}>Title</FieldLabelWithHelp>
               <input className={inputClass} value={contentForm.title} onChange={(e) => setContentForm((f) => ({ ...f, title: e.target.value }))} />
             </div>
             <div className="md:col-span-2">
-              <label className={labelClass}>Description</label>
+              <FieldLabelWithHelp helpKey="sim.organisational_process_assets.description" className={labelClass}>Description</FieldLabelWithHelp>
               <textarea
                 className={inputClass}
                 rows={2}
@@ -966,7 +968,7 @@ export default function OrganisationalTemplateDetailPage() {
 
           {rawJsonFallback ? (
             <div>
-              <label className={labelClass}>Document data (JSON)</label>
+              <FieldLabelWithHelp helpKey="sim.organisational_process_assets.document_data" className={labelClass}>Document data (JSON)</FieldLabelWithHelp>
               <p className="mb-1 text-xs text-gray-500 dark:text-gray-400">
                 This document's data isn't a simple key/value shape, so it's shown as raw JSON.
               </p>
@@ -1059,5 +1061,20 @@ export default function OrganisationalTemplateDetailPage() {
       </fieldset>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (sim.pm_template_nodes.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  ...['name', 'category', 'description'].map((name) => `sim.pm_template_nodes.${name}`),
+  ...['title', 'description', 'document_data'].map((name) => `sim.organisational_process_assets.${name}`),
+]
+
+export default function OrganisationalTemplateDetailPage(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <OrganisationalTemplateDetailPageBody {...props} />
+    </FieldHelpScope>
   )
 }

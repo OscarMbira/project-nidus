@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { X, Save, FolderKanban, DollarSign, Calendar, Target, Trash2, Info } from 'lucide-react'
 import { simDb } from '../../services/supabase/supabaseClient'
 import { createPracticePortfolio, getPracticePortfolios } from '../../services/sim/practicePortfolioService'
@@ -8,7 +10,7 @@ import { getFundingSources } from '../../services/fundingSourceService'
 import { SmartAmountInput } from '@nidus/ui/SmartAmountInput'
 import SearchableSelect from '@nidus/ui/SearchableSelect'
 
-export default function PracticePortfolioForm({ onSaved, onCancel, useModalLayout = true }) {
+function PracticePortfolioFormBody({ onSaved, onCancel, useModalLayout = true }) {
   const [formData, setFormData] = useState({
     portfolio_code: '',
     portfolio_name: '',
@@ -219,7 +221,7 @@ export default function PracticePortfolioForm({ onSaved, onCancel, useModalLayou
           <h3 className="text-sm font-semibold text-gray-200 border-b border-gray-700 pb-2">Basic Information</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-medium text-gray-400 mb-1">Portfolio Code</label>
+              <FieldLabelWithHelp helpKey="sim.practice_portfolios.portfolio_code" className="block text-xs font-medium text-gray-400 mb-1">Portfolio Code</FieldLabelWithHelp>
               <input
                 type="text"
                 name="portfolio_code"
@@ -229,7 +231,7 @@ export default function PracticePortfolioForm({ onSaved, onCancel, useModalLayou
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-400 mb-1">Portfolio Name *</label>
+              <FieldLabelWithHelp helpKey="sim.practice_portfolios.portfolio_name" className="block text-xs font-medium text-gray-400 mb-1" required>Portfolio Name *</FieldLabelWithHelp>
               <input
                 type="text"
                 name="portfolio_name"
@@ -240,7 +242,7 @@ export default function PracticePortfolioForm({ onSaved, onCancel, useModalLayou
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-400 mb-1">Status *</label>
+              <FieldLabelWithHelp helpKey="sim.practice_portfolios.portfolio_status" className="block text-xs font-medium text-gray-400 mb-1" required>Status *</FieldLabelWithHelp>
               <select
                 name="portfolio_status"
                 value={formData.portfolio_status}
@@ -255,7 +257,7 @@ export default function PracticePortfolioForm({ onSaved, onCancel, useModalLayou
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-400 mb-1">Portfolio Type *</label>
+              <FieldLabelWithHelp helpKey="sim.practice_portfolios.portfolio_type" className="block text-xs font-medium text-gray-400 mb-1" required>Portfolio Type *</FieldLabelWithHelp>
               <select
                 name="portfolio_type"
                 value={formData.portfolio_type}
@@ -271,7 +273,7 @@ export default function PracticePortfolioForm({ onSaved, onCancel, useModalLayou
             </div>
             {/* Row: Category + Parent Portfolio */}
             <div>
-              <label className="block text-xs font-medium text-gray-400 mb-1">Category</label>
+              <FieldLabelWithHelp helpKey="sim.practice_portfolios.portfolio_category" className="block text-xs font-medium text-gray-400 mb-1">Category</FieldLabelWithHelp>
               <select
                 name="portfolio_category"
                 value={formData.portfolio_category}
@@ -290,7 +292,7 @@ export default function PracticePortfolioForm({ onSaved, onCancel, useModalLayou
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-gray-400 mb-1">Parent Portfolio (optional)</label>
+              <FieldLabelWithHelp helpKey="sim.practice_portfolios.parent_portfolio_id" className="block text-xs font-medium text-gray-400 mb-1" listOptions={false}>Parent Portfolio (optional)</FieldLabelWithHelp>
               <SearchableSelect
                 options={portfolios.map(p => ({
                   value: p.id,
@@ -305,7 +307,7 @@ export default function PracticePortfolioForm({ onSaved, onCancel, useModalLayou
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-xs font-medium text-gray-400 mb-1">Description</label>
+              <FieldLabelWithHelp helpKey="sim.practice_portfolios.portfolio_description" className="block text-xs font-medium text-gray-400 mb-1">Description</FieldLabelWithHelp>
               <textarea
                 name="portfolio_description"
                 value={formData.portfolio_description}
@@ -315,7 +317,7 @@ export default function PracticePortfolioForm({ onSaved, onCancel, useModalLayou
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-400 mb-1">Mission</label>
+              <FieldLabelWithHelp helpKey="sim.practice_portfolios.portfolio_mission" className="block text-xs font-medium text-gray-400 mb-1">Mission</FieldLabelWithHelp>
               <textarea
                 name="portfolio_mission"
                 value={formData.portfolio_mission}
@@ -326,7 +328,7 @@ export default function PracticePortfolioForm({ onSaved, onCancel, useModalLayou
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-400 mb-1">Vision</label>
+              <FieldLabelWithHelp helpKey="sim.practice_portfolios.portfolio_vision" className="block text-xs font-medium text-gray-400 mb-1">Vision</FieldLabelWithHelp>
               <textarea
                 name="portfolio_vision"
                 value={formData.portfolio_vision}
@@ -344,7 +346,7 @@ export default function PracticePortfolioForm({ onSaved, onCancel, useModalLayou
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-gray-400 mb-1">Governance Model</label>
+                  <FieldLabelWithHelp helpKey="sim.practice_portfolios.governance_model" className="block text-xs font-medium text-gray-400 mb-1">Governance Model</FieldLabelWithHelp>
                   <select
                     name="governance_model"
                     value={formData.governance_model}
@@ -357,7 +359,7 @@ export default function PracticePortfolioForm({ onSaved, onCancel, useModalLayou
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-400 mb-1">Review Frequency</label>
+                  <FieldLabelWithHelp helpKey="sim.practice_portfolios.review_frequency" className="block text-xs font-medium text-gray-400 mb-1">Review Frequency</FieldLabelWithHelp>
                   <select
                     name="review_frequency"
                     value={formData.review_frequency}
@@ -373,7 +375,7 @@ export default function PracticePortfolioForm({ onSaved, onCancel, useModalLayou
               </div>
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-400 mb-1">Goals</label>
+              <FieldLabelWithHelp helpKey="sim.practice_portfolios.goals" className="block text-xs font-medium text-gray-400 mb-1">Goals</FieldLabelWithHelp>
               <div className="space-y-2">
                 {(!Array.isArray(formData.portfolio_goals) || formData.portfolio_goals.length === 0) && (
                   <p className="text-[11px] text-gray-500">No goals added yet. Use &quot;Add goal&quot; to capture key outcomes.</p>
@@ -436,7 +438,7 @@ export default function PracticePortfolioForm({ onSaved, onCancel, useModalLayou
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-medium text-gray-400 mb-1">Start Date</label>
+              <FieldLabelWithHelp helpKey="sim.practice_portfolios.portfolio_start_date" className="block text-xs font-medium text-gray-400 mb-1">Start Date</FieldLabelWithHelp>
               <input
                 type="date"
                 name="portfolio_start_date"
@@ -446,7 +448,7 @@ export default function PracticePortfolioForm({ onSaved, onCancel, useModalLayou
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-400 mb-1">End Date</label>
+              <FieldLabelWithHelp helpKey="sim.practice_portfolios.portfolio_end_date" className="block text-xs font-medium text-gray-400 mb-1">End Date</FieldLabelWithHelp>
               <input
                 type="date"
                 name="portfolio_end_date"
@@ -467,7 +469,7 @@ export default function PracticePortfolioForm({ onSaved, onCancel, useModalLayou
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-medium text-gray-400 mb-1">Reporting Currency</label>
+              <FieldLabelWithHelp helpKey="sim.practice_portfolios.budget_currency" className="block text-xs font-medium text-gray-400 mb-1">Reporting Currency</FieldLabelWithHelp>
               <select
                 name="budget_currency"
                 value={formData.budget_currency}
@@ -482,7 +484,7 @@ export default function PracticePortfolioForm({ onSaved, onCancel, useModalLayou
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-400 mb-1">Budget Type</label>
+              <FieldLabelWithHelp helpKey="sim.practice_portfolios.budget_type" className="block text-xs font-medium text-gray-400 mb-1">Budget Type</FieldLabelWithHelp>
               <select
                 value={formData.budget_type || ''}
                 onChange={(e) => setFormData((prev) => ({ ...prev, budget_type: e.target.value }))}
@@ -501,7 +503,7 @@ export default function PracticePortfolioForm({ onSaved, onCancel, useModalLayou
           </div>
           <div className="border border-gray-700 rounded-lg p-4 bg-gray-800/50">
             <div className="flex items-center justify-between mb-2">
-              <label className="block text-xs font-medium text-gray-400">Budget Categories</label>
+              <FieldLabelWithHelp helpKey="sim.practice_portfolios.budget_categories" className="block text-xs font-medium text-gray-400">Budget Categories</FieldLabelWithHelp>
               <button
                 type="button"
                 onClick={addBudgetItem}
@@ -651,5 +653,34 @@ export default function PracticePortfolioForm({ onSaved, onCancel, useModalLayou
         </div>
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.practice_portfolios.portfolio_code',
+  'sim.practice_portfolios.portfolio_name',
+  'sim.practice_portfolios.portfolio_status',
+  'sim.practice_portfolios.portfolio_type',
+  'sim.practice_portfolios.portfolio_category',
+  'sim.practice_portfolios.parent_portfolio_id',
+  'sim.practice_portfolios.portfolio_description',
+  'sim.practice_portfolios.portfolio_mission',
+  'sim.practice_portfolios.portfolio_vision',
+  'sim.practice_portfolios.governance_model',
+  'sim.practice_portfolios.review_frequency',
+  'sim.practice_portfolios.goals',
+  'sim.practice_portfolios.portfolio_start_date',
+  'sim.practice_portfolios.portfolio_end_date',
+  'sim.practice_portfolios.budget_currency',
+  'sim.practice_portfolios.budget_type',
+  'sim.practice_portfolios.budget_categories',
+]
+
+export default function PracticePortfolioForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <PracticePortfolioFormBody {...props} />
+    </FieldHelpScope>
   )
 }

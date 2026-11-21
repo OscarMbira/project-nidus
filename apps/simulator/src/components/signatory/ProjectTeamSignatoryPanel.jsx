@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { Plus, Trash2, ChevronUp, ChevronDown, Save, Users, ShieldCheck } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { platformDb, simDb } from '@nidus/supabase'
@@ -76,7 +78,7 @@ function SlotRow({ index, slot, slotsLength, roleOptions, updateSlot, setSlotMan
           combobox
         />
       </div>
-      <label
+      <FieldLabelWithHelp helpKey="sim.project_document_signatories.is_mandatory"
         className="inline-flex shrink-0 items-center gap-1.5 rounded border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-200"
         title="When unchecked, this slot is optional — it does not block document lock"
       >
@@ -87,7 +89,7 @@ function SlotRow({ index, slot, slotsLength, roleOptions, updateSlot, setSlotMan
           className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600"
         />
         Mandatory
-      </label>
+      </FieldLabelWithHelp>
       <button type="button" onClick={() => moveSlot(index, -1)} disabled={index === 0} className="shrink-0 rounded p-1 text-gray-400 hover:bg-gray-200 hover:text-gray-700 disabled:opacity-30 dark:hover:bg-gray-700 dark:hover:text-gray-200" title="Move up">
         <ChevronUp className="h-4 w-4" />
       </button>
@@ -242,7 +244,7 @@ function ScopeEditor({ title, icon: Icon, scopeType, scopeId, accountId, documen
  * FK), and sim.practice_teams.team_lead_user_id references auth.users(id) directly — so
  * both checks compare against the raw auth user id, not public.users.id.
  */
-export default function ProjectTeamSignatoryPanel({ practiceProjectId }) {
+function ProjectTeamSignatoryPanelBody({ practiceProjectId }) {
   const [accountId, setAccountId] = useState(null)
   const [authUserId, setAuthUserId] = useState(null)
   const [isOwner, setIsOwner] = useState(false)
@@ -406,7 +408,7 @@ export default function ProjectTeamSignatoryPanel({ practiceProjectId }) {
   return (
     <div className="flex flex-col gap-4">
       <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
-        <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Document type</label>
+        <FieldLabelWithHelp helpKey="sim.project_document_signatories.document_type" className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Document type</FieldLabelWithHelp>
         <input
           type="search"
           value={docSearch}
@@ -462,5 +464,19 @@ export default function ProjectTeamSignatoryPanel({ practiceProjectId }) {
 
       {successModal}
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.project_document_signatories.is_mandatory',
+  'sim.project_document_signatories.document_type',
+]
+
+export default function ProjectTeamSignatoryPanel(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ProjectTeamSignatoryPanelBody {...props} />
+    </FieldHelpScope>
   )
 }

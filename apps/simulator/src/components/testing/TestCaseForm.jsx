@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { X, Save, ClipboardList } from 'lucide-react'
 import TestCaseStepEditor from './TestCaseStepEditor'
 import { platformDb } from '@nidus/supabase'
@@ -24,7 +26,7 @@ function tagsToListValue(tags) {
   return ''
 }
 
-export default function TestCaseForm({
+function TestCaseFormBody({
   testCase,
   projectId,
   suites = [],
@@ -220,9 +222,9 @@ export default function TestCaseForm({
             >
               {/* Title */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                <FieldLabelWithHelp helpKey="sim.test_cases.title" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1" required>
                   Title <span className="text-red-400">*</span>
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   value={form.title}
                   onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
@@ -235,7 +237,7 @@ export default function TestCaseForm({
               {/* Suite + Type */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Test Suite</label>
+                  <FieldLabelWithHelp helpKey="sim.test_cases.suite_id" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Test Suite</FieldLabelWithHelp>
                   <select
                     value={form.suite_id}
                     onChange={e => setForm(f => ({ ...f, suite_id: e.target.value }))}
@@ -248,7 +250,7 @@ export default function TestCaseForm({
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Test Type</label>
+                  <FieldLabelWithHelp helpKey="sim.test_cases.test_type" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Test Type</FieldLabelWithHelp>
                   <select
                     value={form.test_type}
                     onChange={e => setForm(f => ({ ...f, test_type: e.target.value }))}
@@ -264,7 +266,7 @@ export default function TestCaseForm({
               {/* Priority + Status */}
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Priority</label>
+                  <FieldLabelWithHelp helpKey="sim.test_cases.priority" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Priority</FieldLabelWithHelp>
                   <select
                     value={form.priority}
                     onChange={e => setForm(f => ({ ...f, priority: e.target.value }))}
@@ -276,7 +278,7 @@ export default function TestCaseForm({
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Status</label>
+                  <FieldLabelWithHelp helpKey="sim.test_cases.status" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Status</FieldLabelWithHelp>
                   <select
                     value={form.status}
                     onChange={e => setForm(f => ({ ...f, status: e.target.value }))}
@@ -288,7 +290,7 @@ export default function TestCaseForm({
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Est. Duration (min)</label>
+                  <FieldLabelWithHelp helpKey="sim.test_cases.estimated_duration_minutes" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Est. Duration (min)</FieldLabelWithHelp>
                   <input
                     type="number" min="1"
                     value={form.estimated_duration_minutes}
@@ -301,7 +303,7 @@ export default function TestCaseForm({
               {/* Description + Preconditions (one row, two columns) */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="min-w-0">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Description</label>
+                  <FieldLabelWithHelp helpKey="sim.test_cases.description" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Description</FieldLabelWithHelp>
                   <textarea
                     value={form.description}
                     onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
@@ -311,7 +313,7 @@ export default function TestCaseForm({
                   />
                 </div>
                 <div className="min-w-0">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Preconditions</label>
+                  <FieldLabelWithHelp helpKey="sim.test_cases.preconditions" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Preconditions</FieldLabelWithHelp>
                   <textarea
                     value={form.preconditions}
                     onChange={e => setForm(f => ({ ...f, preconditions: e.target.value }))}
@@ -325,7 +327,7 @@ export default function TestCaseForm({
 
               {/* Expected Result */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Overall Expected Result</label>
+                <FieldLabelWithHelp helpKey="sim.test_cases.expected_result" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Overall Expected Result</FieldLabelWithHelp>
                 <textarea
                   value={form.expected_result}
                   onChange={e => setForm(f => ({ ...f, expected_result: e.target.value }))}
@@ -338,7 +340,7 @@ export default function TestCaseForm({
               {/* Module + Requirement */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Module / Area</label>
+                  <FieldLabelWithHelp helpKey="sim.test_cases.module_area" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Module / Area</FieldLabelWithHelp>
                   <input
                     value={form.module_area}
                     onChange={e => setForm(f => ({ ...f, module_area: e.target.value }))}
@@ -347,7 +349,7 @@ export default function TestCaseForm({
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Requirement Ref</label>
+                  <FieldLabelWithHelp helpKey="sim.test_cases.requirement_ref" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Requirement Ref</FieldLabelWithHelp>
                   <input
                     value={form.requirement_ref}
                     onChange={e => setForm(f => ({ ...f, requirement_ref: e.target.value }))}
@@ -359,7 +361,7 @@ export default function TestCaseForm({
 
               {/* Tags */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Tags</label>
+                <FieldLabelWithHelp helpKey="sim.test_cases.tags" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Tags</FieldLabelWithHelp>
                 <MultiLineListInput
                   viewModeId="testing-test-case-tags"
                   value={form.tags}
@@ -442,4 +444,28 @@ export default function TestCaseForm({
   }
 
   return <div className="w-full">{inner}</div>
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.test_cases.title',
+  'sim.test_cases.suite_id',
+  'sim.test_cases.test_type',
+  'sim.test_cases.priority',
+  'sim.test_cases.status',
+  'sim.test_cases.estimated_duration_minutes',
+  'sim.test_cases.description',
+  'sim.test_cases.preconditions',
+  'sim.test_cases.expected_result',
+  'sim.test_cases.module_area',
+  'sim.test_cases.requirement_ref',
+  'sim.test_cases.tags',
+]
+
+export default function TestCaseForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <TestCaseFormBody {...props} />
+    </FieldHelpScope>
+  )
 }

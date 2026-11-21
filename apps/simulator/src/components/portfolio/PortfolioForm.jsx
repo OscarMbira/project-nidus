@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { X, Save, FolderKanban, User, DollarSign, Calendar, Target, Trash2, Info } from 'lucide-react';
 import { savePortfolio } from '../../services/portfolioService';
 import { platformDb } from '@nidus/supabase';
@@ -14,7 +16,7 @@ import AuditField from '@nidus/ui/AuditField';
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
 import { humanizeAuditToken } from '@nidus/shared/utils/auditDisplayUtils';
 
-export default function PortfolioForm({ portfolio, onSave, onCancel, useModalLayout = true, readOnly = false }) {
+function PortfolioFormBody({ portfolio, onSave, onCancel, useModalLayout = true, readOnly = false }) {
   const [formData, setFormData] = useState({
     portfolio_code: '',
     portfolio_name: '',
@@ -432,9 +434,9 @@ export default function PortfolioForm({ portfolio, onSave, onCancel, useModalLay
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Row 1: Code + Name */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.portfolios.portfolio_code" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Portfolio Code
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   name="portfolio_code"
@@ -445,9 +447,9 @@ export default function PortfolioForm({ portfolio, onSave, onCancel, useModalLay
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.portfolios.portfolio_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Portfolio Name *
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   name="portfolio_name"
@@ -460,9 +462,9 @@ export default function PortfolioForm({ portfolio, onSave, onCancel, useModalLay
 
               {/* Row 2: Status + Type */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.portfolios.portfolio_status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Status *
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="portfolio_status"
                   value={formData.portfolio_status}
@@ -479,9 +481,9 @@ export default function PortfolioForm({ portfolio, onSave, onCancel, useModalLay
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.portfolios.portfolio_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Portfolio Type *
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="portfolio_type"
                   value={formData.portfolio_type}
@@ -499,9 +501,9 @@ export default function PortfolioForm({ portfolio, onSave, onCancel, useModalLay
 
               {/* Row 3: Category + Parent Portfolio — same source as Programme: portfolio_categories */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.portfolios.portfolio_category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Category
-                </label>
+                </FieldLabelWithHelp>
                 <SearchableSelect
                   options={categories.map((c) => ({
                     value: c.code || c.name,
@@ -519,9 +521,9 @@ export default function PortfolioForm({ portfolio, onSave, onCancel, useModalLay
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.portfolios.parent_portfolio_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                   Parent Portfolio (optional)
-                </label>
+                </FieldLabelWithHelp>
                 <SearchableSelect
                   options={portfolios.map(p => ({
                     value: p.id,
@@ -539,9 +541,9 @@ export default function PortfolioForm({ portfolio, onSave, onCancel, useModalLay
 
               {/* Description */}
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.portfolios.portfolio_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Description
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   name="portfolio_description"
                   value={formData.portfolio_description}
@@ -553,9 +555,9 @@ export default function PortfolioForm({ portfolio, onSave, onCancel, useModalLay
 
               {/* Mission & Vision */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.portfolios.portfolio_mission" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Mission
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   name="portfolio_mission"
                   value={formData.portfolio_mission}
@@ -567,9 +569,9 @@ export default function PortfolioForm({ portfolio, onSave, onCancel, useModalLay
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.portfolios.portfolio_vision" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Vision
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   name="portfolio_vision"
                   value={formData.portfolio_vision}
@@ -588,9 +590,9 @@ export default function PortfolioForm({ portfolio, onSave, onCancel, useModalLay
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <FieldLabelWithHelp helpKey="sim.portfolios.governance_model" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Governance Model
-                    </label>
+                    </FieldLabelWithHelp>
                     <select
                       name="governance_model"
                       value={formData.governance_model}
@@ -603,9 +605,9 @@ export default function PortfolioForm({ portfolio, onSave, onCancel, useModalLay
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <FieldLabelWithHelp helpKey="sim.portfolios.review_frequency" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Review Frequency
-                    </label>
+                    </FieldLabelWithHelp>
                     <select
                       name="review_frequency"
                       value={formData.review_frequency}
@@ -619,9 +621,9 @@ export default function PortfolioForm({ portfolio, onSave, onCancel, useModalLay
                     </select>
                   </div>
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <FieldLabelWithHelp helpKey="sim.portfolios.delivery_methodology_track" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Delivery Methodology
-                    </label>
+                    </FieldLabelWithHelp>
                     <select
                       name="delivery_methodology_track"
                       value={formData.delivery_methodology_track}
@@ -647,9 +649,9 @@ export default function PortfolioForm({ portfolio, onSave, onCancel, useModalLay
 
               {/* Goals */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.portfolios.goals" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Goals
-                </label>
+                </FieldLabelWithHelp>
                 <div className="space-y-2">
                   {(!Array.isArray(formData.portfolio_goals) ||
                     formData.portfolio_goals.length === 0) && (
@@ -729,9 +731,9 @@ export default function PortfolioForm({ portfolio, onSave, onCancel, useModalLay
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.portfolios.portfolio_owner_user_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                   Portfolio Owner
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="portfolio_owner_user_id"
                   value={formData.portfolio_owner_user_id}
@@ -748,9 +750,9 @@ export default function PortfolioForm({ portfolio, onSave, onCancel, useModalLay
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.portfolios.portfolio_manager_user_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                   Portfolio Manager
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="portfolio_manager_user_id"
                   value={formData.portfolio_manager_user_id}
@@ -778,9 +780,9 @@ export default function PortfolioForm({ portfolio, onSave, onCancel, useModalLay
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.portfolios.portfolio_start_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Start Date
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="date"
                   name="portfolio_start_date"
@@ -791,9 +793,9 @@ export default function PortfolioForm({ portfolio, onSave, onCancel, useModalLay
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.portfolios.portfolio_end_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   End Date
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="date"
                   name="portfolio_end_date"
@@ -817,9 +819,9 @@ export default function PortfolioForm({ portfolio, onSave, onCancel, useModalLay
             {/* Reporting currency + Budget Type */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.portfolios.budget_currency" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Reporting Currency
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="budget_currency"
                   value={formData.budget_currency}
@@ -838,9 +840,9 @@ export default function PortfolioForm({ portfolio, onSave, onCancel, useModalLay
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.portfolios.budget_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Budget Type
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="budget_type"
                   value={formData.budget_type || ''}
@@ -867,9 +869,9 @@ export default function PortfolioForm({ portfolio, onSave, onCancel, useModalLay
             {/* Budget categories with per-line currency */}
             <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-900">
               <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <FieldLabelWithHelp helpKey="sim.portfolios.budget_categories" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Budget Categories
-                </label>
+                </FieldLabelWithHelp>
                 <button
                   type="button"
                   onClick={addBudgetItem}
@@ -1064,3 +1066,34 @@ export default function PortfolioForm({ portfolio, onSave, onCancel, useModalLay
   );
 }
 
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.portfolios.portfolio_code',
+  'sim.portfolios.portfolio_name',
+  'sim.portfolios.portfolio_status',
+  'sim.portfolios.portfolio_type',
+  'sim.portfolios.portfolio_category',
+  'sim.portfolios.parent_portfolio_id',
+  'sim.portfolios.portfolio_description',
+  'sim.portfolios.portfolio_mission',
+  'sim.portfolios.portfolio_vision',
+  'sim.portfolios.governance_model',
+  'sim.portfolios.review_frequency',
+  'sim.portfolios.delivery_methodology_track',
+  'sim.portfolios.goals',
+  'sim.portfolios.portfolio_owner_user_id',
+  'sim.portfolios.portfolio_manager_user_id',
+  'sim.portfolios.portfolio_start_date',
+  'sim.portfolios.portfolio_end_date',
+  'sim.portfolios.budget_currency',
+  'sim.portfolios.budget_type',
+  'sim.portfolios.budget_categories',
+]
+
+export default function PortfolioForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <PortfolioFormBody {...props} />
+    </FieldHelpScope>
+  )
+}

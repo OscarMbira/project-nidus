@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { ArrowRight, Plus, X, Link as LinkIcon } from 'lucide-react'
 import { linkFollowOnAction, unlinkFollowOnAction, getOpenItemsForFollowOn } from '../../../services/eprFollowOnService'
 import { fetchFollowOnActions } from '../../../services/closingProjectService'
 
-export default function EPRFollowOnActions({ reportId, followOnActions, onFollowOnActionsChange, projectId, mode }) {
+function EPRFollowOnActionsBody({ reportId, followOnActions, onFollowOnActionsChange, projectId, mode }) {
   const [showLinkForm, setShowLinkForm] = useState(false)
   const [openItems, setOpenItems] = useState(null)
   const [availableActions, setAvailableActions] = useState([])
@@ -171,9 +173,9 @@ export default function EPRFollowOnActions({ reportId, followOnActions, onFollow
             <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-900">
               <div className="space-y-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <FieldLabelWithHelp helpKey="public.end_project_report_follow_on_actions.follow_on_action_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required listOptions={false}>
                     Follow-On Action *
-                  </label>
+                  </FieldLabelWithHelp>
                   <select
                     value={newLink.follow_on_action_id}
                     onChange={(e) => setNewLink({ ...newLink, follow_on_action_id: e.target.value })}
@@ -188,9 +190,9 @@ export default function EPRFollowOnActions({ reportId, followOnActions, onFollow
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <FieldLabelWithHelp helpKey="public.end_project_report_follow_on_actions.source_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Source Type
-                  </label>
+                  </FieldLabelWithHelp>
                   <select
                     value={newLink.source_type}
                     onChange={(e) => setNewLink({ ...newLink, source_type: e.target.value })}
@@ -210,9 +212,9 @@ export default function EPRFollowOnActions({ reportId, followOnActions, onFollow
                     onChange={(e) => setNewLink({ ...newLink, documentation_attached: e.target.checked })}
                     className="rounded"
                   />
-                  <label className="text-sm text-gray-700 dark:text-gray-300">
+                  <FieldLabelWithHelp helpKey="public.end_project_report_follow_on_actions.documentation_attached" className="text-sm text-gray-700 dark:text-gray-300">
                     Documentation attached
-                  </label>
+                  </FieldLabelWithHelp>
                 </div>
                 <div className="flex items-center gap-2">
                   <input
@@ -221,9 +223,9 @@ export default function EPRFollowOnActions({ reportId, followOnActions, onFollow
                     onChange={(e) => setNewLink({ ...newLink, project_board_advice_requested: e.target.checked })}
                     className="rounded"
                   />
-                  <label className="text-sm text-gray-700 dark:text-gray-300">
+                  <FieldLabelWithHelp helpKey="public.end_project_report_follow_on_actions.board_advice_requested" className="text-sm text-gray-700 dark:text-gray-300">
                     Project Board advice requested
-                  </label>
+                  </FieldLabelWithHelp>
                 </div>
                 <div className="flex gap-2">
                   <button
@@ -256,5 +258,19 @@ export default function EPRFollowOnActions({ reportId, followOnActions, onFollow
         </>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.end_project_report_follow_on_actions.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'follow_on_action_id', 'source_type', 'documentation_attached', 'board_advice_requested',
+].map((name) => `public.end_project_report_follow_on_actions.${name}`)
+
+export default function EPRFollowOnActions(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <EPRFollowOnActionsBody {...props} />
+    </FieldHelpScope>
   )
 }

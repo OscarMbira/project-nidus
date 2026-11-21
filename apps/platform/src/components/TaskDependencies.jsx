@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { supabase } from '../services/supabaseClient'
 import { Link } from 'react-router-dom'
 import { ArrowRight, AlertTriangle, Plus, Trash2 } from 'lucide-react'
 
 // Task Dependencies component
 // Shows predecessors and successors for a given task and allows adding/removing dependencies
-export default function TaskDependencies({ taskId, projectId }) {
+function TaskDependenciesBody({ taskId, projectId }) {
   const [dependencies, setDependencies] = useState([])
   const [projectTasks, setProjectTasks] = useState([])
   const [loading, setLoading] = useState(true)
@@ -214,9 +216,9 @@ export default function TaskDependencies({ taskId, projectId }) {
         <form onSubmit={handleAddDependency} className="space-y-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="public.task_dependencies.direction" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Relationship
-              </label>
+              </FieldLabelWithHelp>
               <select
                 name="direction"
                 value={formData.direction}
@@ -228,9 +230,9 @@ export default function TaskDependencies({ taskId, projectId }) {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="public.task_dependencies.other_task_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" listOptions={false}>
                 Related Task
-              </label>
+              </FieldLabelWithHelp>
               <select
                 name="other_task_id"
                 value={formData.other_task_id}
@@ -246,9 +248,9 @@ export default function TaskDependencies({ taskId, projectId }) {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="public.task_dependencies.dependency_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Dependency Type
-              </label>
+              </FieldLabelWithHelp>
               <select
                 name="dependency_type"
                 value={formData.dependency_type}
@@ -262,9 +264,9 @@ export default function TaskDependencies({ taskId, projectId }) {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="public.task_dependencies.lag_days" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Lag / Lead (days)
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="number"
                 name="lag_days"
@@ -406,4 +408,16 @@ export default function TaskDependencies({ taskId, projectId }) {
   )
 }
 
+// v1345 slice 4: field help for this component (public.task_dependencies.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'direction', 'other_task_id', 'dependency_type', 'lag_days',
+].map((name) => `public.task_dependencies.${name}`)
 
+export default function TaskDependencies(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <TaskDependenciesBody {...props} />
+    </FieldHelpScope>
+  )
+}

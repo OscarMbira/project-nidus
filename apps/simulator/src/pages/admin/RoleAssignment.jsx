@@ -6,6 +6,8 @@
  */
 
 import { useState, useEffect, useMemo } from 'react';
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { useNavigate } from 'react-router-dom';
 import { 
   UserPlus, 
@@ -54,7 +56,7 @@ const SORT_ACCESSORS = {
   roles: (u) => u.roles.map((r) => r.role_display_name).join(', '),
 };
 
-export default function RoleAssignment() {
+function RoleAssignmentBody() {
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useViewMode('role-assignment-users', 'list');
   const [search, setSearch] = useState('');
@@ -434,9 +436,9 @@ export default function RoleAssignment() {
             <h2 className="text-xl font-semibold mb-4">Invite New User</h2>
             <form onSubmit={handleInviteUser} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.organisation_invitations.email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Email Address *
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="email"
                   value={inviteEmail}
@@ -448,9 +450,9 @@ export default function RoleAssignment() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.organisation_invitations.role_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Role *
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   value={inviteRole}
                   onChange={(e) => setInviteRole(e.target.value)}
@@ -467,9 +469,9 @@ export default function RoleAssignment() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.organisation_invitations.invitation_message" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Message (Optional)
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   value={inviteMessage}
                   onChange={(e) => setInviteMessage(e.target.value)}
@@ -516,9 +518,9 @@ export default function RoleAssignment() {
             <h2 className="text-xl font-semibold mb-4">Assign Role to Existing User</h2>
             <form onSubmit={handleAssignRole} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.organisation_invitations.assign_user_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required listOptions={false}>
                   User *
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   value={assignUserId}
                   onChange={(e) => setAssignUserId(e.target.value)}
@@ -535,9 +537,9 @@ export default function RoleAssignment() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.organisation_invitations.role_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Role *
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   value={assignRole}
                   onChange={(e) => setAssignRole(e.target.value)}
@@ -684,3 +686,18 @@ export default function RoleAssignment() {
   );
 }
 
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.organisation_invitations.email',
+  'sim.organisation_invitations.role_id',
+  'sim.organisation_invitations.invitation_message',
+  'sim.organisation_invitations.assign_user_id',
+]
+
+export default function RoleAssignment(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <RoleAssignmentBody {...props} />
+    </FieldHelpScope>
+  )
+}

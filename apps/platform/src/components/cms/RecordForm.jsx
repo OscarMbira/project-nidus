@@ -4,6 +4,8 @@
  */
 
 import { useState } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
 import AuditCard from '@nidus/ui/AuditCard'
@@ -11,7 +13,7 @@ import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken } from '@nidus/shared/utils/auditDisplayUtils'
 
-export default function RecordForm({ recordData = {}, onChange, onCancel, onSubmit, isEditing = false }) {
+function RecordFormBody({ recordData = {}, onChange, onCancel, onSubmit, isEditing = false }) {
   const [formTab, setFormTab] = useState('details')
 
   const handleChange = (field, value) => {
@@ -61,9 +63,9 @@ export default function RecordForm({ recordData = {}, onChange, onCancel, onSubm
       <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.cms_communication_records.record_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Record Name <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             value={recordData.record_name || ''}
@@ -75,9 +77,9 @@ export default function RecordForm({ recordData = {}, onChange, onCancel, onSubm
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.cms_communication_records.record_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Record Type <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={recordData.record_type || ''}
             onChange={(e) => handleChange('record_type', e.target.value)}
@@ -95,9 +97,9 @@ export default function RecordForm({ recordData = {}, onChange, onCancel, onSubm
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="public.cms_communication_records.record_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
           Description <span className="text-red-500">*</span>
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={recordData.record_description || ''}
           onChange={(e) => handleChange('record_description', e.target.value)}
@@ -109,9 +111,9 @@ export default function RecordForm({ recordData = {}, onChange, onCancel, onSubm
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="public.cms_communication_records.record_purpose" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
           Purpose <span className="text-red-500">*</span>
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={recordData.record_purpose || ''}
           onChange={(e) => handleChange('record_purpose', e.target.value)}
@@ -124,9 +126,9 @@ export default function RecordForm({ recordData = {}, onChange, onCancel, onSubm
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.cms_communication_records.storage_location" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Storage Location
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             value={recordData.storage_location || ''}
@@ -137,9 +139,9 @@ export default function RecordForm({ recordData = {}, onChange, onCancel, onSubm
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.cms_communication_records.retention_period" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Retention Period
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             value={recordData.retention_period || ''}
@@ -151,9 +153,9 @@ export default function RecordForm({ recordData = {}, onChange, onCancel, onSubm
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="public.cms_communication_records.access_control" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Access Control
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={recordData.access_control || ''}
           onChange={(e) => handleChange('access_control', e.target.value)}
@@ -164,9 +166,9 @@ export default function RecordForm({ recordData = {}, onChange, onCancel, onSubm
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="public.cms_communication_records.format_requirements" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Format Requirements
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={recordData.format_requirements || ''}
           onChange={(e) => handleChange('format_requirements', e.target.value)}
@@ -177,7 +179,7 @@ export default function RecordForm({ recordData = {}, onChange, onCancel, onSubm
       </div>
 
       <div className="flex items-center">
-        <label className="flex items-center">
+        <FieldLabelWithHelp helpKey="public.cms_communication_records.is_mandatory" className="flex items-center">
           <input
             type="checkbox"
             checked={recordData.is_mandatory !== undefined ? recordData.is_mandatory : true}
@@ -187,7 +189,7 @@ export default function RecordForm({ recordData = {}, onChange, onCancel, onSubm
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
             Mandatory Record
           </span>
-        </label>
+        </FieldLabelWithHelp>
       </div>
       </>
       )}
@@ -208,5 +210,20 @@ export default function RecordForm({ recordData = {}, onChange, onCancel, onSubm
         </button>
       </div>
     </form>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.cms_communication_records.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'record_name', 'record_type', 'record_description', 'record_purpose', 'storage_location',
+  'retention_period', 'access_control', 'format_requirements', 'is_mandatory',
+].map((name) => `public.cms_communication_records.${name}`)
+
+export default function RecordForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <RecordFormBody {...props} />
+    </FieldHelpScope>
   )
 }

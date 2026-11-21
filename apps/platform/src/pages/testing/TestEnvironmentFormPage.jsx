@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import { platformDb } from '@nidus/supabase'
@@ -20,7 +22,7 @@ import {
 const labelClass = 'mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200'
 const controlClass = 'w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100'
 
-export default function TestEnvironmentFormPage() {
+function TestEnvironmentFormPageBody() {
   const { environmentKey } = useParams()
   const isNew = !environmentKey
   return (
@@ -193,7 +195,7 @@ function Editor({ isNew, environmentKey, projectId }) {
           <form onSubmit={save} className="space-y-4 p-5">
             <fieldset disabled={!editing} className="space-y-4 disabled:opacity-80">
               <div>
-                <label className={labelClass} htmlFor="environment-name">Name <span className="text-red-400">*</span></label>
+                <FieldLabelWithHelp helpKey="public.test_environments.name" className={labelClass} htmlFor="environment-name" required>Name <span className="text-red-400">*</span></FieldLabelWithHelp>
                 <input
                   id="environment-name"
                   value={name}
@@ -203,7 +205,7 @@ function Editor({ isNew, environmentKey, projectId }) {
                 />
               </div>
               <div>
-                <label className={labelClass} htmlFor="environment-description">Description</label>
+                <FieldLabelWithHelp helpKey="public.test_environments.description" className={labelClass} htmlFor="environment-description">Description</FieldLabelWithHelp>
                 <textarea
                   id="environment-description"
                   value={description}
@@ -212,14 +214,14 @@ function Editor({ isNew, environmentKey, projectId }) {
                   className={`${controlClass} resize-none`}
                 />
               </div>
-              <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
+              <FieldLabelWithHelp helpKey="public.test_environments.is_active" className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
                 <input
                   type="checkbox"
                   checked={isActive}
                   onChange={(e) => { setIsActive(e.target.checked); setDirty(true) }}
                 />
                 Active
-              </label>
+              </FieldLabelWithHelp>
             </fieldset>
             {editing && (
               <div className="flex justify-end gap-3">
@@ -236,5 +238,19 @@ function Editor({ isNew, environmentKey, projectId }) {
         )}
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.test_environments.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'name', 'description', 'is_active',
+].map((name) => `public.test_environments.${name}`)
+
+export default function TestEnvironmentFormPage(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <TestEnvironmentFormPageBody {...props} />
+    </FieldHelpScope>
   )
 }

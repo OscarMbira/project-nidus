@@ -5,6 +5,8 @@
  */
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useNavigate } from 'react-router-dom';
 import { Plus, Edit, Trash2, ArrowLeft, X } from 'lucide-react';
 import { toast } from 'react-hot-toast';
@@ -24,7 +26,7 @@ import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
-export default function FundingSources() {
+function FundingSourcesBody() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [sources, setSources] = useState([]);
@@ -200,7 +202,7 @@ export default function FundingSources() {
               <>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Name *</label>
+                  <FieldLabelWithHelp helpKey="sim.funding_sources.name" className="block text-sm font-medium text-gray-300 mb-2" required>Name *</FieldLabelWithHelp>
                   <input
                     type="text"
                     value={formData.name}
@@ -211,7 +213,7 @@ export default function FundingSources() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Code</label>
+                  <FieldLabelWithHelp helpKey="sim.funding_sources.code" className="block text-sm font-medium text-gray-300 mb-2">Code</FieldLabelWithHelp>
                   <input
                     type="text"
                     value={formData.code}
@@ -222,7 +224,7 @@ export default function FundingSources() {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Description</label>
+                <FieldLabelWithHelp helpKey="sim.funding_sources.description" className="block text-sm font-medium text-gray-300 mb-2">Description</FieldLabelWithHelp>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData(p => ({ ...p, description: e.target.value }))}
@@ -240,7 +242,7 @@ export default function FundingSources() {
                     onChange={(e) => setFormData(p => ({ ...p, is_active: e.target.checked }))}
                     className="rounded border-gray-600 bg-gray-700 text-blue-500"
                   />
-                  <label htmlFor="is_active" className="text-sm text-gray-300">Active</label>
+                  <FieldLabelWithHelp helpKey="sim.funding_sources.is_active" htmlFor="is_active" className="text-sm text-gray-300">Active</FieldLabelWithHelp>
                 </div>
               )}
               </>
@@ -300,4 +302,18 @@ export default function FundingSources() {
       </div>
     </div>
   );
+}
+
+// v1345 slice 4: field help for this component (sim.funding_sources.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'name', 'code', 'description', 'is_active',
+].map((name) => `sim.funding_sources.${name}`)
+
+export default function FundingSources(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <FundingSourcesBody {...props} />
+    </FieldHelpScope>
+  )
 }

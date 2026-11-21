@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { supabase } from '../../services/supabaseClient'
 import { X, Save, FileText, Package, BookOpen, Users, Award, Target, Settings } from 'lucide-react'
 import { createPPD, updatePPD, createPPDFromMandate } from '../../services/projectProductDescriptionService'
@@ -10,7 +12,7 @@ import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
-export default function PPDForm({ ppd, projectId, mandateId, onSave, onCancel }) {
+function PPDFormBody({ ppd, projectId, mandateId, onSave, onCancel }) {
   const [formData, setFormData] = useState({
     product_title: '',
     purpose: '',
@@ -263,9 +265,9 @@ export default function PPDForm({ ppd, projectId, mandateId, onSave, onCancel })
         return (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.project_product_descriptions.product_title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Product Title *
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="text"
                 name="product_title"
@@ -282,9 +284,9 @@ export default function PPDForm({ ppd, projectId, mandateId, onSave, onCancel })
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.project_product_descriptions.purpose" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Purpose *
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 name="purpose"
                 value={formData.purpose}
@@ -301,9 +303,9 @@ export default function PPDForm({ ppd, projectId, mandateId, onSave, onCancel })
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.project_product_descriptions.composition" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Composition
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 name="composition"
                 value={formData.composition}
@@ -315,9 +317,9 @@ export default function PPDForm({ ppd, projectId, mandateId, onSave, onCancel })
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.project_product_descriptions.derivation" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Derivation
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 name="derivation"
                 value={formData.derivation}
@@ -339,9 +341,9 @@ export default function PPDForm({ ppd, projectId, mandateId, onSave, onCancel })
               </p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.project_product_descriptions.composition" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Composition Summary
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 name="composition"
                 value={formData.composition}
@@ -358,9 +360,9 @@ export default function PPDForm({ ppd, projectId, mandateId, onSave, onCancel })
         return (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.project_product_descriptions.development_skills_required" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Development Skills Required
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 name="development_skills_required"
                 value={formData.development_skills_required}
@@ -372,9 +374,9 @@ export default function PPDForm({ ppd, projectId, mandateId, onSave, onCancel })
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.project_product_descriptions.resource_areas" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Resource Areas
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 name="resource_areas"
                 value={formData.resource_areas}
@@ -391,9 +393,9 @@ export default function PPDForm({ ppd, projectId, mandateId, onSave, onCancel })
         return (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.project_product_descriptions.customer_quality_expectations" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Customer Quality Expectations *
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 name="customer_quality_expectations"
                 value={formData.customer_quality_expectations}
@@ -405,9 +407,9 @@ export default function PPDForm({ ppd, projectId, mandateId, onSave, onCancel })
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.project_product_descriptions.quality_characteristics" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Quality Characteristics
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 name="quality_characteristics"
                 value={formData.quality_characteristics}
@@ -419,9 +421,9 @@ export default function PPDForm({ ppd, projectId, mandateId, onSave, onCancel })
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.project_product_descriptions.quality_management_system" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Quality Management System
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 name="quality_management_system"
                 value={formData.quality_management_system}
@@ -433,9 +435,9 @@ export default function PPDForm({ ppd, projectId, mandateId, onSave, onCancel })
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.project_product_descriptions.applicable_standards" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Applicable Standards
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 name="applicable_standards"
                 value={formData.applicable_standards}
@@ -447,9 +449,9 @@ export default function PPDForm({ ppd, projectId, mandateId, onSave, onCancel })
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.project_product_descriptions.satisfaction_targets" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Satisfaction Targets
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 name="satisfaction_targets"
                 value={formData.satisfaction_targets}
@@ -461,9 +463,9 @@ export default function PPDForm({ ppd, projectId, mandateId, onSave, onCancel })
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.project_product_descriptions.project_quality_tolerances" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Project Quality Tolerances
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 name="project_quality_tolerances"
                 value={formData.project_quality_tolerances}
@@ -480,9 +482,9 @@ export default function PPDForm({ ppd, projectId, mandateId, onSave, onCancel })
         return (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.project_product_descriptions.acceptance_method" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Acceptance Method *
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 name="acceptance_method"
                 value={formData.acceptance_method}
@@ -499,9 +501,9 @@ export default function PPDForm({ ppd, projectId, mandateId, onSave, onCancel })
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.project_product_descriptions.acceptance_responsibilities" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Acceptance Responsibilities
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 name="acceptance_responsibilities"
                 value={formData.acceptance_responsibilities}
@@ -513,9 +515,9 @@ export default function PPDForm({ ppd, projectId, mandateId, onSave, onCancel })
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.project_product_descriptions.handover_arrangements" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Handover Arrangements
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 name="handover_arrangements"
                 value={formData.handover_arrangements}
@@ -534,16 +536,16 @@ export default function PPDForm({ ppd, projectId, mandateId, onSave, onCancel })
                 onChange={handleChange}
                 className="h-4 w-4 text-blue-600 rounded border-gray-300"
               />
-              <label className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+              <FieldLabelWithHelp helpKey="sim.project_product_descriptions.phased_handover" className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                 Phased handover planned
-              </label>
+              </FieldLabelWithHelp>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.project_product_descriptions.author_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                   Author
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="author_id"
                   value={formData.author_id}
@@ -560,9 +562,9 @@ export default function PPDForm({ ppd, projectId, mandateId, onSave, onCancel })
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.project_product_descriptions.owner_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                   Owner
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="owner_id"
                   value={formData.owner_id}
@@ -579,9 +581,9 @@ export default function PPDForm({ ppd, projectId, mandateId, onSave, onCancel })
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.project_product_descriptions.client_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                   Client
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="client_id"
                   value={formData.client_id}
@@ -768,5 +770,36 @@ export default function PPDForm({ ppd, projectId, mandateId, onSave, onCancel })
         )}
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.project_product_descriptions.product_title',
+  'sim.project_product_descriptions.purpose',
+  'sim.project_product_descriptions.composition',
+  'sim.project_product_descriptions.derivation',
+  'sim.project_product_descriptions.development_skills_required',
+  'sim.project_product_descriptions.resource_areas',
+  'sim.project_product_descriptions.customer_quality_expectations',
+  'sim.project_product_descriptions.quality_characteristics',
+  'sim.project_product_descriptions.quality_management_system',
+  'sim.project_product_descriptions.applicable_standards',
+  'sim.project_product_descriptions.satisfaction_targets',
+  'sim.project_product_descriptions.project_quality_tolerances',
+  'sim.project_product_descriptions.acceptance_method',
+  'sim.project_product_descriptions.acceptance_responsibilities',
+  'sim.project_product_descriptions.handover_arrangements',
+  'sim.project_product_descriptions.phased_handover',
+  'sim.project_product_descriptions.author_id',
+  'sim.project_product_descriptions.owner_id',
+  'sim.project_product_descriptions.client_id',
+]
+
+export default function PPDForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <PPDFormBody {...props} />
+    </FieldHelpScope>
   )
 }

@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { Save, TrendingUp, Target, Calendar } from 'lucide-react';
 import { saveResourceForecast, getResourceCategories, createResourceCategory } from '../../services/crossResourceService';
 import { getUserSystemRoles, getUserProjectRoles } from '../../services/roleService';
@@ -17,7 +19,7 @@ import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/
 // and above (or any org-wide system role) may forecast beyond project scope.
 const HIGHER_TIER_MIN_ROLE_LEVEL = 10;
 
-export default function ResourceForecastForm({ forecast, onSave, onCancel, variant = 'modal', backLabel = null, readOnly = false }) {
+function ResourceForecastFormBody({ forecast, onSave, onCancel, variant = 'modal', backLabel = null, readOnly = false }) {
   const [formTab, setFormTab] = useState('details');
   const [auditUserLabels, setAuditUserLabels] = useState({});
   const [maxRoleLevel, setMaxRoleLevel] = useState(null); // null = still resolving
@@ -241,9 +243,9 @@ export default function ResourceForecastForm({ forecast, onSave, onCancel, varia
             </h3>
             <div className={`grid grid-cols-1 gap-4 ${showHigherTierFields ? 'md:grid-cols-3' : 'md:max-w-xs'}`}>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.resource_forecasts.forecast_scope" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Scope
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="forecast_scope"
                   value={formData.forecast_scope}
@@ -263,9 +265,9 @@ export default function ResourceForecastForm({ forecast, onSave, onCancel, varia
 
               {showHigherTierFields && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.resource_forecasts.portfolio_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                   Portfolio (optional)
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="portfolio_id"
                   value={formData.portfolio_id}
@@ -285,9 +287,9 @@ export default function ResourceForecastForm({ forecast, onSave, onCancel, varia
 
               {showHigherTierFields && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.resource_forecasts.programme_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                   Programme (optional)
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="programme_id"
                   value={formData.programme_id}
@@ -315,9 +317,9 @@ export default function ResourceForecastForm({ forecast, onSave, onCancel, varia
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.resource_forecasts.forecast_start_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Start Date *
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="date"
                   name="forecast_start_date"
@@ -329,9 +331,9 @@ export default function ResourceForecastForm({ forecast, onSave, onCancel, varia
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.resource_forecasts.forecast_end_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   End Date *
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="date"
                   name="forecast_end_date"
@@ -343,9 +345,9 @@ export default function ResourceForecastForm({ forecast, onSave, onCancel, varia
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.resource_forecasts.forecast_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Forecast Type *
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="forecast_type"
                   value={formData.forecast_type}
@@ -390,9 +392,9 @@ export default function ResourceForecastForm({ forecast, onSave, onCancel, varia
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.resource_forecasts.resource_category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Resource Category
-                </label>
+                </FieldLabelWithHelp>
                 <SelectField
                   options={categories.map((c) => ({ value: c.category_name, label: c.category_name }))}
                   value={formData.resource_category}
@@ -410,9 +412,9 @@ export default function ResourceForecastForm({ forecast, onSave, onCancel, varia
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.resource_forecasts.resource_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Resource Type *
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="resource_type"
                   value={formData.resource_type}
@@ -436,9 +438,9 @@ export default function ResourceForecastForm({ forecast, onSave, onCancel, varia
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.resource_forecasts.forecasted_demand_count" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Demand Count
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="number"
                   name="forecasted_demand_count"
@@ -451,9 +453,9 @@ export default function ResourceForecastForm({ forecast, onSave, onCancel, varia
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.resource_forecasts.forecasted_demand_hours" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Demand Hours
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="number"
                   name="forecasted_demand_hours"
@@ -475,9 +477,9 @@ export default function ResourceForecastForm({ forecast, onSave, onCancel, varia
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.resource_forecasts.forecasted_availability_count" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Availability Count
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="number"
                   name="forecasted_availability_count"
@@ -490,9 +492,9 @@ export default function ResourceForecastForm({ forecast, onSave, onCancel, varia
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.resource_forecasts.forecasted_availability_hours" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Availability Hours
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="number"
                   name="forecasted_availability_hours"
@@ -518,9 +520,9 @@ export default function ResourceForecastForm({ forecast, onSave, onCancel, varia
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.resource_forecasts.forecast_confidence_level" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Confidence Level
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="forecast_confidence_level"
                   value={formData.forecast_confidence_level}
@@ -534,9 +536,9 @@ export default function ResourceForecastForm({ forecast, onSave, onCancel, varia
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.resource_forecasts.forecast_confidence_percentage" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Confidence Percentage
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="number"
                   name="forecast_confidence_percentage"
@@ -549,9 +551,9 @@ export default function ResourceForecastForm({ forecast, onSave, onCancel, varia
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.resource_forecasts.forecast_methodology" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Forecast Methodology
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="forecast_methodology"
                   value={formData.forecast_methodology}
@@ -594,4 +596,31 @@ export default function ResourceForecastForm({ forecast, onSave, onCancel, varia
         )}
     </FormSurface>
   );
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.resource_forecasts.forecast_scope',
+  'sim.resource_forecasts.portfolio_id',
+  'sim.resource_forecasts.programme_id',
+  'sim.resource_forecasts.forecast_start_date',
+  'sim.resource_forecasts.forecast_end_date',
+  'sim.resource_forecasts.forecast_type',
+  'sim.resource_forecasts.resource_category',
+  'sim.resource_forecasts.resource_type',
+  'sim.resource_forecasts.forecasted_demand_count',
+  'sim.resource_forecasts.forecasted_demand_hours',
+  'sim.resource_forecasts.forecasted_availability_count',
+  'sim.resource_forecasts.forecasted_availability_hours',
+  'sim.resource_forecasts.forecast_confidence_level',
+  'sim.resource_forecasts.forecast_confidence_percentage',
+  'sim.resource_forecasts.forecast_methodology',
+]
+
+export default function ResourceForecastForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ResourceForecastFormBody {...props} />
+    </FieldHelpScope>
+  )
 }

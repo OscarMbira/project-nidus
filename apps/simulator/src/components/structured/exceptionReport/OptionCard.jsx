@@ -1,7 +1,9 @@
 import { useState } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { CheckCircle, X, Edit2, Trash2, Star, AlertTriangle, TrendingUp, DollarSign } from 'lucide-react'
 
-export default function OptionCard({ option, onEdit, onDelete, onSetRecommended, isEditing, onSave, onCancel, mode }) {
+function OptionCardBody({ option, onEdit, onDelete, onSetRecommended, isEditing, onSave, onCancel, mode }) {
   const [formData, setFormData] = useState(option || {
     option_title: '',
     option_description: '',
@@ -68,9 +70,9 @@ export default function OptionCard({ option, onEdit, onDelete, onSetRecommended,
       <div className="border border-blue-300 dark:border-blue-700 rounded-lg p-4 bg-blue-50 dark:bg-blue-900/20">
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="sim.exception_report_options.option_title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
               Option Title *
-            </label>
+            </FieldLabelWithHelp>
             <input
               type="text"
               value={formData.option_title}
@@ -81,9 +83,9 @@ export default function OptionCard({ option, onEdit, onDelete, onSetRecommended,
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="sim.exception_report_options.option_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
               Option Description *
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               value={formData.option_description}
               onChange={(e) => setFormData(prev => ({ ...prev, option_description: e.target.value }))}
@@ -95,9 +97,9 @@ export default function OptionCard({ option, onEdit, onDelete, onSetRecommended,
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.exception_report_options.revised_end_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Revised End Date
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="date"
                 value={formData.revised_end_date || ''}
@@ -106,9 +108,9 @@ export default function OptionCard({ option, onEdit, onDelete, onSetRecommended,
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.exception_report_options.revised_budget" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" isAmount>
                 Revised Budget
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="number"
                 step="0.01"
@@ -120,9 +122,9 @@ export default function OptionCard({ option, onEdit, onDelete, onSetRecommended,
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="sim.exception_report_options.effect_on_business_case" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Effect on Business Case
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               value={formData.effect_on_business_case || ''}
               onChange={(e) => setFormData(prev => ({ ...prev, effect_on_business_case: e.target.value }))}
@@ -133,9 +135,9 @@ export default function OptionCard({ option, onEdit, onDelete, onSetRecommended,
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="sim.exception_report_options.associated_risks" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Associated Risks
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               value={formData.associated_risks || ''}
               onChange={(e) => setFormData(prev => ({ ...prev, associated_risks: e.target.value }))}
@@ -147,9 +149,9 @@ export default function OptionCard({ option, onEdit, onDelete, onSetRecommended,
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.exception_report_options.risk_level" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Risk Level
-              </label>
+              </FieldLabelWithHelp>
               <select
                 value={formData.risk_level || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, risk_level: e.target.value || null }))}
@@ -163,9 +165,9 @@ export default function OptionCard({ option, onEdit, onDelete, onSetRecommended,
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.exception_report_options.feasibility_rating" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Feasibility Rating
-              </label>
+              </FieldLabelWithHelp>
               <select
                 value={formData.feasibility_rating || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, feasibility_rating: e.target.value || null }))}
@@ -181,9 +183,9 @@ export default function OptionCard({ option, onEdit, onDelete, onSetRecommended,
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.exception_report_options.pros" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Pros
-              </label>
+              </FieldLabelWithHelp>
               <div className="space-y-2">
                 {(formData.pros || []).map((pro, index) => (
                   <div key={index} className="flex items-center space-x-2 bg-green-50 dark:bg-green-900/20 rounded p-2">
@@ -207,9 +209,9 @@ export default function OptionCard({ option, onEdit, onDelete, onSetRecommended,
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.exception_report_options.cons" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Cons
-              </label>
+              </FieldLabelWithHelp>
               <div className="space-y-2">
                 {(formData.cons || []).map((con, index) => (
                   <div key={index} className="flex items-center space-x-2 bg-red-50 dark:bg-red-900/20 rounded p-2">
@@ -318,5 +320,27 @@ export default function OptionCard({ option, onEdit, onDelete, onSetRecommended,
         )}
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.exception_report_options.option_title',
+  'sim.exception_report_options.option_description',
+  'sim.exception_report_options.revised_end_date',
+  'sim.exception_report_options.revised_budget',
+  'sim.exception_report_options.effect_on_business_case',
+  'sim.exception_report_options.associated_risks',
+  'sim.exception_report_options.risk_level',
+  'sim.exception_report_options.feasibility_rating',
+  'sim.exception_report_options.pros',
+  'sim.exception_report_options.cons',
+]
+
+export default function OptionCard(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <OptionCardBody {...props} />
+    </FieldHelpScope>
   )
 }

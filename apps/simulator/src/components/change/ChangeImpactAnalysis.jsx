@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { AlertTriangle, DollarSign, Calendar, Package, TrendingUp, TrendingDown } from 'lucide-react';
 
-export default function ChangeImpactAnalysis({ changeRequest, onUpdate }) {
+function ChangeImpactAnalysisBody({ changeRequest, onUpdate }) {
   const [impactData, setImpactData] = useState({
     cost_impact: changeRequest?.cost_impact || 0,
     cost_impact_currency: changeRequest?.cost_impact_currency || 'USD',
@@ -56,9 +58,9 @@ export default function ChangeImpactAnalysis({ changeRequest, onUpdate }) {
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="sim.change_requests.overall_impact_severity" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
               Impact Severity *
-            </label>
+            </FieldLabelWithHelp>
             <select
               name="overall_impact_severity"
               value={impactData.overall_impact_severity}
@@ -87,9 +89,9 @@ export default function ChangeImpactAnalysis({ changeRequest, onUpdate }) {
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="sim.change_requests.cost_impact_amount" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" isAmount>
               Cost Impact
-            </label>
+            </FieldLabelWithHelp>
             <div className="flex gap-2">
               <select
                 name="cost_impact_currency"
@@ -139,9 +141,9 @@ export default function ChangeImpactAnalysis({ changeRequest, onUpdate }) {
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="sim.change_requests.schedule_impact_days" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Schedule Impact (Days)
-            </label>
+            </FieldLabelWithHelp>
             <div className="flex items-center gap-2">
               <input
                 type="number"
@@ -184,9 +186,9 @@ export default function ChangeImpactAnalysis({ changeRequest, onUpdate }) {
           Scope Impact
         </h3>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.change_requests.scope_impact_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Scope Impact Description
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             name="scope_impact_description"
             value={impactData.scope_impact_description}
@@ -261,3 +263,18 @@ export default function ChangeImpactAnalysis({ changeRequest, onUpdate }) {
   );
 }
 
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.change_requests.overall_impact_severity',
+  'sim.change_requests.cost_impact_amount',
+  'sim.change_requests.schedule_impact_days',
+  'sim.change_requests.scope_impact_description',
+]
+
+export default function ChangeImpactAnalysis(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ChangeImpactAnalysisBody {...props} />
+    </FieldHelpScope>
+  )
+}

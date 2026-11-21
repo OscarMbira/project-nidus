@@ -1,7 +1,9 @@
 import { useState } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Lightbulb, X, Edit2, Trash2, ArrowUp, CheckCircle } from 'lucide-react'
 
-export default function LessonCard({ lesson, onEdit, onDelete, onEscalate, isEditing, onSave, onCancel, mode }) {
+function LessonCardBody({ lesson, onEdit, onDelete, onEscalate, isEditing, onSave, onCancel, mode }) {
   const [formData, setFormData] = useState(lesson || {
     lesson_type: 'for_this_project',
     lesson_title: '',
@@ -21,9 +23,9 @@ export default function LessonCard({ lesson, onEdit, onDelete, onEscalate, isEdi
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.exception_report_lessons.lesson_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Lesson Type *
-              </label>
+              </FieldLabelWithHelp>
               <select
                 value={formData.lesson_type}
                 onChange={(e) => setFormData(prev => ({ ...prev, lesson_type: e.target.value }))}
@@ -35,9 +37,9 @@ export default function LessonCard({ lesson, onEdit, onDelete, onEscalate, isEdi
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.exception_report_lessons.category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Category
-              </label>
+              </FieldLabelWithHelp>
               <select
                 value={formData.category || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value || null }))}
@@ -57,9 +59,9 @@ export default function LessonCard({ lesson, onEdit, onDelete, onEscalate, isEdi
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.exception_report_lessons.lesson_title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
               Lesson Title *
-            </label>
+            </FieldLabelWithHelp>
             <input
               type="text"
               value={formData.lesson_title}
@@ -70,9 +72,9 @@ export default function LessonCard({ lesson, onEdit, onDelete, onEscalate, isEdi
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.exception_report_lessons.lesson_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
               Lesson Description *
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               value={formData.lesson_description}
               onChange={(e) => setFormData(prev => ({ ...prev, lesson_description: e.target.value }))}
@@ -83,9 +85,9 @@ export default function LessonCard({ lesson, onEdit, onDelete, onEscalate, isEdi
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.exception_report_lessons.recommendation" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Recommendation
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               value={formData.recommendation || ''}
               onChange={(e) => setFormData(prev => ({ ...prev, recommendation: e.target.value }))}
@@ -96,9 +98,9 @@ export default function LessonCard({ lesson, onEdit, onDelete, onEscalate, isEdi
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.exception_report_lessons.preventive_action" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Preventive Action
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               value={formData.preventive_action || ''}
               onChange={(e) => setFormData(prev => ({ ...prev, preventive_action: e.target.value }))}
@@ -190,5 +192,19 @@ export default function LessonCard({ lesson, onEdit, onDelete, onEscalate, isEdi
         )}
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.exception_report_lessons.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'lesson_type', 'category', 'lesson_title', 'lesson_description', 'recommendation', 'preventive_action',
+].map((name) => `public.exception_report_lessons.${name}`)
+
+export default function LessonCard(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <LessonCardBody {...props} />
+    </FieldHelpScope>
   )
 }

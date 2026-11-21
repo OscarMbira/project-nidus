@@ -4,6 +4,8 @@
  */
 
 import { useState, useEffect } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { Users, Plus, BarChart3, Calendar } from 'lucide-react'
@@ -55,7 +57,7 @@ const TABS = [
   { id: 'leaves', label: 'Leave Calendar', icon: Calendar },
 ]
 
-export default function PracticeTeams() {
+function PracticeTeamsBody() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const projectId = searchParams.get('projectId')
@@ -429,12 +431,12 @@ export default function PracticeTeams() {
 
           {addingCapacity && (
             <div className="p-3 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 flex flex-wrap gap-2 items-center">
-              <label className="text-sm text-gray-700 dark:text-gray-200">Hours/day
+              <FieldLabelWithHelp helpKey="sim.practice_teams.default_hours_per_day" className="text-sm text-gray-700 dark:text-gray-200">Hours/day
                 <input type="number" min="0" max="24" value={newHoursPerDay} onChange={(e) => setNewHoursPerDay(e.target.value)} className="ml-2 w-20 px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm" />
-              </label>
-              <label className="text-sm text-gray-700 dark:text-gray-200">Hours/week
+              </FieldLabelWithHelp>
+              <FieldLabelWithHelp helpKey="sim.practice_teams.default_hours_per_week" className="text-sm text-gray-700 dark:text-gray-200">Hours/week
                 <input type="number" min="0" max="168" value={newHoursPerWeek} onChange={(e) => setNewHoursPerWeek(e.target.value)} className="ml-2 w-20 px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm" />
-              </label>
+              </FieldLabelWithHelp>
               <button type="button" onClick={handleAddMyCapacity} className="px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium min-h-[40px]">{editingCapacity ? 'Update' : 'Save'}</button>
               <button type="button" onClick={() => { setAddingCapacity(false); setEditingCapacity(null) }} className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 text-sm min-h-[40px]">Cancel</button>
             </div>
@@ -562,5 +564,19 @@ export default function PracticeTeams() {
         </div>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (sim.practice_teams.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'default_hours_per_day', 'default_hours_per_week',
+].map((name) => `sim.practice_teams.${name}`)
+
+export default function PracticeTeams(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <PracticeTeamsBody {...props} />
+    </FieldHelpScope>
   )
 }

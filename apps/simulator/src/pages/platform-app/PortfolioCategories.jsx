@@ -5,6 +5,8 @@
  */
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { useNavigate } from 'react-router-dom'
 import { Plus, Edit, Trash2, ArrowLeft, X } from 'lucide-react'
 import { toast } from 'react-hot-toast'
@@ -24,7 +26,7 @@ import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 import { platformDb } from '@nidus/supabase'
 
-export default function PortfolioCategories() {
+function PortfolioCategoriesBody() {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
   const [items, setItems] = useState([])
@@ -219,7 +221,7 @@ export default function PortfolioCategories() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Name *</label>
+                  <FieldLabelWithHelp helpKey="sim.portfolio_categories.name" className="block text-sm font-medium text-gray-300 mb-2" required>Name *</FieldLabelWithHelp>
                   <input
                     type="text"
                     value={formData.name}
@@ -230,7 +232,7 @@ export default function PortfolioCategories() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Code</label>
+                  <FieldLabelWithHelp helpKey="sim.portfolio_categories.code" className="block text-sm font-medium text-gray-300 mb-2">Code</FieldLabelWithHelp>
                   <input
                     type="text"
                     value={formData.code}
@@ -241,7 +243,7 @@ export default function PortfolioCategories() {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Description</label>
+                <FieldLabelWithHelp helpKey="sim.portfolio_categories.description" className="block text-sm font-medium text-gray-300 mb-2">Description</FieldLabelWithHelp>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData((p) => ({ ...p, description: e.target.value }))}
@@ -252,7 +254,7 @@ export default function PortfolioCategories() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Sort order</label>
+                  <FieldLabelWithHelp helpKey="sim.portfolio_categories.sort_order" className="block text-sm font-medium text-gray-300 mb-2">Sort order</FieldLabelWithHelp>
                   <input
                     type="number"
                     min={0}
@@ -277,9 +279,9 @@ export default function PortfolioCategories() {
                       }
                       className="rounded border-gray-600 bg-gray-700 text-blue-500"
                     />
-                    <label htmlFor="is_active" className="text-sm text-gray-300">
+                    <FieldLabelWithHelp helpKey="sim.portfolio_categories.is_active" htmlFor="is_active" className="text-sm text-gray-300">
                       Active
-                    </label>
+                    </FieldLabelWithHelp>
                   </div>
                 )}
               </div>
@@ -379,3 +381,19 @@ export default function PortfolioCategories() {
   )
 }
 
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.portfolio_categories.name',
+  'sim.portfolio_categories.code',
+  'sim.portfolio_categories.description',
+  'sim.portfolio_categories.sort_order',
+  'sim.portfolio_categories.is_active',
+]
+
+export default function PortfolioCategories(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <PortfolioCategoriesBody {...props} />
+    </FieldHelpScope>
+  )
+}

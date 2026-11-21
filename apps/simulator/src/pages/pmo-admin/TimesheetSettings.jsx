@@ -6,6 +6,8 @@
  * Route: /platform/pmo-admin/timesheet-settings
  */
 import { useState, useEffect, useCallback } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -25,7 +27,7 @@ const DAY_OPTIONS = [
   { value: 'sat', label: 'Sat' },
 ]
 
-export default function TimesheetSettings() {
+function TimesheetSettingsBody() {
   const navigate = useNavigate()
   const { showSuccess, modal } = useSuccessModal()
   const [loading, setLoading] = useState(true)
@@ -133,19 +135,19 @@ export default function TimesheetSettings() {
           <fieldset disabled={!canManage} className="space-y-5 disabled:opacity-60">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Standard daily hours</label>
+                <FieldLabelWithHelp helpKey="sim.organisation_timesheet_settings.standard_daily_hours" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Standard daily hours</FieldLabelWithHelp>
                 <input type="number" step="0.5" min="0.5" max="24" value={form.standard_daily_hours}
                   onChange={(e) => setForm((f) => ({ ...f, standard_daily_hours: parseFloat(e.target.value) || 0 }))}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Max overtime / day</label>
+                <FieldLabelWithHelp helpKey="sim.organisation_timesheet_settings.max_overtime_per_day" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Max overtime / day</FieldLabelWithHelp>
                 <input type="number" step="0.5" min="0" max="24" value={form.max_overtime_per_day}
                   onChange={(e) => setForm((f) => ({ ...f, max_overtime_per_day: parseFloat(e.target.value) || 0 }))}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Max overtime / week</label>
+                <FieldLabelWithHelp helpKey="sim.organisation_timesheet_settings.max_overtime_per_week" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Max overtime / week</FieldLabelWithHelp>
                 <input type="number" step="0.5" min="0" max="168" value={form.max_overtime_per_week}
                   onChange={(e) => setForm((f) => ({ ...f, max_overtime_per_week: parseFloat(e.target.value) || 0 }))}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
@@ -154,7 +156,7 @@ export default function TimesheetSettings() {
             <p className="text-xs text-gray-500 dark:text-gray-400">Overtime maximums are a soft warning only — they never block saving or submitting a timesheet.</p>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Standard working days (pick exactly 5)</label>
+              <FieldLabelWithHelp helpKey="sim.organisation_timesheet_settings.working_days" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Standard working days (pick exactly 5)</FieldLabelWithHelp>
               <div className="flex flex-wrap gap-2">
                 {DAY_OPTIONS.map((d) => {
                   const checked = form.working_days.includes(d.value)
@@ -184,5 +186,21 @@ export default function TimesheetSettings() {
       </div>
       {modal}
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.organisation_timesheet_settings.standard_daily_hours',
+  'sim.organisation_timesheet_settings.max_overtime_per_day',
+  'sim.organisation_timesheet_settings.max_overtime_per_week',
+  'sim.organisation_timesheet_settings.working_days',
+]
+
+export default function TimesheetSettings(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <TimesheetSettingsBody {...props} />
+    </FieldHelpScope>
   )
 }

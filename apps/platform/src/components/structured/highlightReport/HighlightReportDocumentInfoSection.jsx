@@ -1,4 +1,6 @@
 import { FileText, Calendar } from 'lucide-react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { generateReportReference } from '../../../services/controllingStageService'
 import { useEffect } from 'react'
 
@@ -11,7 +13,7 @@ const FREQUENCY_OPTIONS = [
   { value: 'ad-hoc', label: 'Ad-hoc' }
 ]
 
-export default function HighlightReportDocumentInfoSection({ formData, onChange, errors, mode, projectId, stageBoundaryId }) {
+function HighlightReportDocumentInfoSectionBody({ formData, onChange, errors, mode, projectId, stageBoundaryId }) {
   useEffect(() => {
     if (mode !== 'create' || !projectId) return
     if (formData.report_reference) return
@@ -40,7 +42,7 @@ export default function HighlightReportDocumentInfoSection({ formData, onChange,
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Report Title *</label>
+          <FieldLabelWithHelp helpKey="public.highlight_reports.report_title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>Report Title *</FieldLabelWithHelp>
           <input
             type="text"
             value={formData.report_title || ''}
@@ -52,10 +54,10 @@ export default function HighlightReportDocumentInfoSection({ formData, onChange,
           {errors?.report_title && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.report_title}</p>}
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.highlight_reports.report_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             <Calendar className="h-4 w-4 inline mr-1" />
             Report Date *
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="date"
             value={formData.report_date || formData.reporting_period_end || ''}
@@ -67,7 +69,7 @@ export default function HighlightReportDocumentInfoSection({ formData, onChange,
           {errors?.report_date && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.report_date}</p>}
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Version</label>
+          <FieldLabelWithHelp helpKey="public.highlight_reports.version_no" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Version</FieldLabelWithHelp>
           <input
             type="text"
             value={formData.version_no || '1.0'}
@@ -81,7 +83,7 @@ export default function HighlightReportDocumentInfoSection({ formData, onChange,
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Report Reference</label>
+          <FieldLabelWithHelp helpKey="public.highlight_reports.report_reference" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Report Reference</FieldLabelWithHelp>
           <input
             type="text"
             value={formData.report_reference || ''}
@@ -92,7 +94,7 @@ export default function HighlightReportDocumentInfoSection({ formData, onChange,
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Frequency</label>
+          <FieldLabelWithHelp helpKey="public.highlight_reports.frequency" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Frequency</FieldLabelWithHelp>
           <select
             value={formData.frequency || ''}
             onChange={(e) => onChange('frequency', e.target.value)}
@@ -105,7 +107,7 @@ export default function HighlightReportDocumentInfoSection({ formData, onChange,
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Next Report Due</label>
+          <FieldLabelWithHelp helpKey="public.highlight_reports.next_report_due_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Next Report Due</FieldLabelWithHelp>
           <input
             type="date"
             value={formData.next_report_due_date || ''}
@@ -118,7 +120,7 @@ export default function HighlightReportDocumentInfoSection({ formData, onChange,
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Reporting Period Start *</label>
+          <FieldLabelWithHelp helpKey="public.highlight_reports.reporting_period_start" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>Reporting Period Start *</FieldLabelWithHelp>
           <input
             type="date"
             value={formData.reporting_period_start || ''}
@@ -129,7 +131,7 @@ export default function HighlightReportDocumentInfoSection({ formData, onChange,
           {errors?.reporting_period_start && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.reporting_period_start}</p>}
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Reporting Period End *</label>
+          <FieldLabelWithHelp helpKey="public.highlight_reports.reporting_period_end" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>Reporting Period End *</FieldLabelWithHelp>
           <input
             type="date"
             value={formData.reporting_period_end || ''}
@@ -141,5 +143,20 @@ export default function HighlightReportDocumentInfoSection({ formData, onChange,
         </div>
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.highlight_reports.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'report_title', 'report_date', 'version_no', 'report_reference', 'frequency', 'next_report_due_date',
+  'reporting_period_start', 'reporting_period_end',
+].map((name) => `public.highlight_reports.${name}`)
+
+export default function HighlightReportDocumentInfoSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <HighlightReportDocumentInfoSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

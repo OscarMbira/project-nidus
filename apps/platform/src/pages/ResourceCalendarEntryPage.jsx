@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -31,7 +33,7 @@ function formatReasons(value) {
   return String(value || '').split(/\r?\n/).map((line) => line.trim()).filter(Boolean).join(', ')
 }
 
-export default function ResourceCalendarEntryPage() {
+function ResourceCalendarEntryPageBody() {
   const { id: resourceId, entryId } = useParams()
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
@@ -175,7 +177,7 @@ export default function ResourceCalendarEntryPage() {
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Date *</label>
+            <FieldLabelWithHelp helpKey="public.resource_calendar.calendar_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>Date *</FieldLabelWithHelp>
             <input
               type="date"
               name="calendar_date"
@@ -187,7 +189,7 @@ export default function ResourceCalendarEntryPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Availability Type *</label>
+            <FieldLabelWithHelp helpKey="public.resource_calendar.availability_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>Availability Type *</FieldLabelWithHelp>
             <select
               name="availability_type"
               value={formData.availability_type}
@@ -204,7 +206,7 @@ export default function ResourceCalendarEntryPage() {
           {formData.availability_type === 'partial' && (
             <>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Available Hours</label>
+                <FieldLabelWithHelp helpKey="public.resource_calendar.available_hours" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Available Hours</FieldLabelWithHelp>
                 <input
                   type="number"
                   name="available_hours"
@@ -217,7 +219,7 @@ export default function ResourceCalendarEntryPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Capacity Percentage (%)</label>
+                <FieldLabelWithHelp helpKey="public.resource_calendar.capacity_percentage" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Capacity Percentage (%)</FieldLabelWithHelp>
                 <input
                   type="number"
                   name="capacity_percentage"
@@ -234,7 +236,7 @@ export default function ResourceCalendarEntryPage() {
 
           {(formData.availability_type === 'unavailable' || formData.availability_type === 'partial') && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Reason</label>
+              <FieldLabelWithHelp helpKey="public.resource_calendar.unavailability_reason" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Reason</FieldLabelWithHelp>
               <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">Add one reason at a time. Press Enter or click Add after each.</p>
               <MultiLineListInput
                 viewModeId="resource-calendar-reasons"
@@ -256,13 +258,13 @@ export default function ResourceCalendarEntryPage() {
               onChange={handleChange}
               className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
             />
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Recurring Pattern</label>
+            <FieldLabelWithHelp helpKey="public.resource_calendar.is_recurring" className="text-sm font-medium text-gray-700 dark:text-gray-300">Recurring Pattern</FieldLabelWithHelp>
           </div>
 
           {formData.is_recurring && (
             <>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Recurrence Pattern</label>
+                <FieldLabelWithHelp helpKey="public.resource_calendar.recurrence_pattern" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Recurrence Pattern</FieldLabelWithHelp>
                 <select
                   name="recurrence_pattern"
                   value={formData.recurrence_pattern}
@@ -276,7 +278,7 @@ export default function ResourceCalendarEntryPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">End Date</label>
+                <FieldLabelWithHelp helpKey="public.resource_calendar.recurrence_end_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">End Date</FieldLabelWithHelp>
                 <input
                   type="date"
                   name="recurrence_end_date"
@@ -289,7 +291,7 @@ export default function ResourceCalendarEntryPage() {
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Notes</label>
+            <FieldLabelWithHelp helpKey="public.resource_calendar.notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Notes</FieldLabelWithHelp>
             <textarea
               name="notes"
               value={formData.notes}
@@ -320,5 +322,20 @@ export default function ResourceCalendarEntryPage() {
       )}
       {modal}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.resource_calendar.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'calendar_date', 'availability_type', 'available_hours', 'capacity_percentage', 'unavailability_reason',
+  'is_recurring', 'recurrence_pattern', 'recurrence_end_date', 'notes',
+].map((name) => `public.resource_calendar.${name}`)
+
+export default function ResourceCalendarEntryPage(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ResourceCalendarEntryPageBody {...props} />
+    </FieldHelpScope>
   )
 }

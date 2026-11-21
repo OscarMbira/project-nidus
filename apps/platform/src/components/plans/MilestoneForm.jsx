@@ -3,6 +3,8 @@
  */
 
 import { useState, useEffect } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { X, Save } from 'lucide-react'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
@@ -30,7 +32,7 @@ const MILESTONE_TYPES_STAGE = [
   { value: 'other', label: 'Other' }
 ]
 
-export default function MilestoneForm({ milestone, onSubmit, onCancel, planType }) {
+function MilestoneFormBody({ milestone, onSubmit, onCancel, planType }) {
   const [formData, setFormData] = useState({
     milestone_name: '',
     milestone_description: '',
@@ -91,9 +93,9 @@ export default function MilestoneForm({ milestone, onSubmit, onCancel, planType 
       <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.plan_milestones.milestone_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Milestone Name <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             value={formData.milestone_name}
@@ -105,9 +107,9 @@ export default function MilestoneForm({ milestone, onSubmit, onCancel, planType 
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.plan_milestones.milestone_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Milestone Date <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="date"
             value={formData.milestone_date}
@@ -118,9 +120,9 @@ export default function MilestoneForm({ milestone, onSubmit, onCancel, planType 
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.plan_milestones.milestone_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Milestone Type
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={formData.milestone_type}
             onChange={(e) => setFormData({ ...formData, milestone_type: e.target.value })}
@@ -135,9 +137,9 @@ export default function MilestoneForm({ milestone, onSubmit, onCancel, planType 
         </div>
 
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.plan_milestones.milestone_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Description
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             value={formData.milestone_description}
             onChange={(e) => setFormData({ ...formData, milestone_description: e.target.value })}
@@ -148,7 +150,7 @@ export default function MilestoneForm({ milestone, onSubmit, onCancel, planType 
         </div>
 
         <div className="md:col-span-2">
-          <label className="flex items-center">
+          <FieldLabelWithHelp helpKey="public.plan_milestones.is_critical" className="flex items-center">
             <input
               type="checkbox"
               checked={formData.is_critical}
@@ -158,13 +160,13 @@ export default function MilestoneForm({ milestone, onSubmit, onCancel, planType 
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
               Critical Milestone
             </span>
-          </label>
+          </FieldLabelWithHelp>
         </div>
 
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.plan_milestones.dependencies" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Dependencies
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             value={formData.dependencies}
             onChange={(e) => setFormData({ ...formData, dependencies: e.target.value })}
@@ -197,5 +199,20 @@ export default function MilestoneForm({ milestone, onSubmit, onCancel, planType 
         </button>
       </div>
     </form>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.plan_milestones.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'milestone_name', 'milestone_date', 'milestone_type', 'milestone_description', 'is_critical',
+  'dependencies',
+].map((name) => `public.plan_milestones.${name}`)
+
+export default function MilestoneForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <MilestoneFormBody {...props} />
+    </FieldHelpScope>
   )
 }

@@ -1,0 +1,217 @@
+// v1345 slice 4, wave 4h-2 — governance: board direction, stage gates, governance framework / policies / structure,
+// approval chains, document signatories, raise-exception dialog, starting up / initiating hub forms (source for SQL/v1531).
+// Shape: [help_key, title, purpose, examples[], format_notes?, extra_notes?]. CLAUDE.md rule 77 applies.
+// Use the typographic apostrophe (’); never the word "into" (SQL editor trap).
+const DF = 'Dates show as {date_format}.'
+const AM = 'Amounts show in {currency}.'
+const d = (key, title, purpose) => [key, title, purpose, ['{example_date}'], DF]
+const t = (key, title, purpose, ex) => [key, title, purpose, [ex]]
+const BD = 'public.board_decisions.'
+const BM = 'public.board_meetings.'
+const MB = 'public.board_members.'
+const SG = 'public.stage_gate_reviews.'
+const SB = 'public.stage_boundaries.'
+const BC = 'public.business_cases.'
+const PM = 'public.project_mandates.'
+const GF = 'public.governance_frameworks.'
+const PC = 'public.policies_compliance.'
+const GS = 'public.project_governance_structure.'
+const AC = 'public.pmo_approval_chain_steps.'
+const DS = 'public.project_document_signatories.'
+const GM = 'public.project_governance_members.'
+const EX = 'public.exceptions.'
+
+export const MODULE = 'governance_board'
+export const ROWS = [
+  // ── Ad-hoc direction ──
+  t(BD + 'direction_title', 'Direction title', 'A short name for the request to the board.', 'Approve extra training days'),
+  d(BD + 'request_date', 'Request date', 'When the request was made.'),
+  t(BD + 'direction_type', 'Direction type', 'What kind of direction is asked for: advice, a decision or an approval.', 'Decision'),
+  t(BD + 'priority', 'Priority', 'How urgent the request is.', 'High'),
+  t(BD + 'direction_status', 'Status', 'Where the request stands.', 'Awaiting response'),
+  t(BD + 'request_description', 'Request description', 'What you are asking the board, and the background.', 'Two branches need an extra training day each; cost 4,000 from contingency.'),
+  t(BD + 'business_justification', 'Business justification', 'Why the request is needed.', 'Without it, the branches go live with untrained staff.'),
+  d(BD + 'response_required_by', 'Response required by', 'When you need the board’s answer.'),
+  t(BD + 'board_response', 'Response', 'The board’s answer.', 'Approved; use stage contingency.'),
+  d(BD + 'response_date', 'Response date', 'When the board answered.'),
+
+  // ── Board meetings and members ──
+  t(BM + 'meeting_title', 'Meeting title', 'A short name for the board meeting.', 'Project board – end of stage 2'),
+  t(BM + 'meeting_type', 'Meeting type', 'The kind of meeting.', 'Stage boundary'),
+  t(BM + 'meeting_status', 'Status', 'Where the meeting stands.', 'Scheduled'),
+  d(BM + 'meeting_date', 'Meeting date', 'When the meeting takes place.'),
+  t(BM + 'start_time', 'Start time', 'When the meeting starts.', '10:00'),
+  t(BM + 'end_time', 'End time', 'When the meeting ends.', '11:30'),
+  t(BM + 'location', 'Location', 'Where the meeting is held, or the link to join.', 'Board room, London office'),
+  t(BM + 'meeting_purpose', 'Meeting purpose', 'Why the board is meeting.', 'Review the end stage report and approve the next stage plan.'),
+  t(BM + 'agenda_items', 'Agenda items', 'The topics to cover, in order.', 'End stage report; next stage plan; risks'),
+  t(BM + 'minutes', 'Meeting minutes', 'What was discussed and decided.', 'Stage 2 closed; stage 3 approved with a 25,000 cost tolerance.'),
+  t(BM + 'action_items', 'Action items', 'Actions agreed, with owners and dates.', 'Update the business case – Project Manager – next meeting'),
+  t(MB + 'user_id', 'User', 'The person on the board.', 'Chief Operating Officer'),
+  t(MB + 'role_on_board', 'Role on board', 'Their role on the project board.', 'Executive'),
+  d(MB + 'appointment_date', 'Appointment date', 'When they joined the board.'),
+  t(MB + 'responsibilities', 'Responsibilities', 'What they are responsible for on the board.', 'Owns the business case; chairs board meetings.'),
+  t(MB + 'is_active', 'Active member', 'Tick while the person is on the board.', 'Ticked'),
+
+  // ── Stage gates ──
+  t(SG + 'gate_name', 'Gate name', 'A short name for the stage gate review.', 'Gate 2 – pilot exit'),
+  t(SG + 'project_id', 'Project', 'The project being reviewed.', 'Dubai Branch Network Refresh'),
+  t(SG + 'stage', 'Stage', 'The stage the gate closes.', 'Pilot'),
+  t(SG + 'status', 'Status', 'Where the review stands.', 'Scheduled'),
+  d(SG + 'decision_date', 'Decision date', 'When the gate decision was made.'),
+  t(SG + 'outcome', 'Outcome', 'What was decided at the gate.', 'Proceed to rollout with conditions'),
+  t(SG + 'notes', 'Notes', 'Anything else about the gate.', 'Condition: fix the printer driver before wave 2.'),
+  t(SB + 'stage_number', 'Stage number', 'The number of the stage.', '3'),
+  t(SB + 'gate_name', 'Gate name', 'The name of the gate at the end of the stage.', 'Gate 3 – rollout complete'),
+  t(SB + 'stage_name', 'Stage name', 'The name of the stage.', 'Rollout wave 1'),
+  t(SB + 'stage_description', 'Stage description', 'What the stage covers.', 'Install and train in the 10 largest Dubai branches.'),
+  t(SB + 'gate_type', 'Gate type', 'Whether this is the initiation gate, a stage boundary or the closure gate.', 'Stage Boundary'),
+  d(SB + 'planned_date', 'Planned date', 'When the gate is planned.'),
+
+  // ── Starting up / initiating hub forms ──
+  t(PM + 'mandate_description', 'Mandate description', 'What the proposed project is.', 'Replace the teller system in all Dubai branches.'),
+  t(PM + 'mandate_reason', 'Reason for project', 'Why the project is needed.', 'Teller system support ends next year.'),
+  t(PM + 'mandate_authority', 'Authority', 'Who is commissioning the project.', 'Executive Committee'),
+  d(PM + 'mandate_date', 'Mandate date', 'When the mandate was issued.'),
+  t(PM + 'business_justification', 'Business justification', 'Why the project is worth doing.', 'Same-day account opening and lower running costs.'),
+  t(PM + 'expected_benefits', 'Expected benefits', 'The benefits expected.', '15% lower branch running costs.'),
+  [PM + 'expected_costs', 'Expected costs', 'A rough cost estimate.', ['1,200,000'], AM],
+  t(BC + 'business_justification', 'Business justification', 'Why the project is worth doing.', 'Same-day account opening and lower running costs.'),
+  t(BC + 'expected_benefits', 'Expected benefits', 'The benefits expected.', '15% lower branch running costs.'),
+  [BC + 'expected_costs', 'Expected costs', 'The expected total cost.', ['1,200,000'], AM],
+
+  // ── Governance framework, policies, structure ──
+  t(GF + 'name', 'Name', 'The name of the governance framework.', 'Retail change governance framework'),
+  t(GF + 'version', 'Version', 'The version of the framework.', '2.0'),
+  t(GF + 'status', 'Status', 'Whether the framework is draft, active or retired.', 'Active'),
+  t(GF + 'description', 'Description', 'What the framework covers.', 'How retail change projects are approved, controlled and closed.'),
+  t(GF + 'principles', 'Governance principles', 'The rules every project follows.', 'Every project has a business case; the board approves each stage.'),
+  t(GF + 'escalation_path', 'Escalation path', 'Who issues go to, in order, when they cannot be solved.', 'Project Manager → Project Board → Investment Committee'),
+  t(GF + 'notes', 'Notes', 'Anything else about the framework.', 'Reviewed every year by the PMO.'),
+  t(PC + 'policy_name', 'Policy name', 'The name of the policy.', 'Data protection policy'),
+  t(PC + 'category', 'Category', 'The area the policy covers.', 'Compliance'),
+  t(PC + 'status', 'Status', 'Whether the project complies with it.', 'Compliant'),
+  t(PC + 'compliance_owner', 'Compliance owner', 'The person who checks compliance.', 'Data Protection Officer'),
+  d(PC + 'review_date', 'Review date', 'When compliance is next reviewed.'),
+  t(PC + 'description', 'Description', 'What the policy requires, in short.', 'Customer data is kept only as long as needed and protected.'),
+  t(PC + 'requirements', 'Requirements', 'The specific requirements for this project.', 'Mask customer data in test environments.'),
+  t(PC + 'notes', 'Notes', 'Anything else about compliance.', 'Audit due in Q4.'),
+  t(GS + 'structure_notes', 'Overview', 'A short overview of how the project is governed.', 'A project board oversees the project; the PMO assures it.'),
+  t(GS + 'governance_bodies', 'Governance bodies', 'The groups that govern the project.', 'Project Board; Design Authority; Change Board'),
+  t(GS + 'reporting_lines', 'Reporting lines', 'Who reports to whom.', 'Team Managers → Project Manager → Project Board'),
+  t(GS + 'decision_flow', 'Decision flow', 'Which body decides what.', 'Changes over 10,000 go to the Change Board; stage approvals to the Project Board.'),
+  t(GS + 'pmo_oversight_notes', 'PMO oversight arrangements', 'How the PMO oversees the project.', 'Monthly assurance review and quarterly health check.'),
+  t(GS + 'escalation_steps', 'Escalation steps', 'The steps for escalating an issue.', 'Team Manager → Project Manager → Executive → Investment Committee'),
+  t(GM + 'member_name', 'Name', 'The name or role of the governance member.', 'Head of Compliance'),
+  t(GM + 'role_title', 'Role', 'Their role in project governance.', 'Senior Supplier'),
+  t(GM + 'organisation', 'Organisation', 'The organisation they belong to.', 'Example Software Ltd'),
+  t(GM + 'email', 'Email', 'Their email address.', 'head.of.compliance@company.example'),
+  t(GM + 'phone', 'Phone', 'Their phone number.', '+44 20 7946 0123'),
+  d(GM + 'appointed_date', 'Appointed date', 'When they were appointed.'),
+  d(GM + 'end_date', 'End date', 'When their appointment ends, if known.'),
+  t(GM + 'is_chair', 'Chair', 'Tick if this person chairs the governance body.', 'Ticked'),
+  t(GM + 'notes', 'Notes', 'Anything else about this member.', 'Attends stage boundary meetings only.'),
+
+  // ── Approval chains and signatories ──
+  t(AC + 'chain_name', 'Chain name', 'A name for the approval chain.', 'Business case approval – over 1m'),
+  t(AC + 'description', 'Description', 'When this chain is used.', 'Business cases with a total cost over 1,000,000.'),
+  t(AC + 'role_name', 'Steps (in order)', 'The roles that approve, in the order they approve.', 'Project Executive → CFO → Investment Committee'),
+  t(AC + 'is_mandatory', 'Mandatory step', 'Tick if this approval cannot be skipped.', 'Ticked'),
+  t(AC + 'is_active', 'Active', 'Tick to use this chain for new approvals.', 'Ticked'),
+  t(DS + 'document_type', 'Document type', 'The document these signatories sign.', 'Project initiation document'),
+  t(DS + 'is_mandatory', 'Mandatory signatory', 'Tick if the document cannot be approved without this signature.', 'Ticked'),
+
+  // ── Raise exception (dashboard) ──
+  t(EX + 'project_id', 'Project', 'The project the exception is about.', 'Dubai Branch Network Refresh'),
+  t(EX + 'exception_title', 'Exception title', 'A short name for the exception.', 'Supplier delay breaches time tolerance'),
+  t(EX + 'exception_level', 'Exception level', 'How serious the exception is.', 'High'),
+  t(EX + 'exception_category', 'Category', 'Which area the exception affects.', 'Schedule'),
+  t(EX + 'exception_reason', 'Exception reason', 'What has gone beyond tolerance, and why.', 'Hardware arrives 4 weeks late; stage end will slip past its 10-day tolerance.'),
+  t(EX + 'exception_description', 'Additional details', 'Anything else the PMO should know.', 'Exception report to follow by Friday.'),
+]
+
+// Simulator copies of these screens (sim.* keys) read the Platform help.
+export const ALIASES = [
+  ['sim.board_decisions.board_response', 'public.board_decisions.board_response'],
+  ['sim.board_decisions.business_justification', 'public.board_decisions.business_justification'],
+  ['sim.board_decisions.direction_status', 'public.board_decisions.direction_status'],
+  ['sim.board_decisions.direction_title', 'public.board_decisions.direction_title'],
+  ['sim.board_decisions.direction_type', 'public.board_decisions.direction_type'],
+  ['sim.board_decisions.priority', 'public.board_decisions.priority'],
+  ['sim.board_decisions.request_date', 'public.board_decisions.request_date'],
+  ['sim.board_decisions.request_description', 'public.board_decisions.request_description'],
+  ['sim.board_decisions.response_date', 'public.board_decisions.response_date'],
+  ['sim.board_decisions.response_required_by', 'public.board_decisions.response_required_by'],
+  ['sim.board_meetings.action_items', 'public.board_meetings.action_items'],
+  ['sim.board_meetings.agenda_items', 'public.board_meetings.agenda_items'],
+  ['sim.board_meetings.end_time', 'public.board_meetings.end_time'],
+  ['sim.board_meetings.location', 'public.board_meetings.location'],
+  ['sim.board_meetings.meeting_date', 'public.board_meetings.meeting_date'],
+  ['sim.board_meetings.meeting_purpose', 'public.board_meetings.meeting_purpose'],
+  ['sim.board_meetings.meeting_status', 'public.board_meetings.meeting_status'],
+  ['sim.board_meetings.meeting_title', 'public.board_meetings.meeting_title'],
+  ['sim.board_meetings.meeting_type', 'public.board_meetings.meeting_type'],
+  ['sim.board_meetings.minutes', 'public.board_meetings.minutes'],
+  ['sim.board_meetings.start_time', 'public.board_meetings.start_time'],
+  ['sim.board_members.appointment_date', 'public.board_members.appointment_date'],
+  ['sim.board_members.is_active', 'public.board_members.is_active'],
+  ['sim.board_members.responsibilities', 'public.board_members.responsibilities'],
+  ['sim.board_members.role_on_board', 'public.board_members.role_on_board'],
+  ['sim.board_members.user_id', 'public.board_members.user_id'],
+  ['sim.business_cases.business_justification', 'public.business_cases.business_justification'],
+  ['sim.business_cases.case_title', 'public.business_cases.case_title'],
+  ['sim.business_cases.expected_benefits', 'public.business_cases.expected_benefits'],
+  ['sim.business_cases.expected_costs', 'public.business_cases.expected_costs'],
+  ['sim.business_cases.major_risks', 'public.business_cases.major_risks'],
+  ['sim.exceptions.exception_category', 'public.exceptions.exception_category'],
+  ['sim.exceptions.exception_description', 'public.exceptions.exception_description'],
+  ['sim.exceptions.exception_level', 'public.exceptions.exception_level'],
+  ['sim.exceptions.exception_reason', 'public.exceptions.exception_reason'],
+  ['sim.exceptions.exception_title', 'public.exceptions.exception_title'],
+  ['sim.exceptions.project_id', 'public.exceptions.project_id'],
+  ['sim.governance_frameworks.description', 'public.governance_frameworks.description'],
+  ['sim.governance_frameworks.escalation_path', 'public.governance_frameworks.escalation_path'],
+  ['sim.governance_frameworks.name', 'public.governance_frameworks.name'],
+  ['sim.governance_frameworks.notes', 'public.governance_frameworks.notes'],
+  ['sim.governance_frameworks.principles', 'public.governance_frameworks.principles'],
+  ['sim.governance_frameworks.status', 'public.governance_frameworks.status'],
+  ['sim.governance_frameworks.version', 'public.governance_frameworks.version'],
+  ['sim.pmo_approval_chain_steps.chain_name', 'public.pmo_approval_chain_steps.chain_name'],
+  ['sim.pmo_approval_chain_steps.description', 'public.pmo_approval_chain_steps.description'],
+  ['sim.pmo_approval_chain_steps.is_active', 'public.pmo_approval_chain_steps.is_active'],
+  ['sim.pmo_approval_chain_steps.is_mandatory', 'public.pmo_approval_chain_steps.is_mandatory'],
+  ['sim.pmo_approval_chain_steps.role_name', 'public.pmo_approval_chain_steps.role_name'],
+  ['sim.policies_compliance.category', 'public.policies_compliance.category'],
+  ['sim.policies_compliance.compliance_owner', 'public.policies_compliance.compliance_owner'],
+  ['sim.policies_compliance.description', 'public.policies_compliance.description'],
+  ['sim.policies_compliance.notes', 'public.policies_compliance.notes'],
+  ['sim.policies_compliance.policy_name', 'public.policies_compliance.policy_name'],
+  ['sim.policies_compliance.requirements', 'public.policies_compliance.requirements'],
+  ['sim.policies_compliance.review_date', 'public.policies_compliance.review_date'],
+  ['sim.policies_compliance.status', 'public.policies_compliance.status'],
+  ['sim.project_document_signatories.document_type', 'public.project_document_signatories.document_type'],
+  ['sim.project_document_signatories.is_mandatory', 'public.project_document_signatories.is_mandatory'],
+  ['sim.project_mandates.assumptions', 'public.project_mandates.assumptions'],
+  ['sim.project_mandates.business_justification', 'public.project_mandates.business_justification'],
+  ['sim.project_mandates.constraints', 'public.project_mandates.constraints'],
+  ['sim.project_mandates.expected_benefits', 'public.project_mandates.expected_benefits'],
+  ['sim.project_mandates.expected_costs', 'public.project_mandates.expected_costs'],
+  ['sim.project_mandates.mandate_authority', 'public.project_mandates.mandate_authority'],
+  ['sim.project_mandates.mandate_date', 'public.project_mandates.mandate_date'],
+  ['sim.project_mandates.mandate_description', 'public.project_mandates.mandate_description'],
+  ['sim.project_mandates.mandate_reason', 'public.project_mandates.mandate_reason'],
+  ['sim.project_mandates.mandate_title', 'public.project_mandates.mandate_title'],
+  ['sim.stage_boundaries.gate_name', 'public.stage_boundaries.gate_name'],
+  ['sim.stage_boundaries.gate_type', 'public.stage_boundaries.gate_type'],
+  ['sim.stage_boundaries.planned_date', 'public.stage_boundaries.planned_date'],
+  ['sim.stage_boundaries.stage_description', 'public.stage_boundaries.stage_description'],
+  ['sim.stage_boundaries.stage_name', 'public.stage_boundaries.stage_name'],
+  ['sim.stage_boundaries.stage_number', 'public.stage_boundaries.stage_number'],
+  ['sim.stage_gate_reviews.decision_date', 'public.stage_gate_reviews.decision_date'],
+  ['sim.stage_gate_reviews.gate_name', 'public.stage_gate_reviews.gate_name'],
+  ['sim.stage_gate_reviews.notes', 'public.stage_gate_reviews.notes'],
+  ['sim.stage_gate_reviews.outcome', 'public.stage_gate_reviews.outcome'],
+  ['sim.stage_gate_reviews.project_id', 'public.stage_gate_reviews.project_id'],
+  ['sim.stage_gate_reviews.stage', 'public.stage_gate_reviews.stage'],
+  ['sim.stage_gate_reviews.status', 'public.stage_gate_reviews.status'],
+]

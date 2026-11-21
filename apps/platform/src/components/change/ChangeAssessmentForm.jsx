@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { platformDb } from '@nidus/supabase';
 import { X, FileText, DollarSign, Clock, Target, AlertTriangle, TrendingUp } from 'lucide-react';
 import { createChangeAssessment, updateChangeAssessment } from '../../services/changeManagementService';
@@ -11,7 +13,7 @@ import AuditField from '@nidus/ui/AuditField';
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
 
-export default function ChangeAssessmentForm({
+function ChangeAssessmentFormBody({
   projectId,
   changeRequestId,
   assessment,
@@ -163,9 +165,9 @@ export default function ChangeAssessmentForm({
         return (
           <div className="space-y-6">
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+              <FieldLabelWithHelp helpKey="public.change_requests.assessment_date" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>
                 Assessment Date *
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="date"
                 value={formData.assessment_date}
@@ -176,9 +178,9 @@ export default function ChangeAssessmentForm({
             </div>
 
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+              <FieldLabelWithHelp helpKey="public.change_requests.impact_level" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>
                 Overall Impact Level *
-              </label>
+              </FieldLabelWithHelp>
               <select
                 value={formData.impact_level}
                 onChange={(e) => setFormData({ ...formData, impact_level: e.target.value })}
@@ -194,9 +196,9 @@ export default function ChangeAssessmentForm({
             </div>
 
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+              <FieldLabelWithHelp helpKey="public.change_requests.impact_summary" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>
                 Impact Summary *
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={formData.impact_summary}
                 onChange={(e) => setFormData({ ...formData, impact_summary: e.target.value })}
@@ -220,9 +222,9 @@ export default function ChangeAssessmentForm({
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                    <FieldLabelWithHelp helpKey="public.change_requests.schedule_impact_level" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>
                       Impact Level *
-                    </label>
+                    </FieldLabelWithHelp>
                     <select
                       value={formData.schedule_impact_level}
                       onChange={(e) => setFormData({ ...formData, schedule_impact_level: e.target.value })}
@@ -238,9 +240,9 @@ export default function ChangeAssessmentForm({
                   </div>
 
                   <div>
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                    <FieldLabelWithHelp helpKey="public.change_requests.schedule_impact_days" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                       Schedule Impact (Days)
-                    </label>
+                    </FieldLabelWithHelp>
                     <input
                       type="number"
                       value={formData.schedule_impact_days}
@@ -252,9 +254,9 @@ export default function ChangeAssessmentForm({
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                  <FieldLabelWithHelp helpKey="public.change_requests.schedule_impact_description" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                     Schedule Impact Description
-                  </label>
+                  </FieldLabelWithHelp>
                   <textarea
                     value={formData.schedule_impact_description}
                     onChange={(e) => setFormData({ ...formData, schedule_impact_description: e.target.value })}
@@ -265,9 +267,9 @@ export default function ChangeAssessmentForm({
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                  <FieldLabelWithHelp helpKey="public.change_requests.new_completion_date" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                     New Completion Date
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="date"
                     value={formData.new_completion_date}
@@ -286,9 +288,9 @@ export default function ChangeAssessmentForm({
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                    <FieldLabelWithHelp helpKey="public.change_requests.cost_impact_level" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>
                       Impact Level *
-                    </label>
+                    </FieldLabelWithHelp>
                     <select
                       value={formData.cost_impact_level}
                       onChange={(e) => setFormData({ ...formData, cost_impact_level: e.target.value })}
@@ -304,9 +306,9 @@ export default function ChangeAssessmentForm({
                   </div>
 
                   <div>
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                    <FieldLabelWithHelp helpKey="public.change_requests.cost_impact_amount" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" isAmount>
                       Cost Impact Amount ($)
-                    </label>
+                    </FieldLabelWithHelp>
                     <input
                       type="number"
                       step="0.01"
@@ -319,9 +321,9 @@ export default function ChangeAssessmentForm({
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                  <FieldLabelWithHelp helpKey="public.change_requests.cost_impact_description" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                     Cost Impact Description
-                  </label>
+                  </FieldLabelWithHelp>
                   <textarea
                     value={formData.cost_impact_description}
                     onChange={(e) => setFormData({ ...formData, cost_impact_description: e.target.value })}
@@ -332,9 +334,9 @@ export default function ChangeAssessmentForm({
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                  <FieldLabelWithHelp helpKey="public.change_requests.funding_source" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" listOptions={false}>
                     Funding Source
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="text"
                     value={formData.funding_source}
@@ -358,9 +360,9 @@ export default function ChangeAssessmentForm({
 
               <div className="space-y-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                  <FieldLabelWithHelp helpKey="public.change_requests.scope_impact_level" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>
                     Scope Impact Level *
-                  </label>
+                  </FieldLabelWithHelp>
                   <select
                     value={formData.scope_impact_level}
                     onChange={(e) => setFormData({ ...formData, scope_impact_level: e.target.value })}
@@ -376,7 +378,7 @@ export default function ChangeAssessmentForm({
                 </div>
 
                 <div>
-                  <label className="flex items-center gap-2 cursor-pointer">
+                  <FieldLabelWithHelp helpKey="public.change_requests.scope_baseline_affected" className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={formData.scope_baseline_affected}
@@ -386,13 +388,13 @@ export default function ChangeAssessmentForm({
                     <span className="text-sm text-gray-700 dark:text-gray-300">
                       Scope Baseline Affected
                     </span>
-                  </label>
+                  </FieldLabelWithHelp>
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                  <FieldLabelWithHelp helpKey="public.change_requests.scope_impact_description" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                     Scope Impact Description
-                  </label>
+                  </FieldLabelWithHelp>
                   <textarea
                     value={formData.scope_impact_description}
                     onChange={(e) => setFormData({ ...formData, scope_impact_description: e.target.value })}
@@ -411,9 +413,9 @@ export default function ChangeAssessmentForm({
 
               <div className="space-y-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                  <FieldLabelWithHelp helpKey="public.change_requests.quality_impact_level" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>
                     Quality Impact Level *
-                  </label>
+                  </FieldLabelWithHelp>
                   <select
                     value={formData.quality_impact_level}
                     onChange={(e) => setFormData({ ...formData, quality_impact_level: e.target.value })}
@@ -429,9 +431,9 @@ export default function ChangeAssessmentForm({
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                  <FieldLabelWithHelp helpKey="public.change_requests.quality_impact_description" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                     Quality Impact Description
-                  </label>
+                  </FieldLabelWithHelp>
                   <textarea
                     value={formData.quality_impact_description}
                     onChange={(e) => setFormData({ ...formData, quality_impact_description: e.target.value })}
@@ -450,9 +452,9 @@ export default function ChangeAssessmentForm({
 
               <div className="space-y-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                  <FieldLabelWithHelp helpKey="public.change_requests.benefits_impact_level" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>
                     Impact on Expected Benefits *
-                  </label>
+                  </FieldLabelWithHelp>
                   <select
                     value={formData.benefits_impact_level}
                     onChange={(e) => setFormData({ ...formData, benefits_impact_level: e.target.value })}
@@ -466,9 +468,9 @@ export default function ChangeAssessmentForm({
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                  <FieldLabelWithHelp helpKey="public.change_requests.benefits_impact_description" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                     Benefits Impact Description
-                  </label>
+                  </FieldLabelWithHelp>
                   <textarea
                     value={formData.benefits_impact_description}
                     onChange={(e) => setFormData({ ...formData, benefits_impact_description: e.target.value })}
@@ -493,9 +495,9 @@ export default function ChangeAssessmentForm({
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                    <FieldLabelWithHelp helpKey="public.change_requests.resource_impact_level" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>
                       Impact Level *
-                    </label>
+                    </FieldLabelWithHelp>
                     <select
                       value={formData.resource_impact_level}
                       onChange={(e) => setFormData({ ...formData, resource_impact_level: e.target.value })}
@@ -511,9 +513,9 @@ export default function ChangeAssessmentForm({
                   </div>
 
                   <div>
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                    <FieldLabelWithHelp helpKey="public.change_requests.resource_hours_required" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                       Resource Hours Required
-                    </label>
+                    </FieldLabelWithHelp>
                     <input
                       type="number"
                       step="0.5"
@@ -526,9 +528,9 @@ export default function ChangeAssessmentForm({
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                  <FieldLabelWithHelp helpKey="public.change_requests.resource_impact_description" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                     Resource Impact Description
-                  </label>
+                  </FieldLabelWithHelp>
                   <textarea
                     value={formData.resource_impact_description}
                     onChange={(e) => setFormData({ ...formData, resource_impact_description: e.target.value })}
@@ -547,7 +549,7 @@ export default function ChangeAssessmentForm({
 
               <div className="space-y-4">
                 <div>
-                  <label className="flex items-center gap-2 cursor-pointer">
+                  <FieldLabelWithHelp helpKey="public.change_requests.risk_mitigation_required" className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={formData.risk_mitigation_required}
@@ -557,13 +559,13 @@ export default function ChangeAssessmentForm({
                     <span className="text-sm text-gray-700 dark:text-gray-300">
                       Risk Mitigation Required
                     </span>
-                  </label>
+                  </FieldLabelWithHelp>
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                  <FieldLabelWithHelp helpKey="public.change_requests.risk_impact_description" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                     Risk Impact Description
-                  </label>
+                  </FieldLabelWithHelp>
                   <textarea
                     value={formData.risk_impact_description}
                     onChange={(e) => setFormData({ ...formData, risk_impact_description: e.target.value })}
@@ -581,9 +583,9 @@ export default function ChangeAssessmentForm({
         return (
           <div className="space-y-6">
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+              <FieldLabelWithHelp helpKey="public.change_requests.feasibility_rating" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>
                 Feasibility Rating *
-              </label>
+              </FieldLabelWithHelp>
               <select
                 value={formData.feasibility_rating}
                 onChange={(e) => setFormData({ ...formData, feasibility_rating: e.target.value })}
@@ -598,9 +600,9 @@ export default function ChangeAssessmentForm({
             </div>
 
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+              <FieldLabelWithHelp helpKey="public.change_requests.feasibility_assessment" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                 Feasibility Assessment
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={formData.feasibility_assessment}
                 onChange={(e) => setFormData({ ...formData, feasibility_assessment: e.target.value })}
@@ -612,9 +614,9 @@ export default function ChangeAssessmentForm({
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                <FieldLabelWithHelp helpKey="public.change_requests.implementation_complexity" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                   Implementation Complexity
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   value={formData.implementation_complexity}
                   onChange={(e) => setFormData({ ...formData, implementation_complexity: e.target.value })}
@@ -628,9 +630,9 @@ export default function ChangeAssessmentForm({
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                <FieldLabelWithHelp helpKey="public.change_requests.estimated_effort_hours" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                   Estimated Effort (Hours)
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="number"
                   step="0.5"
@@ -642,9 +644,9 @@ export default function ChangeAssessmentForm({
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                <FieldLabelWithHelp helpKey="public.change_requests.estimated_duration_days" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                   Estimated Duration (Days)
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="number"
                   value={formData.estimated_duration_days}
@@ -656,9 +658,9 @@ export default function ChangeAssessmentForm({
             </div>
 
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+              <FieldLabelWithHelp helpKey="public.change_requests.recommendation" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>
                 Recommendation *
-              </label>
+              </FieldLabelWithHelp>
               <select
                 value={formData.recommendation}
                 onChange={(e) => setFormData({ ...formData, recommendation: e.target.value })}
@@ -674,9 +676,9 @@ export default function ChangeAssessmentForm({
             </div>
 
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+              <FieldLabelWithHelp helpKey="public.change_requests.recommendation_rationale" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>
                 Recommendation Rationale *
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={formData.recommendation_rationale}
                 onChange={(e) => setFormData({ ...formData, recommendation_rationale: e.target.value })}
@@ -689,9 +691,9 @@ export default function ChangeAssessmentForm({
 
             {formData.recommendation === 'approve-with-conditions' && (
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                <FieldLabelWithHelp helpKey="public.change_requests.conditions" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                   Conditions
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   value={formData.conditions}
                   onChange={(e) => setFormData({ ...formData, conditions: e.target.value })}
@@ -801,4 +803,26 @@ export default function ChangeAssessmentForm({
       </div>
     </div>
   );
+}
+
+// v1345 slice 4: field help for this component (public.change_requests.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'assessment_date', 'impact_level', 'impact_summary', 'schedule_impact_level', 'schedule_impact_days',
+  'schedule_impact_description', 'new_completion_date', 'cost_impact_level', 'cost_impact_amount',
+  'cost_impact_description', 'funding_source', 'scope_impact_level', 'scope_baseline_affected',
+  'scope_impact_description', 'quality_impact_level', 'quality_impact_description',
+  'benefits_impact_level', 'benefits_impact_description', 'resource_impact_level',
+  'resource_hours_required', 'resource_impact_description', 'risk_mitigation_required',
+  'risk_impact_description', 'feasibility_rating', 'feasibility_assessment', 'implementation_complexity',
+  'estimated_effort_hours', 'estimated_duration_days', 'recommendation', 'recommendation_rationale',
+  'conditions',
+].map((name) => `public.change_requests.${name}`)
+
+export default function ChangeAssessmentForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ChangeAssessmentFormBody {...props} />
+    </FieldHelpScope>
+  )
 }

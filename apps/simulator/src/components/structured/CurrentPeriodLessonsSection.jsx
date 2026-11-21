@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { AlertCircle, Plus, X, Edit2, ArrowUp } from 'lucide-react'
 import { addLesson, updateLesson, escalateToLessonsLog } from '../../services/checkpointReportLessonsService'
 import { supabase } from '../../services/supabaseClient'
 
-export default function CurrentPeriodLessonsSection({ reportId, lessons, onLessonsChange, projectId, mode }) {
+function CurrentPeriodLessonsSectionBody({ reportId, lessons, onLessonsChange, projectId, mode }) {
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [lessonsLogId, setLessonsLogId] = useState(null)
@@ -190,9 +192,9 @@ export default function CurrentPeriodLessonsSection({ reportId, lessons, onLesso
             <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-900">
               <div className="space-y-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <FieldLabelWithHelp helpKey="sim.checkpoint_report_lessons.lesson_title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
                     Lesson Title *
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="text"
                     value={newLesson.lesson_title}
@@ -202,9 +204,9 @@ export default function CurrentPeriodLessonsSection({ reportId, lessons, onLesso
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <FieldLabelWithHelp helpKey="sim.checkpoint_report_lessons.lesson_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
                     Description *
-                  </label>
+                  </FieldLabelWithHelp>
                   <textarea
                     value={newLesson.lesson_description}
                     onChange={(e) => setNewLesson({ ...newLesson, lesson_description: e.target.value })}
@@ -215,9 +217,9 @@ export default function CurrentPeriodLessonsSection({ reportId, lessons, onLesso
                 </div>
                 <div className="grid grid-cols-3 gap-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <FieldLabelWithHelp helpKey="sim.checkpoint_report_lessons.lesson_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Type
-                    </label>
+                    </FieldLabelWithHelp>
                     <select
                       value={newLesson.lesson_type}
                       onChange={(e) => setNewLesson({ ...newLesson, lesson_type: e.target.value })}
@@ -229,9 +231,9 @@ export default function CurrentPeriodLessonsSection({ reportId, lessons, onLesso
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <FieldLabelWithHelp helpKey="sim.checkpoint_report_lessons.category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Category
-                    </label>
+                    </FieldLabelWithHelp>
                     <select
                       value={newLesson.category}
                       onChange={(e) => setNewLesson({ ...newLesson, category: e.target.value })}
@@ -246,9 +248,9 @@ export default function CurrentPeriodLessonsSection({ reportId, lessons, onLesso
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <FieldLabelWithHelp helpKey="sim.checkpoint_report_lessons.impact" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Impact
-                    </label>
+                    </FieldLabelWithHelp>
                     <select
                       value={newLesson.impact}
                       onChange={(e) => setNewLesson({ ...newLesson, impact: e.target.value })}
@@ -261,9 +263,9 @@ export default function CurrentPeriodLessonsSection({ reportId, lessons, onLesso
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <FieldLabelWithHelp helpKey="sim.checkpoint_report_lessons.recommendation" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Recommendation
-                  </label>
+                  </FieldLabelWithHelp>
                   <textarea
                     value={newLesson.recommendation}
                     onChange={(e) => setNewLesson({ ...newLesson, recommendation: e.target.value })}
@@ -300,5 +302,23 @@ export default function CurrentPeriodLessonsSection({ reportId, lessons, onLesso
         </>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.checkpoint_report_lessons.lesson_title',
+  'sim.checkpoint_report_lessons.lesson_description',
+  'sim.checkpoint_report_lessons.lesson_type',
+  'sim.checkpoint_report_lessons.category',
+  'sim.checkpoint_report_lessons.impact',
+  'sim.checkpoint_report_lessons.recommendation',
+]
+
+export default function CurrentPeriodLessonsSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <CurrentPeriodLessonsSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { Save, FileText, Calendar, Users, Target, CheckCircle } from 'lucide-react';
 import { saveQualityReview } from '../../services/qualityManagementService';
 import { supabase } from '../../services/supabaseClient';
@@ -27,7 +29,7 @@ const QUALITY_REVIEW_FORM_TABS = [
   { value: 'audit', label: 'Audit details' },
 ];
 
-export default function QualityReviewForm({
+function QualityReviewFormBody({
   review,
   projectId,
   qualityRegisterId,
@@ -295,9 +297,9 @@ export default function QualityReviewForm({
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.quality_reviews.review_reference" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Review Reference
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   name="review_reference"
@@ -309,9 +311,9 @@ export default function QualityReviewForm({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.quality_reviews.review_title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Review Title *
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   name="review_title"
@@ -324,9 +326,9 @@ export default function QualityReviewForm({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.quality_reviews.review_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Review Type *
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="review_type"
                   value={formData.review_type}
@@ -344,9 +346,9 @@ export default function QualityReviewForm({
 
               {qualityRegisterItems.length > 0 && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="sim.quality_reviews.quality_register_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                     Quality Register Item
-                  </label>
+                  </FieldLabelWithHelp>
                   <select
                     name="quality_register_id"
                     value={qualityRegisterId || formData.quality_register_id || ''}
@@ -364,9 +366,9 @@ export default function QualityReviewForm({
               )}
 
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.quality_reviews.review_scope" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Review Scope
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   name="review_scope"
                   value={formData.review_scope}
@@ -391,9 +393,9 @@ export default function QualityReviewForm({
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.quality_reviews.planned_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Planned Date
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="date"
                   name="planned_date"
@@ -404,9 +406,9 @@ export default function QualityReviewForm({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.quality_reviews.forecast_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Forecast Date
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="date"
                   name="forecast_date"
@@ -417,9 +419,9 @@ export default function QualityReviewForm({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.quality_reviews.sign_off_planned_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Sign-Off Planned Date
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="date"
                   name="sign_off_planned_date"
@@ -430,9 +432,9 @@ export default function QualityReviewForm({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.quality_reviews.sign_off_forecast_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Sign-Off Forecast Date
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="date"
                   name="sign_off_forecast_date"
@@ -443,9 +445,9 @@ export default function QualityReviewForm({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.quality_reviews.planned_duration_minutes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Duration (minutes)
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="number"
                   name="planned_duration_minutes"
@@ -457,9 +459,9 @@ export default function QualityReviewForm({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.quality_reviews.review_location_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Location Type
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="review_location_type"
                   value={formData.review_location_type}
@@ -473,9 +475,9 @@ export default function QualityReviewForm({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.quality_reviews.review_location" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Location/Meeting Link
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   name={formData.review_location_type === 'virtual' ? 'meeting_link' : 'review_location'}
@@ -503,9 +505,9 @@ export default function QualityReviewForm({
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.quality_reviews.chair_user_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                   Review Chair
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="chair_user_id"
                   value={formData.chair_user_id}
@@ -522,9 +524,9 @@ export default function QualityReviewForm({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.quality_reviews.secretary_user_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                   Secretary
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="secretary_user_id"
                   value={formData.secretary_user_id}
@@ -553,9 +555,9 @@ export default function QualityReviewForm({
               Review Criteria
             </h3>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.quality_reviews.review_criteria" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Review Criteria
-              </label>
+              </FieldLabelWithHelp>
               <MultiLineListInput
                 viewModeId="quality-review-criteria"
                 id="review_criteria"
@@ -581,9 +583,9 @@ export default function QualityReviewForm({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {programmes.length > 0 && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="sim.quality_reviews.programme_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                     Programme (Optional)
-                  </label>
+                  </FieldLabelWithHelp>
                   <select
                     name="programme_id"
                     value={formData.programme_id}
@@ -602,9 +604,9 @@ export default function QualityReviewForm({
 
               {qmsMethods.length > 0 && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="sim.quality_reviews.qms_method_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                     QMS Quality Method (Optional)
-                  </label>
+                  </FieldLabelWithHelp>
                   <select
                     name="qms_method_id"
                     value={formData.qms_method_id}
@@ -622,9 +624,9 @@ export default function QualityReviewForm({
               )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.quality_reviews.pass_threshold" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Pass Threshold (%)
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="number"
                   name="pass_threshold"
@@ -638,9 +640,9 @@ export default function QualityReviewForm({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.quality_reviews.materials_distribution_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Materials Distribution Date
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="date"
                   name="materials_distribution_date"
@@ -658,16 +660,16 @@ export default function QualityReviewForm({
                   onChange={handleChange}
                   className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                 />
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <FieldLabelWithHelp helpKey="sim.quality_reviews.preparation_required" className="text-sm font-medium text-gray-700 dark:text-gray-300" required>
                   Preparation Required
-                </label>
+                </FieldLabelWithHelp>
               </div>
 
               {formData.preparation_required && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="sim.quality_reviews.preparation_time_minutes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Preparation Time (minutes)
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="number"
                     name="preparation_time_minutes"
@@ -763,3 +765,35 @@ export default function QualityReviewForm({
   );
 }
 
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.quality_reviews.review_reference',
+  'sim.quality_reviews.review_title',
+  'sim.quality_reviews.review_type',
+  'sim.quality_reviews.quality_register_id',
+  'sim.quality_reviews.review_scope',
+  'sim.quality_reviews.planned_date',
+  'sim.quality_reviews.forecast_date',
+  'sim.quality_reviews.sign_off_planned_date',
+  'sim.quality_reviews.sign_off_forecast_date',
+  'sim.quality_reviews.planned_duration_minutes',
+  'sim.quality_reviews.review_location_type',
+  'sim.quality_reviews.review_location',
+  'sim.quality_reviews.chair_user_id',
+  'sim.quality_reviews.secretary_user_id',
+  'sim.quality_reviews.review_criteria',
+  'sim.quality_reviews.programme_id',
+  'sim.quality_reviews.qms_method_id',
+  'sim.quality_reviews.pass_threshold',
+  'sim.quality_reviews.materials_distribution_date',
+  'sim.quality_reviews.preparation_required',
+  'sim.quality_reviews.preparation_time_minutes',
+]
+
+export default function QualityReviewForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <QualityReviewFormBody {...props} />
+    </FieldHelpScope>
+  )
+}

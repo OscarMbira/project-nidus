@@ -11,6 +11,8 @@
  * Routes: admin/manage-roles/create · admin/manage-roles/:id · admin/manage-roles/:id/edit
  */
 import { useState, useEffect, useMemo, useCallback } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save, Loader, Shield } from 'lucide-react'
 import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesContext'
@@ -44,7 +46,7 @@ import { MENU_LAYOUT_OPTIONS } from '@nidus/config/consolidatedMenu'
 const MANAGE_ROLES_PATH = '/platform/admin/manage-roles'
 
 /** @param {{ forceEdit?: boolean }} props */
-export default function OrgRoleDetail({ forceEdit = false }) {
+function OrgRoleDetailBody({ forceEdit = false }) {
   const { id } = useParams()
   const navigate = useNavigate()
   const isCreate = !id
@@ -363,9 +365,9 @@ export default function OrgRoleDetail({ forceEdit = false }) {
 
             <div className={isCreate ? 'grid grid-cols-1 sm:grid-cols-2 gap-4' : ''}>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.roles.display_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Role name *
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   value={displayName}
@@ -378,9 +380,9 @@ export default function OrgRoleDetail({ forceEdit = false }) {
 
               {isCreate && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.roles.role_level" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Level (seniority — higher = more senior)
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="number"
                     value={roleLevel}
@@ -397,9 +399,9 @@ export default function OrgRoleDetail({ forceEdit = false }) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.roles.description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Description
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -409,9 +411,9 @@ export default function OrgRoleDetail({ forceEdit = false }) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.roles.role_skills" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Required skills *
-              </label>
+              </FieldLabelWithHelp>
               <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
                 What someone in this role needs to know or be able to do. One per line.
               </p>
@@ -427,7 +429,7 @@ export default function OrgRoleDetail({ forceEdit = false }) {
               />
             </div>
 
-            <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+            <FieldLabelWithHelp helpKey="public.roles.is_governance_only" className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
               <input
                 type="checkbox"
                 checked={isGovernanceOnly}
@@ -435,12 +437,12 @@ export default function OrgRoleDetail({ forceEdit = false }) {
                 className="rounded border-gray-300 dark:border-gray-600"
               />
               Oversight-only (read-only Governance Dashboard, like Board Member / Sponsor / Portfolio Manager)
-            </label>
+            </FieldLabelWithHelp>
 
             <div>
-              <label htmlFor="role-menu-layout" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.roles.menu_layout_key" htmlFor="role-menu-layout" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Menu based on
-              </label>
+              </FieldLabelWithHelp>
               <select
                 id="role-menu-layout"
                 value={menuLayoutKey}
@@ -458,9 +460,9 @@ export default function OrgRoleDetail({ forceEdit = false }) {
 
             {menuBundles.length > 0 && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.roles.start_from_bundle" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Start from a bundle (optional)
-                </label>
+                </FieldLabelWithHelp>
                 <div className="w-full sm:w-80">
                   <SearchableSelect
                     options={menuBundles.map((b) => ({ value: b.id, label: b.bundle_name }))}
@@ -544,5 +546,19 @@ export default function OrgRoleDetail({ forceEdit = false }) {
       </div>
       {successModal}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.roles.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'display_name', 'role_level', 'description', 'role_skills', 'menu_layout_key', 'start_from_bundle', 'is_governance_only',
+].map((name) => `public.roles.${name}`)
+
+export default function OrgRoleDetail(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <OrgRoleDetailBody {...props} />
+    </FieldHelpScope>
   )
 }

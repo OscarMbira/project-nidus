@@ -4,10 +4,12 @@
  */
 
 import { useState, useEffect } from 'react';
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { FileText, Plus, Link as LinkIcon, ExternalLink } from 'lucide-react';
 import { getRecords, addRecord, updateRecord, deleteRecord } from '../../services/qualityActivityRecordsService';
 
-export default function QualityActivityRecords({ activityType, activityId, onUpdate }) {
+function QualityActivityRecordsBody({ activityType, activityId, onUpdate }) {
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -139,9 +141,9 @@ export default function QualityActivityRecords({ activityType, activityId, onUpd
         <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.quality_activity_records.record_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Record Type *
-              </label>
+              </FieldLabelWithHelp>
               <select
                 value={newRecord.record_type}
                 onChange={(e) => setNewRecord({ ...newRecord, record_type: e.target.value })}
@@ -157,9 +159,9 @@ export default function QualityActivityRecords({ activityType, activityId, onUpd
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.quality_activity_records.record_reference" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Record Reference
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="text"
                 value={newRecord.record_reference}
@@ -169,9 +171,9 @@ export default function QualityActivityRecords({ activityType, activityId, onUpd
               />
             </div>
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.quality_activity_records.record_title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Record Title *
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="text"
                 value={newRecord.record_title}
@@ -182,9 +184,9 @@ export default function QualityActivityRecords({ activityType, activityId, onUpd
               />
             </div>
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.quality_activity_records.record_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Description
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={newRecord.record_description}
                 onChange={(e) => setNewRecord({ ...newRecord, record_description: e.target.value })}
@@ -194,9 +196,9 @@ export default function QualityActivityRecords({ activityType, activityId, onUpd
               />
             </div>
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.quality_activity_records.record_url" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Record URL/Link
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="url"
                 value={newRecord.record_url}
@@ -212,9 +214,9 @@ export default function QualityActivityRecords({ activityType, activityId, onUpd
                 onChange={(e) => setNewRecord({ ...newRecord, is_mandatory: e.target.checked })}
                 className="w-4 h-4 text-blue-600 border-gray-300 rounded"
               />
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              <FieldLabelWithHelp helpKey="public.quality_activity_records.is_mandatory" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Mandatory Record
-              </label>
+              </FieldLabelWithHelp>
             </div>
           </div>
           <div className="flex justify-end gap-2 mt-4">
@@ -305,4 +307,18 @@ export default function QualityActivityRecords({ activityType, activityId, onUpd
       )}
     </div>
   );
+}
+
+// v1345 slice 4: field help for this component (public.quality_activity_records.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'record_type', 'record_reference', 'record_title', 'record_description', 'record_url', 'is_mandatory',
+].map((name) => `public.quality_activity_records.${name}`)
+
+export default function QualityActivityRecords(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <QualityActivityRecordsBody {...props} />
+    </FieldHelpScope>
+  )
 }

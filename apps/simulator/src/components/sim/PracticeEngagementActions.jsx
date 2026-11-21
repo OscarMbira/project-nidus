@@ -4,6 +4,8 @@
  */
 
 import { useState, useEffect, useCallback } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { Plus, Pencil, Trash2 } from 'lucide-react'
 import {
   getPracticeEngagementActions,
@@ -37,7 +39,7 @@ const PRIORITY_OPTIONS = [
   { value: 'low', label: 'Low' },
 ]
 
-export default function PracticeEngagementActions({ practiceProjectId, practiceStakeholderId = null }) {
+function PracticeEngagementActionsBody({ practiceProjectId, practiceStakeholderId = null }) {
   const [actions, setActions] = useState([])
   const [stakeholders, setStakeholders] = useState([])
   const [users, setUsers] = useState([])
@@ -217,7 +219,7 @@ export default function PracticeEngagementActions({ practiceProjectId, practiceS
       {showForm && (
         <form onSubmit={handleSubmit} className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 space-y-3">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description *</label>
+            <FieldLabelWithHelp helpKey="sim.practice_engagement_actions.action_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>Description *</FieldLabelWithHelp>
             <textarea
               value={form.action_description}
               onChange={(e) => setForm((f) => ({ ...f, action_description: e.target.value }))}
@@ -228,7 +230,7 @@ export default function PracticeEngagementActions({ practiceProjectId, practiceS
           </div>
           {!practiceStakeholderId && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Stakeholder</label>
+              <FieldLabelWithHelp helpKey="sim.practice_engagement_actions.practice_stakeholder_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Stakeholder</FieldLabelWithHelp>
               <select
                 value={form.practice_stakeholder_id}
                 onChange={(e) => setForm((f) => ({ ...f, practice_stakeholder_id: e.target.value }))}
@@ -244,7 +246,7 @@ export default function PracticeEngagementActions({ practiceProjectId, practiceS
           )}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Owner</label>
+              <FieldLabelWithHelp helpKey="sim.practice_engagement_actions.owner_user_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" listOptions={false}>Owner</FieldLabelWithHelp>
               <select
                 value={form.owner_user_id}
                 onChange={(e) => setForm((f) => ({ ...f, owner_user_id: e.target.value }))}
@@ -257,7 +259,7 @@ export default function PracticeEngagementActions({ practiceProjectId, practiceS
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Due date</label>
+              <FieldLabelWithHelp helpKey="sim.practice_engagement_actions.due_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Due date</FieldLabelWithHelp>
               <input
                 type="date"
                 value={form.due_date}
@@ -268,7 +270,7 @@ export default function PracticeEngagementActions({ practiceProjectId, practiceS
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
+              <FieldLabelWithHelp helpKey="sim.practice_engagement_actions.status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</FieldLabelWithHelp>
               <select
                 value={form.status}
                 onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
@@ -280,7 +282,7 @@ export default function PracticeEngagementActions({ practiceProjectId, practiceS
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type</label>
+              <FieldLabelWithHelp helpKey="sim.practice_engagement_actions.action_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type</FieldLabelWithHelp>
               <select
                 value={form.action_type}
                 onChange={(e) => setForm((f) => ({ ...f, action_type: e.target.value }))}
@@ -292,7 +294,7 @@ export default function PracticeEngagementActions({ practiceProjectId, practiceS
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Priority</label>
+              <FieldLabelWithHelp helpKey="sim.practice_engagement_actions.priority" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Priority</FieldLabelWithHelp>
               <select
                 value={form.priority}
                 onChange={(e) => setForm((f) => ({ ...f, priority: e.target.value }))}
@@ -306,7 +308,7 @@ export default function PracticeEngagementActions({ practiceProjectId, practiceS
           </div>
           {(form.status === 'completed' || editingId) && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Outcome notes</label>
+              <FieldLabelWithHelp helpKey="sim.practice_engagement_actions.outcome_notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Outcome notes</FieldLabelWithHelp>
               <textarea
                 value={form.outcome_notes}
                 onChange={(e) => setForm((f) => ({ ...f, outcome_notes: e.target.value }))}
@@ -385,5 +387,25 @@ export default function PracticeEngagementActions({ practiceProjectId, practiceS
         )}
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.practice_engagement_actions.action_description',
+  'sim.practice_engagement_actions.practice_stakeholder_id',
+  'sim.practice_engagement_actions.owner_user_id',
+  'sim.practice_engagement_actions.due_date',
+  'sim.practice_engagement_actions.status',
+  'sim.practice_engagement_actions.action_type',
+  'sim.practice_engagement_actions.priority',
+  'sim.practice_engagement_actions.outcome_notes',
+]
+
+export default function PracticeEngagementActions(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <PracticeEngagementActionsBody {...props} />
+    </FieldHelpScope>
   )
 }

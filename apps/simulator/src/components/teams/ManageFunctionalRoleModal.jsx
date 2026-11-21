@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { X, Loader } from 'lucide-react'
 
-export default function ManageFunctionalRoleModal({ isOpen, onClose, title, initialLabel = '', onSave, mode = 'add' }) {
+function ManageFunctionalRoleModalBody({ isOpen, onClose, title, initialLabel = '', onSave, mode = 'add' }) {
   const [label, setLabel] = useState('')
   const [saving, setSaving] = useState(false)
 
@@ -32,7 +34,7 @@ export default function ManageFunctionalRoleModal({ isOpen, onClose, title, init
             <X className="w-5 h-5" />
           </button>
         </div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Role label</label>
+        <FieldLabelWithHelp helpKey="sim.project_functional_roles.role_label" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Role label</FieldLabelWithHelp>
         <input
           value={label}
           onChange={(e) => setLabel(e.target.value)}
@@ -59,5 +61,18 @@ export default function ManageFunctionalRoleModal({ isOpen, onClose, title, init
         </div>
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.project_functional_roles.role_label',
+]
+
+export default function ManageFunctionalRoleModal(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ManageFunctionalRoleModalBody {...props} />
+    </FieldHelpScope>
   )
 }

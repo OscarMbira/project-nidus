@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { Plus, Search, RefreshCw, AlertCircle, X, Pencil, Check } from 'lucide-react'
 import {
   getAllPortfolioMembers,
@@ -22,7 +24,7 @@ function statusBadge(s) {
   )
 }
 
-export default function PortfolioResources() {
+function PortfolioResourcesBody() {
   const [rows, setRows]         = useState([])
   const [portfolios, setPortfolios] = useState([])
   const [loading, setLoading]   = useState(true)
@@ -301,7 +303,7 @@ export default function PortfolioResources() {
             {addError && <p className="text-red-400 text-sm">{addError}</p>}
             <div className="space-y-3">
               <div>
-                <label className="block text-gray-400 text-sm mb-1">Portfolio *</label>
+                <FieldLabelWithHelp helpKey="sim.portfolio_members.portfolio_id" className="block text-gray-400 text-sm mb-1" required listOptions={false}>Portfolio *</FieldLabelWithHelp>
                 <select value={addForm.portfolio_id} onChange={e => setAddForm(f => ({ ...f, portfolio_id: e.target.value }))}
                   className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:ring-1 focus:ring-teal-500">
                   <option value="">Select portfolio…</option>
@@ -309,13 +311,13 @@ export default function PortfolioResources() {
                 </select>
               </div>
               <div>
-                <label className="block text-gray-400 text-sm mb-1">User Email *</label>
+                <FieldLabelWithHelp helpKey="sim.portfolio_members.user_email" className="block text-gray-400 text-sm mb-1" required>User Email *</FieldLabelWithHelp>
                 <input value={addForm.user_email} onChange={e => setAddForm(f => ({ ...f, user_email: e.target.value }))}
                   placeholder="user@example.com"
                   className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-teal-500" />
               </div>
               <div>
-                <label className="block text-gray-400 text-sm mb-1">Role</label>
+                <FieldLabelWithHelp helpKey="sim.portfolio_members.member_role" className="block text-gray-400 text-sm mb-1">Role</FieldLabelWithHelp>
                 <select value={addForm.member_role} onChange={e => setAddForm(f => ({ ...f, member_role: e.target.value }))}
                   className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:ring-1 focus:ring-teal-500">
                   <option value="">Select role…</option>
@@ -324,12 +326,12 @@ export default function PortfolioResources() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-gray-400 text-sm mb-1">Start Date</label>
+                  <FieldLabelWithHelp helpKey="sim.portfolio_members.start_date" className="block text-gray-400 text-sm mb-1">Start Date</FieldLabelWithHelp>
                   <input type="date" value={addForm.start_date} onChange={e => setAddForm(f => ({ ...f, start_date: e.target.value }))}
                     className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:outline-none" />
                 </div>
                 <div>
-                  <label className="block text-gray-400 text-sm mb-1">End Date</label>
+                  <FieldLabelWithHelp helpKey="sim.portfolio_members.end_date" className="block text-gray-400 text-sm mb-1">End Date</FieldLabelWithHelp>
                   <input type="date" value={addForm.end_date} onChange={e => setAddForm(f => ({ ...f, end_date: e.target.value }))}
                     className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:outline-none" />
                 </div>
@@ -347,5 +349,22 @@ export default function PortfolioResources() {
         </div>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.portfolio_members.portfolio_id',
+  'sim.portfolio_members.user_email',
+  'sim.portfolio_members.member_role',
+  'sim.portfolio_members.start_date',
+  'sim.portfolio_members.end_date',
+]
+
+export default function PortfolioResources(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <PortfolioResourcesBody {...props} />
+    </FieldHelpScope>
   )
 }

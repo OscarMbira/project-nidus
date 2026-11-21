@@ -9,6 +9,8 @@
  *   - Audit details tab (rule 63.1)
  */
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Loader2, ShieldCheck, Sparkles } from 'lucide-react'
 import { platformDb } from '@nidus/supabase'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
@@ -28,7 +30,7 @@ import AuditField from '../AuditField.jsx'
 
 const fmtDate = (v) => (v ? new Date(v).toLocaleString() : '')
 
-export default function AiSettingsPage() {
+function AiSettingsPageBody() {
   const [tab, setTab] = useState('details')
   const [status, setStatus] = useState(null)
   const [row, setRow] = useState(null)
@@ -188,22 +190,22 @@ export default function AiSettingsPage() {
             <legend className="px-1 text-base font-semibold text-gray-900 dark:text-gray-100">Settings</legend>
             {!canManage && <p className="text-sm text-gray-600 dark:text-gray-400">Only the Account Owner or a PMO Admin can change these settings.</p>}
 
-            <label className="flex items-center gap-3">
+            <FieldLabelWithHelp helpKey="public.ai_settings.ai_enabled" className="flex items-center gap-3">
               <input type="checkbox" checked={form.aiEnabled} disabled={!status.consent_accepted}
                 onChange={(e) => setForm((f) => ({ ...f, aiEnabled: e.target.checked }))}
                 className="h-4 w-4 rounded border-gray-300 text-blue-600 dark:border-gray-600" />
               <span className="text-sm text-gray-800 dark:text-gray-100">AI features are on for my organisation</span>
-            </label>
+            </FieldLabelWithHelp>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <label htmlFor="ai-conv-months" className="block text-sm font-medium text-gray-700 dark:text-gray-200">Keep conversations for (months)</label>
+                <FieldLabelWithHelp helpKey="public.ai_settings.conversation_retention_months" htmlFor="ai-conv-months" className="block text-sm font-medium text-gray-700 dark:text-gray-200">Keep conversations for (months)</FieldLabelWithHelp>
                 <input id="ai-conv-months" type="number" min={min} max={max} value={form.conversationMonths} disabled={lockedRetention}
                   onChange={(e) => setForm((f) => ({ ...f, conversationMonths: e.target.value }))}
                   className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
               </div>
               <div>
-                <label htmlFor="ai-audit-months" className="block text-sm font-medium text-gray-700 dark:text-gray-200">Keep usage records for (months)</label>
+                <FieldLabelWithHelp helpKey="public.ai_settings.audit_retention_months" htmlFor="ai-audit-months" className="block text-sm font-medium text-gray-700 dark:text-gray-200">Keep usage records for (months)</FieldLabelWithHelp>
                 <input id="ai-audit-months" type="number" min={min} max={max} value={form.auditMonths} disabled={lockedRetention}
                   onChange={(e) => setForm((f) => ({ ...f, auditMonths: e.target.value }))}
                   className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
@@ -214,7 +216,7 @@ export default function AiSettingsPage() {
             </p>
 
             <div>
-              <label htmlFor="ai-report-lang" className="block text-sm font-medium text-gray-700 dark:text-gray-200">Language for AI-drafted reports</label>
+              <FieldLabelWithHelp helpKey="public.ai_settings.report_language_code" htmlFor="ai-report-lang" className="block text-sm font-medium text-gray-700 dark:text-gray-200">Language for AI-drafted reports</FieldLabelWithHelp>
               <select id="ai-report-lang" value={form.reportLanguageCode} onChange={(e) => setForm((f) => ({ ...f, reportLanguageCode: e.target.value }))}
                 className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 sm:w-72">
                 <option value="">Each person's own language</option>
@@ -255,5 +257,19 @@ export default function AiSettingsPage() {
       )}
       {modal}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.ai_settings.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'ai_enabled', 'conversation_retention_months', 'audit_retention_months', 'report_language_code',
+].map((name) => `public.ai_settings.${name}`)
+
+export default function AiSettingsPage(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <AiSettingsPageBody {...props} />
+    </FieldHelpScope>
   )
 }

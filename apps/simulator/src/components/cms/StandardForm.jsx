@@ -4,6 +4,8 @@
  */
 
 import { useState } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
 import AuditCard from '@nidus/ui/AuditCard'
@@ -11,7 +13,7 @@ import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken } from '@nidus/shared/utils/auditDisplayUtils'
 
-export default function StandardForm({ standardData = {}, onChange, onCancel, onSubmit, isEditing = false }) {
+function StandardFormBody({ standardData = {}, onChange, onCancel, onSubmit, isEditing = false }) {
   const [formTab, setFormTab] = useState('details')
 
   const handleChange = (field, value) => {
@@ -67,9 +69,9 @@ export default function StandardForm({ standardData = {}, onChange, onCancel, on
       <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.cms_communication_standards.standard_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Standard Name <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             value={standardData.standard_name || ''}
@@ -81,9 +83,9 @@ export default function StandardForm({ standardData = {}, onChange, onCancel, on
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.cms_communication_standards.standard_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Standard Type <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={standardData.standard_type || ''}
             onChange={(e) => handleChange('standard_type', e.target.value)}
@@ -101,9 +103,9 @@ export default function StandardForm({ standardData = {}, onChange, onCancel, on
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="sim.cms_communication_standards.standard_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
           Description <span className="text-red-500">*</span>
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={standardData.standard_description || ''}
           onChange={(e) => handleChange('standard_description', e.target.value)}
@@ -115,9 +117,9 @@ export default function StandardForm({ standardData = {}, onChange, onCancel, on
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="sim.cms_communication_standards.applicability" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Applicability
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={standardData.applicability || ''}
           onChange={(e) => handleChange('applicability', e.target.value)}
@@ -129,9 +131,9 @@ export default function StandardForm({ standardData = {}, onChange, onCancel, on
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.cms_communication_standards.compliance_level" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Compliance Level
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={standardData.compliance_level || 'recommended'}
             onChange={(e) => handleChange('compliance_level', e.target.value)}
@@ -146,9 +148,9 @@ export default function StandardForm({ standardData = {}, onChange, onCancel, on
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.cms_communication_standards.template_reference" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Template Reference
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             value={standardData.template_reference || ''}
@@ -160,9 +162,9 @@ export default function StandardForm({ standardData = {}, onChange, onCancel, on
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="sim.cms_communication_standards.external_link" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           External Link
-        </label>
+        </FieldLabelWithHelp>
         <input
           type="url"
           value={standardData.external_link || ''}
@@ -190,5 +192,24 @@ export default function StandardForm({ standardData = {}, onChange, onCancel, on
         </button>
       </div>
     </form>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.cms_communication_standards.standard_name',
+  'sim.cms_communication_standards.standard_type',
+  'sim.cms_communication_standards.standard_description',
+  'sim.cms_communication_standards.applicability',
+  'sim.cms_communication_standards.compliance_level',
+  'sim.cms_communication_standards.template_reference',
+  'sim.cms_communication_standards.external_link',
+]
+
+export default function StandardForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <StandardFormBody {...props} />
+    </FieldHelpScope>
   )
 }

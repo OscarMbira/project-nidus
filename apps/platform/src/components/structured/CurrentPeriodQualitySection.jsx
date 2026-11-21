@@ -1,8 +1,10 @@
 import { useState } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { CheckCircle, Plus, X, Edit2 } from 'lucide-react'
 import { addQualityActivity, updateQualityActivity, deleteQualityActivity } from '../../services/checkpointReportQualityService'
 
-export default function CurrentPeriodQualitySection({ reportId, qualityActivities, onQualityActivitiesChange, mode }) {
+function CurrentPeriodQualitySectionBody({ reportId, qualityActivities, onQualityActivitiesChange, mode }) {
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [newActivity, setNewActivity] = useState({
@@ -138,9 +140,9 @@ export default function CurrentPeriodQualitySection({ reportId, qualityActivitie
             <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-900">
               <div className="space-y-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <FieldLabelWithHelp helpKey="public.checkpoint_report_quality_activities.activity_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
                     Activity Name *
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="text"
                     value={newActivity.activity_name}
@@ -150,9 +152,9 @@ export default function CurrentPeriodQualitySection({ reportId, qualityActivitie
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <FieldLabelWithHelp helpKey="public.checkpoint_report_quality_activities.activity_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Description
-                  </label>
+                  </FieldLabelWithHelp>
                   <textarea
                     value={newActivity.activity_description}
                     onChange={(e) => setNewActivity({ ...newActivity, activity_description: e.target.value })}
@@ -162,9 +164,9 @@ export default function CurrentPeriodQualitySection({ reportId, qualityActivitie
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <FieldLabelWithHelp helpKey="public.checkpoint_report_quality_activities.activity_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Type
-                    </label>
+                    </FieldLabelWithHelp>
                     <select
                       value={newActivity.activity_type}
                       onChange={(e) => setNewActivity({ ...newActivity, activity_type: e.target.value })}
@@ -178,9 +180,9 @@ export default function CurrentPeriodQualitySection({ reportId, qualityActivitie
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <FieldLabelWithHelp helpKey="public.checkpoint_report_quality_activities.status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Status
-                    </label>
+                    </FieldLabelWithHelp>
                     <select
                       value={newActivity.status}
                       onChange={(e) => setNewActivity({ ...newActivity, status: e.target.value })}
@@ -221,5 +223,19 @@ export default function CurrentPeriodQualitySection({ reportId, qualityActivitie
         </>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.checkpoint_report_quality_activities.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'activity_name', 'activity_description', 'activity_type', 'status',
+].map((name) => `public.checkpoint_report_quality_activities.${name}`)
+
+export default function CurrentPeriodQualitySection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <CurrentPeriodQualitySectionBody {...props} />
+    </FieldHelpScope>
   )
 }

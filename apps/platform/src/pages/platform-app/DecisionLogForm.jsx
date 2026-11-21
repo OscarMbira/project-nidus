@@ -14,6 +14,8 @@ import AuditCard from '@nidus/ui/AuditCard'
 import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 
 const EMPTY = {
   decision_title: '',
@@ -55,7 +57,7 @@ function Field({ label, name, value, onChange, type = 'text', options, rows }) {
   if (options) {
     return (
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">{label}</label>
+        <FieldLabelWithHelp helpKey={`public.project_decisions.${name}`} required={String(label).includes('*')} className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1" options={options.map((o) => ({ value: o, label: o.charAt(0).toUpperCase() + o.slice(1) }))}>{label}</FieldLabelWithHelp>
         <select name={name} value={value} onChange={onChange} className={base}>
           {options.map(o => <option key={o} value={o}>{o.charAt(0).toUpperCase() + o.slice(1)}</option>)}
         </select>
@@ -65,20 +67,20 @@ function Field({ label, name, value, onChange, type = 'text', options, rows }) {
   if (rows) {
     return (
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">{label}</label>
+        <FieldLabelWithHelp helpKey={`public.project_decisions.${name}`} required={String(label).includes('*')} className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">{label}</FieldLabelWithHelp>
         <textarea name={name} value={value} onChange={onChange} rows={rows} className={`${base} resize-y`} />
       </div>
     )
   }
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">{label}</label>
+      <FieldLabelWithHelp helpKey={`public.project_decisions.${name}`} required={String(label).includes('*')} className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">{label}</FieldLabelWithHelp>
       <input type={type} name={name} value={value} onChange={onChange} className={base} />
     </div>
   )
 }
 
-export default function DecisionLogForm() {
+function DecisionLogFormBody() {
   const { id } = useParams()
   const { projectId: resolvedProjectId, routeKey } = usePlatformProjectId()
   const navigate = useNavigate()
@@ -316,5 +318,18 @@ export default function DecisionLogForm() {
         {successModal}
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4: field help for the decision log form (public.project_decisions.<column>).
+const HELP_KEYS = [
+  'decision_title', 'description', 'decision_date', 'decided_by_name', 'category', 'status', 'priority', 'review_date',
+].map((name) => `public.project_decisions.${name}`)
+
+export default function DecisionLogForm() {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <DecisionLogFormBody />
+    </FieldHelpScope>
   )
 }

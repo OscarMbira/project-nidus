@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import SmartAmountInput from '@nidus/ui/SmartAmountInput'
 import MultiLineListInput from '../project/MultiLineListInput'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
@@ -24,7 +26,7 @@ const EMPTY = {
  * PMO manager appointment terms (v593).
  * @param {{ value?: object, onChange: (v: object) => void, eligibleUsers?: Array, storageKey?: string }} props
  */
-export default function ManagerAppointmentForm({
+function ManagerAppointmentFormBody({
   value = EMPTY,
   onChange,
   eligibleUsers = [],
@@ -100,9 +102,9 @@ export default function ManagerAppointmentForm({
       <p className="text-sm font-medium text-gray-900 dark:text-white">Formal appointment terms</p>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+          <FieldLabelWithHelp helpKey="public.manager_appointment_records.assignment_start_date" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
             Assignment start date
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="date"
             value={form.assignmentStartDate}
@@ -111,9 +113,9 @@ export default function ManagerAppointmentForm({
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+          <FieldLabelWithHelp helpKey="public.manager_appointment_records.assignment_end_date" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
             Assignment end date
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="date"
             value={form.assignmentEndDate}
@@ -122,9 +124,9 @@ export default function ManagerAppointmentForm({
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+          <FieldLabelWithHelp helpKey="public.manager_appointment_records.time_commitment_pct" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
             Time commitment %
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={form.timeCommitmentPct}
             onChange={(e) => patch({ timeCommitmentPct: Number(e.target.value) })}
@@ -138,9 +140,9 @@ export default function ManagerAppointmentForm({
           </select>
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+          <FieldLabelWithHelp helpKey="public.manager_appointment_records.reporting_to_user_id" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1" listOptions={false}>
             Reporting to
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={form.reportingToUserId}
             onChange={(e) => patch({ reportingToUserId: e.target.value })}
@@ -155,9 +157,9 @@ export default function ManagerAppointmentForm({
           </select>
         </div>
         <div className="md:col-span-2">
-          <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+          <FieldLabelWithHelp helpKey="public.manager_appointment_records.budget_authority_limit" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1" isAmount>
             Budget authority limit
-          </label>
+          </FieldLabelWithHelp>
           <SmartAmountInput
             value={form.budgetAuthorityLimit}
             onChange={(n) => patch({ budgetAuthorityLimit: n })}
@@ -167,9 +169,9 @@ export default function ManagerAppointmentForm({
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+          <FieldLabelWithHelp helpKey="public.manager_appointment_records.reporting_frequency" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
             Reporting frequency
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={form.reportingFrequency}
             onChange={(e) => patch({ reportingFrequency: e.target.value })}
@@ -183,9 +185,9 @@ export default function ManagerAppointmentForm({
           </select>
         </div>
         <div className="md:col-span-2">
-          <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+          <FieldLabelWithHelp helpKey="public.manager_appointment_records.authority_notes" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
             Authority notes
-          </label>
+          </FieldLabelWithHelp>
           <MultiLineListInput
             id="authority_notes_input"
             value={form.authorityNotes}
@@ -195,9 +197,9 @@ export default function ManagerAppointmentForm({
           />
         </div>
         <div className="md:col-span-2">
-          <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+          <FieldLabelWithHelp helpKey="public.manager_appointment_records.known_constraints" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
             Known constraints
-          </label>
+          </FieldLabelWithHelp>
           <MultiLineListInput
             id="known_constraints_input"
             value={form.knownConstraints}
@@ -207,9 +209,9 @@ export default function ManagerAppointmentForm({
           />
         </div>
         <div className="md:col-span-2">
-          <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+          <FieldLabelWithHelp helpKey="public.manager_appointment_records.reference_document" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
             Reference document
-          </label>
+          </FieldLabelWithHelp>
           <MultiLineListInput
             id="reference_document_input"
             value={form.referenceDocument}
@@ -219,9 +221,9 @@ export default function ManagerAppointmentForm({
           />
         </div>
         <div className="md:col-span-2">
-          <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+          <FieldLabelWithHelp helpKey="public.manager_appointment_records.appointment_message" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
             Invitation message
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             rows={3}
             value={form.appointmentMessage}
@@ -235,3 +237,19 @@ export default function ManagerAppointmentForm({
 }
 
 export { EMPTY as MANAGER_APPOINTMENT_EMPTY }
+
+// v1345 slice 4: field help for this component (public.manager_appointment_records.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'assignment_start_date', 'assignment_end_date', 'time_commitment_pct', 'reporting_to_user_id',
+  'budget_authority_limit', 'reporting_frequency', 'authority_notes', 'known_constraints',
+  'reference_document', 'appointment_message',
+].map((name) => `public.manager_appointment_records.${name}`)
+
+export default function ManagerAppointmentForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ManagerAppointmentFormBody {...props} />
+    </FieldHelpScope>
+  )
+}

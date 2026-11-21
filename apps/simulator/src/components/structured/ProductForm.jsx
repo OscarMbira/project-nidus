@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { supabase } from '../../services/supabaseClient'
 import { platformDb } from '@nidus/supabase'
 import { format } from 'date-fns'
@@ -12,7 +14,7 @@ import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
-export default function ProductForm({ product, projectId, workPackages, onSave, onCancel }) {
+function ProductFormBody({ product, projectId, workPackages, onSave, onCancel }) {
   const [formData, setFormData] = useState({
     product_name: '',
     product_code: '',
@@ -198,9 +200,9 @@ export default function ProductForm({ product, projectId, workPackages, onSave, 
           <>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.product_deliverables.product_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Product Name *
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="text"
                 name="product_name"
@@ -211,9 +213,9 @@ export default function ProductForm({ product, projectId, workPackages, onSave, 
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.product_deliverables.product_code" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Product Code
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="text"
                 name="product_code"
@@ -226,9 +228,9 @@ export default function ProductForm({ product, projectId, workPackages, onSave, 
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="sim.product_deliverables.product_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Description
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               name="product_description"
               value={formData.product_description}
@@ -240,9 +242,9 @@ export default function ProductForm({ product, projectId, workPackages, onSave, 
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.product_deliverables.product_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Product Type
-              </label>
+              </FieldLabelWithHelp>
               <select
                 name="product_type"
                 value={formData.product_type}
@@ -256,10 +258,10 @@ export default function ProductForm({ product, projectId, workPackages, onSave, 
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.product_deliverables.work_package_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                 <FileText className="h-4 w-4 inline mr-1" />
                 Work Package
-              </label>
+              </FieldLabelWithHelp>
               <select
                 name="work_package_id"
                 value={formData.work_package_id}
@@ -275,10 +277,10 @@ export default function ProductForm({ product, projectId, workPackages, onSave, 
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.product_deliverables.assigned_to_user_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                 <User className="h-4 w-4 inline mr-1" />
                 Assign To
-              </label>
+              </FieldLabelWithHelp>
               <select
                 name="assigned_to_user_id"
                 value={formData.assigned_to_user_id}
@@ -296,9 +298,9 @@ export default function ProductForm({ product, projectId, workPackages, onSave, 
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="sim.product_deliverables.product_specification" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Product Specification
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               name="product_specification"
               value={formData.product_specification}
@@ -310,9 +312,9 @@ export default function ProductForm({ product, projectId, workPackages, onSave, 
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.product_deliverables.acceptance_criteria" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Acceptance Criteria
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 name="acceptance_criteria"
                 value={formData.acceptance_criteria}
@@ -322,9 +324,9 @@ export default function ProductForm({ product, projectId, workPackages, onSave, 
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.product_deliverables.quality_standards" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Quality Standards
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 name="quality_standards"
                 value={formData.quality_standards}
@@ -337,10 +339,10 @@ export default function ProductForm({ product, projectId, workPackages, onSave, 
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.product_deliverables.planned_completion_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 <Calendar className="h-4 w-4 inline mr-1" />
                 Planned Completion Date
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="date"
                 name="planned_completion_date"
@@ -350,9 +352,9 @@ export default function ProductForm({ product, projectId, workPackages, onSave, 
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.product_deliverables.version_number" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Version Number
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="text"
                 name="version_number"
@@ -365,9 +367,9 @@ export default function ProductForm({ product, projectId, workPackages, onSave, 
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="sim.product_deliverables.notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Notes
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               name="notes"
               value={formData.notes}
@@ -402,3 +404,26 @@ export default function ProductForm({ product, projectId, workPackages, onSave, 
   )
 }
 
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.product_deliverables.product_name',
+  'sim.product_deliverables.product_code',
+  'sim.product_deliverables.product_description',
+  'sim.product_deliverables.product_type',
+  'sim.product_deliverables.work_package_id',
+  'sim.product_deliverables.assigned_to_user_id',
+  'sim.product_deliverables.product_specification',
+  'sim.product_deliverables.acceptance_criteria',
+  'sim.product_deliverables.quality_standards',
+  'sim.product_deliverables.planned_completion_date',
+  'sim.product_deliverables.version_number',
+  'sim.product_deliverables.notes',
+]
+
+export default function ProductForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ProductFormBody {...props} />
+    </FieldHelpScope>
+  )
+}

@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { supabase } from '../../../services/supabaseClient';
 import { X, MessageSquare, Calendar, FileText, AlertCircle, CheckCircle } from 'lucide-react';
 import { createAdHocDirection, updateAdHocDirection } from '../../../services/directingProjectService';
@@ -10,7 +12,7 @@ import AuditField from '@nidus/ui/AuditField';
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
 
-export default function AdHocDirectionForm({ projectId, direction, onClose, onSuccess }) {
+function AdHocDirectionFormBody({ projectId, direction, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [formTab, setFormTab] = useState('details');
   const [auditUserLabels, setAuditUserLabels] = useState({});
@@ -170,10 +172,10 @@ export default function AdHocDirectionForm({ projectId, direction, onClose, onSu
           <>
           {/* Direction Title */}
           <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.board_decisions.direction_title" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
               <MessageSquare className="h-4 w-4" />
               Direction Title *
-            </label>
+            </FieldLabelWithHelp>
             <input
               type="text"
               value={formData.direction_title}
@@ -187,10 +189,10 @@ export default function AdHocDirectionForm({ projectId, direction, onClose, onSu
           {/* Request Date, Type, Priority, Status */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.board_decisions.request_date" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 <Calendar className="h-4 w-4" />
                 Request Date *
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="date"
                 value={formData.request_date}
@@ -201,10 +203,10 @@ export default function AdHocDirectionForm({ projectId, direction, onClose, onSu
             </div>
 
             <div>
-              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.board_decisions.direction_type" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 <FileText className="h-4 w-4" />
                 Direction Type *
-              </label>
+              </FieldLabelWithHelp>
               <select
                 value={formData.direction_type}
                 onChange={(e) => setFormData({ ...formData, direction_type: e.target.value })}
@@ -225,10 +227,10 @@ export default function AdHocDirectionForm({ projectId, direction, onClose, onSu
             </div>
 
             <div>
-              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.board_decisions.priority" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 <AlertCircle className="h-4 w-4" />
                 Priority *
-              </label>
+              </FieldLabelWithHelp>
               <select
                 value={formData.priority}
                 onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
@@ -249,10 +251,10 @@ export default function AdHocDirectionForm({ projectId, direction, onClose, onSu
             </div>
 
             <div>
-              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.board_decisions.direction_status" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 <CheckCircle className="h-4 w-4" />
                 Status *
-              </label>
+              </FieldLabelWithHelp>
               <select
                 value={formData.direction_status}
                 onChange={(e) => setFormData({ ...formData, direction_status: e.target.value })}
@@ -270,10 +272,10 @@ export default function AdHocDirectionForm({ projectId, direction, onClose, onSu
 
           {/* Request Description */}
           <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.board_decisions.request_description" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
               <FileText className="h-4 w-4" />
               Request Description *
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               value={formData.request_description}
               onChange={(e) => setFormData({ ...formData, request_description: e.target.value })}
@@ -289,10 +291,10 @@ export default function AdHocDirectionForm({ projectId, direction, onClose, onSu
 
           {/* Business Justification */}
           <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.board_decisions.business_justification" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               <FileText className="h-4 w-4" />
               Business Justification
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               value={formData.business_justification}
               onChange={(e) => setFormData({ ...formData, business_justification: e.target.value })}
@@ -307,10 +309,10 @@ export default function AdHocDirectionForm({ projectId, direction, onClose, onSu
 
           {/* Response Required By */}
           <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.board_decisions.response_required_by" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               <Calendar className="h-4 w-4" />
               Response Required By
-            </label>
+            </FieldLabelWithHelp>
             <input
               type="date"
               value={formData.response_required_by}
@@ -331,9 +333,9 @@ export default function AdHocDirectionForm({ projectId, direction, onClose, onSu
               </h3>
 
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                <FieldLabelWithHelp helpKey="public.board_decisions.board_response" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                   Response
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   value={formData.board_response}
                   onChange={(e) => setFormData({ ...formData, board_response: e.target.value })}
@@ -344,9 +346,9 @@ export default function AdHocDirectionForm({ projectId, direction, onClose, onSu
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                <FieldLabelWithHelp helpKey="public.board_decisions.response_date" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                   Response Date
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="date"
                   value={formData.response_date}
@@ -381,4 +383,20 @@ export default function AdHocDirectionForm({ projectId, direction, onClose, onSu
       </div>
     </div>
   );
+}
+
+// v1345 slice 4: field help for this component (public.board_decisions.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'direction_title', 'request_date', 'direction_type', 'priority', 'direction_status',
+  'request_description', 'business_justification', 'response_required_by', 'board_response',
+  'response_date',
+].map((name) => `public.board_decisions.${name}`)
+
+export default function AdHocDirectionForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <AdHocDirectionFormBody {...props} />
+    </FieldHelpScope>
+  )
 }

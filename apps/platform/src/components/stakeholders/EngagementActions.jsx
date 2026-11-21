@@ -4,6 +4,8 @@
  */
 
 import { useState, useEffect, useCallback } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Plus, Pencil, Trash2 } from 'lucide-react'
 import { getEngagementActions, saveEngagementAction, deleteEngagementAction, getStakeholders } from '../../services/stakeholderService'
 import { platformDb } from '../../services/supabaseClient'
@@ -32,7 +34,7 @@ const PRIORITY_OPTIONS = [
   { value: 'low', label: 'Low' },
 ]
 
-export default function EngagementActions({ projectId, stakeholderId = null }) {
+function EngagementActionsBody({ projectId, stakeholderId = null }) {
   const [actions, setActions] = useState([])
   const [stakeholders, setStakeholders] = useState([])
   const [users, setUsers] = useState([])
@@ -211,7 +213,7 @@ export default function EngagementActions({ projectId, stakeholderId = null }) {
       {showForm && (
         <form onSubmit={handleSubmit} className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 space-y-3">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description *</label>
+            <FieldLabelWithHelp helpKey="public.stakeholder_engagement_actions.action_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>Description *</FieldLabelWithHelp>
             <textarea
               value={form.action_description}
               onChange={(e) => setForm((f) => ({ ...f, action_description: e.target.value }))}
@@ -222,7 +224,7 @@ export default function EngagementActions({ projectId, stakeholderId = null }) {
           </div>
           {!stakeholderId && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Stakeholder</label>
+              <FieldLabelWithHelp helpKey="public.stakeholder_engagement_actions.stakeholder_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" listOptions={false}>Stakeholder</FieldLabelWithHelp>
               <select
                 value={form.stakeholder_id}
                 onChange={(e) => setForm((f) => ({ ...f, stakeholder_id: e.target.value }))}
@@ -238,7 +240,7 @@ export default function EngagementActions({ projectId, stakeholderId = null }) {
           )}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Owner</label>
+              <FieldLabelWithHelp helpKey="public.stakeholder_engagement_actions.owner_user_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" listOptions={false}>Owner</FieldLabelWithHelp>
               <select
                 value={form.owner_user_id}
                 onChange={(e) => setForm((f) => ({ ...f, owner_user_id: e.target.value }))}
@@ -251,7 +253,7 @@ export default function EngagementActions({ projectId, stakeholderId = null }) {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Due date</label>
+              <FieldLabelWithHelp helpKey="public.stakeholder_engagement_actions.due_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Due date</FieldLabelWithHelp>
               <input
                 type="date"
                 value={form.due_date}
@@ -262,7 +264,7 @@ export default function EngagementActions({ projectId, stakeholderId = null }) {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
+              <FieldLabelWithHelp helpKey="public.stakeholder_engagement_actions.status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</FieldLabelWithHelp>
               <select
                 value={form.status}
                 onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
@@ -274,7 +276,7 @@ export default function EngagementActions({ projectId, stakeholderId = null }) {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type</label>
+              <FieldLabelWithHelp helpKey="public.stakeholder_engagement_actions.action_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type</FieldLabelWithHelp>
               <select
                 value={form.action_type}
                 onChange={(e) => setForm((f) => ({ ...f, action_type: e.target.value }))}
@@ -286,7 +288,7 @@ export default function EngagementActions({ projectId, stakeholderId = null }) {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Priority</label>
+              <FieldLabelWithHelp helpKey="public.stakeholder_engagement_actions.priority" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Priority</FieldLabelWithHelp>
               <select
                 value={form.priority}
                 onChange={(e) => setForm((f) => ({ ...f, priority: e.target.value }))}
@@ -300,7 +302,7 @@ export default function EngagementActions({ projectId, stakeholderId = null }) {
           </div>
           {(form.status === 'completed' || editingId) && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Outcome notes</label>
+              <FieldLabelWithHelp helpKey="public.stakeholder_engagement_actions.outcome_notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Outcome notes</FieldLabelWithHelp>
               <textarea
                 value={form.outcome_notes}
                 onChange={(e) => setForm((f) => ({ ...f, outcome_notes: e.target.value }))}
@@ -398,5 +400,20 @@ export default function EngagementActions({ projectId, stakeholderId = null }) {
         )}
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.stakeholder_engagement_actions.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'action_description', 'stakeholder_id', 'owner_user_id', 'due_date', 'status', 'action_type', 'priority',
+  'outcome_notes',
+].map((name) => `public.stakeholder_engagement_actions.${name}`)
+
+export default function EngagementActions(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <EngagementActionsBody {...props} />
+    </FieldHelpScope>
   )
 }

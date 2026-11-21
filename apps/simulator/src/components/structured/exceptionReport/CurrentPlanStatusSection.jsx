@@ -1,8 +1,10 @@
 import { useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { TrendingUp, TrendingDown, Calendar, DollarSign } from 'lucide-react'
 import { getCurrentPlanStatus } from '../../../services/exceptionReportService'
 
-export default function CurrentPlanStatusSection({ formData, onChange, errors, mode, projectId }) {
+function CurrentPlanStatusSectionBody({ formData, onChange, errors, mode, projectId }) {
   useEffect(() => {
     if (projectId && mode === 'create' && !formData.time_baseline_end_date) {
       loadPlanStatus()
@@ -51,9 +53,9 @@ export default function CurrentPlanStatusSection({ formData, onChange, errors, m
         </h4>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="sim.exception_reports.time_baseline_end_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Baseline End Date
-            </label>
+            </FieldLabelWithHelp>
             <input
               type="date"
               value={formData.time_baseline_end_date || ''}
@@ -63,9 +65,9 @@ export default function CurrentPlanStatusSection({ formData, onChange, errors, m
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="sim.exception_reports.time_current_forecast_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Current Forecast Date
-            </label>
+            </FieldLabelWithHelp>
             <input
               type="date"
               value={formData.time_current_forecast_date || ''}
@@ -75,9 +77,9 @@ export default function CurrentPlanStatusSection({ formData, onChange, errors, m
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="sim.exception_reports.time_variance_days" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Variance (Days)
-            </label>
+            </FieldLabelWithHelp>
             <div className="relative">
               {formData.time_variance_days !== null && formData.time_variance_days !== undefined && (
                 formData.time_variance_days >= 0 ? (
@@ -97,9 +99,9 @@ export default function CurrentPlanStatusSection({ formData, onChange, errors, m
           </div>
         </div>
         <div className="mt-4">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.exception_reports.time_performance_status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Time Performance Status
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             value={formData.time_performance_status || ''}
             onChange={(e) => onChange('time_performance_status', e.target.value)}
@@ -119,9 +121,9 @@ export default function CurrentPlanStatusSection({ formData, onChange, errors, m
         </h4>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="sim.exception_reports.cost_baseline_budget" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" isAmount>
               Baseline Budget
-            </label>
+            </FieldLabelWithHelp>
             <input
               type="number"
               step="0.01"
@@ -132,9 +134,9 @@ export default function CurrentPlanStatusSection({ formData, onChange, errors, m
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="sim.exception_reports.cost_current_forecast" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" isAmount>
               Current Forecast
-            </label>
+            </FieldLabelWithHelp>
             <input
               type="number"
               step="0.01"
@@ -145,9 +147,9 @@ export default function CurrentPlanStatusSection({ formData, onChange, errors, m
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="sim.exception_reports.cost_variance_amount" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" isAmount>
               Variance Amount
-            </label>
+            </FieldLabelWithHelp>
             <div className="relative">
               {formData.cost_variance_amount !== null && formData.cost_variance_amount !== undefined && (
                 formData.cost_variance_amount >= 0 ? (
@@ -169,9 +171,9 @@ export default function CurrentPlanStatusSection({ formData, onChange, errors, m
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="sim.exception_reports.cost_variance_percentage" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Variance Percentage (%)
-            </label>
+            </FieldLabelWithHelp>
             <input
               type="number"
               step="0.01"
@@ -183,9 +185,9 @@ export default function CurrentPlanStatusSection({ formData, onChange, errors, m
           </div>
         </div>
         <div className="mt-4">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.exception_reports.cost_performance_status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Cost Performance Status
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             value={formData.cost_performance_status || ''}
             onChange={(e) => onChange('cost_performance_status', e.target.value)}
@@ -200,9 +202,9 @@ export default function CurrentPlanStatusSection({ formData, onChange, errors, m
       {/* Scope and Quality Status */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.exception_reports.scope_status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Scope Status
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             value={formData.scope_status || ''}
             onChange={(e) => onChange('scope_status', e.target.value)}
@@ -213,9 +215,9 @@ export default function CurrentPlanStatusSection({ formData, onChange, errors, m
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.exception_reports.quality_status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Quality Status
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             value={formData.quality_status || ''}
             onChange={(e) => onChange('quality_status', e.target.value)}
@@ -227,5 +229,28 @@ export default function CurrentPlanStatusSection({ formData, onChange, errors, m
         </div>
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.exception_reports.time_baseline_end_date',
+  'sim.exception_reports.time_current_forecast_date',
+  'sim.exception_reports.time_variance_days',
+  'sim.exception_reports.time_performance_status',
+  'sim.exception_reports.cost_baseline_budget',
+  'sim.exception_reports.cost_current_forecast',
+  'sim.exception_reports.cost_variance_amount',
+  'sim.exception_reports.cost_variance_percentage',
+  'sim.exception_reports.cost_performance_status',
+  'sim.exception_reports.scope_status',
+  'sim.exception_reports.quality_status',
+]
+
+export default function CurrentPlanStatusSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <CurrentPlanStatusSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

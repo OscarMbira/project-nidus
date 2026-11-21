@@ -4,8 +4,10 @@
  */
 
 import MultiLineListInput from '@nidus/ui/MultiLineListInput'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 
-export default function InterfacesSection({ formData, onChange, errors = {}, readOnly = false }) {
+function InterfacesSectionBody({ formData, onChange, errors = {}, readOnly = false }) {
   const setListField = (name, value) => {
     onChange({ target: { name, value } })
   }
@@ -22,9 +24,9 @@ export default function InterfacesSection({ formData, onChange, errors = {}, rea
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <FieldLabelWithHelp helpKey="sim.project_briefs.interfaces" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Project interfaces
-        </label>
+        </FieldLabelWithHelp>
         <MultiLineListInput
           viewModeId="brief-project-interfaces"
           id="brief_interfaces"
@@ -37,5 +39,18 @@ export default function InterfacesSection({ formData, onChange, errors = {}, rea
         />
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.project_briefs.interfaces',
+]
+
+export default function InterfacesSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <InterfacesSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

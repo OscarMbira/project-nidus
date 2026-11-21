@@ -4,6 +4,8 @@
  */
 
 import { useState } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
 import AuditCard from '@nidus/ui/AuditCard'
@@ -11,7 +13,7 @@ import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken } from '@nidus/shared/utils/auditDisplayUtils'
 
-export default function ToolForm({ toolData = {}, onChange, onCancel, onSubmit, isEditing = false }) {
+function ToolFormBody({ toolData = {}, onChange, onCancel, onSubmit, isEditing = false }) {
   const [formTab, setFormTab] = useState('details')
 
   const handleChange = (field, value) => {
@@ -67,9 +69,9 @@ export default function ToolForm({ toolData = {}, onChange, onCancel, onSubmit, 
       <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.cms_tools_technologies.tool_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Tool Name <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             value={toolData.tool_name || ''}
@@ -81,9 +83,9 @@ export default function ToolForm({ toolData = {}, onChange, onCancel, onSubmit, 
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.cms_tools_technologies.tool_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Tool Type <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={toolData.tool_type || ''}
             onChange={(e) => handleChange('tool_type', e.target.value)}
@@ -101,9 +103,9 @@ export default function ToolForm({ toolData = {}, onChange, onCancel, onSubmit, 
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="sim.cms_tools_technologies.tool_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
           Description <span className="text-red-500">*</span>
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={toolData.tool_description || ''}
           onChange={(e) => handleChange('tool_description', e.target.value)}
@@ -115,9 +117,9 @@ export default function ToolForm({ toolData = {}, onChange, onCancel, onSubmit, 
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="sim.cms_tools_technologies.tool_purpose" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
           Purpose <span className="text-red-500">*</span>
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={toolData.tool_purpose || ''}
           onChange={(e) => handleChange('tool_purpose', e.target.value)}
@@ -129,9 +131,9 @@ export default function ToolForm({ toolData = {}, onChange, onCancel, onSubmit, 
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="sim.cms_tools_technologies.applicable_to" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Applicable To
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={toolData.applicable_to || ''}
           onChange={(e) => handleChange('applicable_to', e.target.value)}
@@ -143,9 +145,9 @@ export default function ToolForm({ toolData = {}, onChange, onCancel, onSubmit, 
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.cms_tools_technologies.proficiency_required" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Proficiency Required
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={toolData.proficiency_required || 'basic'}
             onChange={(e) => handleChange('proficiency_required', e.target.value)}
@@ -160,9 +162,9 @@ export default function ToolForm({ toolData = {}, onChange, onCancel, onSubmit, 
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.cms_tools_technologies.cost" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Cost
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="number"
             step="0.01"
@@ -174,7 +176,7 @@ export default function ToolForm({ toolData = {}, onChange, onCancel, onSubmit, 
         </div>
 
         <div className="flex items-end">
-          <label className="flex items-center">
+          <FieldLabelWithHelp helpKey="sim.cms_tools_technologies.license_required" className="flex items-center" required>
             <input
               type="checkbox"
               checked={toolData.license_required || false}
@@ -184,15 +186,15 @@ export default function ToolForm({ toolData = {}, onChange, onCancel, onSubmit, 
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
               License Required
             </span>
-          </label>
+          </FieldLabelWithHelp>
         </div>
       </div>
 
       {toolData.license_required && (
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.cms_tools_technologies.license_info" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             License Information
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             value={toolData.license_info || ''}
             onChange={(e) => handleChange('license_info', e.target.value)}
@@ -204,9 +206,9 @@ export default function ToolForm({ toolData = {}, onChange, onCancel, onSubmit, 
       )}
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="sim.cms_tools_technologies.external_link" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           External Link
-        </label>
+        </FieldLabelWithHelp>
         <input
           type="url"
           value={toolData.external_link || ''}
@@ -234,5 +236,27 @@ export default function ToolForm({ toolData = {}, onChange, onCancel, onSubmit, 
         </button>
       </div>
     </form>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.cms_tools_technologies.tool_name',
+  'sim.cms_tools_technologies.tool_type',
+  'sim.cms_tools_technologies.tool_description',
+  'sim.cms_tools_technologies.tool_purpose',
+  'sim.cms_tools_technologies.applicable_to',
+  'sim.cms_tools_technologies.proficiency_required',
+  'sim.cms_tools_technologies.cost',
+  'sim.cms_tools_technologies.license_required',
+  'sim.cms_tools_technologies.license_info',
+  'sim.cms_tools_technologies.external_link',
+]
+
+export default function ToolForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ToolFormBody {...props} />
+    </FieldHelpScope>
   )
 }

@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { Users, Award, Plus, X, Edit2 } from 'lucide-react'
 import { addTeamRecognition, updateTeamRecognition, deleteTeamRecognition } from '../../../services/eprTeamPerformanceService'
 import { supabase } from '../../../services/supabaseClient'
 
-export default function EPRTeamPerformance({ reportId, teamPerformance, onTeamPerformanceChange, mode }) {
+function EPRTeamPerformanceBody({ reportId, teamPerformance, onTeamPerformanceChange, mode }) {
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [users, setUsers] = useState([])
@@ -201,9 +203,9 @@ export default function EPRTeamPerformance({ reportId, teamPerformance, onTeamPe
               <div className="space-y-3">
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <FieldLabelWithHelp helpKey="sim.end_project_report_team_performance.team_member_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" listOptions={false}>
                       Team Member
-                    </label>
+                    </FieldLabelWithHelp>
                     <select
                       value={newRecognition.team_member_id || ''}
                       onChange={(e) => setNewRecognition({ ...newRecognition, team_member_id: e.target.value || null })}
@@ -218,9 +220,9 @@ export default function EPRTeamPerformance({ reportId, teamPerformance, onTeamPe
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <FieldLabelWithHelp helpKey="sim.end_project_report_team_performance.team_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Or Team Name
-                    </label>
+                    </FieldLabelWithHelp>
                     <input
                       type="text"
                       value={newRecognition.team_name}
@@ -231,9 +233,9 @@ export default function EPRTeamPerformance({ reportId, teamPerformance, onTeamPe
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <FieldLabelWithHelp helpKey="sim.end_project_report_team_performance.performance_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
                     Performance Description *
-                  </label>
+                  </FieldLabelWithHelp>
                   <textarea
                     value={newRecognition.performance_description}
                     onChange={(e) => setNewRecognition({ ...newRecognition, performance_description: e.target.value })}
@@ -244,9 +246,9 @@ export default function EPRTeamPerformance({ reportId, teamPerformance, onTeamPe
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <FieldLabelWithHelp helpKey="sim.end_project_report_team_performance.performance_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
                       Performance Type *
-                    </label>
+                    </FieldLabelWithHelp>
                     <select
                       value={newRecognition.performance_type}
                       onChange={(e) => setNewRecognition({ ...newRecognition, performance_type: e.target.value })}
@@ -259,9 +261,9 @@ export default function EPRTeamPerformance({ reportId, teamPerformance, onTeamPe
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <FieldLabelWithHelp helpKey="sim.end_project_report_team_performance.recognition_category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Recognition Category
-                    </label>
+                    </FieldLabelWithHelp>
                     <select
                       value={newRecognition.recognition_category || ''}
                       onChange={(e) => setNewRecognition({ ...newRecognition, recognition_category: e.target.value || null })}
@@ -285,9 +287,9 @@ export default function EPRTeamPerformance({ reportId, teamPerformance, onTeamPe
                     onChange={(e) => setNewRecognition({ ...newRecognition, is_highlighted: e.target.checked })}
                     className="rounded"
                   />
-                  <label className="text-sm text-gray-700 dark:text-gray-300">
+                  <FieldLabelWithHelp helpKey="sim.end_project_report_team_performance.is_highlighted" className="text-sm text-gray-700 dark:text-gray-300">
                     Highlight this recognition
-                  </label>
+                  </FieldLabelWithHelp>
                 </div>
                 <div className="flex gap-2">
                   <button
@@ -346,5 +348,23 @@ function TeamRecognitionEditForm({ recognition, users, onSave, onCancel }) {
         </button>
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.end_project_report_team_performance.team_member_id',
+  'sim.end_project_report_team_performance.team_name',
+  'sim.end_project_report_team_performance.performance_description',
+  'sim.end_project_report_team_performance.performance_type',
+  'sim.end_project_report_team_performance.recognition_category',
+  'sim.end_project_report_team_performance.is_highlighted',
+]
+
+export default function EPRTeamPerformance(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <EPRTeamPerformanceBody {...props} />
+    </FieldHelpScope>
   )
 }

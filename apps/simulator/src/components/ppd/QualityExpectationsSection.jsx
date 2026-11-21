@@ -4,12 +4,14 @@
  */
 
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { Plus, Award } from 'lucide-react'
 import { getExpectations, deleteExpectation } from '../../services/ppdQualityExpectationsService'
 import QualityExpectationCard from './QualityExpectationCard'
 import QualityExpectationForm from './QualityExpectationForm'
 
-export default function QualityExpectationsSection({ ppdId, mode = 'view', formData, onChange }) {
+function QualityExpectationsSectionBody({ ppdId, mode = 'view', formData, onChange }) {
   const [expectations, setExpectations] = useState([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -84,9 +86,9 @@ export default function QualityExpectationsSection({ ppdId, mode = 'view', formD
     <div className="space-y-6">
       {/* Customer Quality Expectations (Text Field) */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="sim.ppd_quality_expectations.customer_quality_expectations" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Customer Quality Expectations
-        </label>
+        </FieldLabelWithHelp>
         {mode === 'view' ? (
           <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
             {formData?.customer_quality_expectations || 'Not defined'}
@@ -104,9 +106,9 @@ export default function QualityExpectationsSection({ ppdId, mode = 'view', formD
 
       {/* Quality Characteristics */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="sim.ppd_quality_expectations.quality_characteristics" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Quality Characteristics
-        </label>
+        </FieldLabelWithHelp>
         {mode === 'view' ? (
           <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
             {formData?.quality_characteristics || 'Not defined'}
@@ -189,5 +191,19 @@ export default function QualityExpectationsSection({ ppdId, mode = 'view', formD
         )}
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.ppd_quality_expectations.customer_quality_expectations',
+  'sim.ppd_quality_expectations.quality_characteristics',
+]
+
+export default function QualityExpectationsSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <QualityExpectationsSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

@@ -1,10 +1,12 @@
 import { useState, useEffect, useMemo } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { X, Loader, AlertTriangle } from 'lucide-react'
 import { getAssignableProjectMembers, getTeamFunctionalRoles, getUserTotalTeamAllocation, addTeamMember } from '../../services/teamService'
 import { useToast } from '@nidus/shared/hooks/useToast'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 
-export default function AddTeamMemberModal({ isOpen, onClose, teamId, projectId, onSuccess }) {
+function AddTeamMemberModalBody({ isOpen, onClose, teamId, projectId, onSuccess }) {
   const { showToast } = useToast()
   const [formTab, setFormTab] = useState('details')
   const [loading, setLoading] = useState(true)
@@ -136,7 +138,7 @@ export default function AddTeamMemberModal({ isOpen, onClose, teamId, projectId,
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Project member</label>
+              <FieldLabelWithHelp helpKey="public.team_members.user_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" listOptions={false}>Project member</FieldLabelWithHelp>
               <select
                 required
                 value={selectedUserId}
@@ -165,7 +167,7 @@ export default function AddTeamMemberModal({ isOpen, onClose, teamId, projectId,
             )}
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Functional role</label>
+              <FieldLabelWithHelp helpKey="public.team_members.member_role" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" listOptions={false}>Functional role</FieldLabelWithHelp>
               <div className="flex gap-2 mb-2">
                 <button
                   type="button"
@@ -205,7 +207,7 @@ export default function AddTeamMemberModal({ isOpen, onClose, teamId, projectId,
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Allocation % (0–100)</label>
+              <FieldLabelWithHelp helpKey="public.team_members.allocation_percentage" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Allocation % (0–100)</FieldLabelWithHelp>
               <input
                 type="number"
                 min={0}
@@ -232,5 +234,19 @@ export default function AddTeamMemberModal({ isOpen, onClose, teamId, projectId,
         )}
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.team_members.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'user_id', 'member_role', 'allocation_percentage',
+].map((name) => `public.team_members.${name}`)
+
+export default function AddTeamMemberModal(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <AddTeamMemberModalBody {...props} />
+    </FieldHelpScope>
   )
 }

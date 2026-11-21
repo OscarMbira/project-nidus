@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { supabase } from '../../services/supabaseClient'
 import { X, Save, FileText, Settings, Target, BarChart3, Shield, Users, Calendar, CheckCircle, ArrowRight, ArrowLeft } from 'lucide-react'
 import { createQMS, updateQMS, createQMSForProject } from '../../services/qualityManagementStrategyService'
@@ -10,7 +12,7 @@ import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
-export default function QMSForm({ qms, projectId, onSave, onCancel, onHoldComplete }) {
+function QMSFormBody({ qms, projectId, onSave, onCancel, onHoldComplete }) {
   const [formData, setFormData] = useState({
     purpose: '',
     objectives: '',
@@ -214,9 +216,9 @@ export default function QMSForm({ qms, projectId, onSave, onCancel, onHoldComple
         return (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.quality_management_strategies.purpose" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Purpose <span className="text-red-500">*</span>
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 name="purpose"
                 value={formData.purpose}
@@ -234,9 +236,9 @@ export default function QMSForm({ qms, projectId, onSave, onCancel, onHoldComple
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.quality_management_strategies.objectives" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Objectives <span className="text-red-500">*</span>
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 name="objectives"
                 value={formData.objectives}
@@ -254,9 +256,9 @@ export default function QMSForm({ qms, projectId, onSave, onCancel, onHoldComple
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.quality_management_strategies.scope" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Scope <span className="text-red-500">*</span>
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 name="scope"
                 value={formData.scope}
@@ -274,9 +276,9 @@ export default function QMSForm({ qms, projectId, onSave, onCancel, onHoldComple
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.quality_management_strategies.strategy_responsibility" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Strategy Responsibility
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="text"
                 name="strategy_responsibility"
@@ -293,9 +295,9 @@ export default function QMSForm({ qms, projectId, onSave, onCancel, onHoldComple
         return (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.quality_management_strategies.quality_planning_approach" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Quality Planning Approach
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 name="quality_planning_approach"
                 value={formData.quality_planning_approach}
@@ -307,9 +309,9 @@ export default function QMSForm({ qms, projectId, onSave, onCancel, onHoldComple
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.quality_management_strategies.quality_control_approach" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Quality Control Approach <span className="text-red-500">*</span>
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 name="quality_control_approach"
                 value={formData.quality_control_approach}
@@ -327,9 +329,9 @@ export default function QMSForm({ qms, projectId, onSave, onCancel, onHoldComple
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.quality_management_strategies.quality_assurance_approach" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Quality Assurance Approach <span className="text-red-500">*</span>
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 name="quality_assurance_approach"
                 value={formData.quality_assurance_approach}
@@ -347,9 +349,9 @@ export default function QMSForm({ qms, projectId, onSave, onCancel, onHoldComple
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.quality_management_strategies.variance_from_corporate" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Variance from Corporate Standards
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 name="variance_from_corporate"
                 value={formData.variance_from_corporate}
@@ -361,9 +363,9 @@ export default function QMSForm({ qms, projectId, onSave, onCancel, onHoldComple
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.quality_management_strategies.variance_justification" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Variance Justification
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 name="variance_justification"
                 value={formData.variance_justification}
@@ -386,9 +388,9 @@ export default function QMSForm({ qms, projectId, onSave, onCancel, onHoldComple
         return (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.quality_management_strategies.customer_qms_reference" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Customer QMS Reference
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 name="customer_qms_reference"
                 value={formData.customer_qms_reference}
@@ -400,9 +402,9 @@ export default function QMSForm({ qms, projectId, onSave, onCancel, onHoldComple
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.quality_management_strategies.supplier_qms_reference" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Supplier QMS Reference
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 name="supplier_qms_reference"
                 value={formData.supplier_qms_reference}
@@ -414,9 +416,9 @@ export default function QMSForm({ qms, projectId, onSave, onCancel, onHoldComple
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.quality_management_strategies.corporate_quality_policy_reference" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Corporate Quality Policy Reference
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="text"
                 name="corporate_quality_policy_reference"
@@ -428,9 +430,9 @@ export default function QMSForm({ qms, projectId, onSave, onCancel, onHoldComple
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.quality_management_strategies.programme_quality_policy_reference" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Programme Quality Policy Reference
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="text"
                 name="programme_quality_policy_reference"
@@ -447,9 +449,9 @@ export default function QMSForm({ qms, projectId, onSave, onCancel, onHoldComple
         return (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.quality_management_strategies.author_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                 Author
-              </label>
+              </FieldLabelWithHelp>
               <select
                 name="author_id"
                 value={formData.author_id}
@@ -466,9 +468,9 @@ export default function QMSForm({ qms, projectId, onSave, onCancel, onHoldComple
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.quality_management_strategies.owner_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                 Owner
-              </label>
+              </FieldLabelWithHelp>
               <select
                 name="owner_id"
                 value={formData.owner_id}
@@ -485,9 +487,9 @@ export default function QMSForm({ qms, projectId, onSave, onCancel, onHoldComple
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.quality_management_strategies.client_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                 Client
-              </label>
+              </FieldLabelWithHelp>
               <select
                 name="client_id"
                 value={formData.client_id}
@@ -707,5 +709,33 @@ export default function QMSForm({ qms, projectId, onSave, onCancel, onHoldComple
         )}
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.quality_management_strategies.purpose',
+  'sim.quality_management_strategies.objectives',
+  'sim.quality_management_strategies.scope',
+  'sim.quality_management_strategies.strategy_responsibility',
+  'sim.quality_management_strategies.quality_planning_approach',
+  'sim.quality_management_strategies.quality_control_approach',
+  'sim.quality_management_strategies.quality_assurance_approach',
+  'sim.quality_management_strategies.variance_from_corporate',
+  'sim.quality_management_strategies.variance_justification',
+  'sim.quality_management_strategies.customer_qms_reference',
+  'sim.quality_management_strategies.supplier_qms_reference',
+  'sim.quality_management_strategies.corporate_quality_policy_reference',
+  'sim.quality_management_strategies.programme_quality_policy_reference',
+  'sim.quality_management_strategies.author_id',
+  'sim.quality_management_strategies.owner_id',
+  'sim.quality_management_strategies.client_id',
+]
+
+export default function QMSForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <QMSFormBody {...props} />
+    </FieldHelpScope>
   )
 }

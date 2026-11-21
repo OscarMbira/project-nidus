@@ -4,13 +4,15 @@
  */
 
 import { useState, useEffect } from 'react';
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { DollarSign, Plus, Edit2, Trash2, User, Clock, CheckCircle, XCircle } from 'lucide-react';
 import { getPlanResources, addResource, updateResource, removeResource, calculateTotalResourceCost } from '../../services/benefitsReviewPlanService';
 import { platformDb } from '../../services/supabaseClient';
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
-export default function BenefitsReviewResources({ planId, onUpdate }) {
+function BenefitsReviewResourcesBody({ planId, onUpdate }) {
   const [resources, setResources] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -191,9 +193,9 @@ export default function BenefitsReviewResources({ planId, onUpdate }) {
     <form onSubmit={isEdit ? handleUpdateResource : handleAddResource} className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.benefits_review_plan_resources.resource_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Resource Type *
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={resourceData.resource_type}
             onChange={(e) => setResourceData({ ...resourceData, resource_type: e.target.value })}
@@ -210,9 +212,9 @@ export default function BenefitsReviewResources({ planId, onUpdate }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.benefits_review_plan_resources.resource_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Resource Name *
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             value={resourceData.resource_name}
@@ -226,9 +228,9 @@ export default function BenefitsReviewResources({ planId, onUpdate }) {
         {resourceData.resource_type === 'person' && (
           <>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.benefits_review_plan_resources.assigned_user_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                 Assigned User
-              </label>
+              </FieldLabelWithHelp>
               <select
                 value={resourceData.assigned_user_id}
                 onChange={(e) => setResourceData({ ...resourceData, assigned_user_id: e.target.value })}
@@ -250,9 +252,9 @@ export default function BenefitsReviewResources({ planId, onUpdate }) {
                 onChange={(e) => setResourceData({ ...resourceData, availability_confirmed: e.target.checked })}
                 className="w-5 h-5 text-blue-600 rounded border-gray-300"
               />
-              <label className="text-sm text-gray-700 dark:text-gray-300">
+              <FieldLabelWithHelp helpKey="sim.benefits_review_plan_resources.availability_confirmed" className="text-sm text-gray-700 dark:text-gray-300">
                 Availability Confirmed
-              </label>
+              </FieldLabelWithHelp>
             </div>
           </>
         )}
@@ -260,9 +262,9 @@ export default function BenefitsReviewResources({ planId, onUpdate }) {
         {(resourceData.resource_type === 'skill' || resourceData.resource_type === 'person') && (
           <>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.benefits_review_plan_resources.skill_required" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Skill Required
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="text"
                 value={resourceData.skill_required}
@@ -273,9 +275,9 @@ export default function BenefitsReviewResources({ planId, onUpdate }) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.benefits_review_plan_resources.skill_level" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Skill Level
-              </label>
+              </FieldLabelWithHelp>
               <select
                 value={resourceData.skill_level}
                 onChange={(e) => setResourceData({ ...resourceData, skill_level: e.target.value })}
@@ -292,9 +294,9 @@ export default function BenefitsReviewResources({ planId, onUpdate }) {
         )}
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.benefits_review_plan_resources.estimated_effort_hours" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Estimated Effort (Hours)
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="number"
             value={resourceData.estimated_effort_hours || ''}
@@ -305,9 +307,9 @@ export default function BenefitsReviewResources({ planId, onUpdate }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.benefits_review_plan_resources.estimated_cost" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" isAmount>
             Estimated Cost
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="number"
             value={resourceData.estimated_cost || ''}
@@ -318,9 +320,9 @@ export default function BenefitsReviewResources({ planId, onUpdate }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.benefits_review_plan_resources.cost_currency" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Currency
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={resourceData.cost_currency}
             onChange={(e) => setResourceData({ ...resourceData, cost_currency: e.target.value })}
@@ -335,9 +337,9 @@ export default function BenefitsReviewResources({ planId, onUpdate }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.benefits_review_plan_resources.required_from_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Required From Date
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="date"
             value={resourceData.required_from_date}
@@ -347,9 +349,9 @@ export default function BenefitsReviewResources({ planId, onUpdate }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.benefits_review_plan_resources.required_to_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Required To Date
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="date"
             value={resourceData.required_to_date}
@@ -360,9 +362,9 @@ export default function BenefitsReviewResources({ planId, onUpdate }) {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="sim.benefits_review_plan_resources.resource_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Resource Description
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={resourceData.resource_description}
           onChange={(e) => setResourceData({ ...resourceData, resource_description: e.target.value })}
@@ -373,9 +375,9 @@ export default function BenefitsReviewResources({ planId, onUpdate }) {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="sim.benefits_review_plan_resources.notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Notes
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={resourceData.notes}
           onChange={(e) => setResourceData({ ...resourceData, notes: e.target.value })}
@@ -573,4 +575,29 @@ export default function BenefitsReviewResources({ planId, onUpdate }) {
       </div>
     </div>
   );
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.benefits_review_plan_resources.resource_type',
+  'sim.benefits_review_plan_resources.resource_name',
+  'sim.benefits_review_plan_resources.assigned_user_id',
+  'sim.benefits_review_plan_resources.availability_confirmed',
+  'sim.benefits_review_plan_resources.skill_required',
+  'sim.benefits_review_plan_resources.skill_level',
+  'sim.benefits_review_plan_resources.estimated_effort_hours',
+  'sim.benefits_review_plan_resources.estimated_cost',
+  'sim.benefits_review_plan_resources.cost_currency',
+  'sim.benefits_review_plan_resources.required_from_date',
+  'sim.benefits_review_plan_resources.required_to_date',
+  'sim.benefits_review_plan_resources.resource_description',
+  'sim.benefits_review_plan_resources.notes',
+]
+
+export default function BenefitsReviewResources(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <BenefitsReviewResourcesBody {...props} />
+    </FieldHelpScope>
+  )
 }

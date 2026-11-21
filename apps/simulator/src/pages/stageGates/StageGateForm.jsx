@@ -4,6 +4,8 @@
  */
 
 import { useState, useEffect } from 'react';
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { useNavigate, useParams } from 'react-router-dom';
 import { Save, Flag, ArrowLeft } from 'lucide-react';
 import { platformDb } from '@nidus/supabase';
@@ -25,7 +27,7 @@ const STATUSES = ['draft','pending','approved','rejected'];
 
 const EMPTY = { gate_name: '', stage: '', status: 'draft', decision_date: '', outcome: '', notes: '', project_id: '' };
 
-export default function StageGateForm() {
+function StageGateFormBody() {
   const { id } = useParams();
   const isEdit  = Boolean(id);
   const navigate = useNavigate();
@@ -161,11 +163,11 @@ export default function StageGateForm() {
         {formTab === 'details' && (
         <div className="grid grid-cols-1 gap-5">
           <div>
-            <label className={label}>Gate Name <span className="text-red-400">*</span></label>
+            <FieldLabelWithHelp helpKey="sim.stage_gate_reviews.gate_name" className={label} required>Gate Name <span className="text-red-400">*</span></FieldLabelWithHelp>
             <input className={input} value={form.gate_name} onChange={set('gate_name')} required placeholder="e.g. Stage 2 Go/No-Go" />
           </div>
           <div>
-            <label className={label}>Project</label>
+            <FieldLabelWithHelp helpKey="sim.stage_gate_reviews.project_id" className={label} listOptions={false}>Project</FieldLabelWithHelp>
             <SelectField
               id="stage-gate-project"
               aria-label="Project"
@@ -178,29 +180,29 @@ export default function StageGateForm() {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={label}>Stage</label>
+              <FieldLabelWithHelp helpKey="sim.stage_gate_reviews.stage" className={label}>Stage</FieldLabelWithHelp>
               <select className={input} value={form.stage} onChange={set('stage')}>
                 <option value="">— Select stage —</option>
                 {STAGES.map((s) => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
             <div>
-              <label className={label}>Status</label>
+              <FieldLabelWithHelp helpKey="sim.stage_gate_reviews.status" className={label}>Status</FieldLabelWithHelp>
               <select className={input} value={form.status} onChange={set('status')}>
                 {STATUSES.map((s) => <option key={s} value={s} className="capitalize">{s}</option>)}
               </select>
             </div>
           </div>
           <div>
-            <label className={label}>Decision Date</label>
+            <FieldLabelWithHelp helpKey="sim.stage_gate_reviews.decision_date" className={label}>Decision Date</FieldLabelWithHelp>
             <input type="date" className={input} value={form.decision_date} onChange={set('decision_date')} />
           </div>
           <div>
-            <label className={label}>Outcome</label>
+            <FieldLabelWithHelp helpKey="sim.stage_gate_reviews.outcome" className={label}>Outcome</FieldLabelWithHelp>
             <input className={input} value={form.outcome} onChange={set('outcome')} placeholder="e.g. Proceed to Stage 3" />
           </div>
           <div>
-            <label className={label}>Notes</label>
+            <FieldLabelWithHelp helpKey="sim.stage_gate_reviews.notes" className={label}>Notes</FieldLabelWithHelp>
             <textarea className={`${input} h-24 resize-none`} value={form.notes} onChange={set('notes')} placeholder="Gate review notes and decisions…" />
           </div>
         </div>
@@ -217,4 +219,23 @@ export default function StageGateForm() {
       </form>
     </div>
   );
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.stage_gate_reviews.gate_name',
+  'sim.stage_gate_reviews.project_id',
+  'sim.stage_gate_reviews.stage',
+  'sim.stage_gate_reviews.status',
+  'sim.stage_gate_reviews.decision_date',
+  'sim.stage_gate_reviews.outcome',
+  'sim.stage_gate_reviews.notes',
+]
+
+export default function StageGateForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <StageGateFormBody {...props} />
+    </FieldHelpScope>
+  )
 }

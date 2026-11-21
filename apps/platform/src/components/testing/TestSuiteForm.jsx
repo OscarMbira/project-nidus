@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Link } from 'react-router-dom'
 import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesContext'
 import { X, Save, FolderOpen } from 'lucide-react'
@@ -20,7 +22,7 @@ const STATUSES    = ['draft','active','archived']
 const labelClass = 'block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1'
 const controlClass = 'w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
 
-export default function TestSuiteForm({
+function TestSuiteFormBody({
   suite,
   projectId,
   onSave,
@@ -143,9 +145,9 @@ export default function TestSuiteForm({
 
   const field = (label, key, type = 'text', required = false) => (
     <div>
-      <label className={labelClass}>
+      <FieldLabelWithHelp helpKey={`public.test_suites.${key}`} className={labelClass}>
         {label}{required && <span className="text-red-400 ml-1">*</span>}
-      </label>
+      </FieldLabelWithHelp>
       <input
         type={type}
         value={form[key]}
@@ -207,7 +209,7 @@ export default function TestSuiteForm({
           {field('Suite Name', 'name', 'text', true)}
 
           <div>
-            <label className={labelClass}>Description</label>
+            <FieldLabelWithHelp helpKey="public.test_suites.description" className={labelClass}>Description</FieldLabelWithHelp>
             <textarea
               value={form.description}
               onChange={(e) => setField('description', e.target.value)}
@@ -218,7 +220,7 @@ export default function TestSuiteForm({
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={labelClass}>Suite Type</label>
+              <FieldLabelWithHelp helpKey="public.test_suites.suite_type" className={labelClass}>Suite Type</FieldLabelWithHelp>
               <select
                 value={form.suite_type}
                 onChange={(e) => setField('suite_type', e.target.value)}
@@ -230,7 +232,7 @@ export default function TestSuiteForm({
               </select>
             </div>
             <div>
-              <label className={labelClass}>Status</label>
+              <FieldLabelWithHelp helpKey="public.test_suites.status" className={labelClass}>Status</FieldLabelWithHelp>
               <select
                 value={form.status}
                 onChange={(e) => setField('status', e.target.value)}
@@ -250,7 +252,7 @@ export default function TestSuiteForm({
 
           <div>
             <div className="mb-1 flex items-center justify-between gap-2">
-              <label className={labelClass}>Target Environment</label>
+              <FieldLabelWithHelp helpKey="public.test_suites.target_environment_id" className={labelClass}>Target Environment</FieldLabelWithHelp>
               <Link to={environmentsPath} className="text-xs text-blue-600 hover:underline dark:text-blue-400">
                 Manage environments
               </Link>
@@ -292,7 +294,7 @@ export default function TestSuiteForm({
           </div>
 
           <div>
-            <label className={labelClass}>Tags</label>
+            <FieldLabelWithHelp helpKey="public.test_suites.tags" className={labelClass}>Tags</FieldLabelWithHelp>
             <MultiLineListInput
               viewModeId="test-suite-tags"
               value={form.tags}
@@ -326,5 +328,19 @@ export default function TestSuiteForm({
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
       {panel}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.test_suites.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'description', 'suite_type', 'status', 'target_environment_id', 'tags',
+].map((name) => `public.test_suites.${name}`)
+
+export default function TestSuiteForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <TestSuiteFormBody {...props} />
+    </FieldHelpScope>
   )
 }

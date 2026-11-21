@@ -3,6 +3,8 @@
  */
 
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { X, Save } from 'lucide-react'
 import { supabase } from '../../services/supabaseClient'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
@@ -24,7 +26,7 @@ const DERIVATION_TYPES = [
   { value: 'other', label: 'Other' }
 ]
 
-export default function DerivationForm({ derivation, onSubmit, onCancel, projectId }) {
+function DerivationFormBody({ derivation, onSubmit, onCancel, projectId }) {
   const [formData, setFormData] = useState({
     derivation_type: 'other',
     derivation_title: '',
@@ -138,9 +140,9 @@ export default function DerivationForm({ derivation, onSubmit, onCancel, project
       <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.pd_derivations.derivation_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Derivation Type <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={formData.derivation_type}
             onChange={(e) => setFormData({ ...formData, derivation_type: e.target.value })}
@@ -155,9 +157,9 @@ export default function DerivationForm({ derivation, onSubmit, onCancel, project
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.pd_derivations.derivation_reference" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Derivation Reference
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             value={formData.derivation_reference}
@@ -168,9 +170,9 @@ export default function DerivationForm({ derivation, onSubmit, onCancel, project
         </div>
 
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.pd_derivations.derivation_title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Derivation Title <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             value={formData.derivation_title}
@@ -182,9 +184,9 @@ export default function DerivationForm({ derivation, onSubmit, onCancel, project
         </div>
 
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.pd_derivations.derivation_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Description
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             value={formData.derivation_description}
             onChange={(e) => setFormData({ ...formData, derivation_description: e.target.value })}
@@ -196,9 +198,9 @@ export default function DerivationForm({ derivation, onSubmit, onCancel, project
 
         {formData.derivation_type === 'ppd' && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="sim.pd_derivations.linked_ppd_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
               Link to Project Product Description
-            </label>
+            </FieldLabelWithHelp>
             <select
               value={formData.linked_ppd_id || ''}
               onChange={(e) => setFormData({ ...formData, linked_ppd_id: e.target.value || null })}
@@ -216,9 +218,9 @@ export default function DerivationForm({ derivation, onSubmit, onCancel, project
 
         {formData.derivation_type === 'ppd' && formData.linked_ppd_id && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="sim.pd_derivations.linked_ppd_composition_item_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
               Link to PPD Composition Item
-            </label>
+            </FieldLabelWithHelp>
             <select
               value={formData.linked_ppd_composition_item_id || ''}
               onChange={(e) => setFormData({ ...formData, linked_ppd_composition_item_id: e.target.value || null })}
@@ -236,9 +238,9 @@ export default function DerivationForm({ derivation, onSubmit, onCancel, project
 
         {formData.derivation_type === 'project_mandate' && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="sim.pd_derivations.mandate_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
               Link to Project Mandate
-            </label>
+            </FieldLabelWithHelp>
             <select
               value={formData.mandate_id || ''}
               onChange={(e) => setFormData({ ...formData, mandate_id: e.target.value || null })}
@@ -277,5 +279,24 @@ export default function DerivationForm({ derivation, onSubmit, onCancel, project
         </button>
       </div>
     </form>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.pd_derivations.derivation_type',
+  'sim.pd_derivations.derivation_reference',
+  'sim.pd_derivations.derivation_title',
+  'sim.pd_derivations.derivation_description',
+  'sim.pd_derivations.linked_ppd_id',
+  'sim.pd_derivations.linked_ppd_composition_item_id',
+  'sim.pd_derivations.mandate_id',
+]
+
+export default function DerivationForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <DerivationFormBody {...props} />
+    </FieldHelpScope>
   )
 }

@@ -1,3 +1,4 @@
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 /**
  * Project Regional & Format Settings — per-field overrides (v1062 + local fields v1065)
  * Route: /platform/project-setup/regional-format-settings?projectId=…
@@ -38,7 +39,7 @@ import {
 } from '@nidus/shared/services/regionalFormatSettingsService.js'
 import RegionalFormatFields, { REGIONAL_FORMAT_EXPORT_SECTIONS } from '../../components/regionalFormat/RegionalFormatFields'
 
-export default function ProjectRegionalFormatSettingsPage() {
+function ProjectRegionalFormatSettingsPageBody() {
   const { projectId, routeKey, loading: projectIdLoading, error: projectIdError } = usePlatformProjectId()
   const { showSuccess, modal } = useSuccessModal()
   const [viewMode, setViewMode] = useViewMode('regional-format-project', 'list')
@@ -352,5 +353,14 @@ export default function ProjectRegionalFormatSettingsPage() {
       </div>
       {modal}
     </div>
+  )
+}
+
+// v1345: field help for the regional settings fields (labels request their own keys).
+export default function ProjectRegionalFormatSettingsPage(props) {
+  return (
+    <FieldHelpScope helpKeys={[]}>
+      <ProjectRegionalFormatSettingsPageBody {...props} />
+    </FieldHelpScope>
   )
 }

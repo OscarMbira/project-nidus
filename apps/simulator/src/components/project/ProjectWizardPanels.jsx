@@ -1,4 +1,6 @@
 import { memo } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import SearchableSelect from '@nidus/ui/SearchableSelect'
 import GovernanceSection from './GovernanceSection'
 import BusinessJustificationSection from './BusinessJustificationSection'
@@ -67,9 +69,9 @@ function ProjectWizardPanels({
           <fieldset disabled={isView} className="min-w-0 space-y-6 border-0 p-0">
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div>
-                <label htmlFor="project_code" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <FieldLabelWithHelp helpKey="sim.projects.project_code" htmlFor="project_code" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Project Code (Optional)
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   id="project_code"
@@ -83,9 +85,9 @@ function ProjectWizardPanels({
                 />
               </div>
               <div>
-                <label htmlFor="project_name" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <FieldLabelWithHelp helpKey="sim.projects.project_name" htmlFor="project_name" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300" required>
                   Project Name <span className="text-red-500">*</span>
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   id="project_name"
@@ -106,9 +108,9 @@ function ProjectWizardPanels({
             </div>
 
             <div>
-              <label htmlFor="project_description" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <FieldLabelWithHelp helpKey="sim.projects.project_description" htmlFor="project_description" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Project Description
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 id="project_description"
                 name="project_description"
@@ -123,9 +125,9 @@ function ProjectWizardPanels({
 
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <FieldLabelWithHelp helpKey="sim.projects.project_type_id" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300" required>
                   Project Type <span className="text-red-500">*</span>
-                </label>
+                </FieldLabelWithHelp>
                 <SearchableSelect
                   options={projectTypeOptions}
                   value={formData.project_type_id}
@@ -141,9 +143,9 @@ function ProjectWizardPanels({
                 )}
               </div>
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <FieldLabelWithHelp helpKey="sim.projects.project_status_id" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300" required>
                   {mode === 'create' ? 'Initial Status' : 'Status'} <span className="text-red-500">*</span>
-                </label>
+                </FieldLabelWithHelp>
                 <SearchableSelect
                   options={statusOptions}
                   value={formData.project_status_id}
@@ -161,9 +163,9 @@ function ProjectWizardPanels({
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <FieldLabelWithHelp helpKey="sim.projects.industries" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Industry / Sector
-              </label>
+              </FieldLabelWithHelp>
               <SearchableSelect
                 options={industryOptions}
                 value={formData.industry_category_id}
@@ -178,9 +180,9 @@ function ProjectWizardPanels({
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <FieldLabelWithHelp helpKey="sim.projects.success_criteria" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Success Criteria
-              </label>
+              </FieldLabelWithHelp>
               <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
                 How success will be measured for this project. Add one per line.
               </p>
@@ -195,9 +197,9 @@ function ProjectWizardPanels({
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <FieldLabelWithHelp helpKey="sim.projects.project_classification" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Classification
-              </label>
+              </FieldLabelWithHelp>
               <select
                 value={formData.project_classification}
                 onChange={(e) => handleChange({ target: { name: 'project_classification', value: e.target.value } })}
@@ -216,9 +218,9 @@ function ProjectWizardPanels({
 
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div>
-                <label htmlFor="start_date" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <FieldLabelWithHelp helpKey="sim.projects.start_date" htmlFor="start_date" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Start Date
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="date"
                   id="start_date"
@@ -230,9 +232,9 @@ function ProjectWizardPanels({
                 />
               </div>
               <div>
-                <label htmlFor="end_date" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <FieldLabelWithHelp helpKey="sim.projects.end_date" htmlFor="end_date" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                   End Date
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="date"
                   id="end_date"
@@ -501,7 +503,7 @@ function ProjectWizardPanels({
       {activeTab === 'constraints' && (
         <div className="space-y-6">
           <div className="mb-4">
-            <h2 className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">Constraints</h2>
+            <FieldLabelWithHelp as="h2" helpKey="sim.projects.project_constraints" className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">Constraints</FieldLabelWithHelp>
             <p className="text-sm text-gray-600 dark:text-gray-400">
               Known limitations on how this project can be delivered — schedule, budget, resourcing, technical, or regulatory. Add one per line.
             </p>
@@ -520,7 +522,7 @@ function ProjectWizardPanels({
       {activeTab === 'assumptions' && (
         <div className="space-y-6">
           <div className="mb-4">
-            <h2 className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">Assumptions</h2>
+            <FieldLabelWithHelp as="h2" helpKey="sim.projects.project_assumptions" className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">Assumptions</FieldLabelWithHelp>
             <p className="text-sm text-gray-600 dark:text-gray-400">
               Planning assumptions being made about this project — things believed to be true but not yet confirmed. Add one per line.
             </p>
@@ -539,7 +541,7 @@ function ProjectWizardPanels({
       {activeTab === 'deliverables' && (
         <div className="space-y-6">
           <div className="mb-4">
-            <h2 className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">Deliverables</h2>
+            <FieldLabelWithHelp as="h2" helpKey="sim.projects.key_deliverables" className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">Deliverables</FieldLabelWithHelp>
             <p className="text-sm text-gray-600 dark:text-gray-400">
               The key outputs this project will produce. Add one per line.
             </p>
@@ -558,7 +560,7 @@ function ProjectWizardPanels({
       {activeTab === 'stakeholders' && (
         <div className="space-y-6">
           <div className="mb-4">
-            <h2 className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">Stakeholders</h2>
+            <FieldLabelWithHelp as="h2" helpKey="sim.projects.wizard_stakeholders" className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">Stakeholders</FieldLabelWithHelp>
             <p className="text-sm text-gray-600 dark:text-gray-400">
               Capture the stakeholders identified for this project now, before roles are assigned — kept as audit information. Assigned roles can inherit these or add their own later.
             </p>
@@ -576,7 +578,7 @@ function ProjectWizardPanels({
       {activeTab === 'milestones' && (
         <div className="space-y-6">
           <div className="mb-4">
-            <h2 className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">Main Milestones</h2>
+            <FieldLabelWithHelp as="h2" helpKey="sim.projects.wizard_milestones" className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">Main Milestones</FieldLabelWithHelp>
             <p className="text-sm text-gray-600 dark:text-gray-400">
               Capture the main milestones identified for this project now, before roles are assigned — kept as audit information. Assigned roles can inherit these or add their own later.
             </p>
@@ -594,7 +596,7 @@ function ProjectWizardPanels({
       {activeTab === 'approvals' && (
         <div className="space-y-6">
           <div className="mb-4">
-            <h2 className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">Approvals</h2>
+            <FieldLabelWithHelp as="h2" helpKey="sim.projects.required_approvals" className="mb-2 text-2xl font-bold text-gray-900 dark:text-white" required>Approvals</FieldLabelWithHelp>
             <p className="text-sm text-gray-600 dark:text-gray-400">
               Required approvals or sign-offs for this project — who or which body needs to approve, and for what. Add one per line.
             </p>
@@ -613,4 +615,32 @@ function ProjectWizardPanels({
   )
 }
 
-export default memo(ProjectWizardPanels)
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.projects.project_code',
+  'sim.projects.project_name',
+  'sim.projects.project_description',
+  'sim.projects.project_type_id',
+  'sim.projects.project_status_id',
+  'sim.projects.industries',
+  'sim.projects.success_criteria',
+  'sim.projects.project_classification',
+  'sim.projects.start_date',
+  'sim.projects.end_date',
+  'sim.projects.project_constraints',
+  'sim.projects.project_assumptions',
+  'sim.projects.key_deliverables',
+  'sim.projects.wizard_stakeholders',
+  'sim.projects.wizard_milestones',
+  'sim.projects.required_approvals',
+]
+
+function ProjectWizardPanelsWithHelp(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ProjectWizardPanels {...props} />
+    </FieldHelpScope>
+  )
+}
+
+export default memo(ProjectWizardPanelsWithHelp)

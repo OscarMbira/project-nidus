@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { supabase } from '../../services/supabaseClient'
 import { X, Save, User, Calendar } from 'lucide-react'
 import { format } from 'date-fns'
@@ -6,7 +8,7 @@ import { recordDecision } from '../../services/issueDecisionService'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
-export default function DecisionForm({ issueId, issue, onSave, onCancel }) {
+function DecisionFormBody({ issueId, issue, onSave, onCancel }) {
   const [formData, setFormData] = useState({
     decision_type: 'approve',
     decision_maker_name: '',
@@ -94,9 +96,9 @@ export default function DecisionForm({ issueId, issue, onSave, onCancel }) {
           {formTab === 'details' && (
           <>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.issue_decisions.decision_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
               Decision Type *
-            </label>
+            </FieldLabelWithHelp>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
               {['approve', 'reject', 'defer', 'escalate', 'accept_concession', 'request_more_info'].map((type, index) => (
                 <label
@@ -125,10 +127,10 @@ export default function DecisionForm({ issueId, issue, onSave, onCancel }) {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.issue_decisions.decision_maker_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 <User className="h-4 w-4 inline mr-1" />
                 Decision Maker Name *
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="text"
                 name="decision_maker_name"
@@ -139,9 +141,9 @@ export default function DecisionForm({ issueId, issue, onSave, onCancel }) {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.issue_decisions.decision_maker_role" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Decision Maker Role
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="text"
                 name="decision_maker_role"
@@ -154,9 +156,9 @@ export default function DecisionForm({ issueId, issue, onSave, onCancel }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.issue_decisions.decision_rationale" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
               Decision Rationale *
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               name="decision_rationale"
               value={formData.decision_rationale}
@@ -169,9 +171,9 @@ export default function DecisionForm({ issueId, issue, onSave, onCancel }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.issue_decisions.conditions" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Conditions (if any)
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               name="conditions"
               value={formData.conditions}
@@ -184,10 +186,10 @@ export default function DecisionForm({ issueId, issue, onSave, onCancel }) {
 
           {formData.decision_type === 'defer' && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.issue_decisions.review_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 <Calendar className="h-4 w-4 inline mr-1" />
                 Review Date
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="date"
                 name="review_date"
@@ -220,5 +222,20 @@ export default function DecisionForm({ issueId, issue, onSave, onCancel }) {
         </form>
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.issue_decisions.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'decision_type', 'decision_maker_name', 'decision_maker_role', 'decision_rationale', 'conditions',
+  'review_date',
+].map((name) => `public.issue_decisions.${name}`)
+
+export default function DecisionForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <DecisionFormBody {...props} />
+    </FieldHelpScope>
   )
 }

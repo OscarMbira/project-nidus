@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { format, subDays } from 'date-fns'
 import {
   FileText,
@@ -110,7 +112,7 @@ const defaultFormData = {
   recommendations: ''
 }
 
-export default function HighlightReportForm({
+function HighlightReportFormBody({
   projectId,
   stageBoundaryId = null,
   reportId = null,
@@ -346,7 +348,7 @@ export default function HighlightReportForm({
         {step.id === 'summary' && (
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Executive Summary *</label>
+              <FieldLabelWithHelp helpKey="public.highlight_reports.executive_summary" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>Executive Summary *</FieldLabelWithHelp>
               <textarea
                 value={formData.executive_summary || ''}
                 onChange={(e) => handleChange('executive_summary', e.target.value)}
@@ -358,7 +360,7 @@ export default function HighlightReportForm({
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Stage Status *</label>
+                <FieldLabelWithHelp helpKey="public.highlight_reports.stage_status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>Stage Status *</FieldLabelWithHelp>
                 <select
                   value={formData.stage_status || 'on_track'}
                   onChange={(e) => handleChange('stage_status', e.target.value)}
@@ -373,7 +375,7 @@ export default function HighlightReportForm({
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Overall Status Summary</label>
+              <FieldLabelWithHelp helpKey="public.highlight_reports.overall_status_summary" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Overall Status Summary</FieldLabelWithHelp>
               <textarea
                 value={formData.overall_status_summary || ''}
                 onChange={(e) => handleChange('overall_status_summary', e.target.value)}
@@ -401,7 +403,7 @@ export default function HighlightReportForm({
         {step.id === 'progress' && (
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Progress Summary</label>
+              <FieldLabelWithHelp helpKey="public.highlight_reports.progress_summary" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Progress Summary</FieldLabelWithHelp>
               <textarea
                 value={formData.progress_summary || ''}
                 onChange={(e) => handleChange('progress_summary', e.target.value)}
@@ -412,7 +414,7 @@ export default function HighlightReportForm({
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Completed This Period</label>
+                <FieldLabelWithHelp helpKey="public.highlight_reports.completed_this_period" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Completed This Period</FieldLabelWithHelp>
                 <textarea
                   value={formData.completed_this_period || ''}
                   onChange={(e) => handleChange('completed_this_period', e.target.value)}
@@ -422,7 +424,7 @@ export default function HighlightReportForm({
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Planned Next Period</label>
+                <FieldLabelWithHelp helpKey="public.highlight_reports.planned_next_period" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Planned Next Period</FieldLabelWithHelp>
                 <textarea
                   value={formData.planned_next_period || ''}
                   onChange={(e) => handleChange('planned_next_period', e.target.value)}
@@ -504,5 +506,20 @@ export default function HighlightReportForm({
       </>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.highlight_reports.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'executive_summary', 'stage_status', 'overall_status_summary', 'progress_summary',
+  'completed_this_period', 'planned_next_period',
+].map((name) => `public.highlight_reports.${name}`)
+
+export default function HighlightReportForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <HighlightReportFormBody {...props} />
+    </FieldHelpScope>
   )
 }

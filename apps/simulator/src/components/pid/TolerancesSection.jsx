@@ -4,6 +4,8 @@
  */
 
 import { useState } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { Plus, Gauge, Edit2, Trash2 } from 'lucide-react'
 import ToleranceCard from './ToleranceCard'
 
@@ -17,7 +19,7 @@ const TOLERANCE_TYPES = [
   { id: 'benefits', label: 'Benefits', unit: '%', icon: '📈' }
 ]
 
-export default function TolerancesSection({
+function TolerancesSectionBody({
   pidId,
   tolerances = [],
   onTolerancesChange,
@@ -151,9 +153,9 @@ export default function TolerancesSection({
             </h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <FieldLabelWithHelp helpKey="sim.pid_tolerances.tolerance_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
                   Tolerance Type *
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   value={formData.tolerance_type}
                   onChange={(e) => handleTypeChange(e.target.value)}
@@ -168,9 +170,9 @@ export default function TolerancesSection({
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <FieldLabelWithHelp helpKey="sim.pid_tolerances.baseline_value" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Baseline Value
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   value={formData.baseline_value}
@@ -181,9 +183,9 @@ export default function TolerancesSection({
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <FieldLabelWithHelp helpKey="sim.pid_tolerances.upper_tolerance" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Upper Tolerance (+)
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="text"
                     value={formData.upper_tolerance}
@@ -193,9 +195,9 @@ export default function TolerancesSection({
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <FieldLabelWithHelp helpKey="sim.pid_tolerances.lower_tolerance" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Lower Tolerance (-)
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="text"
                     value={formData.lower_tolerance}
@@ -206,9 +208,9 @@ export default function TolerancesSection({
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <FieldLabelWithHelp helpKey="sim.pid_tolerances.description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Description
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -237,5 +239,22 @@ export default function TolerancesSection({
         </div>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.pid_tolerances.tolerance_type',
+  'sim.pid_tolerances.baseline_value',
+  'sim.pid_tolerances.upper_tolerance',
+  'sim.pid_tolerances.lower_tolerance',
+  'sim.pid_tolerances.description',
+]
+
+export default function TolerancesSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <TolerancesSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { supabase } from '../../../services/supabaseClient';
 import { X, FileText, Calendar, Target, DollarSign, TrendingUp, AlertTriangle, CheckCircle } from 'lucide-react';
 import { createEndStageReport, updateEndStageReport, fetchStageBoundaries } from '../../../services/stageBoundariesService';
@@ -10,7 +12,7 @@ import AuditField from '@nidus/ui/AuditField';
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
 
-export default function EndStageReportForm({ projectId, boardId, report, onClose, onSuccess }) {
+function EndStageReportFormBody({ projectId, boardId, report, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [stageBoundaries, setStageBoundaries] = useState([]);
   const [activeSection, setActiveSection] = useState('basic'); // basic, performance, quality, forecast, approval
@@ -265,10 +267,10 @@ export default function EndStageReportForm({ projectId, boardId, report, onClose
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="md:col-span-2">
-                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.end_stage_reports.report_title" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                     <FileText className="h-4 w-4" />
                     Report Title *
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="text"
                     value={formData.report_title}
@@ -280,10 +282,10 @@ export default function EndStageReportForm({ projectId, boardId, report, onClose
                 </div>
 
                 <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.end_stage_reports.report_date" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                     <Calendar className="h-4 w-4" />
                     Report Date *
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="date"
                     value={formData.report_date}
@@ -294,9 +296,9 @@ export default function EndStageReportForm({ projectId, boardId, report, onClose
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                  <FieldLabelWithHelp helpKey="public.end_stage_reports.stage_boundary_id" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" listOptions={false}>
                     Stage Boundary
-                  </label>
+                  </FieldLabelWithHelp>
                   <select
                     value={formData.stage_boundary_id}
                     onChange={(e) => setFormData({ ...formData, stage_boundary_id: e.target.value })}
@@ -312,9 +314,9 @@ export default function EndStageReportForm({ projectId, boardId, report, onClose
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                  <FieldLabelWithHelp helpKey="public.end_stage_reports.stage_name" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>
                     Stage Name *
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="text"
                     value={formData.stage_name}
@@ -325,9 +327,9 @@ export default function EndStageReportForm({ projectId, boardId, report, onClose
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                  <FieldLabelWithHelp helpKey="public.end_stage_reports.stage_number" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>
                     Stage Number *
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="number"
                     min="1"
@@ -339,9 +341,9 @@ export default function EndStageReportForm({ projectId, boardId, report, onClose
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                  <FieldLabelWithHelp helpKey="public.end_stage_reports.stage_status" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>
                     Stage Status *
-                  </label>
+                  </FieldLabelWithHelp>
                   <select
                     value={formData.stage_status}
                     onChange={(e) => setFormData({ ...formData, stage_status: e.target.value })}
@@ -356,9 +358,9 @@ export default function EndStageReportForm({ projectId, boardId, report, onClose
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                <FieldLabelWithHelp helpKey="public.end_stage_reports.stage_objectives_summary" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                   Stage Objectives Summary
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   value={formData.stage_objectives_summary}
                   onChange={(e) => setFormData({ ...formData, stage_objectives_summary: e.target.value })}
@@ -376,9 +378,9 @@ export default function EndStageReportForm({ projectId, boardId, report, onClose
                   onChange={(e) => setFormData({ ...formData, stage_objectives_met: e.target.checked })}
                   className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                 />
-                <label htmlFor="objectives_met" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <FieldLabelWithHelp helpKey="public.end_stage_reports.objectives_met" htmlFor="objectives_met" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   Stage objectives were met
-                </label>
+                </FieldLabelWithHelp>
               </div>
             </div>
           )}
@@ -394,9 +396,9 @@ export default function EndStageReportForm({ projectId, boardId, report, onClose
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                    <FieldLabelWithHelp helpKey="public.end_stage_reports.planned_start_date" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                       Planned Start Date
-                    </label>
+                    </FieldLabelWithHelp>
                     <input
                       type="date"
                       value={formData.planned_start_date}
@@ -405,9 +407,9 @@ export default function EndStageReportForm({ projectId, boardId, report, onClose
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                    <FieldLabelWithHelp helpKey="public.end_stage_reports.actual_start_date" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                       Actual Start Date
-                    </label>
+                    </FieldLabelWithHelp>
                     <input
                       type="date"
                       value={formData.actual_start_date}
@@ -416,9 +418,9 @@ export default function EndStageReportForm({ projectId, boardId, report, onClose
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                    <FieldLabelWithHelp helpKey="public.end_stage_reports.planned_end_date" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                       Planned End Date
-                    </label>
+                    </FieldLabelWithHelp>
                     <input
                       type="date"
                       value={formData.planned_end_date}
@@ -427,9 +429,9 @@ export default function EndStageReportForm({ projectId, boardId, report, onClose
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                    <FieldLabelWithHelp helpKey="public.end_stage_reports.actual_end_date" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                       Actual End Date
-                    </label>
+                    </FieldLabelWithHelp>
                     <input
                       type="date"
                       value={formData.actual_end_date}
@@ -438,9 +440,9 @@ export default function EndStageReportForm({ projectId, boardId, report, onClose
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                    <FieldLabelWithHelp helpKey="public.end_stage_reports.schedule_performance_index" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                       Schedule Performance Index (SPI)
-                    </label>
+                    </FieldLabelWithHelp>
                     <input
                       type="number"
                       step="0.01"
@@ -461,9 +463,9 @@ export default function EndStageReportForm({ projectId, boardId, report, onClose
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                    <FieldLabelWithHelp helpKey="public.end_stage_reports.planned_budget" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                       Planned Budget ($)
-                    </label>
+                    </FieldLabelWithHelp>
                     <input
                       type="number"
                       step="0.01"
@@ -473,9 +475,9 @@ export default function EndStageReportForm({ projectId, boardId, report, onClose
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                    <FieldLabelWithHelp helpKey="public.end_stage_reports.actual_cost" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                       Actual Cost ($)
-                    </label>
+                    </FieldLabelWithHelp>
                     <input
                       type="number"
                       step="0.01"
@@ -485,9 +487,9 @@ export default function EndStageReportForm({ projectId, boardId, report, onClose
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                    <FieldLabelWithHelp helpKey="public.end_stage_reports.cost_performance_index" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                       Cost Performance Index (CPI)
-                    </label>
+                    </FieldLabelWithHelp>
                     <input
                       type="number"
                       step="0.01"
@@ -513,9 +515,9 @@ export default function EndStageReportForm({ projectId, boardId, report, onClose
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                   <div>
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                    <FieldLabelWithHelp helpKey="public.end_stage_reports.quality_criteria_met" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                       Quality Criteria Met
-                    </label>
+                    </FieldLabelWithHelp>
                     <input
                       type="number"
                       min="0"
@@ -525,9 +527,9 @@ export default function EndStageReportForm({ projectId, boardId, report, onClose
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                    <FieldLabelWithHelp helpKey="public.end_stage_reports.quality_criteria_total" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                       Total Quality Criteria
-                    </label>
+                    </FieldLabelWithHelp>
                     <input
                       type="number"
                       min="0"
@@ -537,9 +539,9 @@ export default function EndStageReportForm({ projectId, boardId, report, onClose
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                    <FieldLabelWithHelp helpKey="public.end_stage_reports.quality_performance_percentage" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                       Performance %
-                    </label>
+                    </FieldLabelWithHelp>
                     <input
                       type="number"
                       step="0.01"
@@ -552,9 +554,9 @@ export default function EndStageReportForm({ projectId, boardId, report, onClose
                   </div>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                  <FieldLabelWithHelp helpKey="public.end_stage_reports.quality_issues_summary" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                     Quality Issues Summary
-                  </label>
+                  </FieldLabelWithHelp>
                   <textarea
                     value={formData.quality_issues_summary}
                     onChange={(e) => setFormData({ ...formData, quality_issues_summary: e.target.value })}
@@ -571,9 +573,9 @@ export default function EndStageReportForm({ projectId, boardId, report, onClose
                   <h4 className="font-semibold text-gray-900 dark:text-white mb-3">Risks</h4>
                   <div className="space-y-3">
                     <div>
-                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                      <FieldLabelWithHelp helpKey="public.end_stage_reports.risks_closed" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                         Risks Closed
-                      </label>
+                      </FieldLabelWithHelp>
                       <input
                         type="number"
                         min="0"
@@ -583,9 +585,9 @@ export default function EndStageReportForm({ projectId, boardId, report, onClose
                       />
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                      <FieldLabelWithHelp helpKey="public.end_stage_reports.risks_transferred_to_next_stage" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                         Risks Transferred to Next Stage
-                      </label>
+                      </FieldLabelWithHelp>
                       <input
                         type="number"
                         min="0"
@@ -601,9 +603,9 @@ export default function EndStageReportForm({ projectId, boardId, report, onClose
                   <h4 className="font-semibold text-gray-900 dark:text-white mb-3">Issues</h4>
                   <div className="space-y-3">
                     <div>
-                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                      <FieldLabelWithHelp helpKey="public.end_stage_reports.issues_closed" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                         Issues Closed
-                      </label>
+                      </FieldLabelWithHelp>
                       <input
                         type="number"
                         min="0"
@@ -613,9 +615,9 @@ export default function EndStageReportForm({ projectId, boardId, report, onClose
                       />
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                      <FieldLabelWithHelp helpKey="public.end_stage_reports.issues_transferred_to_next_stage" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                         Issues Transferred to Next Stage
-                      </label>
+                      </FieldLabelWithHelp>
                       <input
                         type="number"
                         min="0"
@@ -634,9 +636,9 @@ export default function EndStageReportForm({ projectId, boardId, report, onClose
           {activeSection === 'forecast' && (
             <div className="space-y-6">
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                <FieldLabelWithHelp helpKey="public.end_stage_reports.what_went_well" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                   What Went Well
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   value={formData.what_went_well}
                   onChange={(e) => setFormData({ ...formData, what_went_well: e.target.value })}
@@ -647,9 +649,9 @@ export default function EndStageReportForm({ projectId, boardId, report, onClose
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                <FieldLabelWithHelp helpKey="public.end_stage_reports.what_could_improve" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                   What Could Be Improved
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   value={formData.what_could_improve}
                   onChange={(e) => setFormData({ ...formData, what_could_improve: e.target.value })}
@@ -660,9 +662,9 @@ export default function EndStageReportForm({ projectId, boardId, report, onClose
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                <FieldLabelWithHelp helpKey="public.end_stage_reports.lessons_learned" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                   Lessons Learned
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   value={formData.lessons_learned}
                   onChange={(e) => setFormData({ ...formData, lessons_learned: e.target.value })}
@@ -673,9 +675,9 @@ export default function EndStageReportForm({ projectId, boardId, report, onClose
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                <FieldLabelWithHelp helpKey="public.end_stage_reports.next_stage_forecast" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                   Next Stage Forecast
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   value={formData.next_stage_forecast}
                   onChange={(e) => setFormData({ ...formData, next_stage_forecast: e.target.value })}
@@ -686,9 +688,9 @@ export default function EndStageReportForm({ projectId, boardId, report, onClose
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                <FieldLabelWithHelp helpKey="public.end_stage_reports.anticipated_challenges" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                   Anticipated Challenges
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   value={formData.anticipated_challenges}
                   onChange={(e) => setFormData({ ...formData, anticipated_challenges: e.target.value })}
@@ -704,9 +706,9 @@ export default function EndStageReportForm({ projectId, boardId, report, onClose
           {activeSection === 'approval' && (
             <div className="space-y-6">
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                <FieldLabelWithHelp helpKey="public.end_stage_reports.approval_status" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                   Approval Status
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   value={formData.approval_status}
                   onChange={(e) => setFormData({ ...formData, approval_status: e.target.value })}
@@ -729,10 +731,10 @@ export default function EndStageReportForm({ projectId, boardId, report, onClose
                   className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                 />
                 <div className="flex-1">
-                  <label htmlFor="tolerance_breaches" className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                  <FieldLabelWithHelp helpKey="public.end_stage_reports.tolerance_breaches_details" htmlFor="tolerance_breaches" className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
                     <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
                     Tolerance breaches occurred during this stage
-                  </label>
+                  </FieldLabelWithHelp>
                   {formData.tolerance_breaches_occurred && (
                     <textarea
                       value={formData.tolerance_breaches_details}
@@ -746,9 +748,9 @@ export default function EndStageReportForm({ projectId, boardId, report, onClose
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                <FieldLabelWithHelp helpKey="public.end_stage_reports.notes" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                   Notes
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
@@ -782,4 +784,25 @@ export default function EndStageReportForm({ projectId, boardId, report, onClose
       </div>
     </div>
   );
+}
+
+// v1345 slice 4: field help for this component (public.end_stage_reports.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'report_title', 'report_date', 'stage_boundary_id', 'stage_name', 'stage_number', 'stage_status',
+  'stage_objectives_summary', 'objectives_met', 'planned_start_date', 'actual_start_date',
+  'planned_end_date', 'actual_end_date', 'schedule_performance_index', 'planned_budget', 'actual_cost',
+  'cost_performance_index', 'quality_criteria_met', 'quality_criteria_total',
+  'quality_performance_percentage', 'quality_issues_summary', 'risks_closed',
+  'risks_transferred_to_next_stage', 'issues_closed', 'issues_transferred_to_next_stage', 'what_went_well',
+  'what_could_improve', 'lessons_learned', 'next_stage_forecast', 'anticipated_challenges',
+  'approval_status', 'tolerance_breaches_details', 'notes',
+].map((name) => `public.end_stage_reports.${name}`)
+
+export default function EndStageReportForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <EndStageReportFormBody {...props} />
+    </FieldHelpScope>
+  )
 }

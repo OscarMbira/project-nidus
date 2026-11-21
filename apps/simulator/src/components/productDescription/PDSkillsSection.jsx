@@ -3,12 +3,14 @@
  */
 
 import { useState } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { Plus } from 'lucide-react'
 import { addSkill, deleteSkill } from '../../services/pdSkillsRequiredService'
 import SkillForm from './SkillForm'
 import SkillCard from './SkillCard'
 
-export default function PDSkillsSection({ skills, setSkills, formData, onChange, pdId, mode }) {
+function PDSkillsSectionBody({ skills, setSkills, formData, onChange, pdId, mode }) {
   const [showForm, setShowForm] = useState(false)
   const [editingSkill, setEditingSkill] = useState(null)
 
@@ -53,9 +55,9 @@ export default function PDSkillsSection({ skills, setSkills, formData, onChange,
       <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Development Skills Required</h2>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="sim.product_descriptions.development_skills_required" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
           Development Skills Required (Summary)
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={formData.development_skills_required || ''}
           onChange={(e) => onChange('development_skills_required', e.target.value)}
@@ -67,9 +69,9 @@ export default function PDSkillsSection({ skills, setSkills, formData, onChange,
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="sim.product_descriptions.resource_areas" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Resource Areas
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={formData.resource_areas || ''}
           onChange={(e) => onChange('resource_areas', e.target.value)}
@@ -131,5 +133,19 @@ export default function PDSkillsSection({ skills, setSkills, formData, onChange,
         )}
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.product_descriptions.development_skills_required',
+  'sim.product_descriptions.resource_areas',
+]
+
+export default function PDSkillsSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <PDSkillsSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

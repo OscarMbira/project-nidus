@@ -3,6 +3,8 @@
  * Route: /platform/workstream-plans/create  |  /platform/workstream-plans/:id/edit
  */
 import { useState, useEffect } from 'react';
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { useNavigate, useParams } from 'react-router-dom';
 import { Save, GitBranch, ArrowLeft } from 'lucide-react';
 import { platformDb } from '@nidus/supabase';
@@ -17,7 +19,7 @@ const inp='w-full rounded-lg border border-gray-600 bg-gray-700 text-gray-100 px
 const lbl='block text-sm font-medium text-gray-300 mb-1';
 const EMPTY={workstream_name:'',lead_name:'',status:'draft',start_date:'',end_date:'',objectives:'',tasks_summary:'',notes:''};
 
-export default function WorkstreamPlanForm() {
+function WorkstreamPlanFormBody() {
   const {id}=useParams(); const isEdit=Boolean(id); const navigate=useNavigate();
   const [form,setForm]=useState(EMPTY); const [saving,setSaving]=useState(false); const [saved,setSaved]=useState(null); const [loading,setLoading]=useState(isEdit);
   const [record,setRecord]=useState(null);
@@ -84,18 +86,18 @@ export default function WorkstreamPlanForm() {
         </div>
       ) : (
       <form onSubmit={handleSave} className="rounded-lg border border-gray-700 bg-gray-800 p-6 space-y-4">
-        <div><label className={lbl}>Workstream Name <span className="text-red-400">*</span></label><input className={inp} value={form.workstream_name} onChange={set('workstream_name')} required/></div>
+        <div><FieldLabelWithHelp helpKey="sim.workstream_plans.workstream_name" className={lbl} required>Workstream Name <span className="text-red-400">*</span></FieldLabelWithHelp><input className={inp} value={form.workstream_name} onChange={set('workstream_name')} required/></div>
         <div className="grid grid-cols-2 gap-4">
-          <div><label className={lbl}>Lead</label><input className={inp} value={form.lead_name} onChange={set('lead_name')}/></div>
-          <div><label className={lbl}>Status</label><select className={inp} value={form.status} onChange={set('status')}>{['draft','active','on_hold','completed'].map(s=><option key={s} value={s}>{s}</option>)}</select></div>
+          <div><FieldLabelWithHelp helpKey="sim.workstream_plans.lead_name" className={lbl}>Lead</FieldLabelWithHelp><input className={inp} value={form.lead_name} onChange={set('lead_name')}/></div>
+          <div><FieldLabelWithHelp helpKey="sim.workstream_plans.status" className={lbl}>Status</FieldLabelWithHelp><select className={inp} value={form.status} onChange={set('status')}>{['draft','active','on_hold','completed'].map(s=><option key={s} value={s}>{s}</option>)}</select></div>
         </div>
         <div className="grid grid-cols-2 gap-4">
-          <div><label className={lbl}>Start Date</label><input type="date" className={inp} value={form.start_date} onChange={set('start_date')}/></div>
-          <div><label className={lbl}>End Date</label><input type="date" className={inp} value={form.end_date} onChange={set('end_date')}/></div>
+          <div><FieldLabelWithHelp helpKey="sim.workstream_plans.start_date" className={lbl}>Start Date</FieldLabelWithHelp><input type="date" className={inp} value={form.start_date} onChange={set('start_date')}/></div>
+          <div><FieldLabelWithHelp helpKey="sim.workstream_plans.end_date" className={lbl}>End Date</FieldLabelWithHelp><input type="date" className={inp} value={form.end_date} onChange={set('end_date')}/></div>
         </div>
-        <div><label className={lbl}>Objectives</label><textarea className={`${inp} h-20 resize-none`} value={form.objectives} onChange={set('objectives')} placeholder="Key objectives for this workstream…"/></div>
-        <div><label className={lbl}>Tasks Summary</label><textarea className={`${inp} h-16 resize-none`} value={form.tasks_summary} onChange={set('tasks_summary')} placeholder="High-level task overview…"/></div>
-        <div><label className={lbl}>Notes</label><textarea className={`${inp} h-16 resize-none`} value={form.notes} onChange={set('notes')}/></div>
+        <div><FieldLabelWithHelp helpKey="sim.workstream_plans.objectives" className={lbl}>Objectives</FieldLabelWithHelp><textarea className={`${inp} h-20 resize-none`} value={form.objectives} onChange={set('objectives')} placeholder="Key objectives for this workstream…"/></div>
+        <div><FieldLabelWithHelp helpKey="sim.workstream_plans.tasks_summary" className={lbl}>Tasks Summary</FieldLabelWithHelp><textarea className={`${inp} h-16 resize-none`} value={form.tasks_summary} onChange={set('tasks_summary')} placeholder="High-level task overview…"/></div>
+        <div><FieldLabelWithHelp helpKey="sim.workstream_plans.notes" className={lbl}>Notes</FieldLabelWithHelp><textarea className={`${inp} h-16 resize-none`} value={form.notes} onChange={set('notes')}/></div>
         <div className="flex gap-3 pt-2">
           <button type="submit" disabled={saving} className="flex items-center gap-2 px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-lg text-sm font-medium"><Save size={15}/>{saving?'Saving…':isEdit?'Update':'Create'}</button>
           <button type="button" onClick={()=>navigate(-1)} className="px-4 py-2 rounded-lg border border-gray-600 text-gray-300 hover:text-white text-sm">Cancel</button>
@@ -104,4 +106,24 @@ export default function WorkstreamPlanForm() {
       )}
     </div>
   );
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.workstream_plans.workstream_name',
+  'sim.workstream_plans.lead_name',
+  'sim.workstream_plans.status',
+  'sim.workstream_plans.start_date',
+  'sim.workstream_plans.end_date',
+  'sim.workstream_plans.objectives',
+  'sim.workstream_plans.tasks_summary',
+  'sim.workstream_plans.notes',
+]
+
+export default function WorkstreamPlanForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <WorkstreamPlanFormBody {...props} />
+    </FieldHelpScope>
+  )
 }

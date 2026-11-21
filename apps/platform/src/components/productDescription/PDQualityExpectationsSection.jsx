@@ -3,12 +3,14 @@
  */
 
 import { useState } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Plus } from 'lucide-react'
 import { addQualityExpectation, deleteQualityExpectation } from '../../services/pdQualityExpectationsService'
 import QualityExpectationForm from './QualityExpectationForm'
 import QualityExpectationCard from './QualityExpectationCard'
 
-export default function PDQualityExpectationsSection({ qualityExpectations, setQualityExpectations, formData, onChange, pdId, mode }) {
+function PDQualityExpectationsSectionBody({ qualityExpectations, setQualityExpectations, formData, onChange, pdId, mode }) {
   const [showForm, setShowForm] = useState(false)
   const [editingExpectation, setEditingExpectation] = useState(null)
 
@@ -53,9 +55,9 @@ export default function PDQualityExpectationsSection({ qualityExpectations, setQ
       <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Quality Expectations</h2>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="public.pd_quality_expectations.customer_quality_expectations" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Customer Quality Expectations
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={formData.customer_quality_expectations || ''}
           onChange={(e) => onChange('customer_quality_expectations', e.target.value)}
@@ -67,9 +69,9 @@ export default function PDQualityExpectationsSection({ qualityExpectations, setQ
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="public.pd_quality_expectations.quality_characteristics" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Quality Characteristics
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={formData.quality_characteristics || ''}
           onChange={(e) => onChange('quality_characteristics', e.target.value)}
@@ -132,9 +134,9 @@ export default function PDQualityExpectationsSection({ qualityExpectations, setQ
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="public.pd_quality_expectations.applicable_standards" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Applicable Standards
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={formData.applicable_standards || ''}
           onChange={(e) => onChange('applicable_standards', e.target.value)}
@@ -145,5 +147,19 @@ export default function PDQualityExpectationsSection({ qualityExpectations, setQ
         />
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.pd_quality_expectations.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'customer_quality_expectations', 'quality_characteristics', 'applicable_standards',
+].map((name) => `public.pd_quality_expectations.${name}`)
+
+export default function PDQualityExpectationsSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <PDQualityExpectationsSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

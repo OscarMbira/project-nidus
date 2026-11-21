@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { FileText, User, Calendar, Users } from 'lucide-react'
 import { supabase } from '../../../services/supabaseClient'
 import { generateReportReference } from '../../../services/endStageReportService'
 
-export default function EndStageReportDocumentInfoSection({ formData, onChange, errors, mode, projectId, stageNumber }) {
+function EndStageReportDocumentInfoSectionBody({ formData, onChange, errors, mode, projectId, stageNumber }) {
   const [users, setUsers] = useState([])
 
   useEffect(() => {
@@ -47,9 +49,9 @@ export default function EndStageReportDocumentInfoSection({ formData, onChange, 
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.end_stage_reports.report_title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Report Title *
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             value={formData.report_title || ''}
@@ -69,10 +71,10 @@ export default function EndStageReportDocumentInfoSection({ formData, onChange, 
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.end_stage_reports.report_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             <Calendar className="h-4 w-4 inline mr-1" />
             Report Date *
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="date"
             value={formData.report_date || ''}
@@ -94,9 +96,9 @@ export default function EndStageReportDocumentInfoSection({ formData, onChange, 
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.end_stage_reports.reporting_period_start" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Reporting Period Start
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="date"
             value={formData.reporting_period_start || ''}
@@ -109,9 +111,9 @@ export default function EndStageReportDocumentInfoSection({ formData, onChange, 
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.end_stage_reports.reporting_period_end" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Reporting Period End
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="date"
             value={formData.reporting_period_end || ''}
@@ -127,10 +129,10 @@ export default function EndStageReportDocumentInfoSection({ formData, onChange, 
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.end_stage_reports.prepared_by" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
             <User className="h-4 w-4 inline mr-1" />
             Prepared By
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={formData.prepared_by || ''}
             onChange={(e) => onChange('prepared_by', e.target.value || null)}
@@ -149,9 +151,9 @@ export default function EndStageReportDocumentInfoSection({ formData, onChange, 
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.end_stage_reports.version_no" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Version Number
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             value={formData.version_no || '1.0'}
@@ -182,5 +184,20 @@ export default function EndStageReportDocumentInfoSection({ formData, onChange, 
         </div>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.end_stage_reports.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'report_title', 'report_date', 'reporting_period_start', 'reporting_period_end', 'prepared_by',
+  'version_no',
+].map((name) => `public.end_stage_reports.${name}`)
+
+export default function EndStageReportDocumentInfoSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <EndStageReportDocumentInfoSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

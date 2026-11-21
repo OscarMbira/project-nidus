@@ -2,6 +2,8 @@
  * Create, view, or edit one communication format or level of detail.
  */
 import { useEffect, useMemo, useState } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { communicationOptionCodeFromLabel } from '@nidus/shared/utils/communicationOptionCode'
@@ -31,7 +33,7 @@ const EMPTY = {
   is_active: true,
 }
 
-export default function CommunicationInformationOptionFormPage() {
+function CommunicationInformationOptionFormPageBody() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const { kind, code } = useParams()
@@ -199,7 +201,7 @@ export default function CommunicationInformationOptionFormPage() {
         ) : (
           <form onSubmit={save} className="px-4 py-4">
             <fieldset disabled={readOnly || !canMaintain} className="space-y-4 disabled:opacity-80">
-              <label className="block text-sm text-gray-700 dark:text-gray-200">
+              <FieldLabelWithHelp helpKey="public.communication_information_options.option_kind" className="block text-sm text-gray-700 dark:text-gray-200">
                 Used for
                 <select
                   value={form.option_kind}
@@ -211,16 +213,16 @@ export default function CommunicationInformationOptionFormPage() {
                     <option key={item.value} value={item.value}>{item.label}</option>
                   ))}
                 </select>
-              </label>
-              <label className="block text-sm text-gray-700 dark:text-gray-200">
+              </FieldLabelWithHelp>
+              <FieldLabelWithHelp helpKey="public.communication_information_options.option_label" className="block text-sm text-gray-700 dark:text-gray-200">
                 Name
                 <input
                   value={form.option_label}
                   onChange={(event) => update({ option_label: event.target.value })}
                   className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
                 />
-              </label>
-              <label className="block text-sm text-gray-700 dark:text-gray-200">
+              </FieldLabelWithHelp>
+              <FieldLabelWithHelp helpKey="public.communication_information_options.option_code" className="block text-sm text-gray-700 dark:text-gray-200">
                 Code
                 <input
                   value={form.option_code}
@@ -231,8 +233,8 @@ export default function CommunicationInformationOptionFormPage() {
                   disabled={!isCreate}
                   className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 font-mono text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
                 />
-              </label>
-              <label className="block text-sm text-gray-700 dark:text-gray-200">
+              </FieldLabelWithHelp>
+              <FieldLabelWithHelp helpKey="public.communication_information_options.sort_order" className="block text-sm text-gray-700 dark:text-gray-200">
                 Order
                 <input
                   type="number"
@@ -240,15 +242,15 @@ export default function CommunicationInformationOptionFormPage() {
                   onChange={(event) => update({ sort_order: event.target.value })}
                   className="mt-1 w-full max-w-xs rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
                 />
-              </label>
-              <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
+              </FieldLabelWithHelp>
+              <FieldLabelWithHelp helpKey="public.communication_information_options.is_active" className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
                 <input
                   type="checkbox"
                   checked={form.is_active}
                   onChange={(event) => update({ is_active: event.target.checked })}
                 />
                 Active
-              </label>
+              </FieldLabelWithHelp>
             </fieldset>
             {error && <p className="mt-3 text-sm text-red-600 dark:text-red-400">{error}</p>}
             <div className="mt-4 flex gap-2">
@@ -269,5 +271,19 @@ export default function CommunicationInformationOptionFormPage() {
         )}
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.communication_information_options.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'option_kind', 'option_label', 'option_code', 'sort_order', 'is_active',
+].map((name) => `public.communication_information_options.${name}`)
+
+export default function CommunicationInformationOptionFormPage(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <CommunicationInformationOptionFormPageBody {...props} />
+    </FieldHelpScope>
   )
 }

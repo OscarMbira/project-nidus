@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { supabase } from '../../../services/supabaseClient'
 import { generateDocumentRef } from '../../../services/exceptionReportService'
 import { User, Calendar, FileText } from 'lucide-react'
 
-export default function ExceptionReportHeader({ formData, onChange, errors, mode, projectId }) {
+function ExceptionReportHeaderBody({ formData, onChange, errors, mode, projectId }) {
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(false)
 
@@ -58,9 +60,9 @@ export default function ExceptionReportHeader({ formData, onChange, errors, mode
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.exception_reports.report_title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Report Title *
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             value={formData.report_title || ''}
@@ -78,9 +80,9 @@ export default function ExceptionReportHeader({ formData, onChange, errors, mode
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.exception_reports.report_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Report Date *
-          </label>
+          </FieldLabelWithHelp>
           <div className="relative">
             <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <input
@@ -103,9 +105,9 @@ export default function ExceptionReportHeader({ formData, onChange, errors, mode
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.exception_reports.document_ref" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Document Reference
-          </label>
+          </FieldLabelWithHelp>
           <div className="relative">
             <FileText className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <input
@@ -121,9 +123,9 @@ export default function ExceptionReportHeader({ formData, onChange, errors, mode
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.exception_reports.version_no" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Version Number
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             value={formData.version_no || '1.0'}
@@ -134,9 +136,9 @@ export default function ExceptionReportHeader({ formData, onChange, errors, mode
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.exception_reports.urgency" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Urgency *
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={formData.urgency || 'medium'}
             onChange={(e) => onChange('urgency', e.target.value)}
@@ -154,9 +156,9 @@ export default function ExceptionReportHeader({ formData, onChange, errors, mode
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.exception_reports.author_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required listOptions={false}>
             Author *
-          </label>
+          </FieldLabelWithHelp>
           <div className="relative">
             <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <select
@@ -182,9 +184,9 @@ export default function ExceptionReportHeader({ formData, onChange, errors, mode
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.exception_reports.owner_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
             Owner
-          </label>
+          </FieldLabelWithHelp>
           <div className="relative">
             <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <select
@@ -204,9 +206,9 @@ export default function ExceptionReportHeader({ formData, onChange, errors, mode
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.exception_reports.client_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
             Client
-          </label>
+          </FieldLabelWithHelp>
           <div className="relative">
             <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <select
@@ -228,9 +230,9 @@ export default function ExceptionReportHeader({ formData, onChange, errors, mode
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.exception_reports.date_of_this_revision" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Date of This Revision
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="date"
             value={formData.date_of_this_revision || ''}
@@ -241,9 +243,9 @@ export default function ExceptionReportHeader({ formData, onChange, errors, mode
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.exception_reports.date_of_next_revision" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Date of Next Revision
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="date"
             value={formData.date_of_next_revision || ''}
@@ -254,5 +256,27 @@ export default function ExceptionReportHeader({ formData, onChange, errors, mode
         </div>
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.exception_reports.report_title',
+  'sim.exception_reports.report_date',
+  'sim.exception_reports.document_ref',
+  'sim.exception_reports.version_no',
+  'sim.exception_reports.urgency',
+  'sim.exception_reports.author_id',
+  'sim.exception_reports.owner_id',
+  'sim.exception_reports.client_id',
+  'sim.exception_reports.date_of_this_revision',
+  'sim.exception_reports.date_of_next_revision',
+]
+
+export default function ExceptionReportHeader(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ExceptionReportHeaderBody {...props} />
+    </FieldHelpScope>
   )
 }

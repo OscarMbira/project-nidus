@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { FileText, User, Calendar } from 'lucide-react'
 import { supabase } from '../../../services/supabaseClient'
 
-export default function EPRDocumentHeader({ formData, onChange, errors, mode }) {
+function EPRDocumentHeaderBody({ formData, onChange, errors, mode }) {
   const [users, setUsers] = useState([])
 
   useEffect(() => {
@@ -35,9 +37,9 @@ export default function EPRDocumentHeader({ formData, onChange, errors, mode }) 
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.end_project_reports.report_title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Report Title *
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             value={formData.report_title || ''}
@@ -57,10 +59,10 @@ export default function EPRDocumentHeader({ formData, onChange, errors, mode }) 
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.end_project_reports.report_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             <Calendar className="h-4 w-4 inline mr-1" />
             Report Date *
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="date"
             value={formData.report_date || ''}
@@ -82,10 +84,10 @@ export default function EPRDocumentHeader({ formData, onChange, errors, mode }) 
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.end_project_reports.author_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
             <User className="h-4 w-4 inline mr-1" />
             Author
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={formData.author_id || ''}
             onChange={(e) => onChange('author_id', e.target.value || null)}
@@ -104,9 +106,9 @@ export default function EPRDocumentHeader({ formData, onChange, errors, mode }) 
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.end_project_reports.owner_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
             Owner (Project Manager)
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={formData.owner_id || ''}
             onChange={(e) => onChange('owner_id', e.target.value || null)}
@@ -125,9 +127,9 @@ export default function EPRDocumentHeader({ formData, onChange, errors, mode }) 
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.end_project_reports.client_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
             Client (Executive Sponsor)
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={formData.client_id || ''}
             onChange={(e) => onChange('client_id', e.target.value || null)}
@@ -148,9 +150,9 @@ export default function EPRDocumentHeader({ formData, onChange, errors, mode }) 
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.end_project_reports.date_of_this_revision" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Date of This Revision
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="date"
             value={formData.date_of_this_revision || ''}
@@ -163,9 +165,9 @@ export default function EPRDocumentHeader({ formData, onChange, errors, mode }) 
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.end_project_reports.closure_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Closure Type
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={formData.closure_type || 'normal'}
             onChange={(e) => onChange('closure_type', e.target.value)}
@@ -197,5 +199,24 @@ export default function EPRDocumentHeader({ formData, onChange, errors, mode }) 
         </div>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.end_project_reports.report_title',
+  'sim.end_project_reports.report_date',
+  'sim.end_project_reports.author_id',
+  'sim.end_project_reports.owner_id',
+  'sim.end_project_reports.client_id',
+  'sim.end_project_reports.date_of_this_revision',
+  'sim.end_project_reports.closure_type',
+]
+
+export default function EPRDocumentHeader(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <EPRDocumentHeaderBody {...props} />
+    </FieldHelpScope>
   )
 }

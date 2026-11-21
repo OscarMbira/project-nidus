@@ -3,12 +3,14 @@
  */
 
 import { useState } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { Plus } from 'lucide-react'
 import { addResponsibility, deleteResponsibility } from '../../services/pdAcceptanceResponsibilitiesService'
 import ResponsibilityForm from './ResponsibilityForm'
 import ResponsibilityCard from './ResponsibilityCard'
 
-export default function PDAcceptanceResponsibilitiesSection({ responsibilities, setResponsibilities, formData, onChange, pdId, mode, projectId, acceptanceCriteria = [] }) {
+function PDAcceptanceResponsibilitiesSectionBody({ responsibilities, setResponsibilities, formData, onChange, pdId, mode, projectId, acceptanceCriteria = [] }) {
   const [showForm, setShowForm] = useState(false)
   const [editingResponsibility, setEditingResponsibility] = useState(null)
 
@@ -53,9 +55,9 @@ export default function PDAcceptanceResponsibilitiesSection({ responsibilities, 
       <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Acceptance Responsibilities</h2>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="sim.product_descriptions.acceptance_responsibilities" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Acceptance Responsibilities (Summary)
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={formData.acceptance_responsibilities || ''}
           onChange={(e) => onChange('acceptance_responsibilities', e.target.value)}
@@ -67,9 +69,9 @@ export default function PDAcceptanceResponsibilitiesSection({ responsibilities, 
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="sim.product_descriptions.acceptance_method" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Acceptance Method
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={formData.acceptance_method || ''}
           onChange={(e) => onChange('acceptance_method', e.target.value)}
@@ -81,9 +83,9 @@ export default function PDAcceptanceResponsibilitiesSection({ responsibilities, 
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="sim.product_descriptions.handover_arrangements" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Handover Arrangements
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={formData.handover_arrangements || ''}
           onChange={(e) => onChange('handover_arrangements', e.target.value)}
@@ -95,7 +97,7 @@ export default function PDAcceptanceResponsibilitiesSection({ responsibilities, 
       </div>
 
       <div>
-        <label className="flex items-center">
+        <FieldLabelWithHelp helpKey="sim.product_descriptions.phased_handover" className="flex items-center">
           <input
             type="checkbox"
             checked={formData.phased_handover || false}
@@ -106,7 +108,7 @@ export default function PDAcceptanceResponsibilitiesSection({ responsibilities, 
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
             Phased Handover Planned
           </span>
-        </label>
+        </FieldLabelWithHelp>
       </div>
 
       <div>
@@ -162,5 +164,21 @@ export default function PDAcceptanceResponsibilitiesSection({ responsibilities, 
         )}
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.product_descriptions.acceptance_responsibilities',
+  'sim.product_descriptions.acceptance_method',
+  'sim.product_descriptions.handover_arrangements',
+  'sim.product_descriptions.phased_handover',
+]
+
+export default function PDAcceptanceResponsibilitiesSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <PDAcceptanceResponsibilitiesSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

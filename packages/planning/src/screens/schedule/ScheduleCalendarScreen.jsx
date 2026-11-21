@@ -5,6 +5,8 @@
  * Exceptions open their own routed page (rule 65).
  */
 import { useEffect, useState } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useNavigate } from 'react-router-dom'
 import { Plus, Save } from 'lucide-react'
 import { RowActionButton } from '@nidus/ui'
@@ -20,7 +22,7 @@ export const WEEKDAYS = [
 ]
 const DEFAULT_WEEK = { monday: true, tuesday: true, wednesday: true, thursday: true, friday: true, saturday: false, sunday: false, hours_per_day: 8, notes: '' }
 
-export default function ScheduleCalendarScreen() {
+function ScheduleCalendarScreenBody() {
   const navigate = useNavigate()
   const link = useScheduleLinks()
   const { projectId, loading: projectLoading } = useScheduleProjectId()
@@ -83,14 +85,14 @@ export default function ScheduleCalendarScreen() {
               ))}
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <label className="text-xs text-gray-600 dark:text-gray-400">Hours per day
+              <FieldLabelWithHelp helpKey="public.project_calendars.hours_per_day" className="text-xs text-gray-600 dark:text-gray-400">Hours per day
                 <input type="number" min={1} max={24} step="0.5" value={week.hours_per_day} onChange={(e) => setWeek({ ...week, hours_per_day: e.target.value })}
                   className="mt-1 w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
-              </label>
-              <label className="sm:col-span-2 text-xs text-gray-600 dark:text-gray-400">Notes
+              </FieldLabelWithHelp>
+              <FieldLabelWithHelp helpKey="public.project_calendars.notes" className="sm:col-span-2 text-xs text-gray-600 dark:text-gray-400">Notes
                 <input value={week.notes || ''} onChange={(e) => setWeek({ ...week, notes: e.target.value })}
                   className="mt-1 w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
-              </label>
+              </FieldLabelWithHelp>
             </div>
             <div className="flex items-center gap-3">
               <button type="button" onClick={save} disabled={saving} className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm disabled:opacity-50">
@@ -132,5 +134,19 @@ export default function ScheduleCalendarScreen() {
       )}
       {modal}
     </ScheduleLayout>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.project_calendars.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'hours_per_day', 'notes',
+].map((name) => `public.project_calendars.${name}`)
+
+export default function ScheduleCalendarScreen(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ScheduleCalendarScreenBody {...props} />
+    </FieldHelpScope>
   )
 }

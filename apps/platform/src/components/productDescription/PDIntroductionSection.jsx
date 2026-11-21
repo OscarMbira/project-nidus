@@ -3,9 +3,11 @@
  */
 
 import { useState, useEffect } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { supabase } from '../../services/supabaseClient'
 
-export default function PDIntroductionSection({ formData, onChange, errors, mode, projectId }) {
+function PDIntroductionSectionBody({ formData, onChange, errors, mode, projectId }) {
   const [productDeliverables, setProductDeliverables] = useState([])
   const [ppdCompositionItems, setPpdCompositionItems] = useState([])
   const [configurationItems, setConfigurationItems] = useState([])
@@ -72,9 +74,9 @@ export default function PDIntroductionSection({ formData, onChange, errors, mode
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.product_descriptions.product_title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Product Title <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             value={formData.product_title || ''}
@@ -91,9 +93,9 @@ export default function PDIntroductionSection({ formData, onChange, errors, mode
         </div>
 
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.product_descriptions.purpose" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Purpose <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             value={formData.purpose || ''}
             onChange={(e) => onChange('purpose', e.target.value)}
@@ -110,9 +112,9 @@ export default function PDIntroductionSection({ formData, onChange, errors, mode
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.product_descriptions.product_deliverable_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
             Link to Product Deliverable
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={formData.product_deliverable_id || ''}
             onChange={(e) => onChange('product_deliverable_id', e.target.value || null)}
@@ -129,9 +131,9 @@ export default function PDIntroductionSection({ formData, onChange, errors, mode
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.product_descriptions.ppd_composition_item_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
             Link to PPD Composition Item
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={formData.ppd_composition_item_id || ''}
             onChange={(e) => onChange('ppd_composition_item_id', e.target.value || null)}
@@ -148,9 +150,9 @@ export default function PDIntroductionSection({ formData, onChange, errors, mode
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.product_descriptions.configuration_item_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
             Link to Configuration Item
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={formData.configuration_item_id || ''}
             onChange={(e) => onChange('configuration_item_id', e.target.value || null)}
@@ -167,9 +169,9 @@ export default function PDIntroductionSection({ formData, onChange, errors, mode
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.product_descriptions.author_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
             Author
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={formData.author_id || ''}
             onChange={(e) => onChange('author_id', e.target.value || null)}
@@ -186,9 +188,9 @@ export default function PDIntroductionSection({ formData, onChange, errors, mode
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.product_descriptions.owner_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
             Owner (Product Owner)
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={formData.owner_id || ''}
             onChange={(e) => onChange('owner_id', e.target.value || null)}
@@ -205,9 +207,9 @@ export default function PDIntroductionSection({ formData, onChange, errors, mode
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.product_descriptions.client_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
             Client
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={formData.client_id || ''}
             onChange={(e) => onChange('client_id', e.target.value || null)}
@@ -224,5 +226,20 @@ export default function PDIntroductionSection({ formData, onChange, errors, mode
         </div>
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.product_descriptions.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'product_title', 'purpose', 'product_deliverable_id', 'ppd_composition_item_id', 'configuration_item_id',
+  'author_id', 'owner_id', 'client_id',
+].map((name) => `public.product_descriptions.${name}`)
+
+export default function PDIntroductionSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <PDIntroductionSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

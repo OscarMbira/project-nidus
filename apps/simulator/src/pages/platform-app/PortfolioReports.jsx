@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { Plus, Search, RefreshCw, AlertCircle, X, Pencil, Trash2 } from 'lucide-react'
 import {
   getAllPortfolioReports,
@@ -37,7 +39,7 @@ const EMPTY_FORM = {
   generation_status: 'pending', report_summary: '',
 }
 
-export default function PortfolioReports() {
+function PortfolioReportsBody() {
   const [rows, setRows]         = useState([])
   const [portfolios, setPortfolios] = useState([])
   const [loading, setLoading]   = useState(true)
@@ -255,7 +257,7 @@ export default function PortfolioReports() {
             {formError && <p className="text-red-400 text-sm">{formError}</p>}
             <div className="space-y-3">
               <div>
-                <label className="block text-gray-400 text-sm mb-1">Portfolio *</label>
+                <FieldLabelWithHelp helpKey="sim.portfolio_reports.portfolio_id" className="block text-gray-400 text-sm mb-1" required listOptions={false}>Portfolio *</FieldLabelWithHelp>
                 <select value={form.portfolio_id} onChange={e => setForm(f => ({ ...f, portfolio_id: e.target.value }))}
                   className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:ring-1 focus:ring-orange-500">
                   <option value="">Select portfolio…</option>
@@ -263,14 +265,14 @@ export default function PortfolioReports() {
                 </select>
               </div>
               <div>
-                <label className="block text-gray-400 text-sm mb-1">Report Name *</label>
+                <FieldLabelWithHelp helpKey="sim.portfolio_reports.report_name" className="block text-gray-400 text-sm mb-1" required>Report Name *</FieldLabelWithHelp>
                 <input value={form.report_name} onChange={e => setForm(f => ({ ...f, report_name: e.target.value }))}
                   placeholder="e.g. Q1 2026 Portfolio Status Report"
                   className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-orange-500" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-gray-400 text-sm mb-1">Report Type</label>
+                  <FieldLabelWithHelp helpKey="sim.portfolio_reports.report_type" className="block text-gray-400 text-sm mb-1">Report Type</FieldLabelWithHelp>
                   <select value={form.report_type} onChange={e => setForm(f => ({ ...f, report_type: e.target.value }))}
                     className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:outline-none">
                     <option value="">—</option>
@@ -278,21 +280,21 @@ export default function PortfolioReports() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-gray-400 text-sm mb-1">Period</label>
+                  <FieldLabelWithHelp helpKey="sim.portfolio_reports.report_period" className="block text-gray-400 text-sm mb-1">Period</FieldLabelWithHelp>
                   <input value={form.report_period} onChange={e => setForm(f => ({ ...f, report_period: e.target.value }))}
                     placeholder="e.g. Q1 2026"
                     className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none" />
                 </div>
               </div>
               <div>
-                <label className="block text-gray-400 text-sm mb-1">Status</label>
+                <FieldLabelWithHelp helpKey="sim.portfolio_reports.generation_status" className="block text-gray-400 text-sm mb-1">Status</FieldLabelWithHelp>
                 <select value={form.generation_status} onChange={e => setForm(f => ({ ...f, generation_status: e.target.value }))}
                   className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:outline-none">
                   {STATUSES.map(s => <option key={s} value={s}>{s.replace(/_/g, ' ')}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-gray-400 text-sm mb-1">Summary / Content</label>
+                <FieldLabelWithHelp helpKey="sim.portfolio_reports.report_summary" className="block text-gray-400 text-sm mb-1">Summary / Content</FieldLabelWithHelp>
                 <textarea value={form.report_summary} onChange={e => setForm(f => ({ ...f, report_summary: e.target.value }))}
                   rows={4} placeholder="Report summary or key findings…"
                   className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none resize-y" />
@@ -328,5 +330,23 @@ export default function PortfolioReports() {
         </div>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.portfolio_reports.portfolio_id',
+  'sim.portfolio_reports.report_name',
+  'sim.portfolio_reports.report_type',
+  'sim.portfolio_reports.report_period',
+  'sim.portfolio_reports.generation_status',
+  'sim.portfolio_reports.report_summary',
+]
+
+export default function PortfolioReports(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <PortfolioReportsBody {...props} />
+    </FieldHelpScope>
   )
 }

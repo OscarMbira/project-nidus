@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { supabase } from '../../../services/supabaseClient';
 import { ArrowLeft, Users, Calendar, Plus, Trash2 } from 'lucide-react';
 import { createProjectHandover, updateProjectHandover, fetchProjectHandover } from '../../../services/closingProjectService';
@@ -56,7 +58,7 @@ function yesNo(value) {
   return value ? 'Yes' : 'No';
 }
 
-export default function HandoverChecklist({ projectId, onClose, onSuccess }) {
+function HandoverChecklistBody({ projectId, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
   const [users, setUsers] = useState([]);
@@ -427,10 +429,10 @@ export default function HandoverChecklist({ projectId, onClose, onSuccess }) {
           {/* Basic Info */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.project_handover.handover_from" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 <Users className="h-4 w-4" />
                 Handover From *
-              </label>
+              </FieldLabelWithHelp>
               <SelectField
                 forceSearchable
                 options={userOptions}
@@ -443,10 +445,10 @@ export default function HandoverChecklist({ projectId, onClose, onSuccess }) {
             </div>
 
             <div>
-              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.project_handover.handover_to" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 <Users className="h-4 w-4" />
                 Handover To *
-              </label>
+              </FieldLabelWithHelp>
               <SelectField
                 forceSearchable
                 options={userOptions}
@@ -461,10 +463,10 @@ export default function HandoverChecklist({ projectId, onClose, onSuccess }) {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
-              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.project_handover.handover_date" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 <Calendar className="h-4 w-4" />
                 Handover Date *
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="date"
                 value={formData.handover_date}
@@ -475,9 +477,9 @@ export default function HandoverChecklist({ projectId, onClose, onSuccess }) {
             </div>
 
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+              <FieldLabelWithHelp helpKey="public.project_handover.handover_type" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>
                 Handover Type *
-              </label>
+              </FieldLabelWithHelp>
               <select
                 value={formData.handover_type}
                 onChange={(e) => setFormData({ ...formData, handover_type: e.target.value })}
@@ -491,9 +493,9 @@ export default function HandoverChecklist({ projectId, onClose, onSuccess }) {
             </div>
 
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+              <FieldLabelWithHelp helpKey="public.project_handover.handover_status" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>
                 Handover Status *
-              </label>
+              </FieldLabelWithHelp>
               <select
                 value={formData.handover_status}
                 onChange={(e) => setFormData({ ...formData, handover_status: e.target.value })}
@@ -508,9 +510,9 @@ export default function HandoverChecklist({ projectId, onClose, onSuccess }) {
           </div>
 
           <div>
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+            <FieldLabelWithHelp helpKey="public.project_handover.handover_notes" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
               Handover Notes
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               value={formData.handover_notes}
               onChange={(e) => setFormData({ ...formData, handover_notes: e.target.value })}
@@ -521,10 +523,10 @@ export default function HandoverChecklist({ projectId, onClose, onSuccess }) {
           </div>
 
           <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.project_handover.acceptance_signature_date" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               <Calendar className="h-4 w-4" />
               Acceptance Signature Date
-            </label>
+            </FieldLabelWithHelp>
             <input
               type="date"
               value={formData.acceptance_signature_date}
@@ -551,7 +553,7 @@ export default function HandoverChecklist({ projectId, onClose, onSuccess }) {
                 </button>
               </div>
               <div className="space-y-3">
-                <label className="flex items-center gap-3 cursor-pointer">
+                <FieldLabelWithHelp helpKey="public.project_handover.documentation_complete" className="flex items-center gap-3 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={formData.documentation_complete}
@@ -561,8 +563,8 @@ export default function HandoverChecklist({ projectId, onClose, onSuccess }) {
                   <span className="text-sm text-gray-700 dark:text-gray-300">
                     Documentation Complete
                   </span>
-                </label>
-                <label className="flex items-center gap-3 cursor-pointer">
+                </FieldLabelWithHelp>
+                <FieldLabelWithHelp helpKey="public.project_handover.training_complete" className="flex items-center gap-3 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={formData.training_complete}
@@ -572,8 +574,8 @@ export default function HandoverChecklist({ projectId, onClose, onSuccess }) {
                   <span className="text-sm text-gray-700 dark:text-gray-300">
                     Training Complete
                   </span>
-                </label>
-                <label className="flex items-center gap-3 cursor-pointer">
+                </FieldLabelWithHelp>
+                <FieldLabelWithHelp helpKey="public.project_handover.knowledge_transfer_complete" className="flex items-center gap-3 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={formData.knowledge_transfer_complete}
@@ -583,7 +585,7 @@ export default function HandoverChecklist({ projectId, onClose, onSuccess }) {
                   <span className="text-sm text-gray-700 dark:text-gray-300">
                   Knowledge Transfer Complete
                 </span>
-              </label>
+              </FieldLabelWithHelp>
               {completionItems.map((item, index) => (
                 <div key={index} className="flex items-center gap-3">
                   <input
@@ -659,9 +661,9 @@ export default function HandoverChecklist({ projectId, onClose, onSuccess }) {
 
           {formTab === 'support' && (
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+              <FieldLabelWithHelp helpKey="public.project_handover.support_arrangements" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>
                 Support Arrangements *
-              </label>
+              </FieldLabelWithHelp>
               <MultiLineListInput
                 viewModeId="handover-support-arrangements"
                 value={formData.support_arrangements}
@@ -676,9 +678,9 @@ export default function HandoverChecklist({ projectId, onClose, onSuccess }) {
 
           {formTab === 'acceptance' && (
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+              <FieldLabelWithHelp helpKey="public.project_handover.operational_acceptance" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>
                 Operational Acceptance *
-              </label>
+              </FieldLabelWithHelp>
               <MultiLineListInput
                 viewModeId="handover-operational-acceptance"
                 value={formData.operational_acceptance}
@@ -713,4 +715,20 @@ export default function HandoverChecklist({ projectId, onClose, onSuccess }) {
     </div>
     </div>
   );
+}
+
+// v1345 slice 4: field help for this component (public.project_handover.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'handover_from', 'handover_to', 'handover_date', 'handover_type', 'handover_status', 'handover_notes',
+  'acceptance_signature_date', 'documentation_complete', 'training_complete',
+  'knowledge_transfer_complete', 'support_arrangements', 'operational_acceptance',
+].map((name) => `public.project_handover.${name}`)
+
+export default function HandoverChecklist(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <HandoverChecklistBody {...props} />
+    </FieldHelpScope>
+  )
 }

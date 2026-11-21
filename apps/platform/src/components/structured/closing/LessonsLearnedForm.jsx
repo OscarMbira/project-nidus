@@ -1,9 +1,11 @@
 import { useState } from 'react';
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { supabase } from '../../../services/supabaseClient';
 import { X, Lightbulb, FileText } from 'lucide-react';
 import { createLessonLearned, updateLessonLearned } from '../../../services/closingProjectService';
 
-export default function LessonsLearnedForm({ projectId, lesson, onClose, onSuccess }) {
+function LessonsLearnedFormBody({ projectId, lesson, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     lesson_title: lesson?.lesson_title || '',
@@ -72,7 +74,7 @@ export default function LessonsLearnedForm({ projectId, lesson, onClose, onSucce
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           <div>
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Lesson Title *</label>
+            <FieldLabelWithHelp helpKey="public.lessons_learned.lesson_title" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>Lesson Title *</FieldLabelWithHelp>
             <input
               type="text"
               value={formData.lesson_title}
@@ -85,7 +87,7 @@ export default function LessonsLearnedForm({ projectId, lesson, onClose, onSucce
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Lesson Type *</label>
+              <FieldLabelWithHelp helpKey="public.lessons_learned.lesson_type" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>Lesson Type *</FieldLabelWithHelp>
               <select
                 value={formData.lesson_type}
                 onChange={(e) => setFormData({ ...formData, lesson_type: e.target.value })}
@@ -99,7 +101,7 @@ export default function LessonsLearnedForm({ projectId, lesson, onClose, onSucce
             </div>
 
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Category *</label>
+              <FieldLabelWithHelp helpKey="public.lessons_learned.lesson_category" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>Category *</FieldLabelWithHelp>
               <select
                 value={formData.lesson_category}
                 onChange={(e) => setFormData({ ...formData, lesson_category: e.target.value })}
@@ -118,7 +120,7 @@ export default function LessonsLearnedForm({ projectId, lesson, onClose, onSucce
             </div>
 
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Applicability *</label>
+              <FieldLabelWithHelp helpKey="public.lessons_learned.applicability" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>Applicability *</FieldLabelWithHelp>
               <select
                 value={formData.applicability}
                 onChange={(e) => setFormData({ ...formData, applicability: e.target.value })}
@@ -133,7 +135,7 @@ export default function LessonsLearnedForm({ projectId, lesson, onClose, onSucce
           </div>
 
           <div>
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Lesson Description *</label>
+            <FieldLabelWithHelp helpKey="public.lessons_learned.lesson_description" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>Lesson Description *</FieldLabelWithHelp>
             <textarea
               value={formData.lesson_description}
               onChange={(e) => setFormData({ ...formData, lesson_description: e.target.value })}
@@ -145,7 +147,7 @@ export default function LessonsLearnedForm({ projectId, lesson, onClose, onSucce
           </div>
 
           <div>
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Context</label>
+            <FieldLabelWithHelp helpKey="public.lessons_learned.context" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Context</FieldLabelWithHelp>
             <textarea
               value={formData.context}
               onChange={(e) => setFormData({ ...formData, context: e.target.value })}
@@ -156,7 +158,7 @@ export default function LessonsLearnedForm({ projectId, lesson, onClose, onSucce
           </div>
 
           <div>
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Recommendations</label>
+            <FieldLabelWithHelp helpKey="public.lessons_learned.recommendations" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Recommendations</FieldLabelWithHelp>
             <textarea
               value={formData.recommendations}
               onChange={(e) => setFormData({ ...formData, recommendations: e.target.value })}
@@ -187,4 +189,19 @@ export default function LessonsLearnedForm({ projectId, lesson, onClose, onSucce
       </div>
     </div>
   );
+}
+
+// v1345 slice 4: field help for this component (public.lessons_learned.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'lesson_title', 'lesson_type', 'lesson_category', 'applicability', 'lesson_description', 'context',
+  'recommendations',
+].map((name) => `public.lessons_learned.${name}`)
+
+export default function LessonsLearnedForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <LessonsLearnedFormBody {...props} />
+    </FieldHelpScope>
+  )
 }

@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useParams, useNavigate } from 'react-router-dom'
 
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
 import { supabase } from '../../services/supabaseClient'
 import { normalizeProjectDeliveryTrack } from '@nidus/config/methodologyMenuUtils'
 
-export default function StartingUpProject() {
+function StartingUpProjectBody() {
   const { projectId, routeKey } = usePlatformProjectId()
   const navigate = useNavigate()
   const [project, setProject] = useState(null)
@@ -297,9 +299,9 @@ function MandateTab({ projectId, mandate, onSave }) {
 
       <div className="space-y-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.project_mandates.mandate_title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Mandate Title *
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             name="mandate_title"
@@ -311,9 +313,9 @@ function MandateTab({ projectId, mandate, onSave }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.project_mandates.mandate_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Mandate Description
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             name="mandate_description"
             value={formData.mandate_description}
@@ -324,9 +326,9 @@ function MandateTab({ projectId, mandate, onSave }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.project_mandates.mandate_reason" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Reason for Project
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             name="mandate_reason"
             value={formData.mandate_reason}
@@ -338,9 +340,9 @@ function MandateTab({ projectId, mandate, onSave }) {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.project_mandates.mandate_authority" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Authority
-            </label>
+            </FieldLabelWithHelp>
             <input
               type="text"
               name="mandate_authority"
@@ -350,9 +352,9 @@ function MandateTab({ projectId, mandate, onSave }) {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.project_mandates.mandate_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Mandate Date
-            </label>
+            </FieldLabelWithHelp>
             <input
               type="date"
               name="mandate_date"
@@ -364,9 +366,9 @@ function MandateTab({ projectId, mandate, onSave }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.project_mandates.business_justification" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Business Justification
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             name="business_justification"
             value={formData.business_justification}
@@ -378,9 +380,9 @@ function MandateTab({ projectId, mandate, onSave }) {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.project_mandates.expected_benefits" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Expected Benefits
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               name="expected_benefits"
               value={formData.expected_benefits}
@@ -390,9 +392,9 @@ function MandateTab({ projectId, mandate, onSave }) {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.project_mandates.expected_costs" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Expected Costs
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               name="expected_costs"
               value={formData.expected_costs}
@@ -405,9 +407,9 @@ function MandateTab({ projectId, mandate, onSave }) {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.project_mandates.constraints" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Constraints
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               name="constraints"
               value={formData.constraints}
@@ -417,9 +419,9 @@ function MandateTab({ projectId, mandate, onSave }) {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.project_mandates.assumptions" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Assumptions
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               name="assumptions"
               value={formData.assumptions}
@@ -468,3 +470,17 @@ function ProjectBriefTab({ projectId, projectBrief, mandateId, onSave }) {
   )
 }
 
+// v1345 slice 4: field help for this component (public.project_mandates.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'mandate_title', 'mandate_description', 'mandate_reason', 'mandate_authority', 'mandate_date',
+  'business_justification', 'expected_benefits', 'expected_costs', 'constraints', 'assumptions',
+].map((name) => `public.project_mandates.${name}`)
+
+export default function StartingUpProject(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <StartingUpProjectBody {...props} />
+    </FieldHelpScope>
+  )
+}

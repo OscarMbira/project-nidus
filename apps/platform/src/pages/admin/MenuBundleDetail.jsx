@@ -7,6 +7,8 @@
  * admin/manage-menu-bundles/:id/edit
  */
 import { useState, useEffect, useMemo, useCallback } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save, Loader, LayoutList } from 'lucide-react'
 import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesContext'
@@ -32,7 +34,7 @@ import {
 const MANAGE_MENU_BUNDLES_PATH = '/platform/admin/manage-menu-bundles'
 
 /** @param {{ forceEdit?: boolean }} props */
-export default function MenuBundleDetail({ forceEdit = false }) {
+function MenuBundleDetailBody({ forceEdit = false }) {
   const { id } = useParams()
   const navigate = useNavigate()
   const isCreate = !id
@@ -253,9 +255,9 @@ export default function MenuBundleDetail({ forceEdit = false }) {
               )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.org_menu_bundles.bundle_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Bundle name *
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   value={bundleName}
@@ -267,9 +269,9 @@ export default function MenuBundleDetail({ forceEdit = false }) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.org_menu_bundles.description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Description
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
@@ -339,5 +341,19 @@ export default function MenuBundleDetail({ forceEdit = false }) {
       </div>
       {successModal}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.org_menu_bundles.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'bundle_name', 'description',
+].map((name) => `public.org_menu_bundles.${name}`)
+
+export default function MenuBundleDetail(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <MenuBundleDetailBody {...props} />
+    </FieldHelpScope>
   )
 }

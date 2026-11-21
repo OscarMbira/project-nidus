@@ -4,12 +4,14 @@
  */
 
 import { useState, useEffect } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Plus, Settings, User } from 'lucide-react'
 import { getResponsibilities, deleteResponsibility } from '../../services/ppdAcceptanceResponsibilitiesService'
 import ResponsibilityCard from './ResponsibilityCard'
 import ResponsibilityForm from './ResponsibilityForm'
 
-export default function AcceptanceResponsibilitiesSection({ ppdId, mode = 'view', formData, onChange, projectId }) {
+function AcceptanceResponsibilitiesSectionBody({ ppdId, mode = 'view', formData, onChange, projectId }) {
   const [responsibilities, setResponsibilities] = useState([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -84,9 +86,9 @@ export default function AcceptanceResponsibilitiesSection({ ppdId, mode = 'view'
     <div className="space-y-6">
       {/* Acceptance Responsibilities (Text Field) */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="public.project_product_descriptions.acceptance_responsibilities" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Acceptance Responsibilities
-        </label>
+        </FieldLabelWithHelp>
         {mode === 'view' ? (
           <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
             {formData?.acceptance_responsibilities || 'Not defined'}
@@ -170,5 +172,19 @@ export default function AcceptanceResponsibilitiesSection({ ppdId, mode = 'view'
         )}
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.project_product_descriptions.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'acceptance_responsibilities',
+].map((name) => `public.project_product_descriptions.${name}`)
+
+export default function AcceptanceResponsibilitiesSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <AcceptanceResponsibilitiesSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

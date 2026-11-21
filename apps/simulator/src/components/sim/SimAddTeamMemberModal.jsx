@@ -1,4 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { X, Loader, AlertTriangle } from 'lucide-react'
 import {
   getSimAssignablePracticeMembers,
@@ -9,7 +11,7 @@ import {
 import { useToast } from '@nidus/shared/hooks/useToast'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 
-export default function SimAddTeamMemberModal({ isOpen, onClose, practiceTeamId, practiceProjectId, onSuccess }) {
+function SimAddTeamMemberModalBody({ isOpen, onClose, practiceTeamId, practiceProjectId, onSuccess }) {
   const { showToast } = useToast()
   const [loading, setLoading] = useState(true)
   const [assignable, setAssignable] = useState([])
@@ -139,7 +141,7 @@ export default function SimAddTeamMemberModal({ isOpen, onClose, practiceTeamId,
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Practice project member</label>
+              <FieldLabelWithHelp helpKey="sim.practice_team_members.user_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" listOptions={false}>Practice project member</FieldLabelWithHelp>
               <select
                 required
                 value={selectedUserId}
@@ -167,7 +169,7 @@ export default function SimAddTeamMemberModal({ isOpen, onClose, practiceTeamId,
             )}
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Functional role</label>
+              <FieldLabelWithHelp helpKey="sim.practice_team_members.member_role" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" listOptions={false}>Functional role</FieldLabelWithHelp>
               <div className="flex gap-2 mb-2">
                 <button
                   type="button"
@@ -207,7 +209,7 @@ export default function SimAddTeamMemberModal({ isOpen, onClose, practiceTeamId,
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Allocation % (0–100)</label>
+              <FieldLabelWithHelp helpKey="sim.practice_team_members.allocation_percentage" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Allocation % (0–100)</FieldLabelWithHelp>
               <input
                 type="number"
                 min={0}
@@ -234,5 +236,20 @@ export default function SimAddTeamMemberModal({ isOpen, onClose, practiceTeamId,
         )}
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.practice_team_members.user_id',
+  'sim.practice_team_members.member_role',
+  'sim.practice_team_members.allocation_percentage',
+]
+
+export default function SimAddTeamMemberModal(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <SimAddTeamMemberModalBody {...props} />
+    </FieldHelpScope>
   )
 }

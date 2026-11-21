@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { useProjectRole } from '@nidus/shared/hooks/useProjectRole'
@@ -41,7 +43,7 @@ const SECTIONS = [
   },
 ]
 
-export default function ActivityDetail() {
+function ActivityDetailBody() {
   const { actId } = useParams()
   const { projectId, routeKey } = usePlatformProjectId()
   const navigate = useNavigate()
@@ -251,7 +253,7 @@ export default function ActivityDetail() {
       <div className="space-y-4 rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-900">
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="mb-1 block text-xs text-gray-600 dark:text-gray-400">Code</label>
+            <FieldLabelWithHelp helpKey="public.activity_list.activity_code" className="mb-1 block text-xs text-gray-600 dark:text-gray-400">Code</FieldLabelWithHelp>
             <input
               value={form.activity_code}
               onChange={(e) => setForm((f) => ({ ...f, activity_code: e.target.value }))}
@@ -260,7 +262,7 @@ export default function ActivityDetail() {
             />
           </div>
           <div className="flex items-end pb-2">
-            <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+            <FieldLabelWithHelp helpKey="public.activity_list.is_milestone" className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
               <input
                 type="checkbox"
                 checked={form.is_milestone}
@@ -268,11 +270,11 @@ export default function ActivityDetail() {
                 disabled={!canEdit}
               />
               Milestone
-            </label>
+            </FieldLabelWithHelp>
           </div>
         </div>
         <div>
-          <label className="mb-1 block text-xs text-gray-600 dark:text-gray-400">Name *</label>
+          <FieldLabelWithHelp helpKey="public.activity_list.name" className="mb-1 block text-xs text-gray-600 dark:text-gray-400" required>Name *</FieldLabelWithHelp>
           <input
             value={form.name}
             onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
@@ -281,7 +283,7 @@ export default function ActivityDetail() {
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs text-gray-600 dark:text-gray-400">WBS node</label>
+          <FieldLabelWithHelp helpKey="public.activity_list.wbs_node_id" className="mb-1 block text-xs text-gray-600 dark:text-gray-400" listOptions={false}>WBS node</FieldLabelWithHelp>
           <select
             value={form.wbs_node_id}
             onChange={(e) => setForm((f) => ({ ...f, wbs_node_id: e.target.value }))}
@@ -297,7 +299,7 @@ export default function ActivityDetail() {
           </select>
         </div>
         <div>
-          <label className="mb-1 block text-xs text-gray-600 dark:text-gray-400">Description</label>
+          <FieldLabelWithHelp helpKey="public.activity_list.description" className="mb-1 block text-xs text-gray-600 dark:text-gray-400">Description</FieldLabelWithHelp>
           <textarea
             value={form.description}
             onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
@@ -314,7 +316,7 @@ export default function ActivityDetail() {
             ['actual_end_date', 'Actual end'],
           ].map(([k, lab]) => (
             <div key={k}>
-              <label className="mb-1 block text-xs text-gray-600 dark:text-gray-400">{lab}</label>
+              <FieldLabelWithHelp helpKey={`public.activity_list.${k}`} className="mb-1 block text-xs text-gray-600 dark:text-gray-400">{lab}</FieldLabelWithHelp>
               <input
                 type="date"
                 value={form[k]}
@@ -326,7 +328,7 @@ export default function ActivityDetail() {
           ))}
         </div>
         <div>
-          <label className="mb-1 block text-xs text-gray-600 dark:text-gray-400">Estimation technique</label>
+          <FieldLabelWithHelp helpKey="public.activity_list.estimation_technique" className="mb-1 block text-xs text-gray-600 dark:text-gray-400">Estimation technique</FieldLabelWithHelp>
           <select
             value={form.estimation_technique}
             onChange={(e) => setForm((f) => ({ ...f, estimation_technique: e.target.value }))}
@@ -343,7 +345,7 @@ export default function ActivityDetail() {
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div>
-            <label className="mb-1 block text-xs text-gray-600 dark:text-gray-400">Optimistic (O)</label>
+            <FieldLabelWithHelp helpKey="public.activity_list.optimistic_duration" className="mb-1 block text-xs text-gray-600 dark:text-gray-400">Optimistic (O)</FieldLabelWithHelp>
             <SmartAmountInput
               value={form.optimistic_duration}
               onChange={(v) => setForm((f) => ({ ...f, optimistic_duration: v }))}
@@ -355,7 +357,7 @@ export default function ActivityDetail() {
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs text-gray-600 dark:text-gray-400">Most likely (M)</label>
+            <FieldLabelWithHelp helpKey="public.activity_list.most_likely_duration" className="mb-1 block text-xs text-gray-600 dark:text-gray-400">Most likely (M)</FieldLabelWithHelp>
             <SmartAmountInput
               value={form.most_likely_duration}
               onChange={(v) => setForm((f) => ({ ...f, most_likely_duration: v }))}
@@ -367,7 +369,7 @@ export default function ActivityDetail() {
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs text-gray-600 dark:text-gray-400">Pessimistic (P)</label>
+            <FieldLabelWithHelp helpKey="public.activity_list.pessimistic_duration" className="mb-1 block text-xs text-gray-600 dark:text-gray-400">Pessimistic (P)</FieldLabelWithHelp>
             <SmartAmountInput
               value={form.pessimistic_duration}
               onChange={(v) => setForm((f) => ({ ...f, pessimistic_duration: v }))}
@@ -383,7 +385,7 @@ export default function ActivityDetail() {
           Expected duration (O+4M+P)/6 and σ=(P−O)/6 are computed in the database when O, M, and P are set.
         </p>
         <div>
-          <label className="mb-1 block text-xs text-gray-600 dark:text-gray-400">Duration unit</label>
+          <FieldLabelWithHelp helpKey="public.activity_list.duration_unit" className="mb-1 block text-xs text-gray-600 dark:text-gray-400">Duration unit</FieldLabelWithHelp>
           <select
             value={form.duration_unit}
             onChange={(e) => setForm((f) => ({ ...f, duration_unit: e.target.value }))}
@@ -402,7 +404,7 @@ export default function ActivityDetail() {
           ['assumptions', 'Assumptions'],
         ].map(([k, lab]) => (
           <div key={k}>
-            <label className="mb-1 block text-xs text-gray-600 dark:text-gray-400">{lab}</label>
+            <FieldLabelWithHelp helpKey={`public.activity_list.${k}`} className="mb-1 block text-xs text-gray-600 dark:text-gray-400">{lab}</FieldLabelWithHelp>
             <textarea
               value={form[k]}
               onChange={(e) => setForm((f) => ({ ...f, [k]: e.target.value }))}
@@ -413,7 +415,7 @@ export default function ActivityDetail() {
           </div>
         ))}
         <div>
-          <label className="mb-1 block text-xs text-gray-600 dark:text-gray-400">Status</label>
+          <FieldLabelWithHelp helpKey="public.activity_list.status" className="mb-1 block text-xs text-gray-600 dark:text-gray-400">Status</FieldLabelWithHelp>
           <select
             value={form.status}
             onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
@@ -439,5 +441,22 @@ export default function ActivityDetail() {
       </div>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.activity_list.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'activity_code', 'is_milestone', 'name', 'wbs_node_id', 'description', 'planned_start_date',
+  'planned_end_date', 'actual_start_date', 'actual_end_date', 'estimation_technique',
+  'optimistic_duration', 'most_likely_duration', 'pessimistic_duration', 'duration_unit',
+  'basis_of_estimate', 'resource_requirements', 'constraints', 'assumptions', 'status',
+].map((name) => `public.activity_list.${name}`)
+
+export default function ActivityDetail(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ActivityDetailBody {...props} />
+    </FieldHelpScope>
   )
 }

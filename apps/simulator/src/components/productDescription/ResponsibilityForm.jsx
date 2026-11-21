@@ -3,6 +3,8 @@
  */
 
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { X, Save } from 'lucide-react'
 import { supabase } from '../../services/supabaseClient'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
@@ -20,7 +22,7 @@ const RESPONSIBILITY_TYPES = [
   { value: 'reviews', label: 'Reviews' }
 ]
 
-export default function ResponsibilityForm({ responsibility, onSubmit, onCancel, projectId, acceptanceCriteria = [] }) {
+function ResponsibilityFormBody({ responsibility, onSubmit, onCancel, projectId, acceptanceCriteria = [] }) {
   const [formData, setFormData] = useState({
     responsibility_type: 'accepts_product',
     role_name: '',
@@ -123,9 +125,9 @@ export default function ResponsibilityForm({ responsibility, onSubmit, onCancel,
       <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.pd_acceptance_responsibilities.responsibility_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Responsibility Type
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={formData.responsibility_type}
             onChange={(e) => setFormData({ ...formData, responsibility_type: e.target.value })}
@@ -140,9 +142,9 @@ export default function ResponsibilityForm({ responsibility, onSubmit, onCancel,
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.pd_acceptance_responsibilities.assigned_to_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
             Assigned To
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={formData.assigned_to_id || ''}
             onChange={(e) => {
@@ -165,9 +167,9 @@ export default function ResponsibilityForm({ responsibility, onSubmit, onCancel,
         </div>
 
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.pd_acceptance_responsibilities.role_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Role Name <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             value={formData.role_name}
@@ -179,9 +181,9 @@ export default function ResponsibilityForm({ responsibility, onSubmit, onCancel,
         </div>
 
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.pd_acceptance_responsibilities.role_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Role Description
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             value={formData.role_description}
             onChange={(e) => setFormData({ ...formData, role_description: e.target.value })}
@@ -193,9 +195,9 @@ export default function ResponsibilityForm({ responsibility, onSubmit, onCancel,
 
         {acceptanceCriteria.length > 0 && (
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="sim.pd_acceptance_responsibilities.acceptance_criteria_ids" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Acceptance Criteria (select which criteria this role accepts)
-            </label>
+            </FieldLabelWithHelp>
             <div className="max-h-40 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-lg p-2">
               {acceptanceCriteria.map(criterion => (
                 <label key={criterion.id} className="flex items-center p-2 hover:bg-gray-50 dark:hover:bg-gray-800 rounded">
@@ -237,5 +239,22 @@ export default function ResponsibilityForm({ responsibility, onSubmit, onCancel,
         </button>
       </div>
     </form>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.pd_acceptance_responsibilities.responsibility_type',
+  'sim.pd_acceptance_responsibilities.assigned_to_id',
+  'sim.pd_acceptance_responsibilities.role_name',
+  'sim.pd_acceptance_responsibilities.role_description',
+  'sim.pd_acceptance_responsibilities.acceptance_criteria_ids',
+]
+
+export default function ResponsibilityForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ResponsibilityFormBody {...props} />
+    </FieldHelpScope>
   )
 }

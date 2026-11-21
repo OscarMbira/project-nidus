@@ -4,13 +4,15 @@
  */
 
 import { useState, useEffect } from 'react';
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { Share2, Plus, User, Mail, CheckCircle, X } from 'lucide-react';
 import { getDistributionList, addRecipient, removeRecipient, recordAcknowledgement } from '../../services/benefitsReviewPlanService';
 import { platformDb, supabase } from '../../services/supabaseClient';
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
-export default function BenefitsReviewPlanDistribution({ planId, onUpdate }) {
+function BenefitsReviewPlanDistributionBody({ planId, onUpdate }) {
   const [distribution, setDistribution] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -160,9 +162,9 @@ export default function BenefitsReviewPlanDistribution({ planId, onUpdate }) {
         <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
           <form onSubmit={handleAddRecipient} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.benefits_review_plan_distribution.recipient_user_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                 Select User (Optional)
-              </label>
+              </FieldLabelWithHelp>
               <select
                 value={newRecipient.recipient_user_id}
                 onChange={(e) => handleUserSelect(e.target.value)}
@@ -179,9 +181,9 @@ export default function BenefitsReviewPlanDistribution({ planId, onUpdate }) {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.benefits_review_plan_distribution.recipient_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Name *
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   value={newRecipient.recipient_name}
@@ -192,9 +194,9 @@ export default function BenefitsReviewPlanDistribution({ planId, onUpdate }) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.benefits_review_plan_distribution.recipient_title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Title
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   value={newRecipient.recipient_title}
@@ -204,9 +206,9 @@ export default function BenefitsReviewPlanDistribution({ planId, onUpdate }) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.benefits_review_plan_distribution.recipient_email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Email *
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="email"
                   value={newRecipient.recipient_email}
@@ -217,9 +219,9 @@ export default function BenefitsReviewPlanDistribution({ planId, onUpdate }) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.benefits_review_plan_distribution.distribution_method" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Distribution Method
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   value={newRecipient.distribution_method}
                   onChange={(e) => setNewRecipient({ ...newRecipient, distribution_method: e.target.value })}
@@ -353,4 +355,21 @@ export default function BenefitsReviewPlanDistribution({ planId, onUpdate }) {
       </div>
     </div>
   );
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.benefits_review_plan_distribution.recipient_user_id',
+  'sim.benefits_review_plan_distribution.recipient_name',
+  'sim.benefits_review_plan_distribution.recipient_title',
+  'sim.benefits_review_plan_distribution.recipient_email',
+  'sim.benefits_review_plan_distribution.distribution_method',
+]
+
+export default function BenefitsReviewPlanDistribution(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <BenefitsReviewPlanDistributionBody {...props} />
+    </FieldHelpScope>
+  )
 }

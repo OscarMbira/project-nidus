@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import toast from 'react-hot-toast'
 import { Link, useNavigate } from 'react-router-dom'
 import { RowActionButton } from '@nidus/ui'
@@ -41,7 +43,7 @@ const STATUS_STYLES = {
   processed: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
 }
 
-export default function MyExpenses() {
+function MyExpensesBody() {
   const navigate = useNavigate()
   const [rows, setRows] = useState([])
   const { currentProjectId, projects: assignedProjects } = useCurrentProject()
@@ -219,13 +221,13 @@ export default function MyExpenses() {
         {activeTab === 'create' && (
         <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 space-y-3">
           <h2 className="font-semibold">{isEditing ? 'Edit draft' : 'New claim'}</h2>
-          <label htmlFor="expense-project" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Project</label>
+          <FieldLabelWithHelp helpKey="public.project_expense_claims.project_id" htmlFor="expense-project" className="block text-sm font-medium text-gray-700 dark:text-gray-300" listOptions={false}>Project</FieldLabelWithHelp>
           <select id="expense-project" value={form.project_id} onChange={(e) => setForm({ ...form, project_id: e.target.value })} className="w-full rounded border border-gray-600 bg-gray-950 px-3 py-2 text-sm">
             {projects.map((p) => (
               <option key={p.id} value={p.id}>{p.project_code} — {p.project_name}</option>
             ))}
           </select>
-          <label htmlFor="expense-date" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Expense date</label>
+          <FieldLabelWithHelp helpKey="public.project_expense_claims.expense_date" htmlFor="expense-date" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Expense date</FieldLabelWithHelp>
           <input id="expense-date" type="date" value={form.expense_date} onChange={(e) => setForm({ ...form, expense_date: e.target.value })} className="w-full rounded border border-gray-600 bg-gray-950 px-3 py-2 text-sm" />
           <div className="flex items-center gap-2">
             <input
@@ -235,7 +237,7 @@ export default function MyExpenses() {
               onChange={(e) => setForm({ ...form, itemize: e.target.checked })}
               className="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500"
             />
-            <label htmlFor="expense-itemize" className="text-sm font-medium text-gray-700 dark:text-gray-300">Itemize this expense</label>
+            <FieldLabelWithHelp helpKey="public.project_expense_claims.is_itemized" htmlFor="expense-itemize" className="text-sm font-medium text-gray-700 dark:text-gray-300">Itemize this expense</FieldLabelWithHelp>
           </div>
           {form.itemize ? (
             <div className="space-y-2">
@@ -251,13 +253,13 @@ export default function MyExpenses() {
             </div>
           ) : (
             <>
-              <label htmlFor="expense-amount" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Amount</label>
+              <FieldLabelWithHelp helpKey="public.project_expense_claims.amount" htmlFor="expense-amount" className="block text-sm font-medium text-gray-700 dark:text-gray-300" isAmount>Amount</FieldLabelWithHelp>
               <input id="expense-amount" placeholder="e.g. 1500" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} className="w-full rounded border border-gray-600 bg-gray-950 px-3 py-2 text-sm" />
             </>
           )}
-          <label htmlFor="expense-description" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Description</label>
+          <FieldLabelWithHelp helpKey="public.project_expense_claims.description" htmlFor="expense-description" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Description</FieldLabelWithHelp>
           <textarea id="expense-description" placeholder="What was this for?" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="w-full rounded border border-gray-600 bg-gray-950 px-3 py-2 text-sm" rows={3} />
-          <label htmlFor="expense-notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Notes</label>
+          <FieldLabelWithHelp helpKey="public.project_expense_claims.notes" htmlFor="expense-notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Notes</FieldLabelWithHelp>
           <textarea id="expense-notes" placeholder="Any additional context" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className="w-full rounded border border-gray-600 bg-gray-950 px-3 py-2 text-sm" rows={3} />
           <div className="flex gap-2">
             <button type="button" onClick={save} className="px-4 py-2 rounded-lg border border-gray-600 text-sm">{isEditing ? 'Save changes' : 'Save draft'}</button>
@@ -376,5 +378,19 @@ export default function MyExpenses() {
         <Link to="/platform/expenses/approvals" className="text-blue-400 text-sm hover:underline">Go to approvals</Link>
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.project_expense_claims.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'project_id', 'expense_date', 'is_itemized', 'amount', 'description', 'notes',
+].map((name) => `public.project_expense_claims.${name}`)
+
+export default function MyExpenses(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <MyExpensesBody {...props} />
+    </FieldHelpScope>
   )
 }

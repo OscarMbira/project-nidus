@@ -3,12 +3,14 @@
  */
 
 import { useState } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Plus } from 'lucide-react'
 import { addResource, deleteResource } from '../../services/planResourceService'
 import ResourceForm from './ResourceForm'
 import ResourceCard from './ResourceCard'
 
-export default function ProjectPlanResourceSection({ 
+function ProjectPlanResourceSectionBody({ 
   formData, 
   onChange, 
   resources, 
@@ -60,9 +62,9 @@ export default function ProjectPlanResourceSection({
       <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Resources</h2>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="public.plan_resources.resource_summary" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Resource Summary
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={formData.resource_summary || ''}
           onChange={(e) => onChange('resource_summary', e.target.value)}
@@ -125,5 +127,19 @@ export default function ProjectPlanResourceSection({
         )}
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.plan_resources.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'resource_summary',
+].map((name) => `public.plan_resources.${name}`)
+
+export default function ProjectPlanResourceSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ProjectPlanResourceSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

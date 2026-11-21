@@ -4,6 +4,8 @@
  */
 
 import { useState } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
 import AuditCard from '@nidus/ui/AuditCard'
@@ -11,7 +13,7 @@ import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken } from '@nidus/shared/utils/auditDisplayUtils'
 
-export default function MethodForm({ methodData = {}, onChange, onCancel, onSubmit, isEditing = false }) {
+function MethodFormBody({ methodData = {}, onChange, onCancel, onSubmit, isEditing = false }) {
   const [formTab, setFormTab] = useState('details')
 
   const handleChange = (field, value) => {
@@ -59,9 +61,9 @@ export default function MethodForm({ methodData = {}, onChange, onCancel, onSubm
       <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.cms_communication_methods.method_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Method Name <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             value={methodData.method_name || ''}
@@ -73,9 +75,9 @@ export default function MethodForm({ methodData = {}, onChange, onCancel, onSubm
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.cms_communication_methods.method_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Method Type (IAP2 Spectrum) <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={methodData.method_type || ''}
             onChange={(e) => handleChange('method_type', e.target.value)}
@@ -93,9 +95,9 @@ export default function MethodForm({ methodData = {}, onChange, onCancel, onSubm
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="sim.cms_communication_methods.method_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
           Description <span className="text-red-500">*</span>
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={methodData.method_description || ''}
           onChange={(e) => handleChange('method_description', e.target.value)}
@@ -107,9 +109,9 @@ export default function MethodForm({ methodData = {}, onChange, onCancel, onSubm
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="sim.cms_communication_methods.when_to_use" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           When to Use
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={methodData.when_to_use || ''}
           onChange={(e) => handleChange('when_to_use', e.target.value)}
@@ -121,9 +123,9 @@ export default function MethodForm({ methodData = {}, onChange, onCancel, onSubm
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.cms_communication_methods.entry_criteria" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Entry Criteria
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             value={methodData.entry_criteria || ''}
             onChange={(e) => handleChange('entry_criteria', e.target.value)}
@@ -134,9 +136,9 @@ export default function MethodForm({ methodData = {}, onChange, onCancel, onSubm
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="sim.cms_communication_methods.exit_criteria" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Exit Criteria
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             value={methodData.exit_criteria || ''}
             onChange={(e) => handleChange('exit_criteria', e.target.value)}
@@ -148,9 +150,9 @@ export default function MethodForm({ methodData = {}, onChange, onCancel, onSubm
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="sim.cms_communication_methods.required_participants" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
           Required Participants
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={methodData.required_participants || ''}
           onChange={(e) => handleChange('required_participants', e.target.value)}
@@ -161,9 +163,9 @@ export default function MethodForm({ methodData = {}, onChange, onCancel, onSubm
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="sim.cms_communication_methods.documentation_required" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
           Documentation Required
-        </label>
+        </FieldLabelWithHelp>
         <textarea
           value={methodData.documentation_required || ''}
           onChange={(e) => handleChange('documentation_required', e.target.value)}
@@ -174,7 +176,7 @@ export default function MethodForm({ methodData = {}, onChange, onCancel, onSubm
       </div>
 
       <div className="flex items-center">
-        <label className="flex items-center">
+        <FieldLabelWithHelp helpKey="sim.cms_communication_methods.is_mandatory" className="flex items-center">
           <input
             type="checkbox"
             checked={methodData.is_mandatory || false}
@@ -184,7 +186,7 @@ export default function MethodForm({ methodData = {}, onChange, onCancel, onSubm
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
             Mandatory Method
           </span>
-        </label>
+        </FieldLabelWithHelp>
       </div>
       </>
       )}
@@ -205,5 +207,26 @@ export default function MethodForm({ methodData = {}, onChange, onCancel, onSubm
         </button>
       </div>
     </form>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.cms_communication_methods.method_name',
+  'sim.cms_communication_methods.method_type',
+  'sim.cms_communication_methods.method_description',
+  'sim.cms_communication_methods.when_to_use',
+  'sim.cms_communication_methods.entry_criteria',
+  'sim.cms_communication_methods.exit_criteria',
+  'sim.cms_communication_methods.required_participants',
+  'sim.cms_communication_methods.documentation_required',
+  'sim.cms_communication_methods.is_mandatory',
+]
+
+export default function MethodForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <MethodFormBody {...props} />
+    </FieldHelpScope>
   )
 }

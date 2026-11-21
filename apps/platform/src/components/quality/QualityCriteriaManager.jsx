@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Target, Plus, Edit2, Trash2, Save, X } from 'lucide-react';
 import { supabase } from '../../services/supabaseClient';
 import { getQualityRegister } from '../../services/qualityManagementService';
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
-export default function QualityCriteriaManager({ projectId, qualityRegisterId = null }) {
+function QualityCriteriaManagerBody({ projectId, qualityRegisterId = null }) {
   const [criteria, setCriteria] = useState([]);
   const [registerItems, setRegisterItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -349,9 +351,9 @@ export default function QualityCriteriaManager({ projectId, qualityRegisterId = 
             <div className="p-6 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.quality_criteria.criterion_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                     Criterion Name *
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="text"
                     value={formData.criterion_name}
@@ -363,9 +365,9 @@ export default function QualityCriteriaManager({ projectId, qualityRegisterId = 
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.quality_criteria.criterion_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                     Criterion Type *
-                  </label>
+                  </FieldLabelWithHelp>
                   <select
                     value={formData.criterion_type}
                     onChange={(e) => setFormData({ ...formData, criterion_type: e.target.value })}
@@ -383,9 +385,9 @@ export default function QualityCriteriaManager({ projectId, qualityRegisterId = 
 
                 {registerItems.length > 0 && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <FieldLabelWithHelp helpKey="public.quality_criteria.quality_register_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                       Product/Deliverable
-                    </label>
+                    </FieldLabelWithHelp>
                     <select
                       value={formData.quality_register_id}
                       onChange={(e) => setFormData({ ...formData, quality_register_id: e.target.value })}
@@ -402,9 +404,9 @@ export default function QualityCriteriaManager({ projectId, qualityRegisterId = 
                 )}
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.quality_criteria.measurement_method" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Measurement Method
-                  </label>
+                  </FieldLabelWithHelp>
                   <select
                     value={formData.measurement_method}
                     onChange={(e) => setFormData({ ...formData, measurement_method: e.target.value })}
@@ -419,9 +421,9 @@ export default function QualityCriteriaManager({ projectId, qualityRegisterId = 
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.quality_criteria.acceptance_threshold" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Acceptance Threshold
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="number"
                     value={formData.acceptance_threshold || ''}
@@ -433,9 +435,9 @@ export default function QualityCriteriaManager({ projectId, qualityRegisterId = 
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.quality_criteria.measurement_unit" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Measurement Unit
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="text"
                     value={formData.measurement_unit}
@@ -452,16 +454,16 @@ export default function QualityCriteriaManager({ projectId, qualityRegisterId = 
                     onChange={(e) => setFormData({ ...formData, is_mandatory: e.target.checked })}
                     className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                   />
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <FieldLabelWithHelp helpKey="public.quality_criteria.is_mandatory" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                     Mandatory Criterion
-                  </label>
+                  </FieldLabelWithHelp>
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.quality_criteria.criterion_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Description
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   value={formData.criterion_description}
                   onChange={(e) => setFormData({ ...formData, criterion_description: e.target.value })}
@@ -472,9 +474,9 @@ export default function QualityCriteriaManager({ projectId, qualityRegisterId = 
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.quality_criteria.notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Notes
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
@@ -511,3 +513,18 @@ export default function QualityCriteriaManager({ projectId, qualityRegisterId = 
   );
 }
 
+// v1345 slice 4: field help for this component (public.quality_criteria.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'is_mandatory',
+  'criterion_name', 'criterion_type', 'quality_register_id', 'measurement_method', 'acceptance_threshold',
+  'measurement_unit', 'criterion_description', 'notes',
+].map((name) => `public.quality_criteria.${name}`)
+
+export default function QualityCriteriaManager(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <QualityCriteriaManagerBody {...props} />
+    </FieldHelpScope>
+  )
+}

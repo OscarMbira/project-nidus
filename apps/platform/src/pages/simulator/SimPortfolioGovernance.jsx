@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Search, RefreshCw, AlertCircle, X, Pencil, Check } from 'lucide-react'
 import {
   getAllSimPortfolioGovernance,
@@ -46,7 +48,7 @@ const EMPTY_EDIT = {
   governance_notes: '',
 }
 
-export default function SimPortfolioGovernance() {
+function SimPortfolioGovernanceBody() {
   const [rows, setRows] = useState([])
   const [portfolios, setPortfolios] = useState([])
   const [loading, setLoading] = useState(true)
@@ -343,7 +345,7 @@ export default function SimPortfolioGovernance() {
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-gray-400 text-sm mb-1">Governance Model</label>
+                  <FieldLabelWithHelp helpKey="sim.practice_portfolio_governance.governance_model" className="block text-gray-400 text-sm mb-1">Governance Model</FieldLabelWithHelp>
                   <select
                     value={form.governance_model}
                     onChange={(e) =>
@@ -360,7 +362,7 @@ export default function SimPortfolioGovernance() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-gray-400 text-sm mb-1">Review Frequency</label>
+                  <FieldLabelWithHelp helpKey="sim.practice_portfolio_governance.review_frequency" className="block text-gray-400 text-sm mb-1">Review Frequency</FieldLabelWithHelp>
                   <select
                     value={form.review_frequency}
                     onChange={(e) =>
@@ -379,7 +381,7 @@ export default function SimPortfolioGovernance() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-gray-400 text-sm mb-1">Last Review</label>
+                  <FieldLabelWithHelp helpKey="sim.practice_portfolio_governance.last_review_date" className="block text-gray-400 text-sm mb-1">Last Review</FieldLabelWithHelp>
                   <input
                     type="date"
                     value={form.last_review_date}
@@ -390,7 +392,7 @@ export default function SimPortfolioGovernance() {
                   />
                 </div>
                 <div>
-                  <label className="block text-gray-400 text-sm mb-1">Next Review</label>
+                  <FieldLabelWithHelp helpKey="sim.practice_portfolio_governance.next_review_date" className="block text-gray-400 text-sm mb-1">Next Review</FieldLabelWithHelp>
                   <input
                     type="date"
                     value={form.next_review_date}
@@ -402,7 +404,7 @@ export default function SimPortfolioGovernance() {
                 </div>
               </div>
               <div>
-                <label className="block text-gray-400 text-sm mb-1">Decision Authority</label>
+                <FieldLabelWithHelp helpKey="sim.practice_portfolio_governance.decision_authority" className="block text-gray-400 text-sm mb-1">Decision Authority</FieldLabelWithHelp>
                 <input
                   value={form.decision_authority}
                   onChange={(e) =>
@@ -413,7 +415,7 @@ export default function SimPortfolioGovernance() {
                 />
               </div>
               <div>
-                <label className="block text-gray-400 text-sm mb-1">Notes</label>
+                <FieldLabelWithHelp helpKey="sim.practice_portfolio_governance.governance_notes" className="block text-gray-400 text-sm mb-1">Notes</FieldLabelWithHelp>
                 <textarea
                   value={form.governance_notes}
                   onChange={(e) =>
@@ -450,3 +452,17 @@ export default function SimPortfolioGovernance() {
   )
 }
 
+// v1345 slice 4: field help for this component (sim.practice_portfolio_governance.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'governance_model', 'review_frequency', 'last_review_date', 'next_review_date', 'decision_authority',
+  'governance_notes',
+].map((name) => `sim.practice_portfolio_governance.${name}`)
+
+export default function SimPortfolioGovernance(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <SimPortfolioGovernanceBody {...props} />
+    </FieldHelpScope>
+  )
+}

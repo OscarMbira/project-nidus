@@ -4,8 +4,10 @@
  */
 
 import MultiLineListInput from '@nidus/ui/MultiLineListInput'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 
-export default function ScopeSection({ formData, onChange, errors = {}, readOnly = false }) {
+function ScopeSectionBody({ formData, onChange, errors = {}, readOnly = false }) {
   const setListField = (name, value) => {
     onChange({ target: { name, value } })
   }
@@ -22,9 +24,9 @@ export default function ScopeSection({ formData, onChange, errors = {}, readOnly
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <FieldLabelWithHelp helpKey="sim.project_briefs.project_scope" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
           Project scope <span className="text-red-500">*</span>
-        </label>
+        </FieldLabelWithHelp>
         <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
           Major deliverables and work included. One item per line.
         </p>
@@ -44,9 +46,9 @@ export default function ScopeSection({ formData, onChange, errors = {}, readOnly
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <FieldLabelWithHelp helpKey="sim.project_briefs.scope_exclusions" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Scope exclusions
-        </label>
+        </FieldLabelWithHelp>
         <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
           Explicitly out of scope. One item per line.
         </p>
@@ -63,9 +65,9 @@ export default function ScopeSection({ formData, onChange, errors = {}, readOnly
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <FieldLabelWithHelp helpKey="sim.project_briefs.constraints" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Constraints
-        </label>
+        </FieldLabelWithHelp>
         <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
           Limitations (resources, time, budget, regulatory, technical). One per line.
         </p>
@@ -82,9 +84,9 @@ export default function ScopeSection({ formData, onChange, errors = {}, readOnly
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <FieldLabelWithHelp helpKey="sim.project_briefs.assumptions" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Assumptions
-        </label>
+        </FieldLabelWithHelp>
         <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
           What must be true for the project to succeed. One per line.
         </p>
@@ -100,5 +102,21 @@ export default function ScopeSection({ formData, onChange, errors = {}, readOnly
         />
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.project_briefs.project_scope',
+  'sim.project_briefs.scope_exclusions',
+  'sim.project_briefs.constraints',
+  'sim.project_briefs.assumptions',
+]
+
+export default function ScopeSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ScopeSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

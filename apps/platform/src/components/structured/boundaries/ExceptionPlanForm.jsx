@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { supabase } from '../../../services/supabaseClient';
 import { X, AlertTriangle, FileText, DollarSign, Calendar, TrendingUp } from 'lucide-react';
 import { createExceptionPlan, updateExceptionPlan, fetchStageBoundaries } from '../../../services/stageBoundariesService';
@@ -10,7 +12,7 @@ import AuditField from '@nidus/ui/AuditField';
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
 
-export default function ExceptionPlanForm({ projectId, boardId, plan, onClose, onSuccess }) {
+function ExceptionPlanFormBody({ projectId, boardId, plan, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [stageBoundaries, setStageBoundaries] = useState([]);
   const [activeSection, setActiveSection] = useState('basic'); // basic, exception, solution, impact, approval
@@ -222,7 +224,7 @@ export default function ExceptionPlanForm({ projectId, boardId, plan, onClose, o
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="md:col-span-2">
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Plan Title *</label>
+                  <FieldLabelWithHelp helpKey="public.exception_plans.plan_title" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>Plan Title *</FieldLabelWithHelp>
                   <input
                     type="text"
                     value={formData.plan_title}
@@ -234,7 +236,7 @@ export default function ExceptionPlanForm({ projectId, boardId, plan, onClose, o
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Plan Date *</label>
+                  <FieldLabelWithHelp helpKey="public.exception_plans.plan_date" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>Plan Date *</FieldLabelWithHelp>
                   <input
                     type="date"
                     value={formData.plan_date}
@@ -245,7 +247,7 @@ export default function ExceptionPlanForm({ projectId, boardId, plan, onClose, o
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Stage Boundary</label>
+                  <FieldLabelWithHelp helpKey="public.exception_plans.stage_boundary_id" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" listOptions={false}>Stage Boundary</FieldLabelWithHelp>
                   <select
                     value={formData.stage_boundary_id}
                     onChange={(e) => setFormData({ ...formData, stage_boundary_id: e.target.value })}
@@ -261,7 +263,7 @@ export default function ExceptionPlanForm({ projectId, boardId, plan, onClose, o
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Exception Type *</label>
+                  <FieldLabelWithHelp helpKey="public.exception_plans.exception_type" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>Exception Type *</FieldLabelWithHelp>
                   <select
                     value={formData.exception_type}
                     onChange={(e) => setFormData({ ...formData, exception_type: e.target.value })}
@@ -278,7 +280,7 @@ export default function ExceptionPlanForm({ projectId, boardId, plan, onClose, o
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Solution Approach *</label>
+                  <FieldLabelWithHelp helpKey="public.exception_plans.solution_approach" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>Solution Approach *</FieldLabelWithHelp>
                   <select
                     value={formData.solution_approach}
                     onChange={(e) => setFormData({ ...formData, solution_approach: e.target.value })}
@@ -298,7 +300,7 @@ export default function ExceptionPlanForm({ projectId, boardId, plan, onClose, o
           {activeSection === 'exception' && (
             <div className="space-y-6">
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Exception Description *</label>
+                <FieldLabelWithHelp helpKey="public.exception_plans.exception_description" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>Exception Description *</FieldLabelWithHelp>
                 <textarea
                   value={formData.exception_description}
                   onChange={(e) => setFormData({ ...formData, exception_description: e.target.value })}
@@ -310,7 +312,7 @@ export default function ExceptionPlanForm({ projectId, boardId, plan, onClose, o
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Exception Cause</label>
+                <FieldLabelWithHelp helpKey="public.exception_plans.exception_cause" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Exception Cause</FieldLabelWithHelp>
                 <textarea
                   value={formData.exception_cause}
                   onChange={(e) => setFormData({ ...formData, exception_cause: e.target.value })}
@@ -327,7 +329,7 @@ export default function ExceptionPlanForm({ projectId, boardId, plan, onClose, o
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Tolerance Type</label>
+                    <FieldLabelWithHelp helpKey="public.exception_plans.tolerance_type" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Tolerance Type</FieldLabelWithHelp>
                     <select
                       value={formData.tolerance_type}
                       onChange={(e) => setFormData({ ...formData, tolerance_type: e.target.value })}
@@ -342,7 +344,7 @@ export default function ExceptionPlanForm({ projectId, boardId, plan, onClose, o
                     </select>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Tolerance Threshold</label>
+                    <FieldLabelWithHelp helpKey="public.exception_plans.tolerance_threshold" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Tolerance Threshold</FieldLabelWithHelp>
                     <input
                       type="text"
                       value={formData.tolerance_threshold}
@@ -352,7 +354,7 @@ export default function ExceptionPlanForm({ projectId, boardId, plan, onClose, o
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Actual Value</label>
+                    <FieldLabelWithHelp helpKey="public.exception_plans.actual_value" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Actual Value</FieldLabelWithHelp>
                     <input
                       type="text"
                       value={formData.actual_value}
@@ -362,7 +364,7 @@ export default function ExceptionPlanForm({ projectId, boardId, plan, onClose, o
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Variance Amount</label>
+                    <FieldLabelWithHelp helpKey="public.exception_plans.variance_amount" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" isAmount>Variance Amount</FieldLabelWithHelp>
                     <input
                       type="text"
                       value={formData.variance_amount}
@@ -379,7 +381,7 @@ export default function ExceptionPlanForm({ projectId, boardId, plan, onClose, o
           {activeSection === 'solution' && (
             <div className="space-y-6">
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Current Status</label>
+                <FieldLabelWithHelp helpKey="public.exception_plans.current_status" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Current Status</FieldLabelWithHelp>
                 <textarea
                   value={formData.current_status}
                   onChange={(e) => setFormData({ ...formData, current_status: e.target.value })}
@@ -390,7 +392,7 @@ export default function ExceptionPlanForm({ projectId, boardId, plan, onClose, o
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Proposed Solution</label>
+                <FieldLabelWithHelp helpKey="public.exception_plans.proposed_solution" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Proposed Solution</FieldLabelWithHelp>
                 <textarea
                   value={formData.proposed_solution}
                   onChange={(e) => setFormData({ ...formData, proposed_solution: e.target.value })}
@@ -401,7 +403,7 @@ export default function ExceptionPlanForm({ projectId, boardId, plan, onClose, o
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Recovery Actions</label>
+                <FieldLabelWithHelp helpKey="public.exception_plans.recovery_actions" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Recovery Actions</FieldLabelWithHelp>
                 <textarea
                   value={formData.recovery_actions}
                   onChange={(e) => setFormData({ ...formData, recovery_actions: e.target.value })}
@@ -413,7 +415,7 @@ export default function ExceptionPlanForm({ projectId, boardId, plan, onClose, o
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Additional Time Required (days)</label>
+                  <FieldLabelWithHelp helpKey="public.exception_plans.additional_time_required_days" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Additional Time Required (days)</FieldLabelWithHelp>
                   <input
                     type="number"
                     value={formData.additional_time_required_days}
@@ -422,7 +424,7 @@ export default function ExceptionPlanForm({ projectId, boardId, plan, onClose, o
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Revised Completion Date</label>
+                  <FieldLabelWithHelp helpKey="public.exception_plans.revised_completion_date" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Revised Completion Date</FieldLabelWithHelp>
                   <input
                     type="date"
                     value={formData.revised_completion_date}
@@ -431,7 +433,7 @@ export default function ExceptionPlanForm({ projectId, boardId, plan, onClose, o
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Additional Budget Required ($)</label>
+                  <FieldLabelWithHelp helpKey="public.exception_plans.additional_budget_required" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Additional Budget Required ($)</FieldLabelWithHelp>
                   <input
                     type="number"
                     step="0.01"
@@ -441,7 +443,7 @@ export default function ExceptionPlanForm({ projectId, boardId, plan, onClose, o
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Revised Total Budget ($)</label>
+                  <FieldLabelWithHelp helpKey="public.exception_plans.revised_budget" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" isAmount>Revised Total Budget ($)</FieldLabelWithHelp>
                   <input
                     type="number"
                     step="0.01"
@@ -458,7 +460,7 @@ export default function ExceptionPlanForm({ projectId, boardId, plan, onClose, o
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Impact on Business Case</label>
+                  <FieldLabelWithHelp helpKey="public.exception_plans.impact_on_business_case" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Impact on Business Case</FieldLabelWithHelp>
                   <textarea
                     value={formData.impact_on_business_case}
                     onChange={(e) => setFormData({ ...formData, impact_on_business_case: e.target.value })}
@@ -467,7 +469,7 @@ export default function ExceptionPlanForm({ projectId, boardId, plan, onClose, o
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Impact on Project Objectives</label>
+                  <FieldLabelWithHelp helpKey="public.exception_plans.impact_on_project_objectives" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Impact on Project Objectives</FieldLabelWithHelp>
                   <textarea
                     value={formData.impact_on_project_objectives}
                     onChange={(e) => setFormData({ ...formData, impact_on_project_objectives: e.target.value })}
@@ -496,7 +498,7 @@ export default function ExceptionPlanForm({ projectId, boardId, plan, onClose, o
                     </div>
                     <div className="space-y-3 ml-7">
                       <div>
-                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">Description</label>
+                        <FieldLabelWithHelp helpKey="public.exception_plans.option_description" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">Description</FieldLabelWithHelp>
                         <textarea
                           value={formData[`option_${num}_description`]}
                           onChange={(e) => setFormData({ ...formData, [`option_${num}_description`]: e.target.value })}
@@ -506,7 +508,7 @@ export default function ExceptionPlanForm({ projectId, boardId, plan, onClose, o
                         />
                       </div>
                       <div>
-                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">Pros & Cons</label>
+                        <FieldLabelWithHelp helpKey="public.exception_plans.option_pros_cons" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">Pros & Cons</FieldLabelWithHelp>
                         <textarea
                           value={formData[`option_${num}_pros_cons`]}
                           onChange={(e) => setFormData({ ...formData, [`option_${num}_pros_cons`]: e.target.value })}
@@ -526,7 +528,7 @@ export default function ExceptionPlanForm({ projectId, boardId, plan, onClose, o
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Approval Status</label>
+                  <FieldLabelWithHelp helpKey="public.exception_plans.approval_status" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Approval Status</FieldLabelWithHelp>
                   <select
                     value={formData.approval_status}
                     onChange={(e) => setFormData({ ...formData, approval_status: e.target.value })}
@@ -541,7 +543,7 @@ export default function ExceptionPlanForm({ projectId, boardId, plan, onClose, o
                   </select>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Implementation Status</label>
+                  <FieldLabelWithHelp helpKey="public.exception_plans.implementation_status" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Implementation Status</FieldLabelWithHelp>
                   <select
                     value={formData.implementation_status}
                     onChange={(e) => setFormData({ ...formData, implementation_status: e.target.value })}
@@ -555,7 +557,7 @@ export default function ExceptionPlanForm({ projectId, boardId, plan, onClose, o
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Notes</label>
+                <FieldLabelWithHelp helpKey="public.exception_plans.notes" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Notes</FieldLabelWithHelp>
                 <textarea
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
@@ -588,4 +590,23 @@ export default function ExceptionPlanForm({ projectId, boardId, plan, onClose, o
       </div>
     </div>
   );
+}
+
+// v1345 slice 4: field help for this component (public.exception_plans.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'plan_title', 'plan_date', 'stage_boundary_id', 'exception_type', 'solution_approach',
+  'exception_description', 'exception_cause', 'tolerance_type', 'tolerance_threshold', 'actual_value',
+  'variance_amount', 'current_status', 'proposed_solution', 'recovery_actions',
+  'additional_time_required_days', 'revised_completion_date', 'additional_budget_required',
+  'revised_budget', 'impact_on_business_case', 'impact_on_project_objectives', 'approval_status',
+  'implementation_status', 'notes',
+].map((name) => `public.exception_plans.${name}`)
+
+export default function ExceptionPlanForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ExceptionPlanFormBody {...props} />
+    </FieldHelpScope>
+  )
 }

@@ -5,6 +5,7 @@
  */
 
 import { platformDb } from './supabase/supabaseClient';
+import { splitPlanLists, savePlanLists, loadPlanLists } from '@nidus/shared/services/planListTablesService';
 
 /**
  * Create a new Project Plan
@@ -42,8 +43,9 @@ export async function createProjectPlan(projectId, planData) {
       return { success: false, error: 'A Project Plan already exists for this project' };
     }
 
+    const { plan: planFields, lists } = splitPlanLists('project', planData);
     const insertData = {
-      ...planData,
+      ...planFields,
       project_id: projectId,
       author_id: planData.author_id || userData.id,
       owner_id: planData.owner_id || userData.id,
@@ -69,6 +71,8 @@ export async function createProjectPlan(projectId, planData) {
       .single();
 
     if (error) throw error;
+    await savePlanLists(platformDb, 'project', data.id, lists);
+    Object.assign(data, lists);
 
     return { success: true, data };
   } catch (error) {
@@ -171,6 +175,14 @@ export async function getProjectPlanById(planId) {
       .single();
 
     if (error) throw error;
+    if (data) {
+      try {
+        Object.assign(data, await loadPlanLists(platformDb, 'project', data.id));
+      } catch (listError) {
+        // Plan list tables not created yet (SQL v1542): the stored values are still shown.
+        console.warn('Plan lists not loaded:', listError.message);
+      }
+    }
 
     return { success: true, data };
   } catch (error) {
@@ -205,6 +217,14 @@ export async function getProjectPlanByProject(projectId) {
       .maybeSingle();
 
     if (error) throw error;
+    if (data) {
+      try {
+        Object.assign(data, await loadPlanLists(platformDb, 'project', data.id));
+      } catch (listError) {
+        // Plan list tables not created yet (SQL v1542): the stored values are still shown.
+        console.warn('Plan lists not loaded:', listError.message);
+      }
+    }
 
     return { success: true, data };
   } catch (error) {
@@ -237,8 +257,9 @@ export async function updateProjectPlan(planId, updates) {
       return { success: false, error: 'User not found' };
     }
 
+    const { plan: planFields, lists } = splitPlanLists('project', updates);
     const updateData = {
-      ...updates,
+      ...planFields,
       updated_by: userData.id,
       updated_at: new Date().toISOString()
     };
@@ -258,6 +279,8 @@ export async function updateProjectPlan(planId, updates) {
       .single();
 
     if (error) throw error;
+    await savePlanLists(platformDb, 'project', data.id, lists);
+    Object.assign(data, lists);
 
     return { success: true, data };
   } catch (error) {

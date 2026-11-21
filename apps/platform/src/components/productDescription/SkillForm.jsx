@@ -3,6 +3,8 @@
  */
 
 import { useState, useEffect } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { X, Save } from 'lucide-react'
 import { supabase } from '../../services/supabaseClient'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
@@ -28,7 +30,7 @@ const PROFICIENCY_LEVELS = [
   { value: 'expert', label: 'Expert' }
 ]
 
-export default function SkillForm({ skill, onSubmit, onCancel }) {
+function SkillFormBody({ skill, onSubmit, onCancel }) {
   const [formData, setFormData] = useState({
     skill_name: '',
     skill_description: '',
@@ -106,9 +108,9 @@ export default function SkillForm({ skill, onSubmit, onCancel }) {
       <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.pd_skills_required.skill_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Skill Name <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             value={formData.skill_name}
@@ -120,9 +122,9 @@ export default function SkillForm({ skill, onSubmit, onCancel }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.pd_skills_required.skill_category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Category
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={formData.skill_category}
             onChange={(e) => setFormData({ ...formData, skill_category: e.target.value })}
@@ -137,9 +139,9 @@ export default function SkillForm({ skill, onSubmit, onCancel }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.pd_skills_required.proficiency_level" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Proficiency Level
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={formData.proficiency_level}
             onChange={(e) => setFormData({ ...formData, proficiency_level: e.target.value })}
@@ -154,9 +156,9 @@ export default function SkillForm({ skill, onSubmit, onCancel }) {
         </div>
 
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.pd_skills_required.skill_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Description
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             value={formData.skill_description}
             onChange={(e) => setFormData({ ...formData, skill_description: e.target.value })}
@@ -167,9 +169,9 @@ export default function SkillForm({ skill, onSubmit, onCancel }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.pd_skills_required.required_for" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Required For
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             value={formData.required_for}
             onChange={(e) => setFormData({ ...formData, required_for: e.target.value })}
@@ -180,9 +182,9 @@ export default function SkillForm({ skill, onSubmit, onCancel }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.pd_skills_required.resource_area" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Resource Area
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             value={formData.resource_area}
@@ -193,7 +195,7 @@ export default function SkillForm({ skill, onSubmit, onCancel }) {
         </div>
 
         <div className="md:col-span-2">
-          <label className="flex items-center">
+          <FieldLabelWithHelp helpKey="public.pd_skills_required.is_critical" className="flex items-center">
             <input
               type="checkbox"
               checked={formData.is_critical}
@@ -203,7 +205,7 @@ export default function SkillForm({ skill, onSubmit, onCancel }) {
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
               Critical Skill
             </span>
-          </label>
+          </FieldLabelWithHelp>
         </div>
       </div>
       </>
@@ -229,5 +231,20 @@ export default function SkillForm({ skill, onSubmit, onCancel }) {
         </button>
       </div>
     </form>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.pd_skills_required.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'skill_name', 'skill_category', 'proficiency_level', 'skill_description', 'required_for',
+  'resource_area', 'is_critical',
+].map((name) => `public.pd_skills_required.${name}`)
+
+export default function SkillForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <SkillFormBody {...props} />
+    </FieldHelpScope>
   )
 }

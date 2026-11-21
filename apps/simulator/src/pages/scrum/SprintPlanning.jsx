@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { useParams, useNavigate } from 'react-router-dom'
 
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
@@ -7,7 +9,7 @@ import { normalizeProjectDeliveryTrack } from '@nidus/config/methodologyMenuUtil
 import { format, addDays, differenceInDays } from 'date-fns'
 import { RowActionButton } from '@nidus/ui'
 
-export default function SprintPlanning() {
+function SprintPlanningBody() {
   const { projectId, routeKey } = usePlatformProjectId()
   const navigate = useNavigate()
   const [project, setProject] = useState(null)
@@ -930,9 +932,9 @@ function SprintForm({ sprint, projectId, backlogId, onSave, onClose }) {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="sim.sprints.sprint_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
               Sprint Name *
-            </label>
+            </FieldLabelWithHelp>
             <input
               type="text"
               name="sprint_name"
@@ -945,9 +947,9 @@ function SprintForm({ sprint, projectId, backlogId, onSave, onClose }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="sim.sprints.sprint_goal" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Sprint Goal
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               name="sprint_goal"
               value={formData.sprint_goal}
@@ -960,9 +962,9 @@ function SprintForm({ sprint, projectId, backlogId, onSave, onClose }) {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.sprints.sprint_start_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Start Date *
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="date"
                 name="sprint_start_date"
@@ -974,9 +976,9 @@ function SprintForm({ sprint, projectId, backlogId, onSave, onClose }) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.sprints.sprint_end_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 End Date *
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="date"
                 name="sprint_end_date"
@@ -990,9 +992,9 @@ function SprintForm({ sprint, projectId, backlogId, onSave, onClose }) {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.sprints.team_capacity_story_points" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Team Capacity (Story Points)
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="number"
                 name="team_capacity_story_points"
@@ -1005,9 +1007,9 @@ function SprintForm({ sprint, projectId, backlogId, onSave, onClose }) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.sprints.team_capacity_hours" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Team Capacity (Hours)
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="number"
                 name="team_capacity_hours"
@@ -1022,9 +1024,9 @@ function SprintForm({ sprint, projectId, backlogId, onSave, onClose }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="sim.sprints.scrum_master_user_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
               Scrum Master
-            </label>
+            </FieldLabelWithHelp>
             <select
               name="scrum_master_user_id"
               value={formData.scrum_master_user_id}
@@ -1041,9 +1043,9 @@ function SprintForm({ sprint, projectId, backlogId, onSave, onClose }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="sim.sprints.status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Status
-            </label>
+            </FieldLabelWithHelp>
             <select
               name="status"
               value={formData.status}
@@ -1079,3 +1081,22 @@ function SprintForm({ sprint, projectId, backlogId, onSave, onClose }) {
   )
 }
 
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.sprints.sprint_name',
+  'sim.sprints.sprint_goal',
+  'sim.sprints.sprint_start_date',
+  'sim.sprints.sprint_end_date',
+  'sim.sprints.team_capacity_story_points',
+  'sim.sprints.team_capacity_hours',
+  'sim.sprints.scrum_master_user_id',
+  'sim.sprints.status',
+]
+
+export default function SprintPlanning(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <SprintPlanningBody {...props} />
+    </FieldHelpScope>
+  )
+}

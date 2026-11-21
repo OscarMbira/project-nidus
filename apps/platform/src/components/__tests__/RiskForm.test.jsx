@@ -34,6 +34,17 @@ vi.mock('@nidus/shared/context/UnsavedChangesContext', () => ({
   useUnsavedChangesGuard: () => ({ confirmDiscard: (fn) => fn?.() }),
 }))
 
+// v1345: these tests are about saving, not field help — render the help scope as a plain pass-through.
+vi.mock('@nidus/shared/context/FieldHelpContext', async () => {
+  const { createContext } = await import('react')
+  return {
+    default: createContext(null),
+    FieldHelpScope: ({ children }) => children,
+    useFieldHelpEntry: () => null,
+    useFieldHelpScope: () => null,
+  }
+})
+
 describe('RiskForm — success confirmation (v861)', () => {
   beforeEach(() => vi.clearAllMocks())
 

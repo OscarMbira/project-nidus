@@ -4,6 +4,8 @@
  * Route: /pmo/settings/timesheet-approvals, /platform/timesheets/settings
  */
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Plus, X } from 'lucide-react'
 import { platformDb } from '@nidus/supabase'
 import { RowActionButton } from '@nidus/ui'
@@ -28,7 +30,7 @@ const APPROVER_ROLES = ['project_manager', 'team_lead', 'pmo_admin']
 
 const defaultForm = { approver_role: 'project_manager', escalation_days: 3, auto_approve: false }
 
-export default function TimesheetApprovalSettingsPage() {
+function TimesheetApprovalSettingsPageBody() {
   const [accountId, setAccountId] = useState(null)
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
@@ -180,7 +182,7 @@ export default function TimesheetApprovalSettingsPage() {
               )
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
-                <label className="block">
+                <FieldLabelWithHelp helpKey="public.timesheet_approval_settings.approver_role" className="block">
                   <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Approver role</span>
                   <select
                     value={form.approver_role}
@@ -191,8 +193,8 @@ export default function TimesheetApprovalSettingsPage() {
                       <option key={r} value={r}>{r.replace(/_/g, ' ')}</option>
                     ))}
                   </select>
-                </label>
-                <label className="block">
+                </FieldLabelWithHelp>
+                <FieldLabelWithHelp helpKey="public.timesheet_approval_settings.escalation_days" className="block">
                   <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Escalation days</span>
                   <input
                     type="number"
@@ -201,8 +203,8 @@ export default function TimesheetApprovalSettingsPage() {
                     onChange={(e) => setForm((f) => ({ ...f, escalation_days: e.target.value }))}
                     className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 min-h-[44px] text-gray-900 dark:text-gray-100"
                   />
-                </label>
-                <label className="flex items-center gap-2">
+                </FieldLabelWithHelp>
+                <FieldLabelWithHelp helpKey="public.timesheet_approval_settings.auto_approve" className="flex items-center gap-2">
                   <input
                     type="checkbox"
                     checked={form.auto_approve}
@@ -210,7 +212,7 @@ export default function TimesheetApprovalSettingsPage() {
                     className="rounded border-gray-300 dark:border-gray-600"
                   />
                   <span className="text-sm text-gray-700 dark:text-gray-300">Auto-approve after escalation window</span>
-                </label>
+                </FieldLabelWithHelp>
                 <div className="flex gap-2 pt-2">
                   <button type="submit" disabled={saving} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg disabled:opacity-50">
                     {editing ? 'Update' : 'Create'}
@@ -266,5 +268,19 @@ export default function TimesheetApprovalSettingsPage() {
         {successModal}
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.timesheet_approval_settings.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'approver_role', 'escalation_days', 'auto_approve',
+].map((name) => `public.timesheet_approval_settings.${name}`)
+
+export default function TimesheetApprovalSettingsPage(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <TimesheetApprovalSettingsPageBody {...props} />
+    </FieldHelpScope>
   )
 }

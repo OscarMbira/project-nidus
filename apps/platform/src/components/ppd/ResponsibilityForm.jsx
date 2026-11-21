@@ -4,6 +4,8 @@
  */
 
 import { useState, useEffect } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { X, Save } from 'lucide-react'
 import { addResponsibility, updateResponsibility } from '../../services/ppdAcceptanceResponsibilitiesService'
 import { supabase } from '../../services/supabaseClient'
@@ -15,7 +17,7 @@ import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
-export default function ResponsibilityForm({ ppdId, responsibility = null, mode = 'create', projectId, onSave, onCancel }) {
+function ResponsibilityFormBody({ ppdId, responsibility = null, mode = 'create', projectId, onSave, onCancel }) {
   const [formData, setFormData] = useState({
     role_name: '',
     role_category: 'user',
@@ -206,9 +208,9 @@ export default function ResponsibilityForm({ ppdId, responsibility = null, mode 
         {formTab === 'details' && (
         <>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <FieldLabelWithHelp helpKey="public.ppd_acceptance_responsibilities.role_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
             Role Name <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             name="role_name"
@@ -225,9 +227,9 @@ export default function ResponsibilityForm({ ppdId, responsibility = null, mode 
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <FieldLabelWithHelp helpKey="public.ppd_acceptance_responsibilities.role_category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Role Category
-            </label>
+            </FieldLabelWithHelp>
             <select
               name="role_category"
               value={formData.role_category}
@@ -246,9 +248,9 @@ export default function ResponsibilityForm({ ppdId, responsibility = null, mode 
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <FieldLabelWithHelp helpKey="public.ppd_acceptance_responsibilities.authority_level" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Authority Level
-            </label>
+            </FieldLabelWithHelp>
             <select
               name="authority_level"
               value={formData.authority_level}
@@ -263,9 +265,9 @@ export default function ResponsibilityForm({ ppdId, responsibility = null, mode 
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <FieldLabelWithHelp helpKey="public.ppd_acceptance_responsibilities.user_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" listOptions={false}>
             Assign to User (Optional)
-          </label>
+          </FieldLabelWithHelp>
           <select
             name="user_id"
             value={formData.user_id || ''}
@@ -282,9 +284,9 @@ export default function ResponsibilityForm({ ppdId, responsibility = null, mode 
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <FieldLabelWithHelp helpKey="public.ppd_acceptance_responsibilities.user_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             User Name (if external)
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             name="user_name"
@@ -296,9 +298,9 @@ export default function ResponsibilityForm({ ppdId, responsibility = null, mode 
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <FieldLabelWithHelp helpKey="public.ppd_acceptance_responsibilities.acceptance_scope" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Acceptance Scope
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             name="acceptance_scope"
             value={formData.acceptance_scope}
@@ -311,9 +313,9 @@ export default function ResponsibilityForm({ ppdId, responsibility = null, mode 
 
         {criteria.length > 0 && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.ppd_acceptance_responsibilities.criteria_ids" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Assign to Acceptance Criteria (Optional)
-            </label>
+            </FieldLabelWithHelp>
             <div className="max-h-48 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-lg p-3 space-y-2">
               {criteria.map((criterion, index) => (
                 <label key={criterion.id} className="flex items-center gap-2 cursor-pointer">
@@ -355,5 +357,20 @@ export default function ResponsibilityForm({ ppdId, responsibility = null, mode 
         </div>
       </form>
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.ppd_acceptance_responsibilities.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'role_name', 'role_category', 'authority_level', 'user_id', 'user_name', 'acceptance_scope',
+  'criteria_ids',
+].map((name) => `public.ppd_acceptance_responsibilities.${name}`)
+
+export default function ResponsibilityForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ResponsibilityFormBody {...props} />
+    </FieldHelpScope>
   )
 }

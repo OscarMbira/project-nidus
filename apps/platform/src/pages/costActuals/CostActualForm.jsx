@@ -5,6 +5,8 @@
  * kept as a plain numeric input for this initial build to keep the form simple (rule 62).
  */
 import { useState, useEffect, useMemo } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
@@ -16,7 +18,7 @@ import { getByProjectId } from '../../services/projectBudgetCategoryService'
 const inputClass =
   'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm'
 
-export default function CostActualForm() {
+function CostActualFormBody() {
   const { id } = useParams()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -130,7 +132,7 @@ export default function CostActualForm() {
       <div className="space-y-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Transaction Type *</label>
+            <FieldLabelWithHelp helpKey="public.cost_actuals.transaction_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>Transaction Type *</FieldLabelWithHelp>
             <select value={transactionType} onChange={(e) => setTransactionType(e.target.value)} className={inputClass}>
               <option value="actual">Actual</option>
               <option value="commitment">Commitment</option>
@@ -138,7 +140,7 @@ export default function CostActualForm() {
             </select>
           </div>
           <div>
-            <label htmlFor="cost-amount" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Amount *</label>
+            <FieldLabelWithHelp helpKey="public.cost_actuals.amount" htmlFor="cost-amount" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required isAmount>Amount *</FieldLabelWithHelp>
             <input
               id="cost-amount"
               type="number"
@@ -152,11 +154,11 @@ export default function CostActualForm() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Transaction Date *</label>
+            <FieldLabelWithHelp helpKey="public.cost_actuals.transaction_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>Transaction Date *</FieldLabelWithHelp>
             <input type="date" value={transactionDate} onChange={(e) => setTransactionDate(e.target.value)} className={inputClass} />
           </div>
           <div>
-            <label htmlFor="cost-category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
+            <FieldLabelWithHelp helpKey="public.cost_actuals.category" htmlFor="cost-category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</FieldLabelWithHelp>
             <select id="cost-category" value={category} onChange={(e) => setCategory(e.target.value)} className={inputClass}>
               <option value="">Select a budget line…</option>
               {categoryOptions.map((name) => (
@@ -167,12 +169,12 @@ export default function CostActualForm() {
         </div>
 
         <div>
-          <label htmlFor="cost-description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
+          <FieldLabelWithHelp helpKey="public.cost_actuals.description" htmlFor="cost-description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</FieldLabelWithHelp>
           <textarea id="cost-description" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className={inputClass} />
         </div>
 
         <div>
-          <label htmlFor="cost-notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</label>
+          <FieldLabelWithHelp helpKey="public.cost_actuals.notes" htmlFor="cost-notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</FieldLabelWithHelp>
           <textarea id="cost-notes" value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className={inputClass} placeholder="Any additional context (e.g. approval details)" />
         </div>
       </div>
@@ -192,5 +194,19 @@ export default function CostActualForm() {
       </div>
       {modal}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.cost_actuals.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'transaction_type', 'amount', 'transaction_date', 'category', 'description', 'notes',
+].map((name) => `public.cost_actuals.${name}`)
+
+export default function CostActualForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <CostActualFormBody {...props} />
+    </FieldHelpScope>
   )
 }

@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { FileText, User, Calendar, RefreshCw } from 'lucide-react'
 import { useThemeContext } from '@nidus/shared/context/ThemeContext'
 
-export default function IssueReportDocumentInfoSection({
+function IssueReportDocumentInfoSectionBody({
   formData,
   onChange,
   errors = {},
@@ -40,9 +42,9 @@ export default function IssueReportDocumentInfoSection({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Report Reference */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.issue_reports.report_reference" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Report Reference <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <div className="flex gap-2">
             <input
               type="text"
@@ -82,9 +84,9 @@ export default function IssueReportDocumentInfoSection({
 
         {/* Version Number */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.issue_reports.version_no" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Version Number <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             value={formData.version_no || '1.0'}
@@ -104,10 +106,10 @@ export default function IssueReportDocumentInfoSection({
 
         {/* Report Date */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.issue_reports.report_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             <Calendar className="w-4 h-4 inline mr-1" />
             Report Date <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="date"
             value={formData.report_date || ''}
@@ -126,9 +128,9 @@ export default function IssueReportDocumentInfoSection({
 
         {/* Report Status */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.issue_reports.report_status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Report Status
-          </label>
+          </FieldLabelWithHelp>
           <select
             value={formData.report_status || 'draft'}
             onChange={(e) => onChange('report_status', e.target.value)}
@@ -158,9 +160,9 @@ export default function IssueReportDocumentInfoSection({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Author */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.issue_reports.author_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required listOptions={false}>
               Author <span className="text-red-500">*</span>
-            </label>
+            </FieldLabelWithHelp>
             <select
               value={formData.author_id || ''}
               onChange={(e) => onChange('author_id', e.target.value || null)}
@@ -196,9 +198,9 @@ export default function IssueReportDocumentInfoSection({
 
           {/* Prepared By */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.issue_reports.prepared_by_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
               Prepared By
-            </label>
+            </FieldLabelWithHelp>
             <select
               value={formData.prepared_by_id || ''}
               onChange={(e) => onChange('prepared_by_id', e.target.value || null)}
@@ -234,5 +236,19 @@ export default function IssueReportDocumentInfoSection({
         </div>
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.issue_reports.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'report_reference', 'version_no', 'report_date', 'report_status', 'author_id', 'prepared_by_id',
+].map((name) => `public.issue_reports.${name}`)
+
+export default function IssueReportDocumentInfoSection(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <IssueReportDocumentInfoSectionBody {...props} />
+    </FieldHelpScope>
   )
 }

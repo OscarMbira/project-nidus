@@ -2,6 +2,8 @@
  * Work Breakdown Structure hub (v1024) — Hierarchy | Dictionary | Control Accounts | Work Packages link.
  */
 import { useState, useEffect, useCallback } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
@@ -35,7 +37,7 @@ const CA_EMPTY = {
   notes: '',
 }
 
-export default function WBSBuilder() {
+function WBSBuilderBody() {
   const { projectId, routeKey } = usePlatformProjectId()
   const { canEdit } = useProjectRole(projectId)
   const { showSuccess, modal } = useSuccessModal()
@@ -331,26 +333,26 @@ export default function WBSBuilder() {
                 classification={[{ label: 'Status', value: caRecord?.status }, { label: 'Budget', value: caRecord?.budget_amount }, { label: 'Currency', value: caRecord?.currency_code }]}
               />
             ) : (<>
-            <label className="block text-xs">Name
+            <FieldLabelWithHelp helpKey="public.wbs_nodes.name" className="block text-xs">Name
               <input required value={caForm.name} onChange={(e) => setCaForm((f) => ({ ...f, name: e.target.value }))}
                 className="mt-1 w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2" />
-            </label>
-            <label className="block text-xs">Code
+            </FieldLabelWithHelp>
+            <FieldLabelWithHelp helpKey="public.wbs_nodes.code" className="block text-xs">Code
               <input value={caForm.code} onChange={(e) => setCaForm((f) => ({ ...f, code: e.target.value }))}
                 className="mt-1 w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2" />
-            </label>
-            <label className="block text-xs">WBS node
+            </FieldLabelWithHelp>
+            <FieldLabelWithHelp helpKey="public.wbs_nodes.wbs_node_id" className="block text-xs" listOptions={false}>WBS node
               <select value={caForm.wbs_node_id} onChange={(e) => setCaForm((f) => ({ ...f, wbs_node_id: e.target.value }))}
                 className="mt-1 w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2">
                 <option value="">—</option>
                 {nodes.map((n) => <option key={n.id} value={n.id}>{n.title || n.id}</option>)}
               </select>
-            </label>
-            <label className="block text-xs">Budget
+            </FieldLabelWithHelp>
+            <FieldLabelWithHelp helpKey="public.wbs_nodes.budget_amount" className="block text-xs" isAmount>Budget
               <input type="number" step="0.01" value={caForm.budget_amount} onChange={(e) => setCaForm((f) => ({ ...f, budget_amount: e.target.value }))}
                 className="mt-1 w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2" />
-            </label>
-            <label className="block text-xs">Status
+            </FieldLabelWithHelp>
+            <FieldLabelWithHelp helpKey="public.wbs_nodes.status" className="block text-xs">Status
               <select value={caForm.status} onChange={(e) => setCaForm((f) => ({ ...f, status: e.target.value }))}
                 className="mt-1 w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2">
                 <option value="draft">draft</option>
@@ -358,11 +360,11 @@ export default function WBSBuilder() {
                 <option value="on_hold">on_hold</option>
                 <option value="closed">closed</option>
               </select>
-            </label>
-            <label className="block text-xs">Notes
+            </FieldLabelWithHelp>
+            <FieldLabelWithHelp helpKey="public.wbs_nodes.notes" className="block text-xs">Notes
               <textarea value={caForm.notes} onChange={(e) => setCaForm((f) => ({ ...f, notes: e.target.value }))} rows={2}
                 className="mt-1 w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2" />
-            </label>
+            </FieldLabelWithHelp>
             <div className="flex justify-end gap-2">
               <button type="button" onClick={() => setCaFormOpen(false)} className="px-3 py-2 text-sm rounded border">Cancel</button>
               <button type="submit" className="px-3 py-2 text-sm rounded bg-blue-600 text-white">Save</button>
@@ -377,5 +379,19 @@ export default function WBSBuilder() {
         </div>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.wbs_nodes.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'name', 'code', 'wbs_node_id', 'budget_amount', 'status', 'notes',
+].map((name) => `public.wbs_nodes.${name}`)
+
+export default function WBSBuilder(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <WBSBuilderBody {...props} />
+    </FieldHelpScope>
   )
 }
