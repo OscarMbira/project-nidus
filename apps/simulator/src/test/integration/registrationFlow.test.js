@@ -11,7 +11,6 @@ import { BrowserRouter } from 'react-router-dom';
 vi.mock('../../services/organisationService');
 vi.mock('../../services/trialService');
 vi.mock('../../services/subscriptionPlanService');
-vi.mock('../../services/paynowService');
 
 describe('Registration Flow Integration Tests', () => {
   beforeEach(() => {
