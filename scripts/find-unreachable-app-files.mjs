@@ -50,6 +50,9 @@ function walk(dir, out = []) {
 export function findUnreachable({ src, packagesDir = null, bundle = false }) {
   const all = walk(src)
   const files = new Set(all)
+  // Windows / macOS resolve imports case-insensitively (an import of AppToPlatformRedirect finds
+  // AppToplatformRedirect.jsx), so match paths without regard to case.
+  const byLower = new Map(all.map((f) => [f.toLowerCase(), f]))
   const texts = new Map(all.map((f) => [f, fs.readFileSync(f, 'utf8')]))
 
   const resolve = (from, spec) => {
@@ -59,7 +62,12 @@ export function findUnreachable({ src, packagesDir = null, bundle = false }) {
     else if (spec.startsWith('@/')) base = path.join(src, spec.slice(2))
     else return null
     const tries = [base, ...EXTS.map((x) => base + x), ...EXTS.map((x) => path.join(base, 'index' + x))]
-    return tries.map((t) => path.normalize(t)).find((t) => files.has(t)) || null
+    for (const t of tries.map((x) => path.normalize(x))) {
+      if (files.has(t)) return t
+      const ci = byLower.get(t.toLowerCase())
+      if (ci) return ci
+    }
+    return null
   }
 
   const entries = ['main.jsx', 'main.js', 'main.tsx', 'App.jsx'].map((f) => path.normalize(path.join(src, f))).filter((f) => files.has(f))

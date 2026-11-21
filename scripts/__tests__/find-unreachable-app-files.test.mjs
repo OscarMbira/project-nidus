@@ -66,3 +66,11 @@ test('tests are neither entry points nor results', () => {
   })
   assert.deepEqual(findUnreachable({ src }).dead, ['components/A.jsx'])
 })
+
+test('imports resolve without regard to case (Windows / macOS)', () => {
+  const src = fixture({
+    'main.jsx': "import Redirect from './components/AppToPlatformRedirect'\n",
+    'components/AppToplatformRedirect.jsx': 'export default () => null\n',
+  })
+  assert.deepEqual(findUnreachable({ src }).dead, [])
+})
