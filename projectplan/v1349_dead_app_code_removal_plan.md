@@ -18,10 +18,22 @@ PRD: `projectprd/v1349_dead_app_code_removal_PRD.md`. Decisions D1–D5 there (o
 
 ### Slice 1b — Unused lazy entries first (learned 2026-11-22)
 The first services batch (365 files) broke the build: Vite compiles **every** `lazy(() => import(…))` entry in `lazyImports.js` whether or not a route renders it, so a dead page kept alive by an unused entry still needs its imports. ~840 dead Simulator files were compiled only for that reason. The script gained `--bundle` (what the bundler compiles) and `--unused-lazy` (lazy entries no reachable file renders). Order is now: remove unused lazy entries → then folder batches are safe.
-- [ ] Remove the unused entries from `lazyImports.js` (statement-aware: some span several lines). First pass removed 317 of 336 (the other 19 use another format — next pass). Only these hunks are committed; the file also holds another session's edits. Names stay harmlessly `undefined` in `routeCommon.jsx` (`import * as LP`); none is imported directly by name.
-- [ ] Build + tests + commit.
+- [x] Remove the unused entries from `lazyImports.js` (statement-aware: some span several lines). 317 + 19 (space-padded) = 336 removed. Only these hunks are committed; the file also holds another session's edits. Names stay harmlessly `undefined` in `routeCommon.jsx` (`import * as LP`); none is imported directly by name.
+- [x] Build + tests + commit. — `5f3659d4`, `3ec92178`.
 
-### Slice 2…n — Simulator, folder by folder (largest first)
+### Slice 2…n — Simulator, folder by folder — DONE 2026-11-22
+Batch = unreachable (render) ∩ not compiled (`--bundle`) ∩ no uncommitted edits, plus tests whose subject is dead (runner: build + full Vitest, compare failing test files with the baseline).
+
+| Commit | Batch | Files | Failing test files after (baseline 59) |
+|---|---|---|---|
+| `057e38a0` | `services/*` + 60 tests + 3 dead workflow tests (`registrationFlow` drops its `paynowService` mock) | 362 | 33 (26 dead-code tests went) |
+| `a7c16943` | `pages/**` + 6 tests | 417 | 33 |
+| `12708bd8` | `components/**` + 16 tests (first try broke: import case `AppToPlatformRedirect` vs file `AppToplatformRedirect.jsx` → script now case-insensitive, test added) | 755 | 22 |
+| `9a75afaa` | config, features, lib, services/sim, services/dual, services/communications, shared barrels, `moduleConfig.js` + 9 tests | 93 | 20 |
+
+**Simulator result:** 2,732 → 1,164 source files; unreachable 1,600 → 31: 25 with other sessions' uncommitted edits (listed by `--skip-dirty`), 5 kept compiled by an unused lazy entry in `components/AppLayout.js` (`Layout`, `MobileNavigation`, `FeedbackWidget`, `feedbackService`, `helpService`), and `vite-env.d.ts` (kept on purpose — editor type hints, not code).
+
+### (original order, superseded) Simulator, folder by folder (largest first)
 Order: `services` (≈303) · `components/structured` (≈103) · `pages/platform-app` (≈85) · `pages` root (≈70) · `components/cms` · `components/app` · `components/issues` · `services/sim` · `pages/pmo` · `components/brief` · `pages/simulator` · `components/risks` · remaining folders.
 - [ ] One commit per folder batch; re-run the check before each (deleting one batch can make others unreachable).
 
