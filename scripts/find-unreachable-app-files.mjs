@@ -13,6 +13,9 @@
  *   node scripts/find-unreachable-app-files.mjs simulator --under components/plans
  *   node scripts/find-unreachable-app-files.mjs simulator --skip-dirty # leave out files with uncommitted edits
  *   node scripts/find-unreachable-app-files.mjs simulator --fail       # exit 1 when anything is unreachable (CI)
+ *   node scripts/find-unreachable-app-files.mjs simulator --bundle     # what the bundler compiles (every lazy entry,
+ *     rendered or not): a file unreachable in normal mode but reachable here is kept alive only by an unused
+ *     lazy entry — remove the entry first, or the build breaks when its imports are deleted
  *
  * Tests (__tests__, test/, *.test.*, *.spec.*) are ignored as entry points and as results. Review before
  * deleting: a file loaded by a string path (a glob or a CMS-driven route) would show as unreachable.
@@ -44,7 +47,7 @@ function walk(dir, out = []) {
  * @returns {{ all: string[], reachable: Set<string>, dead: string[], entries: string[], shellRefs: number }}
  *   paths in `dead` are relative to src, with forward slashes, sorted.
  */
-export function findUnreachable({ src, packagesDir = null }) {
+export function findUnreachable({ src, packagesDir = null, bundle = false }) {
   const all = walk(src)
   const files = new Set(all)
   const texts = new Map(all.map((f) => [f, fs.readFileSync(f, 'utf8')]))
@@ -91,7 +94,8 @@ export function findUnreachable({ src, packagesDir = null }) {
       for (const m of s.matchAll(LAZY_RE)) lazyTargets.set(m[2], m[1])
       for (const m of s.matchAll(IMPORT_RE)) {
         const spec = m[1] || m[2] || m[3]
-        if (m[2] && lazyTargets.has(spec) && !rendered.has(lazyTargets.get(spec))) continue
+        // bundle mode: what the bundler compiles (every lazy entry, rendered or not).
+        if (!bundle && m[2] && lazyTargets.has(spec) && !rendered.has(lazyTargets.get(spec))) continue
         const r = resolve(f, spec)
         if (r && !reachable.has(r)) { reachable.add(r); queue.push(r); changed = true; scanRendered(texts.get(r) ?? '') }
       }
@@ -100,7 +104,15 @@ export function findUnreachable({ src, packagesDir = null }) {
 
   const rel = (f) => path.relative(src, f).replace(/\\/g, '/')
   const dead = all.filter((f) => !reachable.has(f)).map(rel).sort()
-  return { all, reachable, dead, entries: entries.map(rel), shellRefs }
+
+  // Lazy entries in reachable files whose component no reachable file renders.
+  const unusedLazy = []
+  for (const f of reachable) {
+    for (const m of (texts.get(f) ?? '').matchAll(LAZY_RE)) {
+      if (!rendered.has(m[1])) unusedLazy.push({ file: rel(f), name: m[1], target: m[2] })
+    }
+  }
+  return { all, reachable, dead, entries: entries.map(rel), shellRefs, unusedLazy }
 }
 
 /** Files under `dir` (relative to the repo) with uncommitted edits or untracked, as repo-relative paths. */
@@ -120,7 +132,13 @@ if (isCli) {
   const underIdx = args.indexOf('--under')
   const under = underIdx >= 0 ? args[underIdx + 1] : null
   const appDir = `apps/${app}/src`
-  const { all, reachable, dead, entries, shellRefs } = findUnreachable({ src: path.join(ROOT, appDir), packagesDir: path.join(ROOT, 'packages') })
+  const { all, reachable, dead, entries, shellRefs, unusedLazy } = findUnreachable({ src: path.join(ROOT, appDir), packagesDir: path.join(ROOT, 'packages'), bundle: args.includes('--bundle') })
+  if (args.includes('--unused-lazy')) {
+    // Lazy page entries no reachable file renders (the bundler still compiles them).
+    console.log(unusedLazy.map((u) => `${u.file}\t${u.name}\t${u.target}`).join('\n'))
+    console.log(`\n${app}: ${unusedLazy.length} unused lazy entries.`)
+    process.exit(0)
+  }
   let shown = dead.filter((f) => !under || f.startsWith(under))
   let skipped = []
   if (args.includes('--skip-dirty')) {
