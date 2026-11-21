@@ -456,9 +456,6 @@ export const StageGates = lazy(() => import('../pages/structured/StageGates'))
 export const ManagingProductDelivery = lazy(() => import('../pages/structured/ManagingProductDelivery'))
 export const DirectingProject = lazy(() => import('../pages/structured/DirectingProject'))
 // Plan Documentation Pages
-export const ProjectPlanCreate = lazy(() => import('../pages/plans/ProjectPlanCreate'))
-export const ProjectPlanEdit = lazy(() => import('../pages/plans/ProjectPlanEdit'))
-export const ProjectPlanViewPage = lazy(() => import('../pages/plans/ProjectPlanViewPage'))
 // Product Description Pages
 export const ProductDescriptionTemplates = lazy(() => import('../pages/productDescription/ProductDescriptionTemplates'))
 // Product Status Account Pages
