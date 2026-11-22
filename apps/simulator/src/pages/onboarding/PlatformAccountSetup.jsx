@@ -12,6 +12,8 @@
  */
 
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../services/supabaseClient'
 import { updateAccount, getUserAccounts } from '../../services/accountService'
@@ -21,7 +23,7 @@ import { useToast } from '@nidus/shared/hooks/useToast'
 import MainHeader from '../../components/homepage/MainHeader'
 import Footer from '../../components/homepage/Footer'
 
-export default function PlatformAccountSetup() {
+function PlatformAccountSetupBody() {
   const navigate = useNavigate()
   const toast = useToast()
   const [currentStep, setCurrentStep] = useState(1)
@@ -383,9 +385,9 @@ export default function PlatformAccountSetup() {
                   </p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="sim.accounts.account_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Account Name
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="text"
                     value={accountName}
@@ -396,9 +398,9 @@ export default function PlatformAccountSetup() {
                 </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.accounts.account_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Account Type *
-              </label>
+              </FieldLabelWithHelp>
               <select
                 value={accountType}
                 onChange={(e) => setAccountType(e.target.value)}
@@ -414,9 +416,9 @@ export default function PlatformAccountSetup() {
 
             {accountType !== 'individual' && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.accounts.company_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Company Name
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   value={companyName}
@@ -428,9 +430,9 @@ export default function PlatformAccountSetup() {
             )}
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.accounts.billing_email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Billing Email
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="email"
                 value={billingEmail}
@@ -448,9 +450,9 @@ export default function PlatformAccountSetup() {
         return (
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.accounts.first_project_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Project Name *
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="text"
                 required
@@ -462,9 +464,9 @@ export default function PlatformAccountSetup() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.accounts.first_project_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Project Description
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={projectDescription}
                 onChange={(e) => setProjectDescription(e.target.value)}
@@ -476,9 +478,9 @@ export default function PlatformAccountSetup() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.accounts.first_project_start_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Start Date
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="date"
                   value={startDate}
@@ -487,9 +489,9 @@ export default function PlatformAccountSetup() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.accounts.first_project_end_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   End Date
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="date"
                   value={endDate}
@@ -686,3 +688,22 @@ export default function PlatformAccountSetup() {
   )
 }
 
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.accounts.account_name',
+  'sim.accounts.account_type',
+  'sim.accounts.company_name',
+  'sim.accounts.billing_email',
+  'sim.accounts.first_project_name',
+  'sim.accounts.first_project_description',
+  'sim.accounts.first_project_start_date',
+  'sim.accounts.first_project_end_date',
+]
+
+export default function PlatformAccountSetup(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <PlatformAccountSetupBody {...props} />
+    </FieldHelpScope>
+  )
+}

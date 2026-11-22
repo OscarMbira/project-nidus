@@ -7,12 +7,14 @@
  * (see projectCloneService.js's header comment).
  */
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, Copy, Loader } from 'lucide-react'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import { listCloneableProjects, runProjectClone } from '../services/projectCloneService'
 
-export default function ProjectCloneCreatePage({ basePath = '/simulator/pmo/admin/project-clone' }) {
+function ProjectCloneCreatePageBody({ basePath = '/simulator/pmo/admin/project-clone' }) {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const { showSuccess, modal: successModal } = useSuccessModal()
@@ -90,7 +92,7 @@ export default function ProjectCloneCreatePage({ basePath = '/simulator/pmo/admi
         )}
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Source project *</label>
+          <FieldLabelWithHelp helpKey="sim.project_clones.source_project_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required listOptions={false}>Source project *</FieldLabelWithHelp>
           <select
             value={sourceProjectId}
             onChange={(e) => setSourceProjectId(e.target.value)}
@@ -105,7 +107,7 @@ export default function ProjectCloneCreatePage({ basePath = '/simulator/pmo/admi
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Shift dates by (days)</label>
+          <FieldLabelWithHelp helpKey="sim.project_clones.date_shift_days" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Shift dates by (days)</FieldLabelWithHelp>
           <input
             type="number"
             value={dateShiftDays}
@@ -116,15 +118,15 @@ export default function ProjectCloneCreatePage({ basePath = '/simulator/pmo/admi
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">What to clone</label>
-          <label className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+          <FieldLabelWithHelp helpKey="sim.project_clones.clone_options" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">What to clone</FieldLabelWithHelp>
+          <FieldLabelWithHelp helpKey="sim.project_clones.clone_options" className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
             <input type="checkbox" checked disabled className="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-blue-600" />
             Project core fields (always included)
-          </label>
-          <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 mt-2">
+          </FieldLabelWithHelp>
+          <FieldLabelWithHelp helpKey="sim.project_clones.include_tasks" className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 mt-2">
             <input type="checkbox" checked={includeTasks} onChange={(e) => setIncludeTasks(e.target.checked)} className="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-blue-600" />
             Tasks
-          </label>
+          </FieldLabelWithHelp>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Practice projects have no task child table in the Simulator — this option has no effect here.</p>
         </div>
 
@@ -140,5 +142,21 @@ export default function ProjectCloneCreatePage({ basePath = '/simulator/pmo/admi
       </form>
       {successModal}
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.project_clones.source_project_id',
+  'sim.project_clones.date_shift_days',
+  'sim.project_clones.clone_options',
+  'sim.project_clones.include_tasks',
+]
+
+export default function ProjectCloneCreatePage(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ProjectCloneCreatePageBody {...props} />
+    </FieldHelpScope>
   )
 }

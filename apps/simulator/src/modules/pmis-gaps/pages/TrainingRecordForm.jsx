@@ -4,6 +4,8 @@
  * TrainingRecordForm.jsx. Always sim schema (simDb.auth.getUser() for the record owner).
  */
 import { useState, useEffect, useMemo } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
@@ -18,7 +20,7 @@ import {
 
 const inputClass = 'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm'
 
-export default function TrainingRecordForm() {
+function TrainingRecordFormBody() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { showSuccess, modal } = useSuccessModal()
@@ -137,19 +139,19 @@ export default function TrainingRecordForm() {
 
       <div className="space-y-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Certification (optional)</label>
+          <FieldLabelWithHelp helpKey="sim.training_records.certification_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" listOptions={false}>Certification (optional)</FieldLabelWithHelp>
           <select value={form.certification_id} onChange={(e) => handleCertificationChange(e.target.value)} className={inputClass}>
             <option value="">— None / free-text below —</option>
             {certifications.map((c) => <option key={c.id} value={c.id}>{c.certification_name}</option>)}
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title *</label>
+          <FieldLabelWithHelp helpKey="sim.training_records.title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>Title *</FieldLabelWithHelp>
           <input type="text" value={form.title} onChange={(e) => handleChange('title', e.target.value)} className={inputClass} />
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type</label>
+            <FieldLabelWithHelp helpKey="sim.training_records.record_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type</FieldLabelWithHelp>
             <select value={form.record_type} onChange={(e) => handleChange('record_type', e.target.value)} className={inputClass}>
               <option value="certification">Certification</option>
               <option value="training">Training</option>
@@ -157,7 +159,7 @@ export default function TrainingRecordForm() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
+            <FieldLabelWithHelp helpKey="sim.training_records.completion_status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</FieldLabelWithHelp>
             <select value={form.completion_status} onChange={(e) => handleChange('completion_status', e.target.value)} className={inputClass}>
               <option value="in_progress">In progress</option>
               <option value="completed">Completed</option>
@@ -167,16 +169,16 @@ export default function TrainingRecordForm() {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Issue date</label>
+            <FieldLabelWithHelp helpKey="sim.training_records.issue_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Issue date</FieldLabelWithHelp>
             <input type="date" value={form.issue_date} onChange={(e) => handleChange('issue_date', e.target.value)} className={inputClass} />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Expiry date</label>
+            <FieldLabelWithHelp helpKey="sim.training_records.expiry_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Expiry date</FieldLabelWithHelp>
             <input type="date" value={form.expiry_date} onChange={(e) => handleChange('expiry_date', e.target.value)} className={inputClass} />
           </div>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</label>
+          <FieldLabelWithHelp helpKey="sim.training_records.notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</FieldLabelWithHelp>
           <textarea value={form.notes} onChange={(e) => handleChange('notes', e.target.value)} rows={3} className={inputClass} />
         </div>
       </div>
@@ -191,5 +193,24 @@ export default function TrainingRecordForm() {
       </div>
       {modal}
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.training_records.certification_id',
+  'sim.training_records.title',
+  'sim.training_records.record_type',
+  'sim.training_records.completion_status',
+  'sim.training_records.issue_date',
+  'sim.training_records.expiry_date',
+  'sim.training_records.notes',
+]
+
+export default function TrainingRecordForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <TrainingRecordFormBody {...props} />
+    </FieldHelpScope>
   )
 }

@@ -5,6 +5,7 @@
  */
 
 import React, { useState } from 'react';
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Calendar, Clock, Users, Video, CheckCircle } from 'lucide-react';
 import Button from '@nidus/ui/Button';
 import Card from '@nidus/ui/Card';
@@ -128,9 +129,9 @@ const SimulatorRequestDemoPage = () => {
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <FieldLabelWithHelp helpKey="public.demo_requests.full_name" htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                       Full Name *
-                    </label>
+                    </FieldLabelWithHelp>
                     <input
                       type="text"
                       id="name"
@@ -143,9 +144,9 @@ const SimulatorRequestDemoPage = () => {
                     />
                   </div>
                   <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <FieldLabelWithHelp helpKey="public.demo_requests.email" htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                       Email Address *
-                    </label>
+                    </FieldLabelWithHelp>
                     <input
                       type="email"
                       id="email"
@@ -161,9 +162,9 @@ const SimulatorRequestDemoPage = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label htmlFor="company" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <FieldLabelWithHelp helpKey="public.demo_requests.company" htmlFor="company" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                       Company Name *
-                    </label>
+                    </FieldLabelWithHelp>
                     <input
                       type="text"
                       id="company"
@@ -176,9 +177,9 @@ const SimulatorRequestDemoPage = () => {
                     />
                   </div>
                   <div>
-                    <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <FieldLabelWithHelp helpKey="public.demo_requests.phone" htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Phone Number
-                    </label>
+                    </FieldLabelWithHelp>
                     <input
                       type="tel"
                       id="phone"
@@ -193,9 +194,9 @@ const SimulatorRequestDemoPage = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label htmlFor="preferredDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <FieldLabelWithHelp helpKey="public.demo_requests.preferred_date" htmlFor="preferredDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Preferred Date
-                    </label>
+                    </FieldLabelWithHelp>
                     <input
                       type="date"
                       id="preferredDate"
@@ -206,9 +207,9 @@ const SimulatorRequestDemoPage = () => {
                     />
                   </div>
                   <div>
-                    <label htmlFor="preferredTime" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <FieldLabelWithHelp helpKey="public.demo_requests.preferred_time" htmlFor="preferredTime" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Preferred Time
-                    </label>
+                    </FieldLabelWithHelp>
                     <select
                       id="preferredTime"
                       name="preferredTime"
@@ -231,9 +232,9 @@ const SimulatorRequestDemoPage = () => {
                 </div>
 
                 <div>
-                  <label htmlFor="teamSize" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.demo_requests.team_size" htmlFor="teamSize" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Team Size
-                  </label>
+                  </FieldLabelWithHelp>
                   <select
                     id="teamSize"
                     name="teamSize"
@@ -252,9 +253,9 @@ const SimulatorRequestDemoPage = () => {
                 </div>
 
                 <div>
-                  <label htmlFor="message" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.demo_requests.message" htmlFor="message" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Additional Information
-                  </label>
+                  </FieldLabelWithHelp>
                   <textarea
                     id="message"
                     name="message"

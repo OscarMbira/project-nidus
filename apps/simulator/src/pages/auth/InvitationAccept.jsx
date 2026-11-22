@@ -4,6 +4,8 @@
  */
 
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom'
 import { appDb as supabase } from '@nidus/supabase'
 import { getInvitationAcceptContext, getInvitationByToken } from '../../services/invitationService'
@@ -59,7 +61,7 @@ function InvitationPageWrap({ children, contentClassName }) {
   )
 }
 
-export default function InvitationAccept() {
+function InvitationAcceptBody() {
   const { token: pathToken } = useParams()
   const [searchParams] = useSearchParams()
   const token = pathToken || searchParams.get('token') || ''
@@ -648,9 +650,9 @@ export default function InvitationAccept() {
   // professional_role_id (e.g. set at registration) is never touched.
   const ProfessionalRoleField = professionalRoles.length > 0 ? (
     <div>
-      <label htmlFor="invitation-accept-professional-role" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+      <FieldLabelWithHelp helpKey="public.invitation_accept.professional_role_id" htmlFor="invitation-accept-professional-role" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
         Professional role (optional)
-      </label>
+      </FieldLabelWithHelp>
       <select
         id="invitation-accept-professional-role"
         value={professionalRoleId}
@@ -730,9 +732,9 @@ export default function InvitationAccept() {
 
       {/* Pre-filled, read-only email */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <FieldLabelWithHelp helpKey="public.invitation_accept.email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Email
-        </label>
+        </FieldLabelWithHelp>
         <div className="relative">
           <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <div className="pl-10 py-2 px-3 w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-sm text-gray-600 dark:text-gray-400 select-none">
@@ -743,9 +745,9 @@ export default function InvitationAccept() {
 
       {/* Password */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <FieldLabelWithHelp helpKey="public.invitation_accept.password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Password
-        </label>
+        </FieldLabelWithHelp>
         <div className="relative">
           <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <input
@@ -808,9 +810,9 @@ export default function InvitationAccept() {
       </p>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <FieldLabelWithHelp helpKey="public.invitation_accept.set_password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Set password
-        </label>
+        </FieldLabelWithHelp>
         <div className="relative">
           <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
           <input
@@ -826,9 +828,9 @@ export default function InvitationAccept() {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <FieldLabelWithHelp helpKey="public.invitation_accept.confirm_password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Confirm password
-        </label>
+        </FieldLabelWithHelp>
         <div className="relative">
           <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
           <input
@@ -909,5 +911,22 @@ export default function InvitationAccept() {
         )}
       </div>
     </InvitationPageWrap>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'public.invitation_accept.professional_role_id',
+  'public.invitation_accept.email',
+  'public.invitation_accept.password',
+  'public.invitation_accept.set_password',
+  'public.invitation_accept.confirm_password',
+]
+
+export default function InvitationAccept(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <InvitationAcceptBody {...props} />
+    </FieldHelpScope>
   )
 }

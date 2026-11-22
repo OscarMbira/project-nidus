@@ -6,6 +6,8 @@
  * surface a form that then fails with a confusing RLS error on submit.
  */
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save, Loader, Plug } from 'lucide-react'
 import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesContext'
@@ -14,7 +16,7 @@ import { DetailAuditTabList, AuditDetailsPanel, AuditCard, AuditField, AuditTime
 import { getSessionPMOAdminStatus } from '../../../services/pmoAdminService'
 import { getCatalogEntry, createCatalogEntry, updateCatalogEntry } from '../services/integrationCatalogService'
 
-export default function IntegrationCatalogDetailPage({ basePath = '/pm/integrations', configBasePath = '/platform/integrations', forceEdit = false }) {
+function IntegrationCatalogDetailPageBody({ basePath = '/pm/integrations', configBasePath = '/platform/integrations', forceEdit = false }) {
   const { id } = useParams()
   const navigate = useNavigate()
   const isCreate = !id
@@ -184,7 +186,7 @@ export default function IntegrationCatalogDetailPage({ basePath = '/pm/integrati
               )}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Integration name *</label>
+                  <FieldLabelWithHelp helpKey="public.integration_catalog.integration_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>Integration name *</FieldLabelWithHelp>
                   <input
                     type="text"
                     value={integrationName}
@@ -194,7 +196,7 @@ export default function IntegrationCatalogDetailPage({ basePath = '/pm/integrati
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Code *</label>
+                  <FieldLabelWithHelp helpKey="public.integration_catalog.integration_code" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>Code *</FieldLabelWithHelp>
                   <input
                     type="text"
                     value={integrationCode}
@@ -207,7 +209,7 @@ export default function IntegrationCatalogDetailPage({ basePath = '/pm/integrati
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Category *</label>
+                <FieldLabelWithHelp helpKey="public.integration_catalog.category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>Category *</FieldLabelWithHelp>
                 <input
                   type="text"
                   value={category}
@@ -218,7 +220,7 @@ export default function IntegrationCatalogDetailPage({ basePath = '/pm/integrati
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</label>
+                <FieldLabelWithHelp helpKey="public.integration_catalog.description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</FieldLabelWithHelp>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
@@ -228,7 +230,7 @@ export default function IntegrationCatalogDetailPage({ basePath = '/pm/integrati
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Logo URL</label>
+                  <FieldLabelWithHelp helpKey="public.integration_catalog.logo_url" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Logo URL</FieldLabelWithHelp>
                   <input
                     type="text"
                     value={logoUrl}
@@ -237,7 +239,7 @@ export default function IntegrationCatalogDetailPage({ basePath = '/pm/integrati
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Setup guide URL</label>
+                  <FieldLabelWithHelp helpKey="public.integration_catalog.setup_guide_url" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Setup guide URL</FieldLabelWithHelp>
                   <input
                     type="text"
                     value={setupGuideUrl}
@@ -247,16 +249,16 @@ export default function IntegrationCatalogDetailPage({ basePath = '/pm/integrati
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                <FieldLabelWithHelp helpKey="public.integration_catalog.is_available" className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
                   <input type="checkbox" checked={isAvailable} onChange={(e) => setIsAvailable(e.target.checked)} className="w-4 h-4" />
                   Available
-                </label>
-                <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                </FieldLabelWithHelp>
+                <FieldLabelWithHelp helpKey="public.integration_catalog.is_coming_soon" className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
                   <input type="checkbox" checked={isComingSoon} onChange={(e) => setIsComingSoon(e.target.checked)} className="w-4 h-4" />
                   Coming soon
-                </label>
+                </FieldLabelWithHelp>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Sort order</label>
+                  <FieldLabelWithHelp helpKey="public.integration_catalog.sort_order" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Sort order</FieldLabelWithHelp>
                   <input
                     type="number"
                     value={sortOrder}
@@ -305,5 +307,20 @@ export default function IntegrationCatalogDetailPage({ basePath = '/pm/integrati
       </div>
       {successModal}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.integration_catalog.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'integration_name', 'integration_code', 'category', 'description', 'logo_url', 'setup_guide_url',
+  'sort_order',
+].map((name) => `public.integration_catalog.${name}`)
+
+export default function IntegrationCatalogDetailPage(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <IntegrationCatalogDetailPageBody {...props} />
+    </FieldHelpScope>
   )
 }

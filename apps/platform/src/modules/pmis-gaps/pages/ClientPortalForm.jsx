@@ -6,6 +6,8 @@
  * effectively a different portal).
  */
 import { useState, useEffect, useMemo } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
@@ -14,7 +16,7 @@ import { getPortal, createPortal, updatePortal, listProjectOptions } from '../..
 
 const inputClass = 'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm'
 
-export default function ClientPortalForm({ sim = false }) {
+function ClientPortalFormBody({ sim = false }) {
   const { id } = useParams()
   const navigate = useNavigate()
   const { showSuccess, modal } = useSuccessModal()
@@ -97,21 +99,21 @@ export default function ClientPortalForm({ sim = false }) {
 
       <div className="space-y-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Portal name *</label>
+          <FieldLabelWithHelp helpKey="public.client_portals.portal_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>Portal name *</FieldLabelWithHelp>
           <input type="text" value={form.portal_name} onChange={(e) => handleChange('portal_name', e.target.value)} className={inputClass} />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Project *</label>
+          <FieldLabelWithHelp helpKey="public.client_portals.project_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required listOptions={false}>Project *</FieldLabelWithHelp>
           <select value={form.project_id} onChange={(e) => handleChange('project_id', e.target.value)} disabled={isEdit} className={`${inputClass} disabled:opacity-60`}>
             <option value="">Select a project…</option>
             {projects.map((p) => <option key={p.id} value={p.id}>{p.project_name}</option>)}
           </select>
         </div>
         {isEdit && (
-          <label className="inline-flex items-center gap-2">
+          <FieldLabelWithHelp helpKey="public.client_portals.is_active" className="inline-flex items-center gap-2">
             <input type="checkbox" checked={form.is_active} onChange={(e) => handleChange('is_active', e.target.checked)} />
             <span className="text-sm text-gray-700 dark:text-gray-300">Active</span>
-          </label>
+          </FieldLabelWithHelp>
         )}
       </div>
 
@@ -125,5 +127,19 @@ export default function ClientPortalForm({ sim = false }) {
       </div>
       {modal}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.client_portals.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'portal_name', 'project_id', 'is_active',
+].map((name) => `public.client_portals.${name}`)
+
+export default function ClientPortalForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ClientPortalFormBody {...props} />
+    </FieldHelpScope>
   )
 }

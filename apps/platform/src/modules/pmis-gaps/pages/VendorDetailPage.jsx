@@ -2,6 +2,8 @@
  * Vendor register item — create/view/edit (Procurement, GAP-12), rule 65 + rule 63.1 Audit tab.
  */
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save, Loader, Truck } from 'lucide-react'
 import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesContext'
@@ -12,7 +14,7 @@ import SelectField from '@nidus/ui/SelectField'
 import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
 import { getVendor, createVendor, updateVendor, listVendorCategories, saveVendorCategory } from '../services/procurementService'
 
-export default function VendorDetailPage({ basePath = '/pm/procurement/vendors', forceEdit = false }) {
+function VendorDetailPageBody({ basePath = '/pm/procurement/vendors', forceEdit = false }) {
   const { id } = useParams()
   const navigate = useNavigate()
   const isCreate = !id
@@ -207,7 +209,7 @@ export default function VendorDetailPage({ basePath = '/pm/procurement/vendors',
                 <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-800 dark:text-red-200">{error}</div>
               )}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Vendor name *</label>
+                <FieldLabelWithHelp helpKey="public.vendors.vendor_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>Vendor name *</FieldLabelWithHelp>
                 <input
                   type="text"
                   value={vendorName}
@@ -218,7 +220,7 @@ export default function VendorDetailPage({ basePath = '/pm/procurement/vendors',
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Category</label>
+                  <FieldLabelWithHelp helpKey="public.vendors.category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Category</FieldLabelWithHelp>
                   <SelectField
                     id="vendor-category"
                     aria-label="Category"
@@ -238,7 +240,7 @@ export default function VendorDetailPage({ basePath = '/pm/procurement/vendors',
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Vendor code</label>
+                  <FieldLabelWithHelp helpKey="public.vendors.vendor_code" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Vendor code</FieldLabelWithHelp>
                   <input
                     type="text"
                     value={vendorCode}
@@ -251,7 +253,7 @@ export default function VendorDetailPage({ basePath = '/pm/procurement/vendors',
               </div>
               <div className="space-y-5">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Contact email</label>
+                  <FieldLabelWithHelp helpKey="public.vendors.contact_email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Contact email</FieldLabelWithHelp>
                   <MultiLineListInput
                     viewModeId="vendor-contact-emails"
                     id="vendor-contact-emails"
@@ -265,7 +267,7 @@ export default function VendorDetailPage({ basePath = '/pm/procurement/vendors',
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Contact phone</label>
+                  <FieldLabelWithHelp helpKey="public.vendors.contact_phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Contact phone</FieldLabelWithHelp>
                   <MultiLineListInput
                     viewModeId="vendor-contact-phones"
                     id="vendor-contact-phones"
@@ -279,10 +281,10 @@ export default function VendorDetailPage({ basePath = '/pm/procurement/vendors',
                 </div>
               </div>
               {!isCreate && (
-                <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                <FieldLabelWithHelp helpKey="public.vendors.is_active" className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
                   <input type="checkbox" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} className="rounded border-gray-300 dark:border-gray-600" />
                   Active vendor
-                </label>
+                </FieldLabelWithHelp>
               )}
             </fieldset>
 
@@ -325,5 +327,19 @@ export default function VendorDetailPage({ basePath = '/pm/procurement/vendors',
       </div>
       {successModal}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.vendors.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'vendor_name', 'category', 'vendor_code', 'contact_email', 'contact_phone',
+].map((name) => `public.vendors.${name}`)
+
+export default function VendorDetailPage(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <VendorDetailPageBody {...props} />
+    </FieldHelpScope>
   )
 }

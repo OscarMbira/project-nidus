@@ -5,6 +5,8 @@
  */
 
 import { useState, useEffect } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../../services/supabaseClient'
 import { normalizeSupabaseAuthError } from '@nidus/shared/utils/authErrorMessage'
@@ -19,7 +21,7 @@ import {
 import MainHeader from '../../components/homepage/MainHeader'
 import SimulatorFooter from '../../components/homepage/SimulatorFooter'
 
-export default function SimulatorRegister() {
+function SimulatorRegisterBody() {
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -302,9 +304,9 @@ export default function SimulatorRegister() {
 
                 {/* Simulator Selection - Auto-selected based on route */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                  <FieldLabelWithHelp helpKey="public.sign_up.platform" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                     Platform
-                  </label>
+                  </FieldLabelWithHelp>
                   <div className="p-4 border-2 border-green-500 bg-green-50 dark:bg-green-900/20 rounded-lg">
                     <div className="flex items-center">
                       <div className="flex-shrink-0 p-2 rounded-lg bg-green-100 dark:bg-green-800">
@@ -329,9 +331,9 @@ export default function SimulatorRegister() {
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      <FieldLabelWithHelp helpKey="public.sign_up.first_name" htmlFor="firstName" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                         First Name
-                      </label>
+                      </FieldLabelWithHelp>
                       <div className="mt-1 relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                           <User className="h-5 w-5 text-gray-400" />
@@ -350,9 +352,9 @@ export default function SimulatorRegister() {
                       </div>
                     </div>
                     <div>
-                      <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      <FieldLabelWithHelp helpKey="public.sign_up.last_name" htmlFor="lastName" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                         Last Name
-                      </label>
+                      </FieldLabelWithHelp>
                       <div className="mt-1 relative">
                         <input
                           id="lastName"
@@ -370,9 +372,9 @@ export default function SimulatorRegister() {
                   </div>
 
                   <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    <FieldLabelWithHelp helpKey="public.sign_up.email" htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Email address
-                    </label>
+                    </FieldLabelWithHelp>
                     <div className="mt-1 relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <Mail className="h-5 w-5 text-gray-400" />
@@ -392,9 +394,9 @@ export default function SimulatorRegister() {
                   </div>
 
                   <div>
-                    <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    <FieldLabelWithHelp helpKey="public.sign_up.password" htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Password
-                    </label>
+                    </FieldLabelWithHelp>
                     <div className="mt-1 relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <Lock className="h-5 w-5 text-gray-400" />
@@ -414,9 +416,9 @@ export default function SimulatorRegister() {
                   </div>
 
                   <div>
-                    <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    <FieldLabelWithHelp helpKey="public.sign_up.confirm_password" htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Confirm Password
-                    </label>
+                    </FieldLabelWithHelp>
                     <div className="mt-1 relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <Lock className="h-5 w-5 text-gray-400" />
@@ -476,3 +478,15 @@ export default function SimulatorRegister() {
   )
 }
 
+// v1345 slice 4: field help for this component (public.users.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+// Public form: labels load their own public-form keys (anonymous visitors may read them, v1345 4o).
+const HELP_KEYS = []
+
+export default function SimulatorRegister(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <SimulatorRegisterBody {...props} />
+    </FieldHelpScope>
+  )
+}

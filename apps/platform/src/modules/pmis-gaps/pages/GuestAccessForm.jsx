@@ -6,6 +6,8 @@
  * after this screen closes (see GuestAccessDetailPage's masked reference).
  */
 import { useState, useEffect, useMemo } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
@@ -15,7 +17,7 @@ import { getGuestCollaborator, inviteGuest, updateGuestPermissions } from '../se
 
 const inputClass = 'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm'
 
-export default function GuestAccessForm() {
+function GuestAccessFormBody() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { projectId } = usePlatformProjectId()
@@ -115,16 +117,16 @@ export default function GuestAccessForm() {
 
       <div className="space-y-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email *</label>
+          <FieldLabelWithHelp helpKey="public.guest_access.guest_email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>Email *</FieldLabelWithHelp>
           <input type="email" value={form.guest_email} onChange={(e) => handleChange('guest_email', e.target.value)} disabled={isEdit} className={`${inputClass} disabled:opacity-60`} />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name</label>
+          <FieldLabelWithHelp helpKey="public.guest_access.guest_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name</FieldLabelWithHelp>
           <input type="text" value={form.guest_name} onChange={(e) => handleChange('guest_name', e.target.value)} className={inputClass} />
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Permission level</label>
+            <FieldLabelWithHelp helpKey="public.guest_access.permission_level" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Permission level</FieldLabelWithHelp>
             <select value={form.permission_level} onChange={(e) => handleChange('permission_level', e.target.value)} className={inputClass}>
               <option value="view">View only</option>
               <option value="comment">Can comment</option>
@@ -132,15 +134,15 @@ export default function GuestAccessForm() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Expires</label>
+            <FieldLabelWithHelp helpKey="public.guest_access.expires_at" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Expires</FieldLabelWithHelp>
             <input type="date" value={form.expires_at} onChange={(e) => handleChange('expires_at', e.target.value)} className={inputClass} />
           </div>
         </div>
         {isEdit && (
-          <label className="inline-flex items-center gap-2">
+          <FieldLabelWithHelp helpKey="public.guest_access.is_active" className="inline-flex items-center gap-2">
             <input type="checkbox" checked={form.is_active} onChange={(e) => handleChange('is_active', e.target.checked)} />
             <span className="text-sm text-gray-700 dark:text-gray-300">Active</span>
-          </label>
+          </FieldLabelWithHelp>
         )}
       </div>
 
@@ -154,5 +156,19 @@ export default function GuestAccessForm() {
       </div>
       {modal}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.guest_access.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'guest_email', 'guest_name', 'permission_level', 'expires_at', 'is_active',
+].map((name) => `public.guest_access.${name}`)
+
+export default function GuestAccessForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <GuestAccessFormBody {...props} />
+    </FieldHelpScope>
   )
 }

@@ -24,3 +24,13 @@ test('builds Simulator alias rows and rejects bad aliases', async () => {
   assert.match(sql, /\('sim\.practice_projects\.status_id', 'public\.projects\.project_status_id'\)\nON CONFLICT \(alias_key\)/)
   assert.throws(() => buildAliasesSql([['public.x.y', 'public.x.y']]), /Bad alias/)
 })
+
+test('register help written with a menu category code is expanded to the real register keys (2026-11-22)', async () => {
+  const { expandRegisterRows } = await import('../field-help-content/build-sql.mjs')
+  const expand = (k) => (k === 'register:ict_cat_debt:debt_reference' ? ['register:ict_technical_debt:debt_reference'] : [k])
+  const rows = expandRegisterRows([
+    ['register:ict_cat_debt:debt_reference', 'Debt reference', 'A code for the debt item.', ['TD-10']],
+    ['register:*:owner', 'Owner', 'Who owns it.', ['Head of IT']],
+  ], expand)
+  assert.deepEqual(rows.map((r) => r[0]), ['register:ict_technical_debt:debt_reference', 'register:*:owner'])
+})

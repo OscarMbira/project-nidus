@@ -90,10 +90,13 @@ export async function loadFieldHelp(keys, { formKey = '', locale = 'en', db = pl
       for (const row of data || []) aliasMap[row.alias_key] = row.help_key
     }
     const targetFor = (k) => aliasMap[k] || k
+    // A Simulator key with no alias falls back to the Platform key of the same table and column
+    // (2026-11-22): most Simulator screens mirror Platform ones, and a missing alias used to hide the help.
+    const twinOf = (k) => (k.startsWith('sim.') && !aliasMap[k] ? `public.${k.slice(4)}` : null)
     const targets = [...new Set(missing.flatMap((k) => {
       const t = targetFor(k)
       const common = commonRegisterKey(t)
-      return common ? [t, common] : [t]
+      return [t, ...(common ? [common] : []), ...(twinOf(k) ? [twinOf(k)] : [])]
     }))]
     const { data, error } = await db
       .from('field_help')
@@ -112,7 +115,7 @@ export async function loadFieldHelp(keys, { formKey = '', locale = 'en', db = pl
     for (const key of missing) {
       const target = targetFor(key)
       // Register fields: the register's own help, else the common help for that field key (S2-D1).
-      const row = byKey[target] || (commonRegisterKey(target) ? byKey[commonRegisterKey(target)] : null) || null
+      const row = byKey[target] || (commonRegisterKey(target) ? byKey[commonRegisterKey(target)] : null) || (twinOf(key) ? byKey[twinOf(key)] : null) || null
       result[key] = row
       fresh.entries[cacheId(key, formKey, locale)] = row
     }

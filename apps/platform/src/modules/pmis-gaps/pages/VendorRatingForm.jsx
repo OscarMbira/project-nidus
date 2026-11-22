@@ -3,6 +3,8 @@
  * No standalone "view" mode — a rating is a short log entry, edited or deleted from the list.
  */
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save, Loader, Star } from 'lucide-react'
 import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesContext'
@@ -12,7 +14,7 @@ import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
 import { platformDb } from '@nidus/supabase'
 import { getVendorRating, createVendorRating, updateVendorRating, listVendors } from '../services/procurementService'
 
-export default function VendorRatingForm({ basePath = '/pm/procurement/performance' }) {
+function VendorRatingFormBody({ basePath = '/pm/procurement/performance' }) {
   const { id } = useParams()
   const navigate = useNavigate()
   const isCreate = !id
@@ -135,7 +137,7 @@ export default function VendorRatingForm({ basePath = '/pm/procurement/performan
               <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-800 dark:text-red-200">{error}</div>
             )}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Vendor *</label>
+              <FieldLabelWithHelp helpKey="public.vendor_ratings.vendor_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required listOptions={false}>Vendor *</FieldLabelWithHelp>
               <select
                 value={vendorId}
                 onChange={(e) => setVendorId(e.target.value)}
@@ -150,7 +152,7 @@ export default function VendorRatingForm({ basePath = '/pm/procurement/performan
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Score (1-5) *</label>
+              <FieldLabelWithHelp helpKey="public.vendor_ratings.rating_score" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>Score (1-5) *</FieldLabelWithHelp>
               <select
                 value={ratingScore}
                 onChange={(e) => setRatingScore(e.target.value)}
@@ -162,7 +164,7 @@ export default function VendorRatingForm({ basePath = '/pm/procurement/performan
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Notes</label>
+              <FieldLabelWithHelp helpKey="public.vendor_ratings.rating_notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Notes</FieldLabelWithHelp>
               <textarea
                 value={ratingNotes}
                 onChange={(e) => setRatingNotes(e.target.value)}
@@ -202,5 +204,19 @@ export default function VendorRatingForm({ basePath = '/pm/procurement/performan
       </div>
       {successModal}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.vendor_ratings.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'vendor_id', 'rating_score', 'rating_notes',
+].map((name) => `public.vendor_ratings.${name}`)
+
+export default function VendorRatingForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <VendorRatingFormBody {...props} />
+    </FieldHelpScope>
   )
 }

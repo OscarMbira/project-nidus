@@ -5,6 +5,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useNavigate, useLocation } from 'react-router-dom';
 import { getAvailablePlans, getPricingSummary } from '../../services/subscriptionPlanService';
 import { toast } from 'react-hot-toast';
@@ -278,9 +279,9 @@ const PaidProjectSetup = () => {
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Project Name */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.projects.project_name" className="block text-sm font-medium text-gray-300 mb-2" required>
                   Project Name *
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   required
@@ -293,9 +294,9 @@ const PaidProjectSetup = () => {
 
               {/* Project Type */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.projects.project_type_id" className="block text-sm font-medium text-gray-300 mb-2" required>
                   Project Type *
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   required
                   value={formData.type}
@@ -315,9 +316,9 @@ const PaidProjectSetup = () => {
 
               {/* Description */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.projects.project_description" className="block text-sm font-medium text-gray-300 mb-2">
                   Project Description
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   value={formData.description}
                   onChange={(e) => handleChange('description', e.target.value)}
@@ -329,9 +330,9 @@ const PaidProjectSetup = () => {
 
               {/* Start Date */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.projects.start_date" className="block text-sm font-medium text-gray-300 mb-2">
                   Start Date
-                </label>
+                </FieldLabelWithHelp>
                 <div className="relative">
                   <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                   <input
@@ -345,9 +346,9 @@ const PaidProjectSetup = () => {
 
               {/* Member Count */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.projects.member_count" className="block text-sm font-medium text-gray-300 mb-2">
                   Number of Team Members
-                </label>
+                </FieldLabelWithHelp>
                 <div className="relative">
                   <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                   <input
@@ -370,9 +371,9 @@ const PaidProjectSetup = () => {
 
               {/* Subsystem Selection */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-3">
+                <FieldLabelWithHelp helpKey="public.projects.enabled_subsystems" className="block text-sm font-medium text-gray-300 mb-3" required>
                   Select Subsystem(s) *
-                </label>
+                </FieldLabelWithHelp>
                 <div className="space-y-3">
                   {/* Platform */}
                   <label className="flex items-start gap-3 p-4 bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-600 transition">

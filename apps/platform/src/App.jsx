@@ -4,6 +4,7 @@ import { Toaster } from 'react-hot-toast'
 import { UnsavedChangesProvider } from '@nidus/shared/context/UnsavedChangesContext'
 import { LanguageProvider } from '@nidus/shared/context/LanguageContext'
 import { AppConfigProvider } from '@nidus/shared/context/AppConfigContext'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { PlanningProvider } from '@nidus/planning/context/PlanningContext.jsx'
 import { platformDb } from '@nidus/supabase'
 import ErrorBoundary from './components/ErrorBoundary'
@@ -35,6 +36,8 @@ export default function App() {
       />
       <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <AppConfigProvider app="platform" basePath="" db={platformDb}>
+          {/* v1345: app-wide help scope — a label outside any page scope still loads its help (2026-11-22). */}
+          <FieldHelpScope helpKeys={[]}>
         <PlanningProvider mode="platform" basePath="/pm/planning" ProjectBar={PlanningProjectBar} headerProjectPicker>
         <LanguageProvider>
           <UnsavedChangesProvider>
@@ -52,6 +55,7 @@ export default function App() {
           </UnsavedChangesProvider>
         </LanguageProvider>
         </PlanningProvider>
+          </FieldHelpScope>
         </AppConfigProvider>
       </BrowserRouter>
     </ErrorBoundary>

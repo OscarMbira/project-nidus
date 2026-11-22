@@ -67,3 +67,16 @@ test('the live SQL folder has help for every register field', async () => {
   const rc = registerCoverage(texts.flatMap(extractRegisterFields), help)
   assert.deepEqual(rc.uncovered.map((f) => `${f.registerId} ${f.fieldKey}`), [])
 })
+
+test('register coverage counts only help under the field’s own register key or the common key (2026-11-22)', async () => {
+  const { registerCoverageByKey } = await import('../check-field-help.mjs')
+  const fields = new Map([['ict_technical_debt', new Set(['debt_reference', 'owner'])], ['fin_core_banking_environments', new Set(['host_name'])]])
+  // Help written under the menu category code does not count for the register:
+  const wrong = new Set(['register:ict_cat_technical_debt:debt_reference', 'register:*:owner'])
+  const r1 = registerCoverageByKey(fields, wrong, new Set(['ict_technical_debt']))
+  assert.deepEqual(r1.uncovered, [{ registerKey: 'ict_technical_debt', fieldKey: 'debt_reference' }])
+  assert.deepEqual(r1.strayRegisters, ['ict_cat_technical_debt'])
+  // Under the real key it does; retired registers are skipped.
+  const right = new Set(['register:ict_technical_debt:debt_reference', 'register:*:owner'])
+  assert.equal(registerCoverageByKey(fields, right, new Set(['ict_technical_debt'])).uncovered.length, 0)
+})

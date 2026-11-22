@@ -5,6 +5,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useNavigate, useLocation } from 'react-router-dom';
 import { createTrialProject } from '../../services/trialService';
 import { toast } from 'react-hot-toast';
@@ -158,9 +159,9 @@ const TrialProjectSetup = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Project Name */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.projects.project_name" className="block text-sm font-medium text-gray-300 mb-2" required>
                 Project Name *
-              </label>
+              </FieldLabelWithHelp>
               <div className="relative">
                 <Rocket className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
@@ -176,9 +177,9 @@ const TrialProjectSetup = () => {
 
             {/* Project Type */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.projects.project_type_id" className="block text-sm font-medium text-gray-300 mb-2" required>
                 Project Type *
-              </label>
+              </FieldLabelWithHelp>
               <select
                 required
                 value={formData.type}
@@ -198,9 +199,9 @@ const TrialProjectSetup = () => {
 
             {/* Description */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.projects.project_description" className="block text-sm font-medium text-gray-300 mb-2">
                 Project Description
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={formData.description}
                 onChange={(e) => handleChange('description', e.target.value)}
@@ -213,9 +214,9 @@ const TrialProjectSetup = () => {
             {/* Trial Dates */}
             <div className="grid md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.projects.start_date" className="block text-sm font-medium text-gray-300 mb-2">
                   Trial Start Date
-                </label>
+                </FieldLabelWithHelp>
                 <div className="relative">
                   <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                   <input
@@ -229,9 +230,9 @@ const TrialProjectSetup = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.projects.end_date" className="block text-sm font-medium text-gray-300 mb-2">
                   Trial End Date
-                </label>
+                </FieldLabelWithHelp>
                 <div className="relative">
                   <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-green-400" />
                   <input
@@ -247,9 +248,9 @@ const TrialProjectSetup = () => {
 
             {/* Subsystem Selection */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-3">
+              <FieldLabelWithHelp helpKey="public.projects.enabled_subsystems" className="block text-sm font-medium text-gray-300 mb-3" required>
                 Select Subsystem(s) *
-              </label>
+              </FieldLabelWithHelp>
               <div className="space-y-3">
                 {/* Platform Checkbox */}
                 <label className="flex items-start gap-3 p-4 bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-600 transition">

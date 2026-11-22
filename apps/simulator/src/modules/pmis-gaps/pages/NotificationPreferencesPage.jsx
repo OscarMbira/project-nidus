@@ -5,6 +5,8 @@
  * "General" card for quiet hours and muted (practice) projects. Always sim schema.
  */
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { Bell, Loader, Save, Link as LinkIcon } from 'lucide-react'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import {
@@ -26,7 +28,7 @@ function defaultPrefFor(category) {
   }
 }
 
-export default function NotificationPreferencesPage({ showTemplatesLink = false, onOpenTemplates }) {
+function NotificationPreferencesPageBody({ showTemplatesLink = false, onOpenTemplates }) {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(null)
   const [prefs, setPrefs] = useState({})
@@ -193,7 +195,7 @@ export default function NotificationPreferencesPage({ showTemplatesLink = false,
         <h2 className="text-base font-semibold text-gray-900 dark:text-white">Quiet hours & muted projects</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Quiet hours start</label>
+            <FieldLabelWithHelp helpKey="sim.notification_preferences.quiet_hours_start" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Quiet hours start</FieldLabelWithHelp>
             <input
               type="time"
               value={general.quiet_hours_start}
@@ -202,7 +204,7 @@ export default function NotificationPreferencesPage({ showTemplatesLink = false,
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Quiet hours end</label>
+            <FieldLabelWithHelp helpKey="sim.notification_preferences.quiet_hours_end" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Quiet hours end</FieldLabelWithHelp>
             <input
               type="time"
               value={general.quiet_hours_end}
@@ -214,7 +216,7 @@ export default function NotificationPreferencesPage({ showTemplatesLink = false,
 
         {projects.length > 0 && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Muted projects</label>
+            <FieldLabelWithHelp helpKey="sim.notification_preferences.muted_project_ids" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Muted projects</FieldLabelWithHelp>
             <div className="flex flex-wrap gap-2">
               {projects.map((p) => (
                 <label
@@ -252,5 +254,20 @@ export default function NotificationPreferencesPage({ showTemplatesLink = false,
       </div>
       {successModal}
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.notification_preferences.quiet_hours_start',
+  'sim.notification_preferences.quiet_hours_end',
+  'sim.notification_preferences.muted_project_ids',
+]
+
+export default function NotificationPreferencesPage(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <NotificationPreferencesPageBody {...props} />
+    </FieldHelpScope>
   )
 }

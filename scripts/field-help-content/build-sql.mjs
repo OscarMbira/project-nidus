@@ -11,6 +11,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
+import { expandRegisterKey } from './register-keys.mjs'
 
 export function sqlText(value) {
   if (value == null || value === '') return 'NULL'
@@ -32,6 +33,22 @@ export function buildRowsSql(rows, moduleCode) {
     const ex = examples.map((e) => `- ${e}`).join('\n')
     return `  (${sqlText(key)}, ${sqlText(title)}, ${sqlText(purpose)}, ${sqlText(ex)}, ${sqlText(format)}, ${sqlText(notes)}, ${sqlText(moduleCode)})`
   }).join(',\n')
+}
+
+/**
+ * v1345 fix 2026-11-22: a register help key written with a menu CATEGORY code (register:<category>:<field>)
+ * is replaced by one row per real register in that category that has the field. A row the module already
+ * writes for that real key wins over an expanded copy.
+ */
+export function expandRegisterRows(rows, expand = expandRegisterKey) {
+  const explicit = new Set(rows.map((r) => r[0]))
+  const out = []
+  for (const row of rows) {
+    const keys = row[0].startsWith('register:') ? expand(row[0]) : [row[0]]
+    if (keys.length === 1 && keys[0] === row[0]) { out.push(row); continue }
+    for (const k of keys) if (!explicit.has(k) && !out.some((r) => r[0] === k)) out.push([k, ...row.slice(1)])
+  }
+  return out
 }
 
 export function buildAliasesSql(aliases = []) {
@@ -97,7 +114,8 @@ SELECT count(*) AS help_entries FROM public.field_help WHERE module_code = '${mo
 if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1'))) {
   const [contentPath, outPath, title, prerequisites = 'v1490, v1497'] = process.argv.slice(2)
   const mod = await import(pathToFileURL(path.resolve(contentPath)).href)
-  const sql = buildSql({ rows: mod.ROWS, moduleCode: mod.MODULE, title, prerequisites, sourceFile: path.relative(process.cwd(), contentPath).replace(/\\/g, '/'), aliases: mod.ALIASES || [] })
+  const rows = expandRegisterRows(mod.ROWS)
+  const sql = buildSql({ rows, moduleCode: mod.MODULE, title, prerequisites, sourceFile: path.relative(process.cwd(), contentPath).replace(/\\/g, '/'), aliases: mod.ALIASES || [] })
   fs.writeFileSync(outPath, sql)
-  console.log(`Wrote ${outPath}: ${mod.ROWS.length} entries`)
+  console.log(`Wrote ${outPath}: ${rows.length} entries${rows.length !== mod.ROWS.length ? ` (${mod.ROWS.length} in the module; register category keys expanded)` : ""}`)
 }

@@ -21,6 +21,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { loadRegisterKeys } from './field-help-content/register-keys.mjs'
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const ALLOWLIST = path.join(ROOT, 'scripts', 'field-help-allowlist.json')
@@ -43,6 +44,8 @@ export function extractSeededKeys(sql) {
   const aliases = new Map()
   for (const block of sql.matchAll(/INSERT INTO public\.field_help\s*\(([\s\S]*?)ON CONFLICT/g)) {
     for (const m of block[1].matchAll(/\(\s*'([^']+)'\s*,/g)) help.add(m[1])
+    // Copy files (v1549 register real keys): ('register:<category>:<f>', 'register:<real>:<f>') pairs seed the second key.
+    for (const m of block[1].matchAll(/\(\s*'register:[^']+'\s*,\s*'(register:[^']+)'\s*\)/g)) help.add(m[1])
   }
   for (const block of sql.matchAll(/INSERT INTO public\.field_help_aliases\s*\(([\s\S]*?)ON CONFLICT/g)) {
     for (const m of block[1].matchAll(/\(\s*'([^']+)'\s*,\s*'([^']+)'\s*\)/g)) aliases.set(m[1], m[2])
@@ -87,6 +90,26 @@ export function registerCoverage(registerFields, helpKeys) {
     else uncovered.push(f)
   }
   return { total: unique.size, covered, uncovered, percent: unique.size ? Math.round((covered / unique.size) * 1000) / 10 : 100 }
+}
+
+/**
+ * v1345 fix 2026-11-22: register coverage by each register's REAL key. A field is covered only by the common
+ * register:*:<field> entry or by register:<its own register_key>:<field> — help written for another register (or
+ * under a menu category code) no longer counts. Retired registers (switched off, records moved) are skipped.
+ */
+export const RETIRED_REGISTERS = new Set(['fin_core_banking_environments', 'ict_environments']) // v1468: moved to core_environments
+export function registerCoverageByKey(fieldsByRegister, helpKeys, registerKeys, retired = RETIRED_REGISTERS) {
+  let total = 0
+  const uncovered = []
+  for (const [reg, fields] of fieldsByRegister) {
+    if (retired.has(reg)) continue
+    for (const field of fields) {
+      total++
+      if (!helpKeys.has(`register:*:${field}`) && !helpKeys.has(`register:${reg}:${field}`)) uncovered.push({ registerKey: reg, fieldKey: field })
+    }
+  }
+  const strayRegisters = [...new Set([...helpKeys].filter((k) => /^register:[^*:][^:]*:/.test(k)).map((k) => k.split(':')[1]).filter((r) => !registerKeys.has(r)))]
+  return { total, covered: total - uncovered.length, uncovered, strayRegisters }
 }
 
 /** Raw <label> elements in a file that renders form fields (not yet using FieldLabelWithHelp). */
@@ -149,13 +172,12 @@ function main(argv) {
   const result = analyse({ files, sqlTexts, moduleKeysFilter: prefixes ? (k) => prefixes.some((p) => k.startsWith(p)) : null })
   let registerFail = false
   if (argv.includes('--registers')) {
-    const allSql = fs.readdirSync(sqlDir).filter((f) => f.endsWith('.sql')).map((f) => fs.readFileSync(path.join(sqlDir, f), 'utf8'))
-    const regFields = allSql.flatMap(extractRegisterFields)
+    const maps = loadRegisterKeys(sqlDir)
     const helpKeys = new Set(sqlTexts.flatMap((t) => [...extractSeededKeys(t).help]))
-    const rc = registerCoverage(regFields, helpKeys)
-    console.log(`Register fields (SQL parse, approximate): ${rc.covered} of ${rc.total} have help (${rc.percent}%).`)
-    // v1345 slice 2 done: every register field has help, so a new field without help fails CI.
-    for (const f of rc.uncovered) console.log(`  ✗ register field without help: ${f.registerId} ${f.fieldKey}`)
+    const rc = registerCoverageByKey(maps.fieldsByRegister, helpKeys, maps.registerKeys)
+    console.log(`Register fields (by real register key, SQL parse): ${rc.covered} of ${rc.total} have help.`)
+    for (const f of rc.uncovered) console.log(`  ✗ register field without help: ${f.registerKey} ${f.fieldKey}`)
+    if (rc.strayRegisters.length) console.log(`  (help keyed to names that are not register keys — expanded by build-sql, or unused: ${rc.strayRegisters.join(', ')})`)
     if (rc.uncovered.length) registerFail = true
   }
 

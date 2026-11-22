@@ -10,6 +10,8 @@
  */
 
 import { useState, useEffect, useCallback, useMemo, memo } from 'react';
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useNavigate } from 'react-router-dom';
 import { Plus, Edit, Trash2, ArrowLeft, Save, X } from 'lucide-react';
 import { toast } from 'react-hot-toast';
@@ -91,7 +93,7 @@ const StatusTableRow = memo(function StatusTableRow({ status, onEdit, onDelete }
   );
 });
 
-export default function ProjectStatuses() {
+function ProjectStatusesBody() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [projectStatuses, setProjectStatuses] = useState([]);
@@ -336,9 +338,9 @@ export default function ProjectStatuses() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.project_statuses.status_code" className="block text-sm font-medium text-gray-300 mb-2" required>
                     Status Code *
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="text"
                     value={formData.status_code}
@@ -349,9 +351,9 @@ export default function ProjectStatuses() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.project_statuses.status_name" className="block text-sm font-medium text-gray-300 mb-2" required>
                     Status Name *
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="text"
                     value={formData.status_name}
@@ -364,9 +366,9 @@ export default function ProjectStatuses() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.project_statuses.status_description" className="block text-sm font-medium text-gray-300 mb-2">
                   Description
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   value={formData.status_description}
                   onChange={(e) => handleFormChange('status_description', e.target.value)}
@@ -378,9 +380,9 @@ export default function ProjectStatuses() {
 
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.project_statuses.status_color" className="block text-sm font-medium text-gray-300 mb-2">
                     Color
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="color"
                     value={formData.status_color}
@@ -389,9 +391,9 @@ export default function ProjectStatuses() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.project_statuses.status_icon" className="block text-sm font-medium text-gray-300 mb-2">
                     Icon (Icon Name)
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="text"
                     value={formData.status_icon}
@@ -401,9 +403,9 @@ export default function ProjectStatuses() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.project_statuses.status_order" className="block text-sm font-medium text-gray-300 mb-2">
                     Order
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="number"
                     value={formData.status_order || ''}
@@ -423,9 +425,9 @@ export default function ProjectStatuses() {
                     onChange={(e) => handleFormChange('is_initial_status', e.target.checked)}
                     className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500"
                   />
-                  <label htmlFor="is_initial_status" className="text-sm text-gray-300">
+                  <FieldLabelWithHelp helpKey="public.project_statuses.is_initial_status" htmlFor="is_initial_status" className="text-sm text-gray-300">
                     Initial Status
-                  </label>
+                  </FieldLabelWithHelp>
                 </div>
                 <div className="flex items-center gap-2">
                   <input
@@ -435,9 +437,9 @@ export default function ProjectStatuses() {
                     onChange={(e) => handleFormChange('is_final_status', e.target.checked)}
                     className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500"
                   />
-                  <label htmlFor="is_final_status" className="text-sm text-gray-300">
+                  <FieldLabelWithHelp helpKey="public.project_statuses.is_final_status" htmlFor="is_final_status" className="text-sm text-gray-300">
                     Final Status
-                  </label>
+                  </FieldLabelWithHelp>
                 </div>
                 <div className="flex items-center gap-2">
                   <input
@@ -447,9 +449,9 @@ export default function ProjectStatuses() {
                     onChange={(e) => handleFormChange('is_active_status', e.target.checked)}
                     className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500"
                   />
-                  <label htmlFor="is_active_status" className="text-sm text-gray-300">
+                  <FieldLabelWithHelp helpKey="public.project_statuses.is_active_status" htmlFor="is_active_status" className="text-sm text-gray-300">
                     Active Status
-                  </label>
+                  </FieldLabelWithHelp>
                 </div>
                 <div className="flex items-center gap-2">
                   <input
@@ -459,9 +461,9 @@ export default function ProjectStatuses() {
                     onChange={(e) => handleFormChange('is_active', e.target.checked)}
                     className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500"
                   />
-                  <label htmlFor="is_active" className="text-sm text-gray-300">
+                  <FieldLabelWithHelp helpKey="public.project_statuses.is_active" htmlFor="is_active" className="text-sm text-gray-300">
                     Active
-                  </label>
+                  </FieldLabelWithHelp>
                 </div>
               </div>
 
@@ -528,4 +530,19 @@ export default function ProjectStatuses() {
       </div>
     </div>
   );
+}
+
+// v1345 slice 4: field help for this component (public.project_statuses.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'status_code', 'status_name', 'status_description', 'status_color', 'status_icon', 'status_order',
+  'is_initial_status', 'is_final_status', 'is_active_status', 'is_active',
+].map((name) => `public.project_statuses.${name}`)
+
+export default function ProjectStatuses(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ProjectStatusesBody {...props} />
+    </FieldHelpScope>
+  )
 }

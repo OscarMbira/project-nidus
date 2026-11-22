@@ -1,4 +1,6 @@
 import { useState, useEffect, lazy, Suspense, memo, useCallback } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { supabase, appDb, simDb } from '../../services/supabaseClient'
 import { login, getRecommendedPlatform, switchPlatform, getUserPlatformAccess } from '../../services/unifiedAuthService'
@@ -278,9 +280,9 @@ function PlatformLogin() {
 
             <div className="space-y-4">
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <FieldLabelWithHelp helpKey="public.sign_in.email" htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Email address
-                </label>
+                </FieldLabelWithHelp>
                 <div className="mt-1 relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <Mail className="h-5 w-5 text-gray-400" />
@@ -300,9 +302,9 @@ function PlatformLogin() {
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <FieldLabelWithHelp helpKey="public.sign_in.password" htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Password
-                </label>
+                </FieldLabelWithHelp>
                 <div className="mt-1 relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <Lock className="h-5 w-5 text-gray-400" />
@@ -385,4 +387,18 @@ function PlatformLogin() {
   )
 }
 
-export default memo(PlatformLogin)
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'public.sign_in.email',
+  'public.sign_in.password',
+]
+
+function PlatformLoginWithHelp(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <PlatformLogin {...props} />
+    </FieldHelpScope>
+  )
+}
+
+export default memo(PlatformLoginWithHelp)

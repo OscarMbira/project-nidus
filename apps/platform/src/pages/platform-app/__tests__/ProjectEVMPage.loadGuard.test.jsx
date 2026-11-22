@@ -34,6 +34,17 @@ vi.mock('@nidus/shared/context/ThemeContext', () => ({
   ThemeProvider: ({ children }) => children,
 }))
 
+// v1345: these tests are about saving, not field help — render the help scope as a plain pass-through.
+vi.mock('@nidus/shared/context/FieldHelpContext', async () => {
+  const { createContext } = await import('react')
+  return {
+    default: createContext(null),
+    FieldHelpScope: ({ children }) => children,
+    useFieldHelpEntry: () => null,
+    useFieldHelpScope: () => null,
+  }
+})
+
 function renderPage() {
   return render(
     <MemoryRouter>

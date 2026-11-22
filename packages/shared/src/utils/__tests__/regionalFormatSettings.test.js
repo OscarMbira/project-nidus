@@ -123,3 +123,11 @@ describe('formatRegional*', () => {
     expect(out).toBe('2026-09-15')
   })
 })
+
+describe('month-name date formats follow the setting, not the display locale (2026-11-22)', () => {
+  it('D MMM YYYY stays day-first even with an en-US display locale', async () => {
+    const { formatRegionalDate } = await import('../formatRegionalSettings.js')
+    expect(formatRegionalDate('2027-03-15T12:00:00', { date_format: 'D MMM YYYY', locale: 'en-US', time_zone: 'UTC' })).toBe('15 Mar 2027')
+    expect(formatRegionalDate('2027-03-15T12:00:00', { date_format: 'MMM D, YYYY', locale: 'en-GB', time_zone: 'UTC' })).toBe('Mar 15, 2027')
+  })
+})

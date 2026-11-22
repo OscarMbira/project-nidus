@@ -10,6 +10,7 @@ import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from 'rea
 import { Toaster } from 'react-hot-toast'
 import { platformDb } from '@nidus/supabase'
 import { AppConfigProvider } from '@nidus/shared/context/AppConfigContext'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { ThemeProvider, useTheme } from '@nidus/shared/context/ThemeContext'
 import { UnsavedChangesProvider } from '@nidus/shared/context/UnsavedChangesContext'
 import { PlanningProvider } from '@nidus/planning/context/PlanningContext.jsx'
@@ -139,12 +140,15 @@ export default function App() {
       <UnsavedChangesProvider>
         <ThemeProvider>
           <AppConfigProvider app="planner" basePath="/app" db={platformDb}>
+            {/* v1345: app-wide help scope — a label outside any page scope still loads its help (2026-11-22). */}
+            <FieldHelpScope helpKeys={[]}>
             <PlanningProvider mode="planner" basePath="/app/planning" ProjectBar={PlannerProjectBar}>
               <AuthProvider>
                 <PlannerRoutes />
                 <Toaster position="top-right" />
               </AuthProvider>
             </PlanningProvider>
+            </FieldHelpScope>
           </AppConfigProvider>
         </ThemeProvider>
       </UnsavedChangesProvider>

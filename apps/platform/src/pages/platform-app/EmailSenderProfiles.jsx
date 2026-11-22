@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Link } from 'react-router-dom'
 import {
   AtSign,
@@ -35,7 +37,7 @@ const EMPTY_FORM = {
   is_default: false,
 }
 
-export default function EmailSenderProfiles() {
+function EmailSenderProfilesBody() {
   const [profiles, setProfiles] = useState([])
   const [projectTypes, setProjectTypes] = useState([])
   const [loading, setLoading] = useState(true)
@@ -350,7 +352,7 @@ export default function EmailSenderProfiles() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-medium text-gray-400">Send test to *</label>
+                <FieldLabelWithHelp helpKey="public.email_sender_profiles.test_email" className="text-xs font-medium text-gray-400" required>Send test to *</FieldLabelWithHelp>
                 <input
                   type="email"
                   value={testEmail}
@@ -411,7 +413,7 @@ export default function EmailSenderProfiles() {
 
             <div className="p-5 space-y-4">
               <div className="space-y-1">
-                <label className="text-xs font-medium text-gray-400">Profile Name *</label>
+                <FieldLabelWithHelp helpKey="public.email_sender_profiles.profile_name" className="text-xs font-medium text-gray-400" required>Profile Name *</FieldLabelWithHelp>
                 <input
                   type="text"
                   value={form.profile_name}
@@ -433,14 +435,14 @@ export default function EmailSenderProfiles() {
                   }))}
                   className="rounded border-gray-600"
                 />
-                <label htmlFor="is_default" className="text-sm text-gray-300">
+                <FieldLabelWithHelp helpKey="public.email_sender_profiles.is_default" htmlFor="is_default" className="text-sm text-gray-300">
                   System Default (fallback for all emails without a matching project type)
-                </label>
+                </FieldLabelWithHelp>
               </div>
 
               {!form.is_default && (
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-gray-400">Project Type *</label>
+                  <FieldLabelWithHelp helpKey="public.email_sender_profiles.project_type_id" className="text-xs font-medium text-gray-400" required>Project Type *</FieldLabelWithHelp>
                   <select
                     value={form.project_type_id}
                     onChange={(e) => setForm((f) => ({ ...f, project_type_id: e.target.value }))}
@@ -456,7 +458,7 @@ export default function EmailSenderProfiles() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-gray-400">From Name *</label>
+                  <FieldLabelWithHelp helpKey="public.email_sender_profiles.from_name" className="text-xs font-medium text-gray-400" required>From Name *</FieldLabelWithHelp>
                   <input
                     type="text"
                     value={form.from_name}
@@ -465,7 +467,7 @@ export default function EmailSenderProfiles() {
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-gray-400">From Email *</label>
+                  <FieldLabelWithHelp helpKey="public.email_sender_profiles.from_email" className="text-xs font-medium text-gray-400" required>From Email *</FieldLabelWithHelp>
                   <input
                     type="email"
                     value={form.from_email}
@@ -498,5 +500,19 @@ export default function EmailSenderProfiles() {
         </div>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.email_sender_profiles.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'test_email', 'profile_name', 'is_default', 'project_type_id', 'from_name', 'from_email',
+].map((name) => `public.email_sender_profiles.${name}`)
+
+export default function EmailSenderProfiles(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <EmailSenderProfilesBody {...props} />
+    </FieldHelpScope>
   )
 }

@@ -9,6 +9,8 @@
  * Route: /platform/project-roles/from-library
  */
 import { Fragment, useState, useEffect, useMemo } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { ArrowLeft, Briefcase, LayoutGrid, List as ListIcon, Search } from 'lucide-react'
@@ -27,7 +29,7 @@ import { platformDb } from '../../services/supabase/supabaseClient'
 
 const PAGE_SIZE = 20
 
-export default function ProjectFunctionalRoleFromLibrary() {
+function ProjectFunctionalRoleFromLibraryBody() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const { projectId, routeKey, loading: projectLoading, error: projectError } = usePlatformProjectId()
@@ -362,9 +364,9 @@ export default function ProjectFunctionalRoleFromLibrary() {
                     {isTicked && (
                       <tr>
                         <td colSpan={5} className="px-3 pb-4 pt-0 bg-gray-50 dark:bg-gray-900/40">
-                          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          <FieldLabelWithHelp helpKey="public.project_functional_roles.required_skills" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1" required>
                             Required skills for this project *
-                          </label>
+                          </FieldLabelWithHelp>
                           <MultiLineListInput
                             viewModeId={`project-roles-from-library-skills-${role.id}`}
                             id={`skills_${role.id}`}
@@ -409,9 +411,9 @@ export default function ProjectFunctionalRoleFromLibrary() {
                 {added && <p className="text-xs text-gray-500 dark:text-gray-400">Already added</p>}
                 {isTicked && (
                   <div className="pt-2">
-                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <FieldLabelWithHelp helpKey="public.project_functional_roles.required_skills" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1" required>
                       Required skills for this project *
-                    </label>
+                    </FieldLabelWithHelp>
                     <MultiLineListInput
                       viewModeId={`project-roles-from-library-skills-${role.id}`}
                       id={`skills_${role.id}`}
@@ -453,5 +455,19 @@ export default function ProjectFunctionalRoleFromLibrary() {
         </div>
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.project_functional_roles.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'required_skills',
+].map((name) => `public.project_functional_roles.${name}`)
+
+export default function ProjectFunctionalRoleFromLibrary(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ProjectFunctionalRoleFromLibraryBody {...props} />
+    </FieldHelpScope>
   )
 }

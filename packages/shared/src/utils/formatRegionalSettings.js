@@ -56,6 +56,17 @@ export function formatRegionalDate(value, settings) {
       if (s.date_format === 'DD/MM/YYYY') return `${get('day')}/${get('month')}/${get('year')}`
       return `${get('month')}/${get('day')}/${get('year')}`
     }
+    // Month-name formats: the setting fixes the ORDER; the display locale only supplies the month name.
+    // Without this, en-US turned 'D MMM YYYY' into "Mar 15, 2027" (2026-11-22).
+    if (s.date_format === 'D MMM YYYY' || s.date_format === 'MMM D, YYYY' || !s.date_format) {
+      const parts = new Intl.DateTimeFormat(s.locale || 'en-GB', {
+        ...opts,
+        timeZone: s.time_zone || undefined,
+      }).formatToParts(date)
+      const get = (t) => parts.find((p) => p.type === t)?.value || ''
+      if (s.date_format === 'MMM D, YYYY') return `${get('month')} ${get('day')}, ${get('year')}`
+      return `${get('day')} ${get('month')} ${get('year')}`
+    }
     return formatted
   } catch {
     return String(value)

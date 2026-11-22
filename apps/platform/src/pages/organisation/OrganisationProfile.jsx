@@ -5,6 +5,8 @@
  */
 
 import { useState, useEffect } from 'react';
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Save, Building2 } from 'lucide-react';
 import { platformDb } from '@nidus/supabase';
 import { useNavigate } from 'react-router-dom';
@@ -14,7 +16,7 @@ const input = 'w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-
 const label = 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1';
 const card  = 'rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm';
 
-export default function OrganisationProfile() {
+function OrganisationProfileBody() {
   const [form, setForm]       = useState({ name: '', contact_email: '', phone: '', industry: '', country_id: '' });
   const [countries, setCountries] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -93,23 +95,23 @@ export default function OrganisationProfile() {
       <form onSubmit={handleSave} className={card}>
         <div className="space-y-4">
           <div>
-            <label className={label}>Organisation Name</label>
+            <FieldLabelWithHelp helpKey="public.organisations.name" className={label}>Organisation Name</FieldLabelWithHelp>
             <input className={input} value={form.name} onChange={set('name')} required />
           </div>
           <div>
-            <label className={label}>Contact Email</label>
+            <FieldLabelWithHelp helpKey="public.organisations.email" className={label}>Contact Email</FieldLabelWithHelp>
             <input className={input} type="email" value={form.contact_email} onChange={set('contact_email')} />
           </div>
           <div>
-            <label className={label}>Phone</label>
+            <FieldLabelWithHelp helpKey="public.organisations.phone" className={label}>Phone</FieldLabelWithHelp>
             <input className={input} value={form.phone} onChange={set('phone')} />
           </div>
           <div>
-            <label className={label}>Industry</label>
+            <FieldLabelWithHelp helpKey="public.organisations.industry" className={label}>Industry</FieldLabelWithHelp>
             <input className={input} value={form.industry} onChange={set('industry')} placeholder="e.g. Technology, Finance, Healthcare" />
           </div>
           <div>
-            <label className={label}>Country</label>
+            <FieldLabelWithHelp helpKey="public.organisations.country_id" className={label}>Country</FieldLabelWithHelp>
             <SelectField
               options={countryOptions}
               value={form.country_id}
@@ -131,4 +133,18 @@ export default function OrganisationProfile() {
       </form>
     </div>
   );
+}
+
+// v1345 slice 4: field help for this component (public.organisations.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'name', 'email', 'phone', 'industry', 'country_id',
+].map((name) => `public.organisations.${name}`)
+
+export default function OrganisationProfile(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <OrganisationProfileBody {...props} />
+    </FieldHelpScope>
+  )
 }

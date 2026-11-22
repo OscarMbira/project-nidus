@@ -5,6 +5,8 @@
  *         /platform/pmo-admin/data-management/breaches/:id/edit
  */
 import { useState, useEffect } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useNavigate, useParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { ArrowLeft, ShieldAlert } from 'lucide-react'
@@ -22,7 +24,7 @@ const SEVERITIES = ['low', 'medium', 'high', 'critical']
 const STATUSES = ['detected', 'investigating', 'contained', 'remediated', 'closed']
 const listPath = '/platform/pmo-admin/data-management'
 
-export default function DataBreachRecordForm() {
+function DataBreachRecordFormBody() {
   const navigate = useNavigate()
   const { id } = useParams()
   const isEdit = !!id
@@ -173,7 +175,7 @@ export default function DataBreachRecordForm() {
       ) : (
         <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 space-y-5">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Breach type *</label>
+            <FieldLabelWithHelp helpKey="public.data_breach_records.breach_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>Breach type *</FieldLabelWithHelp>
             <input
               type="text"
               required
@@ -187,7 +189,7 @@ export default function DataBreachRecordForm() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Severity</label>
+              <FieldLabelWithHelp helpKey="public.data_breach_records.severity" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Severity</FieldLabelWithHelp>
               <select
                 disabled={isEdit}
                 value={severity}
@@ -199,7 +201,7 @@ export default function DataBreachRecordForm() {
             </div>
             {isEdit && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
+                <FieldLabelWithHelp helpKey="public.data_breach_records.status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</FieldLabelWithHelp>
                 <select
                   value={status}
                   onChange={(e) => setStatus(e.target.value)}
@@ -212,7 +214,7 @@ export default function DataBreachRecordForm() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Data types affected</label>
+            <FieldLabelWithHelp helpKey="public.data_breach_records.data_types_affected" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Data types affected</FieldLabelWithHelp>
             <input
               type="text"
               disabled={isEdit}
@@ -224,7 +226,7 @@ export default function DataBreachRecordForm() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Mitigation steps</label>
+            <FieldLabelWithHelp helpKey="public.data_breach_records.mitigation_steps" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Mitigation steps</FieldLabelWithHelp>
             <textarea
               rows={4}
               value={mitigationSteps}
@@ -252,5 +254,19 @@ export default function DataBreachRecordForm() {
         </form>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.data_breach_records.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'breach_type', 'severity', 'status', 'data_types_affected', 'mitigation_steps',
+].map((name) => `public.data_breach_records.${name}`)
+
+export default function DataBreachRecordForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <DataBreachRecordFormBody {...props} />
+    </FieldHelpScope>
   )
 }

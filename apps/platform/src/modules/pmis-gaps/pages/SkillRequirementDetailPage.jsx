@@ -4,6 +4,8 @@
  * per-entity-type picker UI yet) matching the underlying table's own generic design.
  */
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save, Loader, BookMarked } from 'lucide-react'
 import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesContext'
@@ -18,7 +20,7 @@ const ENTITY_TYPES = [
   { value: 'project', label: 'Project' },
 ]
 
-export default function SkillRequirementDetailPage({ basePath = '/pm/resources/skills', forceEdit = false }) {
+function SkillRequirementDetailPageBody({ basePath = '/pm/resources/skills', forceEdit = false }) {
   const { id } = useParams()
   const navigate = useNavigate()
   const isCreate = !id
@@ -152,7 +154,7 @@ export default function SkillRequirementDetailPage({ basePath = '/pm/resources/s
                 <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-800 dark:text-red-200">{error}</div>
               )}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Skill *</label>
+                <FieldLabelWithHelp helpKey="public.skill_requirements.skill_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>Skill *</FieldLabelWithHelp>
                 <select
                   value={skillId}
                   onChange={(e) => setSkillId(e.target.value)}
@@ -167,7 +169,7 @@ export default function SkillRequirementDetailPage({ basePath = '/pm/resources/s
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Applies to</label>
+                  <FieldLabelWithHelp helpKey="public.skill_requirements.entity_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Applies to</FieldLabelWithHelp>
                   <select
                     value={entityType}
                     onChange={(e) => setEntityType(e.target.value)}
@@ -179,7 +181,7 @@ export default function SkillRequirementDetailPage({ basePath = '/pm/resources/s
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Entity ID *</label>
+                  <FieldLabelWithHelp helpKey="public.skill_requirements.entity_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>Entity ID *</FieldLabelWithHelp>
                   <input
                     type="text"
                     value={entityId}
@@ -192,7 +194,7 @@ export default function SkillRequirementDetailPage({ basePath = '/pm/resources/s
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Project (optional)</label>
+                  <FieldLabelWithHelp helpKey="public.skill_requirements.project_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>Project (optional)</FieldLabelWithHelp>
                   <input
                     type="text"
                     value={projectId}
@@ -202,7 +204,7 @@ export default function SkillRequirementDetailPage({ basePath = '/pm/resources/s
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Required level</label>
+                  <FieldLabelWithHelp helpKey="public.skill_requirements.required_level" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Required level</FieldLabelWithHelp>
                   <select
                     value={requiredLevel}
                     onChange={(e) => setRequiredLevel(e.target.value)}
@@ -253,5 +255,19 @@ export default function SkillRequirementDetailPage({ basePath = '/pm/resources/s
       </div>
       {successModal}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.skill_requirements.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'skill_id', 'entity_type', 'entity_id', 'project_id', 'required_level',
+].map((name) => `public.skill_requirements.${name}`)
+
+export default function SkillRequirementDetailPage(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <SkillRequirementDetailPageBody {...props} />
+    </FieldHelpScope>
   )
 }

@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Plus, Search, RefreshCw, AlertCircle, X, Trash2 } from 'lucide-react'
 import {
   getAllPortfolioProjects,
@@ -27,7 +29,7 @@ function statusBadge(s) {
   )
 }
 
-export default function PortfolioProjects() {
+function PortfolioProjectsBody() {
   const [rows, setRows]         = useState([])
   const [portfolios, setPortfolios] = useState([])
   const [allProjects, setAllProjects] = useState([])
@@ -268,7 +270,7 @@ export default function PortfolioProjects() {
             {addError && <p className="text-red-400 text-sm">{addError}</p>}
             <div className="space-y-3">
               <div>
-                <label className="block text-gray-400 text-sm mb-1">Portfolio *</label>
+                <FieldLabelWithHelp helpKey="public.portfolio_projects.portfolio_id" className="block text-gray-400 text-sm mb-1" required listOptions={false}>Portfolio *</FieldLabelWithHelp>
                 <select
                   value={addForm.portfolio_id}
                   onChange={e => setAddForm(f => ({ ...f, portfolio_id: e.target.value }))}
@@ -281,7 +283,7 @@ export default function PortfolioProjects() {
                 </select>
               </div>
               <div>
-                <label className="block text-gray-400 text-sm mb-1">Project *</label>
+                <FieldLabelWithHelp helpKey="public.portfolio_projects.project_id" className="block text-gray-400 text-sm mb-1" required listOptions={false}>Project *</FieldLabelWithHelp>
                 <select
                   value={addForm.project_id}
                   onChange={e => setAddForm(f => ({ ...f, project_id: e.target.value }))}
@@ -335,5 +337,19 @@ export default function PortfolioProjects() {
         </div>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.portfolio_projects.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'portfolio_id', 'project_id',
+].map((name) => `public.portfolio_projects.${name}`)
+
+export default function PortfolioProjects(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <PortfolioProjectsBody {...props} />
+    </FieldHelpScope>
   )
 }

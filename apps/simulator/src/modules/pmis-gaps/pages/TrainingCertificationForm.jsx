@@ -4,6 +4,8 @@
  * TrainingCertificationForm.jsx. Always sim schema.
  */
 import { useState, useEffect, useMemo } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
@@ -12,7 +14,7 @@ import { getCertification, createCertification, updateCertification } from '../s
 
 const inputClass = 'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm'
 
-export default function TrainingCertificationForm() {
+function TrainingCertificationFormBody() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { showSuccess, modal } = useSuccessModal()
@@ -93,21 +95,21 @@ export default function TrainingCertificationForm() {
 
       <div className="space-y-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Certification name *</label>
+          <FieldLabelWithHelp helpKey="sim.training_certifications.certification_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>Certification name *</FieldLabelWithHelp>
           <input type="text" value={form.certification_name} onChange={(e) => handleChange('certification_name', e.target.value)} className={inputClass} />
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Code</label>
+            <FieldLabelWithHelp helpKey="sim.training_certifications.certification_code" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Code</FieldLabelWithHelp>
             <input type="text" value={form.certification_code} onChange={(e) => handleChange('certification_code', e.target.value)} className={inputClass} />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Issuing body</label>
+            <FieldLabelWithHelp helpKey="sim.training_certifications.issuing_body" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Issuing body</FieldLabelWithHelp>
             <input type="text" value={form.issuing_body} onChange={(e) => handleChange('issuing_body', e.target.value)} className={inputClass} />
           </div>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Validity (months, blank = never expires)</label>
+          <FieldLabelWithHelp helpKey="sim.training_certifications.validity_months" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Validity (months, blank = never expires)</FieldLabelWithHelp>
           <input type="number" min="0" value={form.validity_months} onChange={(e) => handleChange('validity_months', e.target.value)} className={inputClass} />
         </div>
       </div>
@@ -122,5 +124,21 @@ export default function TrainingCertificationForm() {
       </div>
       {modal}
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.training_certifications.certification_name',
+  'sim.training_certifications.certification_code',
+  'sim.training_certifications.issuing_body',
+  'sim.training_certifications.validity_months',
+]
+
+export default function TrainingCertificationForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <TrainingCertificationFormBody {...props} />
+    </FieldHelpScope>
   )
 }

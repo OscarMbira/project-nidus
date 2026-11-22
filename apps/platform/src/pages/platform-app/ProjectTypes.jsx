@@ -10,6 +10,8 @@
  */
 
 import { useState, useEffect, useCallback, useMemo, memo, useRef } from 'react';
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useNavigate } from 'react-router-dom';
 import { Plus, Edit, Trash2, ArrowLeft, Save, X } from 'lucide-react';
 import { toast } from 'react-hot-toast';
@@ -78,7 +80,7 @@ const TypeTableRow = memo(function TypeTableRow({ type, onEdit, onDelete }) {
   );
 });
 
-export default function ProjectTypes() {
+function ProjectTypesBody() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [projectTypes, setProjectTypes] = useState([]);
@@ -304,9 +306,9 @@ export default function ProjectTypes() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.project_types.type_code" className="block text-sm font-medium text-gray-300 mb-2" required>
                     Type Code *
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="text"
                     value={formData.type_code}
@@ -317,9 +319,9 @@ export default function ProjectTypes() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.project_types.type_name" className="block text-sm font-medium text-gray-300 mb-2" required>
                     Type Name *
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="text"
                     value={formData.type_name}
@@ -332,9 +334,9 @@ export default function ProjectTypes() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.project_types.type_description" className="block text-sm font-medium text-gray-300 mb-2">
                   Description
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   value={formData.type_description}
                   onChange={(e) => handleFormChange('type_description', e.target.value)}
@@ -346,9 +348,9 @@ export default function ProjectTypes() {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.project_types.type_color" className="block text-sm font-medium text-gray-300 mb-2">
                     Color
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="color"
                     value={formData.type_color}
@@ -357,9 +359,9 @@ export default function ProjectTypes() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.project_types.type_icon" className="block text-sm font-medium text-gray-300 mb-2">
                     Icon (Icon Name)
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="text"
                     value={formData.type_icon}
@@ -369,9 +371,9 @@ export default function ProjectTypes() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.project_types.type_category" className="block text-sm font-medium text-gray-300 mb-2">
                     Category
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="text"
                     value={formData.type_category}
@@ -390,9 +392,9 @@ export default function ProjectTypes() {
                   onChange={(e) => handleFormChange('is_active', e.target.checked)}
                   className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500"
                 />
-                <label htmlFor="is_active" className="text-sm text-gray-300">
+                <FieldLabelWithHelp helpKey="public.project_types.is_active" htmlFor="is_active" className="text-sm text-gray-300">
                   Active
-                </label>
+                </FieldLabelWithHelp>
               </div>
 
               <div className="flex items-center gap-3 pt-4">
@@ -457,4 +459,18 @@ export default function ProjectTypes() {
       </div>
     </div>
   );
+}
+
+// v1345 slice 4: field help for this component (public.project_types.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'type_code', 'type_name', 'type_description', 'type_color', 'type_icon', 'type_category', 'is_active',
+].map((name) => `public.project_types.${name}`)
+
+export default function ProjectTypes(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ProjectTypesBody {...props} />
+    </FieldHelpScope>
+  )
 }

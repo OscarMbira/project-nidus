@@ -49,6 +49,17 @@ describe('fieldHelpService (v1345)', () => {
     expect(db.log.filter((l) => l.table === 'field_help' && l.op === 'select')).toHaveLength(1)
   })
 
+  it('a Simulator key with no alias falls back to the Platform key of the same table and column (2026-11-22)', async () => {
+    const db = fakeDb({
+      field_help_aliases: [],
+      field_help: [{ ...HELP, help_key: 'public.change_requests.cost_impact_level', title: 'Cost impact' }],
+    })
+    const help = await loadFieldHelp(['sim.change_requests.cost_impact_level'], { db })
+    expect(help['sim.change_requests.cost_impact_level'].title).toBe('Cost impact')
+    const sel = db.log.find((l) => l.table === 'field_help' && l.op === 'select')
+    expect(sel.filters.find(([c]) => c === 'help_key')[1]).toContain('public.change_requests.cost_impact_level')
+  })
+
   it('serves repeat loads from the cache and clears it when the help version changes (P8)', async () => {
     const tables = { 'field_help:version': [{ updated_at: 'v1' }], field_help: [HELP] }
     const db = fakeDb(tables)

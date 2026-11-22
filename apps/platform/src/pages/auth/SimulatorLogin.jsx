@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { supabase, appDb, simDb } from '../../services/supabaseClient'
 import SSOLoginButton from '../../components/security/SSOLoginButton'
@@ -10,7 +12,7 @@ import { Mail, Lock, AlertCircle, Loader, LogIn } from 'lucide-react'
 import SimulatorHeader from '../../components/homepage/SimulatorHeader'
 import SimulatorFooter from '../../components/homepage/SimulatorFooter'
 
-export default function SimulatorLogin() {
+function SimulatorLoginBody() {
   const navigate = useNavigate()
   const location = useLocation()
   const [email, setEmail] = useState('')
@@ -263,9 +265,9 @@ export default function SimulatorLogin() {
 
             <div className="space-y-4">
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <FieldLabelWithHelp helpKey="public.sign_in.email" htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Email address
-                </label>
+                </FieldLabelWithHelp>
                 <div className="mt-1 relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <Mail className="h-5 w-5 text-gray-400" />
@@ -285,9 +287,9 @@ export default function SimulatorLogin() {
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <FieldLabelWithHelp helpKey="public.sign_in.password" htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Password
-                </label>
+                </FieldLabelWithHelp>
                 <div className="mt-1 relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <Lock className="h-5 w-5 text-gray-400" />
@@ -368,3 +370,15 @@ export default function SimulatorLogin() {
   )
 }
 
+// v1345 slice 4: field help for this component (public.users.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+// Public form: labels load their own public-form keys (anonymous visitors may read them, v1345 4o).
+const HELP_KEYS = []
+
+export default function SimulatorLogin(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <SimulatorLoginBody {...props} />
+    </FieldHelpScope>
+  )
+}

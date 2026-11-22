@@ -4,6 +4,8 @@
  * checked by the database (planner_invite_member, plan limits).
  */
 import { useCallback, useEffect, useState } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useSearchParams } from 'react-router-dom'
 import { Send, Copy } from 'lucide-react'
 import { platformDb } from '@nidus/supabase'
@@ -16,7 +18,7 @@ import { ROLE_LABELS, sendInviteEmail } from '../../lib/inviteEmail.js'
 
 const input = 'px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white'
 
-export default function MembersPage() {
+function MembersPageBody() {
   const [params] = useSearchParams()
   const { projects, context, readOnly } = useWorkspace()
   const { showSuccess, modal } = useSuccessModal()
@@ -93,12 +95,12 @@ export default function MembersPage() {
           {error && <p role="alert" className="text-sm text-red-600 dark:text-red-400">{error}</p>}
           {manage && (
             <form onSubmit={invite} className="flex flex-wrap items-end gap-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4">
-              <label className="text-sm flex-1 min-w-[14rem]">Email<input type="email" required className={`${input} mt-1 w-full`} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></label>
-              <label className="text-sm">Role
+              <FieldLabelWithHelp helpKey="public.organisation_invitations.email" className="text-sm flex-1 min-w-[14rem]">Email<input type="email" required className={`${input} mt-1 w-full`} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></FieldLabelWithHelp>
+              <FieldLabelWithHelp helpKey="public.organisation_invitations.role_id" className="text-sm">Role
                 <select className={`${input} mt-1 block`} value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
                   {Object.entries(ROLE_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                 </select>
-              </label>
+              </FieldLabelWithHelp>
               <button type="submit" disabled={busy} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm disabled:opacity-50"><Send className="h-4 w-4" /> {busy ? 'Inviting…' : 'Invite'}</button>
               {lastLink && (
                 <button type="button" onClick={() => navigator.clipboard?.writeText(lastLink)} className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 text-sm" title={lastLink}>
@@ -140,5 +142,19 @@ export default function MembersPage() {
       )}
       {modal}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.organisation_invitations.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'email', 'role_id',
+].map((name) => `public.organisation_invitations.${name}`)
+
+export default function MembersPage(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <MembersPageBody {...props} />
+    </FieldHelpScope>
   )
 }

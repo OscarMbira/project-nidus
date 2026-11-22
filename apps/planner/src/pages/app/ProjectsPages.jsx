@@ -4,6 +4,8 @@
  * Projects are edited in the full PMIS only; the Planner keeps project setup to name + start.
  */
 import { useState } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Plus, Save } from 'lucide-react'
 import { RowActionButton } from '@nidus/ui'
@@ -50,7 +52,7 @@ export function ProjectsListPage() {
 
 const input = 'mt-1 w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white'
 
-export function ProjectCreatePage() {
+function ProjectCreatePageBody() {
   const navigate = useNavigate()
   const [params] = useSearchParams()
   const { reloadProjects, readOnly, canManage } = useWorkspace()
@@ -100,9 +102,9 @@ export function ProjectCreatePage() {
         <p className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 text-sm text-gray-500 dark:text-gray-400">Audit details appear after this record is saved.</p>
       ) : (
       <form onSubmit={submit} className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 space-y-4">
-        <label className="block text-sm">Project name *<input className={input} maxLength={200} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></label>
-        <label className="block text-sm">Start date<input type="date" className={input} value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.target.value })} /></label>
-        <label className="block text-sm">Description<textarea rows={3} className={input} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></label>
+        <FieldLabelWithHelp helpKey="public.projects.project_name" className="block text-sm">Project name *<input className={input} maxLength={200} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></FieldLabelWithHelp>
+        <FieldLabelWithHelp helpKey="public.projects.start_date" className="block text-sm">Start date<input type="date" className={input} value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.target.value })} /></FieldLabelWithHelp>
+        <FieldLabelWithHelp helpKey="public.projects.project_description" className="block text-sm">Description<textarea rows={3} className={input} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></FieldLabelWithHelp>
         {error && <p role="alert" className="text-sm text-red-600 dark:text-red-400">{error}</p>}
         <div className="flex gap-2">
           <button type="button" onClick={() => confirmDiscard(() => navigate(-1))} className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 text-sm">Cancel</button>
@@ -112,5 +114,14 @@ export function ProjectCreatePage() {
       )}
       {modal}
     </div>
+  )
+}
+
+// v1345: field help for this page (labels load their own keys).
+export function ProjectCreatePage(props) {
+  return (
+    <FieldHelpScope helpKeys={[]}>
+      <ProjectCreatePageBody {...props} />
+    </FieldHelpScope>
   )
 }

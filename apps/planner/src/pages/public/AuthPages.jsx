@@ -4,6 +4,8 @@
  * (planner_create_account, SQL v1247), so there is no organisation-setup step.
  */
 import { useEffect, useState } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { Link, Navigate, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import PublicLayout, { AuthCard, inputCls, primaryBtn } from './PublicLayout.jsx'
 import { useAuth } from '../../lib/auth.jsx'
@@ -12,7 +14,7 @@ import { rememberPendingPlan } from '../../lib/pendingPlan.js'
 
 const Err = ({ msg }) => (msg ? <p role="alert" className="text-sm text-red-600 dark:text-red-400">{msg}</p> : null)
 
-export function LoginPage() {
+function LoginPageBody() {
   const { signIn, user } = useAuth()
   const navigate = useNavigate()
   const from = useLocation().state?.from || '/app'
@@ -38,8 +40,8 @@ export function LoginPage() {
     <PublicLayout>
       <AuthCard title="Sign in" footer={<>New here? <Link to="/signup" className="text-blue-600 dark:text-blue-400 underline">Start a free trial</Link></>}>
         <form onSubmit={submit} className="space-y-3">
-          <label className="block text-sm">Email<input type="email" required autoComplete="email" className={inputCls} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></label>
-          <label className="block text-sm">Password<input type="password" required autoComplete="current-password" className={inputCls} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></label>
+          <FieldLabelWithHelp helpKey="public.sign_in.email" className="block text-sm">Email<input type="email" required autoComplete="email" className={inputCls} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></FieldLabelWithHelp>
+          <FieldLabelWithHelp helpKey="public.sign_in.password" className="block text-sm">Password<input type="password" required autoComplete="current-password" className={inputCls} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></FieldLabelWithHelp>
           <Err msg={error} />
           <button type="submit" disabled={busy} className={primaryBtn}>{busy ? 'Signing in…' : 'Sign in'}</button>
           <p className="text-right text-sm"><Link to="/reset-password" className="text-blue-600 dark:text-blue-400 underline">Forgot password?</Link></p>
@@ -57,7 +59,7 @@ export function validateSignup({ fullName, email, password }) {
   return null
 }
 
-export function SignupPage() {
+function SignupPageBody() {
   const { signUp, user } = useAuth()
   // Invited people may always create an account (the public sign-up switch does not apply).
   const [params] = useSearchParams()
@@ -103,9 +105,9 @@ export function SignupPage() {
           </div>
         ) : (
           <form onSubmit={submit} className="space-y-3" noValidate>
-            <label className="block text-sm">Your name<input required autoComplete="name" className={inputCls} value={form.fullName} onChange={(e) => setForm({ ...form, fullName: e.target.value })} /></label>
-            <label className="block text-sm">Work email<input type="email" required autoComplete="email" className={inputCls} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></label>
-            <label className="block text-sm">Password<input type="password" required autoComplete="new-password" minLength={8} className={inputCls} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></label>
+            <FieldLabelWithHelp helpKey="public.sign_up.full_name" className="block text-sm">Your name<input required autoComplete="name" className={inputCls} value={form.fullName} onChange={(e) => setForm({ ...form, fullName: e.target.value })} /></FieldLabelWithHelp>
+            <FieldLabelWithHelp helpKey="public.sign_up.email" className="block text-sm">Work email<input type="email" required autoComplete="email" className={inputCls} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></FieldLabelWithHelp>
+            <FieldLabelWithHelp helpKey="public.sign_up.password" className="block text-sm">Password<input type="password" required autoComplete="new-password" minLength={8} className={inputCls} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></FieldLabelWithHelp>
             <Err msg={error} />
             <button type="submit" disabled={busy || (open === null && !invited)} className={primaryBtn}>{busy ? 'Creating…' : 'Create my account'}</button>
             <p className="text-xs text-gray-500 dark:text-gray-400">14 days free, no card. You can rename your workspace later.</p>
@@ -131,7 +133,7 @@ export function VerifyPage() {
   )
 }
 
-export function ResetPasswordPage() {
+function ResetPasswordPageBody() {
   const { sendReset, updatePassword, user } = useAuth()
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
@@ -170,9 +172,9 @@ export function ResetPasswordPage() {
         ) : (
           <form onSubmit={submit} className="space-y-3">
             {recovering ? (
-              <label className="block text-sm">New password<input type="password" required minLength={8} autoComplete="new-password" className={inputCls} value={password} onChange={(e) => setPassword(e.target.value)} /></label>
+              <FieldLabelWithHelp helpKey="public.password_reset.new_password" className="block text-sm">New password<input type="password" required minLength={8} autoComplete="new-password" className={inputCls} value={password} onChange={(e) => setPassword(e.target.value)} /></FieldLabelWithHelp>
             ) : (
-              <label className="block text-sm">Email<input type="email" required autoComplete="email" className={inputCls} value={email} onChange={(e) => setEmail(e.target.value)} /></label>
+              <FieldLabelWithHelp helpKey="public.password_reset.email" className="block text-sm">Email<input type="email" required autoComplete="email" className={inputCls} value={email} onChange={(e) => setEmail(e.target.value)} /></FieldLabelWithHelp>
             )}
             <Err msg={error} />
             <button type="submit" disabled={busy} className={primaryBtn}>{busy ? 'Working…' : recovering ? 'Save password' : 'Send reset link'}</button>
@@ -180,5 +182,32 @@ export function ResetPasswordPage() {
         )}
       </AuthCard>
     </PublicLayout>
+  )
+}
+
+// v1345: field help for this page (labels load their own keys).
+export function LoginPage(props) {
+  return (
+    <FieldHelpScope helpKeys={[]}>
+      <LoginPageBody {...props} />
+    </FieldHelpScope>
+  )
+}
+
+// v1345: field help for this page (labels load their own keys).
+export function SignupPage(props) {
+  return (
+    <FieldHelpScope helpKeys={[]}>
+      <SignupPageBody {...props} />
+    </FieldHelpScope>
+  )
+}
+
+// v1345: field help for this page (labels load their own keys).
+export function ResetPasswordPage(props) {
+  return (
+    <FieldHelpScope helpKeys={[]}>
+      <ResetPasswordPageBody {...props} />
+    </FieldHelpScope>
   )
 }

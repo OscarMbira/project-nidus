@@ -2,6 +2,8 @@
  * Skill Catalog item — create/view/edit (GAP-11, v963 Phase 18), rule 65 + rule 63.1 Audit tab.
  */
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save, Loader, BookMarked } from 'lucide-react'
 import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesContext'
@@ -10,7 +12,7 @@ import { DetailAuditTabList, AuditDetailsPanel, AuditCard, AuditField, AuditTime
 import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
 import { listCategories, getSkill, createSkill, updateSkill } from '../services/skillCatalogService'
 
-export default function SkillCatalogDetailPage({ basePath = '/pm/resources/skills', forceEdit = false }) {
+function SkillCatalogDetailPageBody({ basePath = '/pm/resources/skills', forceEdit = false }) {
   const { id } = useParams()
   const navigate = useNavigate()
   const isCreate = !id
@@ -140,7 +142,7 @@ export default function SkillCatalogDetailPage({ basePath = '/pm/resources/skill
                 <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-800 dark:text-red-200">{error}</div>
               )}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Skill name *</label>
+                <FieldLabelWithHelp helpKey="public.skill_catalog.skill_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>Skill name *</FieldLabelWithHelp>
                 <input
                   type="text"
                   value={skillName}
@@ -151,7 +153,7 @@ export default function SkillCatalogDetailPage({ basePath = '/pm/resources/skill
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Category</label>
+                  <FieldLabelWithHelp helpKey="public.skill_catalog.category_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Category</FieldLabelWithHelp>
                   <select
                     value={categoryId}
                     onChange={(e) => setCategoryId(e.target.value)}
@@ -164,7 +166,7 @@ export default function SkillCatalogDetailPage({ basePath = '/pm/resources/skill
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Code</label>
+                  <FieldLabelWithHelp helpKey="public.skill_catalog.skill_code" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Code</FieldLabelWithHelp>
                   <input
                     type="text"
                     value={skillCode}
@@ -174,7 +176,7 @@ export default function SkillCatalogDetailPage({ basePath = '/pm/resources/skill
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</label>
+                <FieldLabelWithHelp helpKey="public.skill_catalog.description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</FieldLabelWithHelp>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
@@ -220,5 +222,19 @@ export default function SkillCatalogDetailPage({ basePath = '/pm/resources/skill
       </div>
       {successModal}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.skill_catalog.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'skill_name', 'category_id', 'skill_code', 'description',
+].map((name) => `public.skill_catalog.${name}`)
+
+export default function SkillCatalogDetailPage(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <SkillCatalogDetailPageBody {...props} />
+    </FieldHelpScope>
   )
 }

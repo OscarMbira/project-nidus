@@ -5,6 +5,8 @@
  * the URL-based current-project context other gap features rely on. Always sim schema.
  */
 import { useState, useEffect, useMemo } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
@@ -14,7 +16,7 @@ import { getForm, createForm, updateForm, listProjectOptions } from '../../../se
 const TARGET_ENTITY_TYPES = ['issue', 'risk', 'task', 'change', 'feedback', 'other']
 const inputClass = 'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm'
 
-export default function IntakeFormForm() {
+function IntakeFormFormBody() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { showSuccess, modal } = useSuccessModal()
@@ -119,24 +121,24 @@ export default function IntakeFormForm() {
       <div className="space-y-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Form name *</label>
+            <FieldLabelWithHelp helpKey="sim.intake_forms.form_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>Form name *</FieldLabelWithHelp>
             <input type="text" value={form.form_name} onChange={(e) => handleChange('form_name', e.target.value)} className={inputClass} />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Form code *</label>
+            <FieldLabelWithHelp helpKey="sim.intake_forms.form_code" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>Form code *</FieldLabelWithHelp>
             <input type="text" value={form.form_code} onChange={(e) => handleChange('form_code', e.target.value)} disabled={isEdit} className={`${inputClass} disabled:opacity-60`} placeholder="e.g. client-issue-intake" />
           </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Creates a</label>
+            <FieldLabelWithHelp helpKey="sim.intake_forms.target_entity_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Creates a</FieldLabelWithHelp>
             <select value={form.target_entity_type} onChange={(e) => handleChange('target_entity_type', e.target.value)} className={inputClass}>
               {TARGET_ENTITY_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Project (optional)</label>
+            <FieldLabelWithHelp helpKey="sim.intake_forms.project_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" listOptions={false}>Project (optional)</FieldLabelWithHelp>
             <select value={form.practice_project_id} onChange={(e) => handleChange('practice_project_id', e.target.value)} className={inputClass}>
               <option value="">Account-wide (no project link)</option>
               {projects.map((p) => <option key={p.id} value={p.id}>{p.project_name}</option>)}
@@ -146,19 +148,19 @@ export default function IntakeFormForm() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Active from</label>
+            <FieldLabelWithHelp helpKey="sim.intake_forms.is_active" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Active from</FieldLabelWithHelp>
             <input type="date" value={form.active_from} onChange={(e) => handleChange('active_from', e.target.value)} className={inputClass} />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Active to</label>
+            <FieldLabelWithHelp helpKey="sim.intake_forms.is_active" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Active to</FieldLabelWithHelp>
             <input type="date" value={form.active_to} onChange={(e) => handleChange('active_to', e.target.value)} className={inputClass} />
           </div>
         </div>
 
-        <label className="inline-flex items-center gap-2">
+        <FieldLabelWithHelp helpKey="sim.intake_forms.is_active" className="inline-flex items-center gap-2">
           <input type="checkbox" checked={form.is_active} onChange={(e) => handleChange('is_active', e.target.checked)} />
           <span className="text-sm text-gray-700 dark:text-gray-300">Active</span>
-        </label>
+        </FieldLabelWithHelp>
       </div>
 
       <div className="flex items-center gap-3">
@@ -171,5 +173,22 @@ export default function IntakeFormForm() {
       </div>
       {modal}
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.intake_forms.form_name',
+  'sim.intake_forms.form_code',
+  'sim.intake_forms.target_entity_type',
+  'sim.intake_forms.project_id',
+  'sim.intake_forms.is_active',
+]
+
+export default function IntakeFormForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <IntakeFormFormBody {...props} />
+    </FieldHelpScope>
   )
 }

@@ -4,6 +4,8 @@
  * owner's menu grants. Also shows the plan's limits and trial status.
  */
 import { useState } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Link } from 'react-router-dom'
 import { Save } from 'lucide-react'
 import { platformDb } from '@nidus/supabase'
@@ -16,7 +18,7 @@ const input = 'mt-1 w-full px-3 py-2 border border-gray-300 dark:border-gray-700
 const card = 'rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5'
 const show = (v, unit) => (v === null || v === undefined ? `Unlimited ${unit}` : `${v} ${unit}`)
 
-export default function SettingsPage() {
+function SettingsPageBody() {
   const { context, isOwner, reload } = useWorkspace()
   const { showSuccess, modal } = useSuccessModal()
   const [tab, setTab] = useState('details')
@@ -57,9 +59,9 @@ export default function SettingsPage() {
       ) : (
         <>
           <form onSubmit={save} className={`${card} space-y-3`}>
-            <label className="block text-sm">Workspace name
+            <FieldLabelWithHelp helpKey="public.accounts.account_name" className="block text-sm">Workspace name
               <input className={input} value={name} maxLength={200} disabled={!isOwner || busy} onChange={(e) => setName(e.target.value)} />
-            </label>
+            </FieldLabelWithHelp>
             {!isOwner && <p className="text-xs text-gray-500 dark:text-gray-400">Only the account owner can rename the workspace.</p>}
             {error && <p role="alert" className="text-sm text-red-600 dark:text-red-400">{error}</p>}
             {isOwner && (
@@ -80,5 +82,19 @@ export default function SettingsPage() {
       )}
       {modal}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.accounts.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'account_name',
+].map((name) => `public.accounts.${name}`)
+
+export default function SettingsPage(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <SettingsPageBody {...props} />
+    </FieldHelpScope>
   )
 }

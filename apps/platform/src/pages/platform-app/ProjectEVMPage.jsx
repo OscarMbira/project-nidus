@@ -1,4 +1,6 @@
 import { useEffect, useState, useCallback, useMemo } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Link } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -14,7 +16,7 @@ function formatNumber(n) {
   return Number(n || 0).toLocaleString()
 }
 
-export default function ProjectEVMPage() {
+function ProjectEVMPageBody() {
   const { projectId } = usePlatformProjectId()
   const { canManage, readOnlyExecutive } = useFinancialPermissions()
   const [rows, setRows] = useState([])
@@ -77,7 +79,7 @@ export default function ProjectEVMPage() {
         </div>
 
         <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 grid sm:grid-cols-2 gap-3">
-          <label htmlFor="evm-bac" className="text-sm">BAC (budget at completion)</label>
+          <FieldLabelWithHelp helpKey="public.project_evm.bac" htmlFor="evm-bac" className="text-sm">BAC (budget at completion)</FieldLabelWithHelp>
           <SmartAmountInput id="evm-bac" value={bac} onChange={(v) => setBac(v ?? 0)} />
         </div>
 
@@ -126,5 +128,19 @@ export default function ProjectEVMPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.project_evm.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'bac',
+].map((name) => `public.project_evm.${name}`)
+
+export default function ProjectEVMPage(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ProjectEVMPageBody {...props} />
+    </FieldHelpScope>
   )
 }

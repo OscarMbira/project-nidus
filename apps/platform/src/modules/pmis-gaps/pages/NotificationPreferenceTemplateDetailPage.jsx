@@ -3,6 +3,8 @@
  * routed page + rule 63.1 Audit tab. Route: :basePath/create · :basePath/:id · :basePath/:id/edit
  */
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save, Loader, Bell } from 'lucide-react'
 import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesContext'
@@ -18,7 +20,7 @@ import {
 
 const BASE_PATH_DEFAULT = '/pmo/admin/notification-templates'
 
-export default function NotificationPreferenceTemplateDetailPage({ basePath = BASE_PATH_DEFAULT, forceEdit = false }) {
+function NotificationPreferenceTemplateDetailPageBody({ basePath = BASE_PATH_DEFAULT, forceEdit = false }) {
   const { id } = useParams()
   const navigate = useNavigate()
   const isCreate = !id
@@ -152,7 +154,7 @@ export default function NotificationPreferenceTemplateDetailPage({ basePath = BA
                 <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-800 dark:text-red-200">{error}</div>
               )}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Template name *</label>
+                <FieldLabelWithHelp helpKey="public.notification_preference_templates.template_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>Template name *</FieldLabelWithHelp>
                 <input
                   type="text"
                   value={templateName}
@@ -163,7 +165,7 @@ export default function NotificationPreferenceTemplateDetailPage({ basePath = BA
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Role (blank = all roles)</label>
+                  <FieldLabelWithHelp helpKey="public.notification_preference_templates.role_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Role (blank = all roles)</FieldLabelWithHelp>
                   <input
                     type="text"
                     value={roleName}
@@ -173,7 +175,7 @@ export default function NotificationPreferenceTemplateDetailPage({ basePath = BA
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Event category</label>
+                  <FieldLabelWithHelp helpKey="public.notification_preference_templates.event_category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Event category</FieldLabelWithHelp>
                   <select
                     value={eventCategory}
                     onChange={(e) => setEventCategory(e.target.value)}
@@ -186,21 +188,21 @@ export default function NotificationPreferenceTemplateDetailPage({ basePath = BA
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <label className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                <FieldLabelWithHelp helpKey="public.notification_preference_templates.channel_in_app" className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
                   <input type="checkbox" checked={channelInApp} onChange={(e) => setChannelInApp(e.target.checked)} className="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-blue-600" />
                   In-app
-                </label>
-                <label className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                </FieldLabelWithHelp>
+                <FieldLabelWithHelp helpKey="public.notification_preference_templates.channel_email" className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
                   <input type="checkbox" checked={channelEmail} onChange={(e) => setChannelEmail(e.target.checked)} className="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-blue-600" />
                   Email
-                </label>
-                <label className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                </FieldLabelWithHelp>
+                <FieldLabelWithHelp helpKey="public.notification_preference_templates.channel_push" className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
                   <input type="checkbox" checked={channelPush} onChange={(e) => setChannelPush(e.target.checked)} className="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-blue-600" />
                   Push
-                </label>
+                </FieldLabelWithHelp>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Frequency</label>
+                <FieldLabelWithHelp helpKey="public.notification_preference_templates.frequency" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Frequency</FieldLabelWithHelp>
                 <select
                   value={frequency}
                   onChange={(e) => setFrequency(e.target.value)}
@@ -250,5 +252,19 @@ export default function NotificationPreferenceTemplateDetailPage({ basePath = BA
       </div>
       {successModal}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.notification_preference_templates.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'template_name', 'role_name', 'event_category', 'frequency',
+].map((name) => `public.notification_preference_templates.${name}`)
+
+export default function NotificationPreferenceTemplateDetailPage(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <NotificationPreferenceTemplateDetailPageBody {...props} />
+    </FieldHelpScope>
   )
 }

@@ -6,6 +6,8 @@
  */
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Building2, Mail, Phone, Globe, Briefcase, Users, User, MapPin, FileText, Link as LinkIcon } from 'lucide-react';
 import { platformDb, supabase } from '@nidus/supabase';
@@ -308,9 +310,9 @@ const OrganisationSetup = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.organisations.name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Organisation Name *
-              </label>
+              </FieldLabelWithHelp>
               <div className="relative">
                 <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
@@ -340,9 +342,9 @@ const OrganisationSetup = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.organisations.type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Organisation Type *
-              </label>
+              </FieldLabelWithHelp>
               <SearchableSelect
                 options={ORGANISATION_TYPES}
                 value={formData.type}
@@ -356,9 +358,9 @@ const OrganisationSetup = () => {
 
             {showCompanyName && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.organisations.company_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Legal Company Name
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   value={formData.companyName}
@@ -385,9 +387,9 @@ const OrganisationSetup = () => {
             )}
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.organisations.country_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Country *
-              </label>
+              </FieldLabelWithHelp>
               {countriesLoading ? (
                 <div className="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-500 dark:text-gray-400 flex items-center">
                   <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -415,9 +417,9 @@ const OrganisationSetup = () => {
 
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.organisations.phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Phone Number
-              </label>
+              </FieldLabelWithHelp>
               <div className="relative">
                 <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
@@ -431,9 +433,9 @@ const OrganisationSetup = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.organisations.size" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Organisation Size (Optional)
-              </label>
+              </FieldLabelWithHelp>
               <div className="relative">
                 <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <select
@@ -456,9 +458,9 @@ const OrganisationSetup = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.organisations.website" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Website (Optional)
-              </label>
+              </FieldLabelWithHelp>
               <div className="relative">
                 <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
@@ -472,9 +474,9 @@ const OrganisationSetup = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.organisations.contact_person" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Contact Person *
-              </label>
+              </FieldLabelWithHelp>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
@@ -489,9 +491,9 @@ const OrganisationSetup = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.organisations.email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Email *
-              </label>
+              </FieldLabelWithHelp>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
@@ -510,9 +512,9 @@ const OrganisationSetup = () => {
 
             {billingEnabled && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.organisations.billing_email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Billing email *
-                </label>
+                </FieldLabelWithHelp>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                   <input
@@ -531,9 +533,9 @@ const OrganisationSetup = () => {
 
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.organisations.full_address" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Full Address *
-              </label>
+              </FieldLabelWithHelp>
               <div className="relative">
                 <MapPin className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
                 <textarea
@@ -548,9 +550,9 @@ const OrganisationSetup = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.organisations.registration_reference" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Registration Reference (Optional)
-              </label>
+              </FieldLabelWithHelp>
               <div className="relative">
                 <FileText className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
@@ -574,7 +576,7 @@ const OrganisationSetup = () => {
               onChange={(e) => handleChange('wantsPmoAdmin', e.target.checked)}
               className="mt-1 w-4 h-4"
             />
-            <label htmlFor="wantsPmoAdmin" className="text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
+            <FieldLabelWithHelp helpKey="sim.organisations.pmo_admin_access" htmlFor="wantsPmoAdmin" className="text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
               <span className="font-medium text-gray-900 dark:text-white">
                 Also give me PMO Admin access to configure this organisation
               </span>
@@ -583,7 +585,7 @@ const OrganisationSetup = () => {
                 you'd rather have someone else own configuration, leave this off — you can invite a PMO
                 Administrator afterwards, or grant yourself PMO Admin later from Organisation Settings.
               </p>
-            </label>
+            </FieldLabelWithHelp>
           </div>
         )}
 
@@ -598,4 +600,29 @@ const OrganisationSetup = () => {
   );
 };
 
-export default OrganisationSetup;
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.organisations.name',
+  'sim.organisations.type',
+  'sim.organisations.company_name',
+  'sim.organisations.country_id',
+  'sim.organisations.phone',
+  'sim.organisations.size',
+  'sim.organisations.website',
+  'sim.organisations.contact_person',
+  'sim.organisations.email',
+  'sim.organisations.billing_email',
+  'sim.organisations.full_address',
+  'sim.organisations.registration_reference',
+  'sim.organisations.pmo_admin_access',
+]
+
+function OrganisationSetupWithHelp(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <OrganisationSetup {...props} />
+    </FieldHelpScope>
+  )
+}
+
+export default OrganisationSetupWithHelp

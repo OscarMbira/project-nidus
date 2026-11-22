@@ -3,6 +3,8 @@
  * URL uses the category name (unique per organisation) or the record UUID.
  */
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save, Loader, Tags } from 'lucide-react'
 import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesContext'
@@ -11,7 +13,7 @@ import { DetailAuditTabList, AuditDetailsPanel, AuditCard, AuditField, AuditTime
 import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
 import { getVendorCategory, saveVendorCategory } from '../services/procurementService'
 
-export default function VendorCategoryForm({ basePath = '/platform/pm/procurement/vendor-categories', forceEdit = false }) {
+function VendorCategoryFormBody({ basePath = '/platform/pm/procurement/vendor-categories', forceEdit = false }) {
   const { id } = useParams()
   const navigate = useNavigate()
   const isCreate = !id
@@ -152,7 +154,7 @@ export default function VendorCategoryForm({ basePath = '/platform/pm/procuremen
                   <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-800 dark:text-red-200">{error}</div>
                 )}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Category name *</label>
+                  <FieldLabelWithHelp helpKey="public.vendor_categories.category_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>Category name *</FieldLabelWithHelp>
                   <input
                     type="text"
                     value={categoryName}
@@ -163,7 +165,7 @@ export default function VendorCategoryForm({ basePath = '/platform/pm/procuremen
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</label>
+                  <FieldLabelWithHelp helpKey="public.vendor_categories.description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</FieldLabelWithHelp>
                   <textarea
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
@@ -171,10 +173,10 @@ export default function VendorCategoryForm({ basePath = '/platform/pm/procuremen
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   />
                 </div>
-                <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                <FieldLabelWithHelp helpKey="public.vendor_categories.is_active" className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
                   <input type="checkbox" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} className="rounded border-gray-300 dark:border-gray-600" />
                   Active
-                </label>
+                </FieldLabelWithHelp>
               </fieldset>
 
               <div className="flex gap-3 pt-2">
@@ -214,5 +216,19 @@ export default function VendorCategoryForm({ basePath = '/platform/pm/procuremen
       </div>
       {successModal}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.vendor_categories.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'category_name', 'description',
+].map((name) => `public.vendor_categories.${name}`)
+
+export default function VendorCategoryForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <VendorCategoryFormBody {...props} />
+    </FieldHelpScope>
   )
 }

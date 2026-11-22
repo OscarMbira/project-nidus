@@ -6,6 +6,8 @@
  * Prices come from the subscription catalog (rule 25.1).
  */
 import { useEffect, useState } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useSearchParams } from 'react-router-dom'
 import { clearPendingPlan } from '../../lib/pendingPlan.js'
 import { ExternalLink } from 'lucide-react'
@@ -16,7 +18,7 @@ import { getCatalog, startCheckout, checkoutAmount, platformUrl } from '../../li
 const card = 'rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5'
 const money = (v, c) => new Intl.NumberFormat(undefined, { style: 'currency', currency: c || 'USD' }).format(Number(v) || 0)
 
-export default function UpgradePage() {
+function UpgradePageBody() {
   const { context, isOwner } = useWorkspace()
   const [catalog, setCatalog] = useState(null)
   const [error, setError] = useState(null)
@@ -78,9 +80,9 @@ export default function UpgradePage() {
                     <button key={c} type="button" aria-pressed={cycle === c} onClick={() => setCycle(c)} className={`px-3 py-1.5 ${cycle === c ? 'bg-blue-600 text-white' : 'bg-white dark:bg-gray-800'}`}>{c === 'monthly' ? 'Monthly' : 'Yearly'}</button>
                   ))}
                 </div>
-                <label className="block text-sm">Seats
+                <FieldLabelWithHelp helpKey="public.planner_subscriptions.seats" className="block text-sm">Seats
                   <input type="number" min={1} max={1000} value={seats} onChange={(e) => setSeats(e.target.value)} className="mt-1 w-28 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800" />
-                </label>
+                </FieldLabelWithHelp>
                 {plannerPlan && (
                   <button type="button" disabled={busy} onClick={() => pay(plannerPlan, 'planner_subscribe')} className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm disabled:opacity-50">
                     Pay {money(checkoutAmount(plannerPlan, { action: 'planner_subscribe', seats }), plannerPlan.currency)}
@@ -105,5 +107,19 @@ export default function UpgradePage() {
         </div>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.planner_subscriptions.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'seats',
+].map((name) => `public.planner_subscriptions.${name}`)
+
+export default function UpgradePage(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <UpgradePageBody {...props} />
+    </FieldHelpScope>
   )
 }
