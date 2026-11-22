@@ -292,9 +292,10 @@ Export new UI from `packages/ui/src/index.js`.
 
 ### Slice 6 — Admin app (S4-D2)
 - **S6-D1 (owner decision 2026-11-21): Admin help is stored in `admin.field_help`** (keys `admin.<table>.<column>`), seeded from `E:\project-nidus-admin\SQL\`. No read of `public.field_help` and no new rule 34.5 exception.
-- [ ] Admin SQL: `admin.field_help` (same columns as `public.field_help`, minus aliases), RLS read for signed-in admins, writes by migration only; register in `database_tables`.
-- [ ] `@nidus-admin/ui`: field-help label + scope + help service (copies of the monorepo contract, Admin theme), with unit tests.
-- [ ] Admin coverage check script (same output shape as `scripts/check-field-help.mjs`).
+- [x] Admin SQL: `admin.field_help` (same columns as `public.field_help`, minus aliases), RLS read for signed-in admins, writes by migration only; register in `database_tables`.
+- [x] `@nidus-admin/ui`: field-help label + scope + help service (copies of the monorepo contract, Admin theme), with unit tests.
+- [x] Admin coverage check script (same output shape as `scripts/check-field-help.mjs`).
+  - 2026-11-22 (Admin 40f1e39): `SQL/v250_admin_field_help.sql` (not yet run); `AdminFieldLabelWithHelp`, `AdminFieldHelpScope`, `adminFieldHelp.js` (fixed D MMM YYYY tokens; no votes / usage events / Learn-more in Admin v1; a label outside any scope loads its own key so federated module pages work without a shell scope); `AdminField` takes `helpKey` / `htmlFor`; `scripts/check-field-help.mjs` (Admin). **Scope correction:** the check now also counts `AdminField` uses without `helpKey` (AdminField draws its own label) — **746 fields in 122 files** (214 raw labels + 532 `AdminField` uses), not ~210.
 - [ ] Wire Admin pages module by module (~210 raw labels in 90 files today: content, system, subscriptions, audit, ai, support, …) with seeds per module; owner sample review.
 
 ### Slice 5 — Coverage dashboard + failing CI + quality
