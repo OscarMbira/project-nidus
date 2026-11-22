@@ -328,7 +328,7 @@ export default function ResourceCapacity() {
             <div className="flex items-center gap-4 border-t border-gray-200 dark:border-gray-700 pt-4">
               {scope === 'portfolio' && (
                 <div className="flex items-center gap-2">
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Portfolio:</label>
+                  <label data-help="exempt" className="text-sm font-medium text-gray-700 dark:text-gray-300">Portfolio:</label>
                   <select
                     value={filters.portfolio_id || ''}
                     onChange={(e) => setFilters({ ...filters, portfolio_id: e.target.value })}
@@ -345,7 +345,7 @@ export default function ResourceCapacity() {
               )}
               {scope === 'programme' && (
                 <div className="flex items-center gap-2">
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Programme:</label>
+                  <label data-help="exempt" className="text-sm font-medium text-gray-700 dark:text-gray-300">Programme:</label>
                   <select
                     value={filters.programme_id || ''}
                     onChange={(e) => setFilters({ ...filters, programme_id: e.target.value })}
@@ -368,7 +368,7 @@ export default function ResourceCapacity() {
                   onChange={(e) => setFilters({ ...filters, show_cross_project: e.target.checked })}
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 />
-                <label htmlFor="show_cross_project" className="text-sm text-gray-700 dark:text-gray-300">
+                <label data-help="exempt" htmlFor="show_cross_project" className="text-sm text-gray-700 dark:text-gray-300">
                   Show Cross-Project Allocations
                 </label>
               </div>

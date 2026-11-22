@@ -11,6 +11,7 @@ import { Upload, Download, CheckCircle, XCircle, AlertCircle } from 'lucide-reac
 import { getTranslationTargetLanguages } from '@nidus/shared/utils/formTranslations'
 import * as defaultBulkImportService from '../../services/formTranslationBulkImportService'
 import { getFieldTranslations } from '../../services/formEngineService'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 const MAX_FILE_SIZE_MB = 10
 
@@ -149,8 +150,8 @@ export default function FormTranslationBulkImport({
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Translate field labels</h2>
 
-          <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Target language</label>
-          <select
+          <FieldLabelWithHelp helpKey="public.form_translations.language_code" htmlFor="fh-form-translations-language-code" className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Target language</FieldLabelWithHelp>
+          <select id="fh-form-translations-language-code"
             value={languageCode}
             onChange={(e) => setLanguageCode(e.target.value)}
             className="w-full max-w-xs mb-4 rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-900 dark:text-gray-100"

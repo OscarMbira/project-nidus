@@ -137,7 +137,7 @@ export default function StrategicPortfolioView({ portfolioId = null }) {
       {/* Portfolio Selector */}
       {!portfolioId && (
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label data-help="exempt" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Select Portfolio
           </label>
           <select

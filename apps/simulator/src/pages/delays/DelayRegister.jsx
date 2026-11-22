@@ -397,7 +397,7 @@ export default function DelayRegister({ isSim: isSimProp, readOnly: readOnlyProp
       {!(formOpen && delayFormVariant === 'page') && (
       <>
       <div className="mb-4">
-        <label className="block max-w-md">
+        <label data-help="exempt" className="block max-w-md">
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{projectLabel}</span>
           <select
             className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-gray-900 dark:text-gray-100"
@@ -456,7 +456,7 @@ export default function DelayRegister({ isSim: isSimProp, readOnly: readOnlyProp
       {pageTab === 'register' && (
       <div role="tabpanel" aria-label="Delay register">
       <div className="mb-4 grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-        <label className="block">
+        <label data-help="exempt" className="block">
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Search</span>
           <div className="mt-1 flex items-center gap-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2">
             <Search className="h-4 w-4 text-gray-500" />
@@ -468,7 +468,7 @@ export default function DelayRegister({ isSim: isSimProp, readOnly: readOnlyProp
             />
           </div>
         </label>
-        <label className="block">
+        <label data-help="exempt" className="block">
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Status</span>
           <select
             className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-gray-900 dark:text-gray-100"
@@ -483,7 +483,7 @@ export default function DelayRegister({ isSim: isSimProp, readOnly: readOnlyProp
             ))}
           </select>
         </label>
-        <label className="block">
+        <label data-help="exempt" className="block">
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Source</span>
           <select
             className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-gray-900 dark:text-gray-100"

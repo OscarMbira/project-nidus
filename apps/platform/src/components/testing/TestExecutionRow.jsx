@@ -167,7 +167,7 @@ export default function TestExecutionRow({
           className="flex flex-wrap items-center gap-2 text-xs rounded-lg outline-none focus:ring-2 focus:ring-emerald-500"
         >
           <span className="text-gray-500 dark:text-gray-400">Evidence</span>
-          <label className="px-2 py-1 rounded bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer">
+          <label data-help="exempt" className="px-2 py-1 rounded bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer">
             {attaching ? 'Attaching…' : 'Attach file'}
             <input
               type="file"

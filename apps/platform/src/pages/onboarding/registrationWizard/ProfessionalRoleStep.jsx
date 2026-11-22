@@ -63,7 +63,7 @@ export default function ProfessionalRoleStep() {
         <div className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {roles.map((role) => (
-              <label
+              <label data-help="exempt"
                 key={role.id}
                 className={`flex items-start gap-3 border rounded-lg p-4 cursor-pointer transition ${
                   selectedRoleId === role.id

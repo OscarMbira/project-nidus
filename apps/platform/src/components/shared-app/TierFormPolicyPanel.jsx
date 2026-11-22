@@ -27,6 +27,7 @@ import CompletedExampleManager from './CompletedExampleManager'
 import SelectOptionsEditor from '@nidus/ui/SelectOptionsEditor'
 import RowActionButton from '@nidus/ui/RowActionButton'
 import { DEFAULT_MAX_FILES_PER_FIELD, HARD_MAX_FILES_CEILING } from '../../services/formFieldAttachmentService'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 const FIELD_TYPES = [
   { value: 'text', label: 'Text' },
@@ -738,11 +739,11 @@ export default function TierFormPolicyPanel({
   return (
     <div className="space-y-4">
       <div>
-        <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Form template</label>
+        <FieldLabelWithHelp helpKey="public.tier_form_policies.form_template_id" htmlFor="fh-tier-form-policies-form-template-id" className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400" listOptions={false}>Form template</FieldLabelWithHelp>
         {!catalogReady ? (
           <p className="text-sm text-gray-500 dark:text-gray-400">Loading templates…</p>
         ) : (
-          <select
+          <select id="fh-tier-form-policies-form-template-id"
             className="w-full max-w-md rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-900 dark:text-gray-100"
             value={templateId}
             onChange={(e) => {
@@ -911,9 +912,9 @@ export default function TierFormPolicyPanel({
                           {showCustomiseEditors && (
                             <div className="mt-2 flex flex-wrap items-end gap-3">
                               <div>
-                                <label className="mb-0.5 block text-xs text-gray-500 dark:text-gray-400" htmlFor={`${mapKey}-tier-label-override`}>
+                                <FieldLabelWithHelp helpKey="public.tier_form_policies.label_override" className="mb-0.5 block text-xs text-gray-500 dark:text-gray-400" htmlFor={`${mapKey}-tier-label-override`}>
                                   Display name
-                                </label>
+                                </FieldLabelWithHelp>
                                 <input
                                   id={`${mapKey}-tier-label-override`}
                                   className="rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1 text-xs text-gray-900 dark:text-gray-100 w-44"
@@ -927,9 +928,9 @@ export default function TierFormPolicyPanel({
                                 />
                               </div>
                               <div>
-                                <label className="mb-0.5 block text-xs text-gray-500 dark:text-gray-400" htmlFor={`${mapKey}-tier-type-override`}>
+                                <FieldLabelWithHelp helpKey="public.tier_form_policies.type_override" className="mb-0.5 block text-xs text-gray-500 dark:text-gray-400" htmlFor={`${mapKey}-tier-type-override`}>
                                   Input type
-                                </label>
+                                </FieldLabelWithHelp>
                                 <select
                                   id={`${mapKey}-tier-type-override`}
                                   className="rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1 text-xs text-gray-900 dark:text-gray-100"
@@ -995,7 +996,7 @@ export default function TierFormPolicyPanel({
                           )}
                           {showSelectOptions && (
                             <div className="mt-2 rounded border border-dashed border-gray-300 dark:border-gray-700 p-2 max-w-md">
-                              <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Dropdown options</label>
+                              <FieldLabelWithHelp helpKey="public.tier_form_policies.options_override" className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Dropdown options</FieldLabelWithHelp>
                               <SelectOptionsEditor
                                 value={typeDraft?.options || selectOptionsSeed.map(optionToLine)}
                                 onChange={(options) => setTypeOverrideDrafts((prev) => ({
@@ -1010,7 +1011,7 @@ export default function TierFormPolicyPanel({
                           )}
                           {editOptionsDraft && (
                             <div className="mt-2 rounded border border-dashed border-gray-300 dark:border-gray-700 p-2 max-w-md">
-                              <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Edit options for {displayName}</label>
+                              <label data-help="exempt" className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Edit options for {displayName}</label>
                               <SelectOptionsEditor
                                 value={editOptionsDraft}
                                 onChange={(options) => setEditOptionsDrafts((prev) => ({ ...prev, [mapKey]: options }))}
@@ -1202,8 +1203,8 @@ export default function TierFormPolicyPanel({
             </p>
             <div className="grid gap-3 md:grid-cols-5">
               <div>
-                <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Section</label>
-                <select
+                <FieldLabelWithHelp helpKey="public.tier_form_fields.section_key" htmlFor="fh-tier-form-fields-section-key" className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Section</FieldLabelWithHelp>
+                <select id="fh-tier-form-fields-section-key"
                   className="w-full rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1.5 text-sm text-gray-900 dark:text-gray-100"
                   value={newField.sectionKey || firstSectionKey}
                   onChange={(e) => {
@@ -1219,8 +1220,8 @@ export default function TierFormPolicyPanel({
                 </select>
               </div>
               <div>
-                <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Field key</label>
-                <input
+                <FieldLabelWithHelp helpKey="public.tier_form_fields.field_key" htmlFor="fh-tier-form-fields-field-key" className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Field key</FieldLabelWithHelp>
+                <input id="fh-tier-form-fields-field-key"
                   className="w-full rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1.5 text-sm text-gray-900 dark:text-gray-100"
                   placeholder="e.g. quality_metric"
                   value={newField.key}
@@ -1231,8 +1232,8 @@ export default function TierFormPolicyPanel({
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Label</label>
-                <input
+                <FieldLabelWithHelp helpKey="public.tier_form_fields.label" htmlFor="fh-tier-form-fields-label" className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Label</FieldLabelWithHelp>
+                <input id="fh-tier-form-fields-label"
                   className="w-full rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1.5 text-sm text-gray-900 dark:text-gray-100"
                   placeholder="Display label"
                   value={newField.label}
@@ -1243,8 +1244,8 @@ export default function TierFormPolicyPanel({
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Type</label>
-                <select
+                <FieldLabelWithHelp helpKey="public.tier_form_fields.field_type" htmlFor="fh-tier-form-fields-field-type" className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Type</FieldLabelWithHelp>
+                <select id="fh-tier-form-fields-field-type"
                   className="w-full rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1.5 text-sm text-gray-900 dark:text-gray-100"
                   value={newField.type}
                   onChange={(e) => setNewField((prev) => ({ ...prev, type: e.target.value }))}
@@ -1254,7 +1255,7 @@ export default function TierFormPolicyPanel({
                   ))}
                 </select>
               </div>
-              <label className="inline-flex items-end gap-2 pb-2 text-xs text-gray-600 dark:text-gray-400">
+              <label data-help="exempt" className="inline-flex items-end gap-2 pb-2 text-xs text-gray-600 dark:text-gray-400">
                 <input
                   type="checkbox"
                   checked={newField.required}
@@ -1266,8 +1267,8 @@ export default function TierFormPolicyPanel({
             {(newField.type === 'text' || newField.type === 'textarea') && (
               <div className="mt-3 grid gap-3 md:grid-cols-5">
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Min chars</label>
-                  <input
+                  <FieldLabelWithHelp helpKey="public.tier_form_fields.min_chars" htmlFor="fh-tier-form-fields-min-chars" className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Min chars</FieldLabelWithHelp>
+                  <input id="fh-tier-form-fields-min-chars"
                     type="number"
                     min={0}
                     className="w-full rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1.5 text-sm text-gray-900 dark:text-gray-100"
@@ -1277,8 +1278,8 @@ export default function TierFormPolicyPanel({
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Max chars</label>
-                  <input
+                  <FieldLabelWithHelp helpKey="public.tier_form_fields.max_chars" htmlFor="fh-tier-form-fields-max-chars" className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Max chars</FieldLabelWithHelp>
+                  <input id="fh-tier-form-fields-max-chars"
                     type="number"
                     min={0}
                     className="w-full rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1.5 text-sm text-gray-900 dark:text-gray-100"
@@ -1291,7 +1292,7 @@ export default function TierFormPolicyPanel({
             )}
             {newField.type === 'select' && (
               <div className="mt-3">
-                <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Options</label>
+                <FieldLabelWithHelp helpKey="public.tier_form_fields.options" className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Options</FieldLabelWithHelp>
                 <SelectOptionsEditor
                   value={newField.options}
                   onChange={(options) => setNewField((prev) => ({ ...prev, options }))}
@@ -1301,8 +1302,8 @@ export default function TierFormPolicyPanel({
             {newField.type === 'attachment' && (
               <div className="mt-3 grid gap-3 md:grid-cols-5">
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Accepted files</label>
-                  <select
+                  <FieldLabelWithHelp helpKey="public.tier_form_fields.accepted_files" htmlFor="fh-tier-form-fields-accepted-files" className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Accepted files</FieldLabelWithHelp>
+                  <select id="fh-tier-form-fields-accepted-files"
                     className="w-full rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1.5 text-sm text-gray-900 dark:text-gray-100"
                     value={newField.accept}
                     onChange={(e) => setNewField((prev) => ({ ...prev, accept: e.target.value }))}
@@ -1312,8 +1313,8 @@ export default function TierFormPolicyPanel({
                   </select>
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Max files</label>
-                  <input
+                  <FieldLabelWithHelp helpKey="public.tier_form_fields.max_files" htmlFor="fh-tier-form-fields-max-files" className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Max files</FieldLabelWithHelp>
+                  <input id="fh-tier-form-fields-max-files"
                     type="number"
                     min={1}
                     max={HARD_MAX_FILES_CEILING}

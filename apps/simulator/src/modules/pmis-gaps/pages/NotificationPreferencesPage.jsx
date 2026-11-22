@@ -219,7 +219,7 @@ function NotificationPreferencesPageBody({ showTemplatesLink = false, onOpenTemp
             <FieldLabelWithHelp helpKey="sim.notification_preferences.muted_project_ids" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Muted projects</FieldLabelWithHelp>
             <div className="flex flex-wrap gap-2">
               {projects.map((p) => (
-                <label
+                <label data-help="exempt"
                   key={p.id}
                   className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs border cursor-pointer ${
                     general.mute_project_ids.includes(p.id)

@@ -13,6 +13,7 @@ import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 import RegionalDateInput from '@nidus/ui/RegionalDateInput'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 const ACTION_TYPES = [
   { value: 'stage_gate', label: 'Stage gate' },
   { value: 'closure', label: 'Closure' },
@@ -214,8 +215,8 @@ export default function WorkAuthorisationCreatePage() {
       ) : (
       <div className="space-y-4 rounded-xl border border-gray-200 dark:border-gray-700 p-6 bg-white dark:bg-gray-800/40">
         <div>
-          <label className="block text-sm font-medium mb-1">{mode === 'sim' ? 'Practice project' : 'Project'} *</label>
-          <select
+          <FieldLabelWithHelp helpKey="sim.work_authorisations.project_id" htmlFor="fh-work-authorisations-project-id" className="block text-sm font-medium mb-1" listOptions={false}>{mode === 'sim' ? 'Practice project' : 'Project'} *</FieldLabelWithHelp>
+          <select id="fh-work-authorisations-project-id"
             value={projectId}
             onChange={(e) => setProjectId(e.target.value)}
             className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 p-2 text-sm"
@@ -230,16 +231,16 @@ export default function WorkAuthorisationCreatePage() {
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">Title *</label>
-          <input
+          <FieldLabelWithHelp helpKey="sim.work_authorisations.title" htmlFor="fh-work-authorisations-title" className="block text-sm font-medium mb-1">Title *</FieldLabelWithHelp>
+          <input id="fh-work-authorisations-title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 p-2 text-sm"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">Action type</label>
-          <select
+          <FieldLabelWithHelp helpKey="sim.work_authorisations.action_type" htmlFor="fh-work-authorisations-action-type" className="block text-sm font-medium mb-1">Action type</FieldLabelWithHelp>
+          <select id="fh-work-authorisations-action-type"
             value={actionType}
             onChange={(e) => setActionType(e.target.value)}
             className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 p-2 text-sm"
@@ -250,8 +251,8 @@ export default function WorkAuthorisationCreatePage() {
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">Rationale</label>
-          <textarea
+          <FieldLabelWithHelp helpKey="sim.work_authorisations.rationale" htmlFor="fh-work-authorisations-rationale" className="block text-sm font-medium mb-1">Rationale</FieldLabelWithHelp>
+          <textarea id="fh-work-authorisations-rationale"
             value={rationale}
             onChange={(e) => setRationale(e.target.value)}
             rows={4}
@@ -259,8 +260,8 @@ export default function WorkAuthorisationCreatePage() {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">Risk / impact summary</label>
-          <textarea
+          <FieldLabelWithHelp helpKey="sim.work_authorisations.risk_impact_summary" htmlFor="fh-work-authorisations-risk-impact-summary" className="block text-sm font-medium mb-1">Risk / impact summary</FieldLabelWithHelp>
+          <textarea id="fh-work-authorisations-risk-impact-summary"
             value={risk}
             onChange={(e) => setRisk(e.target.value)}
             rows={3}
@@ -269,16 +270,16 @@ export default function WorkAuthorisationCreatePage() {
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm font-medium mb-1">Planned start</label>
-            <RegionalDateInput eventStyle
+            <FieldLabelWithHelp helpKey="sim.work_authorisations.planned_start" htmlFor="fh-work-authorisations-planned-start" className="block text-sm font-medium mb-1">Planned start</FieldLabelWithHelp>
+            <RegionalDateInput id="fh-work-authorisations-planned-start" eventStyle
               value={start}
               onChange={(e) => setStart(e.target.value)}
               className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 p-2 text-sm"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Planned end</label>
-            <RegionalDateInput eventStyle
+            <FieldLabelWithHelp helpKey="sim.work_authorisations.planned_end" htmlFor="fh-work-authorisations-planned-end" className="block text-sm font-medium mb-1">Planned end</FieldLabelWithHelp>
+            <RegionalDateInput id="fh-work-authorisations-planned-end" eventStyle
               value={end}
               onChange={(e) => setEnd(e.target.value)}
               className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 p-2 text-sm"

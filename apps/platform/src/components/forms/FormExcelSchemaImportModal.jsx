@@ -8,6 +8,7 @@ import {
   mergeExcelColumnsIntoSections,
   FORM_EXCEL_MAX_DATA_ROWS,
 } from '@nidus/shared/utils/formExcelImportUtils.js'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 const FIELD_TYPE_OPTIONS = [
   { value: 'text', label: 'Text' },
@@ -149,8 +150,8 @@ export default function FormExcelSchemaImportModal({ isOpen, onClose, sections, 
         <div className="space-y-4">
           {sheetNames.length > 1 && (
             <div>
-              <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Sheet</label>
-              <select
+              <FieldLabelWithHelp helpKey="public.form_imports.sheet_name" htmlFor="fh-form-imports-sheet-name" className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Sheet</FieldLabelWithHelp>
+              <select id="fh-form-imports-sheet-name"
                 className="w-full rounded border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
                 value={sheetIndex}
                 onChange={(e) => handleSheetChange(e.target.value)}

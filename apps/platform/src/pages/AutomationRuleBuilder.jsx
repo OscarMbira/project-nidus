@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../services/supabaseClient'
 import { ArrowLeft, Save, Plus, Trash2, Zap } from 'lucide-react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 export default function AutomationRuleBuilder() {
   const { id } = useParams()
@@ -178,10 +179,10 @@ export default function AutomationRuleBuilder() {
           </h2>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.automation_rules.rule_name" htmlFor="fh-automation-rules-rule-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Rule Name *
-              </label>
-              <input
+              </FieldLabelWithHelp>
+              <input id="fh-automation-rules-rule-name"
                 type="text"
                 name="rule_name"
                 value={formData.rule_name}
@@ -192,10 +193,10 @@ export default function AutomationRuleBuilder() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.automation_rules.description" htmlFor="fh-automation-rules-description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Description
-              </label>
-              <textarea
+              </FieldLabelWithHelp>
+              <textarea id="fh-automation-rules-description"
                 name="rule_description"
                 value={formData.rule_description}
                 onChange={handleChange}
@@ -205,10 +206,10 @@ export default function AutomationRuleBuilder() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.automation_rules.category" htmlFor="fh-automation-rules-category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Category
-                </label>
-                <select
+                </FieldLabelWithHelp>
+                <select id="fh-automation-rules-category"
                   name="rule_category"
                   value={formData.rule_category}
                   onChange={handleChange}
@@ -222,10 +223,10 @@ export default function AutomationRuleBuilder() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.automation_rules.priority" htmlFor="fh-automation-rules-priority" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Priority (1-10)
-                </label>
-                <input
+                </FieldLabelWithHelp>
+                <input id="fh-automation-rules-priority"
                   type="number"
                   name="priority"
                   value={formData.priority}
@@ -236,7 +237,7 @@ export default function AutomationRuleBuilder() {
                 />
               </div>
             </div>
-            <label className="flex items-center gap-2">
+            <label data-help="exempt" className="flex items-center gap-2">
               <input
                 type="checkbox"
                 name="is_active"
@@ -258,10 +259,10 @@ export default function AutomationRuleBuilder() {
           </h2>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.automation_rules.trigger_type" htmlFor="fh-automation-rules-trigger-type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Trigger Type *
-              </label>
-              <select
+              </FieldLabelWithHelp>
+              <select id="fh-automation-rules-trigger-type"
                 value={formData.trigger_config.type}
                 onChange={(e) => handleTriggerChange('type', e.target.value)}
                 required
@@ -304,10 +305,10 @@ export default function AutomationRuleBuilder() {
           </h2>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.automation_rules.action_type" htmlFor="fh-automation-rules-action-type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Action Type *
-              </label>
-              <select
+              </FieldLabelWithHelp>
+              <select id="fh-automation-rules-action-type"
                 value={formData.action_config.type}
                 onChange={(e) => handleActionChange('type', e.target.value)}
                 required

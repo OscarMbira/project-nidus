@@ -43,7 +43,7 @@ export default function CustomFieldInput({
     return (
       <div>
         {commonLabel}
-        <label className="inline-flex items-center gap-2 text-sm text-gray-800 dark:text-gray-200">
+        <label data-help="exempt" className="inline-flex items-center gap-2 text-sm text-gray-800 dark:text-gray-200">
           <input
             type="checkbox"
             checked={Boolean(value)}
@@ -107,7 +107,7 @@ export default function CustomFieldInput({
         {commonLabel}
         <div className="flex flex-wrap gap-2">
           {opts.map((o) => (
-            <label key={o.id || o.option_value} className="inline-flex items-center gap-1 text-sm">
+            <label data-help="exempt" key={o.id || o.option_value} className="inline-flex items-center gap-1 text-sm">
               <input
                 type="checkbox"
                 checked={arr.includes(o.option_value)}

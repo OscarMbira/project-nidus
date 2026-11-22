@@ -88,7 +88,7 @@ export default function IntakeFormFieldsPage({ sim = false }) {
                   <p className="text-sm text-gray-900 dark:text-gray-100 truncate">{field.field_label}</p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">{field.field_key} · {field.field_type}</p>
                 </div>
-                <label className="inline-flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-300 shrink-0">
+                <label data-help="exempt" className="inline-flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-300 shrink-0">
                   <input type="checkbox" checked={field.is_required} onChange={() => handleToggleRequired(field)} />
                   Required
                 </label>

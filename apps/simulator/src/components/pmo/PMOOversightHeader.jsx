@@ -48,7 +48,7 @@ export default function PMOOversightHeader({
           )}
         </div>
         <div className="w-full sm:w-64">
-          <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+          <label data-help="exempt" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
             Project
           </label>
           <select

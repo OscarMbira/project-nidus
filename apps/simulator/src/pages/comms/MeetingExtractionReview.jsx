@@ -30,6 +30,7 @@ import {
   runMeetingRegisterAgent,
 } from '../../services/communications/meetingFilingService'
 import RegionalDateInput from '@nidus/ui/RegionalDateInput'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 const CHOICE_LABEL = { create: 'Create draft', update: 'Add to existing record', reject: 'Set aside', later: 'Decide later' }
 const STATUS_LABEL = { created: 'Draft created', merged: 'Added to existing record', rejected: 'Set aside', dismissed: 'Set aside', converted_to_task: 'Converted to task', completed: 'Completed' }
@@ -178,21 +179,21 @@ export default function MeetingExtractionReview() {
       )}
 
       {needsProject && (
-        <label className="block rounded-lg border border-gray-200 bg-white p-4 text-sm dark:border-gray-700 dark:bg-gray-900">
-          <span className="mb-1 block font-medium text-gray-900 dark:text-gray-100">Which {isSim ? 'practice ' : ''}project are these outcomes for?</span>
-          <select className={inputCls} value={projectId} onChange={(e) => setProjectId(e.target.value)}>
+        <div className="block rounded-lg border border-gray-200 bg-white p-4 text-sm dark:border-gray-700 dark:bg-gray-900">
+          <FieldLabelWithHelp helpKey="sim.comm_meetings.project_id" htmlFor="fh-comm-meetings-project-id" listOptions={false}><span className="mb-1 block font-medium text-gray-900 dark:text-gray-100">Which {isSim ? 'practice ' : ''}project are these outcomes for?</span></FieldLabelWithHelp>
+          <select id="fh-comm-meetings-project-id" className={inputCls} value={projectId} onChange={(e) => setProjectId(e.target.value)}>
             <option value="">Choose a project…</option>
             {projects.map((p) => <option key={p.id} value={p.id}>{p.project_name}</option>)}
           </select>
-        </label>
+        </div>
       )}
 
       {!readOnly && !pending.length && !handled.length && !hasTranscript && (
-        <label className="block rounded-lg border border-gray-200 bg-white p-4 text-sm dark:border-gray-700 dark:bg-gray-900">
-          <span className="mb-1 block font-medium text-gray-900 dark:text-gray-100">This meeting has no transcript. Paste the meeting notes:</span>
-          <textarea className={inputCls} rows={6} value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={48000}
+        <div className="block rounded-lg border border-gray-200 bg-white p-4 text-sm dark:border-gray-700 dark:bg-gray-900">
+          <FieldLabelWithHelp helpKey="sim.comm_meetings.notes" htmlFor="fh-comm-meetings-notes"><span className="mb-1 block font-medium text-gray-900 dark:text-gray-100">This meeting has no transcript. Paste the meeting notes:</span></FieldLabelWithHelp>
+          <textarea id="fh-comm-meetings-notes" className={inputCls} rows={6} value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={48000}
             placeholder="Decisions, actions, risks and issues discussed…" />
-        </label>
+        </div>
       )}
 
       {error && (
@@ -228,7 +229,7 @@ export default function MeetingExtractionReview() {
                       {row.source_quote && <p className="border-l-2 border-gray-300 pl-2 text-xs italic text-gray-500 dark:border-gray-600 dark:text-gray-400">“{row.source_quote}”</p>}
                       <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-600 dark:text-gray-400">
                         {row.suggested_owner_name && (
-                          <label className="inline-flex items-center gap-1">
+                          <label data-help="exempt" className="inline-flex items-center gap-1">
                             <input type="checkbox" checked={edit.ownerId !== null} onChange={(e) => setEdit(row.id, { ownerId: e.target.checked ? undefined : null })} disabled={choice !== 'create'} />
                             Owner: {row.suggested_owner_name}
                           </label>
@@ -249,11 +250,11 @@ export default function MeetingExtractionReview() {
                         {['create', ...(row.duplicate_of_id ? ['update'] : []), 'reject', 'later'].map((c) => <option key={c} value={c}>{CHOICE_LABEL[c]}</option>)}
                       </select>
                       {showDue && choice === 'create' && (
-                        <label className="text-xs text-gray-600 dark:text-gray-400">
-                          Due date
-                          <RegionalDateInput eventStyle className={inputCls} value={edit.dueDate ?? row.suggested_due_date ?? row.due_date ?? ''}
+                        <div className="text-xs text-gray-600 dark:text-gray-400">
+                          <FieldLabelWithHelp helpKey="sim.comm_meeting_items.due_date" htmlFor="fh-comm-meeting-items-due-date">Due date</FieldLabelWithHelp>
+                          <RegionalDateInput id="fh-comm-meeting-items-due-date" eventStyle className={inputCls} value={edit.dueDate ?? row.suggested_due_date ?? row.due_date ?? ''}
                             onChange={(e) => setEdit(row.id, { dueDate: e.target.value || null })} />
-                        </label>
+                        </div>
                       )}
                     </div>
                   </div>

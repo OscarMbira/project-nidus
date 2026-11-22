@@ -327,7 +327,7 @@ function SystemRoleEditPageBody() {
               ) : (
                 <div className="max-h-48 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-lg divide-y divide-gray-100 dark:divide-gray-700">
                   {menuGrants.map((g) => (
-                    <label
+                    <label data-help="exempt"
                       key={g.menu_item_id}
                       className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-300"
                     >

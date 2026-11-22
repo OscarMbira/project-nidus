@@ -13,6 +13,7 @@ import AuditCard from '@nidus/ui/AuditCard'
 import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 const PRIORITY_OPTIONS = [
   { value: 'must_have', label: 'Must Have' },
   { value: 'should_have', label: 'Should Have' },
@@ -154,44 +155,44 @@ export default function RFPLineItemForm({ item = null, nextItemNumber = 1, onSav
           <>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">S/No *</label>
-              <input name="item_number" type="number" min={1} value={form.item_number} onChange={handleChange} required className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+              <FieldLabelWithHelp helpKey="sim.rfp_line_items.item_number" htmlFor="fh-rfp-line-items-item-number" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">S/No *</FieldLabelWithHelp>
+              <input id="fh-rfp-line-items-item-number" name="item_number" type="number" min={1} value={form.item_number} onChange={handleChange} required className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Reference No.</label>
-              <input name="reference_number" value={form.reference_number} onChange={handleChange} maxLength={100} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+              <FieldLabelWithHelp helpKey="sim.rfp_line_items.reference_number" htmlFor="fh-rfp-line-items-reference-number" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Reference No.</FieldLabelWithHelp>
+              <input id="fh-rfp-line-items-reference-number" name="reference_number" value={form.reference_number} onChange={handleChange} maxLength={100} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Scope/Entity</label>
-              <input name="scope_entity" value={form.scope_entity} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+              <FieldLabelWithHelp helpKey="sim.rfp_line_items.scope_entity" htmlFor="fh-rfp-line-items-scope-entity" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Scope/Entity</FieldLabelWithHelp>
+              <input id="fh-rfp-line-items-scope-entity" name="scope_entity" value={form.scope_entity} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Business Area</label>
-              <input name="business_area" value={form.business_area} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+              <FieldLabelWithHelp helpKey="sim.rfp_line_items.business_area" htmlFor="fh-rfp-line-items-business-area" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Business Area</FieldLabelWithHelp>
+              <input id="fh-rfp-line-items-business-area" name="business_area" value={form.business_area} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description *</label>
-            <textarea name="description" value={form.description} onChange={handleChange} rows={4} required className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+            <FieldLabelWithHelp helpKey="sim.rfp_line_items.description" htmlFor="fh-rfp-line-items-description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description *</FieldLabelWithHelp>
+            <textarea id="fh-rfp-line-items-description" name="description" value={form.description} onChange={handleChange} rows={4} required className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Vendor Response/Comments</label>
-            <textarea name="vendor_response" value={form.vendor_response} onChange={handleChange} rows={3} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+            <FieldLabelWithHelp helpKey="sim.rfp_line_items.vendor_response" htmlFor="fh-rfp-line-items-vendor-response" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Vendor Response/Comments</FieldLabelWithHelp>
+            <textarea id="fh-rfp-line-items-vendor-response" name="vendor_response" value={form.vendor_response} onChange={handleChange} rows={3} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Priority</label>
-              <select name="priority" value={form.priority} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+              <FieldLabelWithHelp helpKey="sim.rfp_line_items.priority" htmlFor="fh-rfp-line-items-priority" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Priority</FieldLabelWithHelp>
+              <select id="fh-rfp-line-items-priority" name="priority" value={form.priority} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
                 {PRIORITY_OPTIONS.map((o, index) => (
                   <option key={o.value} value={o.value}>{o.label}</option>
                 ))}
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Requirement Type</label>
-              <select name="requirement_type" value={form.requirement_type} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+              <FieldLabelWithHelp helpKey="sim.rfp_line_items.requirement_type" htmlFor="fh-rfp-line-items-requirement-type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Requirement Type</FieldLabelWithHelp>
+              <select id="fh-rfp-line-items-requirement-type" name="requirement_type" value={form.requirement_type} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
                 {REQUIREMENT_TYPE_OPTIONS.map((o, index) => (
                   <option key={o.value} value={o.value}>{o.label}</option>
                 ))}
@@ -200,15 +201,15 @@ export default function RFPLineItemForm({ item = null, nextItemNumber = 1, onSav
           </div>
           <div className="flex items-center gap-2">
             <input name="is_mandatory" type="checkbox" checked={form.is_mandatory} onChange={handleChange} className="rounded border-gray-300 dark:border-gray-600" />
-            <label className="text-sm text-gray-700 dark:text-gray-300">Mandatory</label>
+            <label data-help="exempt" className="text-sm text-gray-700 dark:text-gray-300">Mandatory</label>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Acceptance Criteria</label>
-            <textarea name="acceptance_criteria" value={form.acceptance_criteria} onChange={handleChange} rows={2} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+            <FieldLabelWithHelp helpKey="sim.rfp_line_items.acceptance_criteria" htmlFor="fh-rfp-line-items-acceptance-criteria" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Acceptance Criteria</FieldLabelWithHelp>
+            <textarea id="fh-rfp-line-items-acceptance-criteria" name="acceptance_criteria" value={form.acceptance_criteria} onChange={handleChange} rows={2} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Estimated Effort</label>
-            <input name="estimated_effort" value={form.estimated_effort} onChange={handleChange} placeholder="e.g. 5 days" className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+            <FieldLabelWithHelp helpKey="sim.rfp_line_items.estimated_effort" htmlFor="fh-rfp-line-items-estimated-effort" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Estimated Effort</FieldLabelWithHelp>
+            <input id="fh-rfp-line-items-estimated-effort" name="estimated_effort" value={form.estimated_effort} onChange={handleChange} placeholder="e.g. 5 days" className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
           </div>
           </>
           )}

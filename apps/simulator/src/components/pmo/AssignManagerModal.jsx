@@ -127,7 +127,7 @@ export default function AssignManagerModal({
 
       <form id="assign-manager-form" onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="mgr-search" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+          <label data-help="exempt" htmlFor="mgr-search" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
             Search managers
           </label>
           <div className="relative">
@@ -151,7 +151,7 @@ export default function AssignManagerModal({
             const w = workloadByUserId[u.id] ?? 0
             const full = w >= limit
             return (
-              <label
+              <label data-help="exempt"
                 key={u.id}
                 className={`flex items-center gap-3 p-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/80 ${
                   selectedId === u.id ? 'bg-blue-50 dark:bg-blue-950/40' : ''

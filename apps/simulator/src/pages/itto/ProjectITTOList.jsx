@@ -315,7 +315,7 @@ export default function ProjectITTOList({ isSim = false }) {
       </div>
 
       <div className="mb-4 space-y-3">
-        <label className="block max-w-md">
+        <label data-help="exempt" className="block max-w-md">
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{projectLabel}</span>
           <select
             value={projectId}

@@ -5,6 +5,7 @@ import { ArrowLeft, AlertTriangle, CheckCircle, XCircle, Filter, Search, Link2, 
 import DashboardStatCard from '@nidus/ui/DashboardStatCard'
 import { format } from 'date-fns'
 import { getResourceConflicts } from '../services/crossResourceService'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 export default function ResourceConflicts() {
   const navigate = useNavigate()
@@ -437,10 +438,10 @@ export default function ResourceConflicts() {
                 </p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.resource_conflicts.resolution_notes" htmlFor="fh-resource-conflicts-resolution-notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Resolution Notes
-                </label>
-                <textarea
+                </FieldLabelWithHelp>
+                <textarea id="fh-resource-conflicts-resolution-notes"
                   value={resolutionNotes}
                   onChange={(e) => setResolutionNotes(e.target.value)}
                   rows={4}

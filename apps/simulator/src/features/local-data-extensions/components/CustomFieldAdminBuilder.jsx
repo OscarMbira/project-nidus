@@ -17,6 +17,7 @@ import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 import FieldHelpInputs, { pickFieldHelp } from '@nidus/ui/FieldHelpInputs'
 import { isFieldHelpComplete } from '@nidus/shared/utils/fieldHelp'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 export default function CustomFieldAdminBuilder({
   platformDb,
@@ -171,41 +172,41 @@ export default function CustomFieldAdminBuilder({
         <div className="p-4 space-y-4">
           {tab === 'basic' && (
             <>
-              <label className="block text-sm">
-                Field code (unique)
-                <input
+              <div className="block text-sm">
+                <FieldLabelWithHelp helpKey="sim.custom_field_definitions.field_code" htmlFor="fh-custom-field-definitions-field-code">Field code (unique)</FieldLabelWithHelp>
+                <input id="fh-custom-field-definitions-field-code"
                   className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm"
                   value={form.field_code}
                   disabled={!!initial?.id}
                   onChange={(e) => setForm((f) => ({ ...f, field_code: e.target.value }))}
                 />
-              </label>
-              <label className="block text-sm">
-                Label
-                <input
+              </div>
+              <div className="block text-sm">
+                <FieldLabelWithHelp helpKey="sim.custom_field_definitions.label" htmlFor="fh-custom-field-definitions-label">Label</FieldLabelWithHelp>
+                <input id="fh-custom-field-definitions-label"
                   className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm"
                   value={form.label}
                   onChange={(e) => setForm((f) => ({ ...f, label: e.target.value }))}
                 />
-              </label>
+              </div>
               <FieldHelpInputs
                 idPrefix="cfd-help"
                 value={form.help}
                 onChange={(help) => setForm((f) => ({ ...f, help }))}
                 showErrors={helpErrors}
               />
-              <label className="block text-sm">
-                Description
-                <textarea
+              <div className="block text-sm">
+                <FieldLabelWithHelp helpKey="sim.custom_field_definitions.description" htmlFor="fh-custom-field-definitions-description">Description</FieldLabelWithHelp>
+                <textarea id="fh-custom-field-definitions-description"
                   className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm"
                   rows={2}
                   value={form.description}
                   onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
                 />
-              </label>
-              <label className="block text-sm">
-                Type
-                <select
+              </div>
+              <div className="block text-sm">
+                <FieldLabelWithHelp helpKey="sim.custom_field_definitions.field_type" htmlFor="fh-custom-field-definitions-field-type">Type</FieldLabelWithHelp>
+                <select id="fh-custom-field-definitions-field-type"
                   className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm"
                   value={form.field_type}
                   onChange={(e) => setForm((f) => ({ ...f, field_type: e.target.value }))}
@@ -216,8 +217,8 @@ export default function CustomFieldAdminBuilder({
                     </option>
                   ))}
                 </select>
-              </label>
-              <label className="inline-flex items-center gap-2 text-sm">
+              </div>
+              <label data-help="exempt" className="inline-flex items-center gap-2 text-sm">
                 <input
                   type="checkbox"
                   checked={form.include_in_export}
@@ -225,7 +226,7 @@ export default function CustomFieldAdminBuilder({
                 />
                 Include in exports
               </label>
-              <label className="inline-flex items-center gap-2 text-sm ml-4">
+              <label data-help="exempt" className="inline-flex items-center gap-2 text-sm ml-4">
                 <input
                   type="checkbox"
                   checked={form.is_sensitive}
@@ -233,9 +234,9 @@ export default function CustomFieldAdminBuilder({
                 />
                 Sensitive (mask when read-only)
               </label>
-              <label className="block text-sm">
-                Workflow status
-                <select
+              <div className="block text-sm">
+                <FieldLabelWithHelp helpKey="sim.custom_field_definitions.workflow_status" htmlFor="fh-custom-field-definitions-workflow-status">Workflow status</FieldLabelWithHelp>
+                <select id="fh-custom-field-definitions-workflow-status"
                   className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm"
                   value={form.workflow_status}
                   onChange={(e) => setForm((f) => ({ ...f, workflow_status: e.target.value }))}
@@ -246,7 +247,7 @@ export default function CustomFieldAdminBuilder({
                     </option>
                   ))}
                 </select>
-              </label>
+              </div>
             </>
           )}
           {tab === 'validation' && (

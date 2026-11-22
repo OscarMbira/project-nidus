@@ -167,7 +167,7 @@ function ProjectTimesheetSettingsBody() {
                     onChange={(e) => setForm((f) => ({ ...f, [key]: parseFloat(e.target.value) || 0 }))}
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-60" />
                 </div>
-                <label className="flex items-center gap-2 pb-2 text-sm text-gray-600 dark:text-gray-300">
+                <label data-help="exempt" className="flex items-center gap-2 pb-2 text-sm text-gray-600 dark:text-gray-300">
                   <input type="checkbox" checked={!!overrideFlags[key]} onChange={(e) => toggleOverride(key, e.target.checked)}
                     className="w-4 h-4 text-blue-600 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500" />
                   Override
@@ -178,7 +178,7 @@ function ProjectTimesheetSettingsBody() {
             <div>
               <div className="flex items-center justify-between mb-2">
                 <FieldLabelWithHelp helpKey="public.project_timesheet_settings.working_days" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Standard working days</FieldLabelWithHelp>
-                <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+                <label data-help="exempt" className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
                   <input type="checkbox" checked={!!overrideFlags.working_days} onChange={(e) => toggleOverride('working_days', e.target.checked)}
                     className="w-4 h-4 text-blue-600 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500" />
                   Override

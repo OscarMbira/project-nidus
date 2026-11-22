@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { fetchModules, fetchScreensForModule } from '../api/customFieldsApi'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 export default function FieldMappingSelector({ platformDb, valueScreenId, onChange }) {
   const [modules, setModules] = useState([])
@@ -20,9 +21,9 @@ export default function FieldMappingSelector({ platformDb, valueScreenId, onChan
 
   return (
     <div className="flex flex-wrap gap-3 items-end">
-      <label className="text-sm">
-        Module
-        <select
+      <div className="text-sm">
+        <FieldLabelWithHelp helpKey="public.custom_field_screen_map.module_code" htmlFor="fh-custom-field-screen-map-module-code">Module</FieldLabelWithHelp>
+        <select id="fh-custom-field-screen-map-module-code"
           className="mt-1 block rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-2 py-1"
           value={moduleId}
           onChange={(e) => {
@@ -37,10 +38,10 @@ export default function FieldMappingSelector({ platformDb, valueScreenId, onChan
             </option>
           ))}
         </select>
-      </label>
-      <label className="text-sm">
-        Screen
-        <select
+      </div>
+      <div className="text-sm">
+        <FieldLabelWithHelp helpKey="public.custom_field_screen_map.screen_code" htmlFor="fh-custom-field-screen-map-screen-code">Screen</FieldLabelWithHelp>
+        <select id="fh-custom-field-screen-map-screen-code"
           className="mt-1 block rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-2 py-1"
           value={valueScreenId || ''}
           disabled={!moduleId}
@@ -53,7 +54,7 @@ export default function FieldMappingSelector({ platformDb, valueScreenId, onChan
             </option>
           ))}
         </select>
-      </label>
+      </div>
     </div>
   )
 }

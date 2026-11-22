@@ -3,6 +3,7 @@ import { useLdeContext } from './LocalDataExtensionsRoutes'
 import { listDefinitions, listScreenMaps, attachScreen, detachScreen } from '../api/customFieldsApi'
 import FieldMappingSelector from '../components/FieldMappingSelector'
 import { WORKFLOW_STATUS } from '../utils/customFieldConstants'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 export default function ScreenMappingPage() {
   const { platformDb, accountId, userInternalId } = useLdeContext()
@@ -49,9 +50,9 @@ export default function ScreenMappingPage() {
 
   return (
     <div className="space-y-6">
-      <label className="block text-sm max-w-lg">
-        Published field
-        <select
+      <div className="block text-sm max-w-lg">
+        <FieldLabelWithHelp helpKey="public.custom_field_screen_map.custom_field_id" htmlFor="fh-custom-field-screen-map-custom-field-id" listOptions={false}>Published field</FieldLabelWithHelp>
+        <select id="fh-custom-field-screen-map-custom-field-id"
           className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2"
           value={fieldId}
           onChange={(e) => setFieldId(e.target.value)}
@@ -63,7 +64,7 @@ export default function ScreenMappingPage() {
             </option>
           ))}
         </select>
-      </label>
+      </div>
 
       <FieldMappingSelector platformDb={platformDb} valueScreenId={pickedScreen} onChange={setPickedScreen} />
 

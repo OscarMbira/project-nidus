@@ -880,7 +880,7 @@ export default function FormsGallery({ mode = 'sim', basePath = '/simulator/pm/p
             <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
               One justification will be applied to every selected draft (max {bulkApproveMax}).
             </p>
-            <label className="mt-3 block">
+            <label data-help="exempt" className="mt-3 block">
               <span className="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">
                 Justification (required)
               </span>

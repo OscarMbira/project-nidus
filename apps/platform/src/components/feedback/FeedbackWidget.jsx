@@ -6,6 +6,7 @@ import { useToastContext } from '@nidus/shared/context/ToastContext'
 import Button from '@nidus/ui/Button.jsx'
 import Textarea from '@nidus/ui/Textarea.jsx'
 import Select from '@nidus/ui/Select.jsx'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 const SEND_TIMEOUT_MS = 18000
 
@@ -224,9 +225,9 @@ export default function FeedbackWidget() {
         </Select>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.user_feedback.rating" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Rating {formData.feedback_type === 'compliment' && '(optional)'}
-          </label>
+          </FieldLabelWithHelp>
           <div className="flex gap-2">
             {[1, 2, 3, 4, 5].map((rating) => (
               <button

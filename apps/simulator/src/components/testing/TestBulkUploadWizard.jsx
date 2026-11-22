@@ -99,7 +99,7 @@ export default function TestBulkUploadWizard({
 
       {step === 'file' && (
         <div>
-          <label className="block border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-8 text-center cursor-pointer hover:border-emerald-600">
+          <label data-help="exempt" className="block border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-8 text-center cursor-pointer hover:border-emerald-600">
             <input type="file" className="hidden" accept=".csv,.xlsx,.xls,.json,.xml" onChange={onPickFile} />
             <p className="text-gray-700 dark:text-gray-300">Drop or click to select CSV, Excel, JSON, or XML</p>
             <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Columns from another test tool? You can match them to the template next.</p>

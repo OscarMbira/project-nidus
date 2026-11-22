@@ -132,7 +132,7 @@ export default function DefectAttachmentUploader({
         <span className="text-sm text-gray-800 dark:text-gray-100">
           {uploading ? 'Uploading…' : 'Click this box, then paste a screenshot (Ctrl+V), or drop an image'}
         </span>
-        <label className="inline-flex cursor-pointer items-center rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-700">
+        <label data-help="exempt" className="inline-flex cursor-pointer items-center rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-700">
           Choose image
           <input
             type="file"

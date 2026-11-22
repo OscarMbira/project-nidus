@@ -20,6 +20,7 @@ import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 import RegionalDateInput from '@nidus/ui/RegionalDateInput'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 /**
  * Resolve organisation account ID for the current user.
@@ -409,22 +410,22 @@ export default function RFPForm({ mode = 'create', basePath = '/pmo', rfpService
             <div className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">RFP Code</label>
-                  <input name="rfp_reference" value={form.rfp_reference} onChange={handleChange} placeholder="Leave blank to auto-generate" className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600" />
+                  <FieldLabelWithHelp helpKey="sim.rfps.rfp_reference" htmlFor="fh-rfps-rfp-reference" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">RFP Code</FieldLabelWithHelp>
+                  <input id="fh-rfps-rfp-reference" name="rfp_reference" value={form.rfp_reference} onChange={handleChange} placeholder="Leave blank to auto-generate" className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600" />
                   <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">System-generated if left blank (e.g. RFP-2026-001).</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">RFP Title *</label>
-                  <input name="rfp_title" value={form.rfp_title} onChange={handleChange} required className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600" />
+                  <FieldLabelWithHelp helpKey="sim.rfps.rfp_title" htmlFor="fh-rfps-rfp-title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">RFP Title *</FieldLabelWithHelp>
+                  <input id="fh-rfps-rfp-title" name="rfp_title" value={form.rfp_title} onChange={handleChange} required className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600" />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
-                <textarea name="rfp_description" value={form.rfp_description} onChange={handleChange} rows={3} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600" />
+                <FieldLabelWithHelp helpKey="sim.rfps.rfp_description" htmlFor="fh-rfps-rfp-description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</FieldLabelWithHelp>
+                <textarea id="fh-rfps-rfp-description" name="rfp_description" value={form.rfp_description} onChange={handleChange} rows={3} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
-                <SearchableSelect
+                <FieldLabelWithHelp helpKey="sim.rfps.category_id" htmlFor="fh-rfps-category-id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</FieldLabelWithHelp>
+                <SearchableSelect id="fh-rfps-category-id"
                   options={categoryOptions}
                   value={form.rfp_category}
                   onChange={(val) => setForm((p) => ({ ...p, rfp_category: val || '' }))}
@@ -437,12 +438,12 @@ export default function RFPForm({ mode = 'create', basePath = '/pmo', rfpService
                 </p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Original Document Reference</label>
-                <input name="original_document_ref" value={form.original_document_ref} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600" />
+                <FieldLabelWithHelp helpKey="sim.rfps.original_document_ref" htmlFor="fh-rfps-original-document-ref" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Original Document Reference</FieldLabelWithHelp>
+                <input id="fh-rfps-original-document-ref" name="original_document_ref" value={form.original_document_ref} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Original Issue Date</label>
-                <RegionalDateInput eventStyle name="original_issue_date" value={form.original_issue_date} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600" />
+                <FieldLabelWithHelp helpKey="sim.rfps.original_issue_date" htmlFor="fh-rfps-original-issue-date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Original Issue Date</FieldLabelWithHelp>
+                <RegionalDateInput id="fh-rfps-original-issue-date" eventStyle name="original_issue_date" value={form.original_issue_date} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600" />
               </div>
             </div>
           </div>
@@ -453,8 +454,8 @@ export default function RFPForm({ mode = 'create', basePath = '/pmo', rfpService
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Service Provider</h2>
             <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Provider Name</label>
-                <input name="service_provider_name" value={form.service_provider_name} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600" />
+                <FieldLabelWithHelp helpKey="sim.rfps.service_provider_name" htmlFor="fh-rfps-service-provider-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Provider Name</FieldLabelWithHelp>
+                <input id="fh-rfps-service-provider-name" name="service_provider_name" value={form.service_provider_name} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600" />
               </div>
 
               <div>
@@ -477,20 +478,20 @@ export default function RFPForm({ mode = 'create', basePath = '/pmo', rfpService
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-0.5">Contact Person</label>
-                          <input value={contact.contact_person} onChange={(e) => handleContactChange(index, 'contact_person', e.target.value)} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 text-sm" placeholder="Name" />
+                          <FieldLabelWithHelp helpKey="sim.rfp_contacts.contact_person" htmlFor="fh-rfp-contacts-contact-person" className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-0.5">Contact Person</FieldLabelWithHelp>
+                          <input id="fh-rfp-contacts-contact-person" value={contact.contact_person} onChange={(e) => handleContactChange(index, 'contact_person', e.target.value)} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 text-sm" placeholder="Name" />
                         </div>
                         <div>
-                          <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-0.5">Email</label>
-                          <input type="email" value={contact.email} onChange={(e) => handleContactChange(index, 'email', e.target.value)} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 text-sm" placeholder="email@example.com" />
+                          <FieldLabelWithHelp helpKey="sim.rfp_contacts.email" htmlFor="fh-rfp-contacts-email" className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-0.5">Email</FieldLabelWithHelp>
+                          <input id="fh-rfp-contacts-email" type="email" value={contact.email} onChange={(e) => handleContactChange(index, 'email', e.target.value)} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 text-sm" placeholder="email@example.com" />
                         </div>
                         <div>
-                          <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-0.5">Phone</label>
-                          <input type="tel" value={contact.phone} onChange={(e) => handleContactChange(index, 'phone', e.target.value)} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 text-sm" placeholder="Phone" />
+                          <FieldLabelWithHelp helpKey="sim.rfp_contacts.phone" htmlFor="fh-rfp-contacts-phone" className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-0.5">Phone</FieldLabelWithHelp>
+                          <input id="fh-rfp-contacts-phone" type="tel" value={contact.phone} onChange={(e) => handleContactChange(index, 'phone', e.target.value)} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 text-sm" placeholder="Phone" />
                         </div>
                         <div>
-                          <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-0.5">Mobile number</label>
-                          <input type="tel" value={contact.mobile} onChange={(e) => handleContactChange(index, 'mobile', e.target.value)} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 text-sm" placeholder="Mobile" />
+                          <FieldLabelWithHelp helpKey="sim.rfp_contacts.mobile" htmlFor="fh-rfp-contacts-mobile" className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-0.5">Mobile number</FieldLabelWithHelp>
+                          <input id="fh-rfp-contacts-mobile" type="tel" value={contact.mobile} onChange={(e) => handleContactChange(index, 'mobile', e.target.value)} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 text-sm" placeholder="Mobile" />
                         </div>
                       </div>
                     </div>
@@ -500,8 +501,8 @@ export default function RFPForm({ mode = 'create', basePath = '/pmo', rfpService
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Contract Value</label>
-                  <SmartAmountInput
+                  <FieldLabelWithHelp helpKey="sim.rfps.contract_value" htmlFor="fh-rfps-contract-value" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Contract Value</FieldLabelWithHelp>
+                  <SmartAmountInput id="fh-rfps-contract-value"
                     value={form.contract_value !== '' && form.contract_value != null && !Number.isNaN(Number(form.contract_value)) ? Number(form.contract_value) : null}
                     onChange={(num) => setForm((p) => ({ ...p, contract_value: num != null && !Number.isNaN(num) ? String(num) : '' }))}
                     placeholder="e.g. 23T, 2M"
@@ -515,8 +516,8 @@ export default function RFPForm({ mode = 'create', basePath = '/pmo', rfpService
                   </p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Currency</label>
-                  <select name="currency" value={form.currency} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600">
+                  <FieldLabelWithHelp helpKey="sim.rfps.currency" htmlFor="fh-rfps-currency" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Currency</FieldLabelWithHelp>
+                  <select id="fh-rfps-currency" name="currency" value={form.currency} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600">
                     <option value="USD">USD</option>
                     <option value="EUR">EUR</option>
                     <option value="GBP">GBP</option>

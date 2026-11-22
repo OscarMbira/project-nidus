@@ -58,7 +58,7 @@ export default function ApprovalWorkflowPanel({
       </p>
 
       {needsJustification && (
-        <label className="mb-3 block">
+        <label data-help="exempt" className="mb-3 block">
           <span className="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">
             Justification (required for Approve / Reject)
           </span>

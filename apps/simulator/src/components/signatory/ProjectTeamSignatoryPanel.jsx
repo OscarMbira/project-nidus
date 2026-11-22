@@ -177,13 +177,13 @@ function ScopeEditor({ title, icon: Icon, scopeType, scopeId, accountId, documen
         <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{title}</h3>
       </div>
       <div className="mb-3 flex flex-wrap gap-3 text-sm text-gray-700 dark:text-gray-200">
-        <label className="inline-flex items-center gap-1.5">
+        <label data-help="exempt" className="inline-flex items-center gap-1.5">
           <input type="radio" checked={mode === 'inherit'} onChange={() => setMode('inherit')} /> Use parent
         </label>
-        <label className="inline-flex items-center gap-1.5">
+        <label data-help="exempt" className="inline-flex items-center gap-1.5">
           <input type="radio" checked={mode === 'none'} onChange={() => setMode('none')} /> No signatories
         </label>
-        <label className="inline-flex items-center gap-1.5">
+        <label data-help="exempt" className="inline-flex items-center gap-1.5">
           <input type="radio" checked={mode === 'custom'} onChange={() => setMode('custom')} /> Custom list
         </label>
       </div>

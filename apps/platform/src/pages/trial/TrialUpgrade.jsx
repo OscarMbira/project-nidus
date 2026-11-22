@@ -22,6 +22,7 @@ import {
   Award,
   Sparkles
 } from 'lucide-react';
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 const TrialUpgrade = () => {
   const navigate = useNavigate();
@@ -307,10 +308,10 @@ const TrialUpgrade = () => {
 
             <div className="flex items-center gap-4">
               <div className="flex-1">
-                <label className="block text-sm text-gray-400 mb-2">
+                <FieldLabelWithHelp helpKey="public.trial_upgrades.team_size" htmlFor="fh-trial-upgrades-team-size" className="block text-sm text-gray-400 mb-2">
                   Number of team members
-                </label>
-                <input
+                </FieldLabelWithHelp>
+                <input id="fh-trial-upgrades-team-size"
                   type="number"
                   min={selectedPlan.member_limit}
                   value={memberCount}

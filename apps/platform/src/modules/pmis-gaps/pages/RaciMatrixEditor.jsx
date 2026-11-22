@@ -26,6 +26,7 @@ import {
   deleteRaciRow,
   setRaciAssignment,
 } from '../services/raciService'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 /** Flat sibling routes (pm|pmo/resources/raci*) — never use navigate('..') (route-tree parent is /). */
 function useRaciBasePath() {
@@ -183,8 +184,8 @@ export default function RaciMatrixEditor() {
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">New RACI Matrix</h1>
         <div className="space-y-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Matrix name *</label>
-            <input type="text" value={newMatrixName} onChange={(e) => setNewMatrixName(e.target.value)} className={inputClass} placeholder="e.g. Delivery workstream RACI" />
+            <FieldLabelWithHelp helpKey="public.raci_matrices.matrix_name" htmlFor="fh-raci-matrices-matrix-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Matrix name *</FieldLabelWithHelp>
+            <input id="fh-raci-matrices-matrix-name" type="text" value={newMatrixName} onChange={(e) => setNewMatrixName(e.target.value)} className={inputClass} placeholder="e.g. Delivery workstream RACI" />
           </div>
           <p className="text-xs text-gray-500 dark:text-gray-400">You'll add deliverables and assign R/A/C/I roles to project members on the next screen.</p>
         </div>

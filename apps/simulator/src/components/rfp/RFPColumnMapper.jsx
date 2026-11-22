@@ -95,7 +95,7 @@ function RFPColumnMapper({ headers = [], mapping = {}, onChange }) {
           <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">Include these columns to capture extra data from your Excel/CSV. They will be stored with each line item.</p>
           <div className="flex flex-wrap gap-3">
             {unmappedHeaders.map((h) => (
-              <label key={h} className="inline-flex items-center gap-2 cursor-pointer">
+              <label data-help="exempt" key={h} className="inline-flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={additionalColumns.includes(h)}

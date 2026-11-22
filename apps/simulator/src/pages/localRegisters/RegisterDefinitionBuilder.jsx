@@ -10,6 +10,7 @@ import { ArrowLeft, Plus, Trash2, GripVertical } from 'lucide-react'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
 import { createRegisterDefinition } from '../../services/localRegisterService'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 const FIELD_TYPES = [
   { value: 'text', label: 'Text' },
@@ -126,8 +127,8 @@ export default function RegisterDefinitionBuilder() {
 
       <div className="space-y-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Register Name *</label>
-          <input
+          <FieldLabelWithHelp helpKey="sim.local_registers.register_name" htmlFor="fh-local-registers-register-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Register Name *</FieldLabelWithHelp>
+          <input id="fh-local-registers-register-name"
             type="text"
             value={label}
             onChange={(e) => setLabel(e.target.value)}
@@ -136,8 +137,8 @@ export default function RegisterDefinitionBuilder() {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
-          <textarea
+          <FieldLabelWithHelp helpKey="sim.local_registers.description" htmlFor="fh-local-registers-description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</FieldLabelWithHelp>
+          <textarea id="fh-local-registers-description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={2}
@@ -205,7 +206,7 @@ export default function RegisterDefinitionBuilder() {
                 <option key={t.value} value={t.value}>{t.label}</option>
               ))}
             </select>
-            <label className="inline-flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400">
+            <label data-help="exempt" className="inline-flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400">
               <input type="checkbox" checked={f.isRequired} onChange={(e) => updateField(index, { isRequired: e.target.checked })} />
               Required
             </label>

@@ -30,6 +30,7 @@ import { User, Building2, Mail, ArrowRight, ArrowLeft, CheckCircle2, AlertCircle
 import MainHeader from '../../components/homepage/MainHeader'
 import PlatformFooter from '../../components/homepage/PlatformFooter'
 import { checkPendingInvitationByEmail } from '../../services/invitationService'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 export const REGISTRATION_INTENT_STORAGE_KEY = 'nidus:regIntent'
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -222,9 +223,9 @@ export default function RegistrationEntryChoice({ target = 'platform' }) {
 
               <form onSubmit={handleLookup} className="space-y-4">
                 <div>
-                  <label htmlFor="invited-email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.invitation_accept.email" htmlFor="invited-email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Email address
-                  </label>
+                  </FieldLabelWithHelp>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <input

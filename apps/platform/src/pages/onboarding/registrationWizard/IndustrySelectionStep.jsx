@@ -116,7 +116,7 @@ export default function IndustrySelectionStep() {
                       : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800'
                   }`}
                 >
-                  <label className="flex items-start gap-3 cursor-pointer">
+                  <label data-help="exempt" className="flex items-start gap-3 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={checked}
@@ -128,7 +128,7 @@ export default function IndustrySelectionStep() {
 
                   {checked && (
                     <div className="mt-3 pl-7 space-y-3">
-                      <label className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                      <label data-help="exempt" className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
                         <input
                           type="radio"
                           name="primaryIndustry"

@@ -18,6 +18,7 @@ import RowActionButton from '@nidus/ui/RowActionButton'
 import Modal from '@nidus/ui/Modal'
 import MultiLineListInput from '@nidus/ui/MultiLineListInput'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 const RoleSkillsLinkTable = forwardRef(function RoleSkillsLinkTable(
   {
@@ -221,9 +222,9 @@ const RoleSkillsLinkTable = forwardRef(function RoleSkillsLinkTable(
     <div className="space-y-3">
       {!disabled && showComposer && (
         <div className="space-y-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40 p-3">
-          <label className="block text-xs text-gray-700 dark:text-gray-200">
-            Role <span className="text-red-500">*</span>
-            <input
+          <div className="block text-xs text-gray-700 dark:text-gray-200">
+            <FieldLabelWithHelp helpKey="public.role_skills.role_id" htmlFor="fh-role-skills-role-id" listOptions={false}>Role <span className="text-red-500">*</span></FieldLabelWithHelp>
+            <input id="fh-role-skills-role-id"
               value={roleDraft}
               onChange={(e) => setRoleDraft(e.target.value)}
               onKeyDown={(e) => {
@@ -235,7 +236,7 @@ const RoleSkillsLinkTable = forwardRef(function RoleSkillsLinkTable(
               placeholder="e.g. Developer"
               className="mt-1 w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2"
             />
-          </label>
+          </div>
           <div>
             <span className="block text-xs text-gray-700 dark:text-gray-200 mb-1">
               Required Skills for This Role <span className="text-red-500">*</span>

@@ -3,6 +3,7 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../services/supabaseClient'
 import { testIntegrationConnection } from '../services/integrationService'
 import { ArrowLeft, Save, TestTube, CheckCircle, XCircle } from 'lucide-react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 export default function IntegrationConfig() {
   const { id } = useParams()
@@ -183,10 +184,10 @@ export default function IntegrationConfig() {
         return (
           <>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.integrations.ms_project_path" htmlFor="fh-integrations-ms-project-path" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 MS Project File Path / URL
-              </label>
-              <input
+              </FieldLabelWithHelp>
+              <input id="fh-integrations-ms-project-path"
                 type="text"
                 value={formData.connection_config.file_path || ''}
                 onChange={(e) => handleConnectionConfigChange('file_path', e.target.value)}
@@ -195,10 +196,10 @@ export default function IntegrationConfig() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.integrations.auth_method" htmlFor="fh-integrations-auth-method" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Authentication Method
-              </label>
-              <select
+              </FieldLabelWithHelp>
+              <select id="fh-integrations-auth-method"
                 value={formData.connection_config.auth_method || 'none'}
                 onChange={(e) => handleConnectionConfigChange('auth_method', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
@@ -215,10 +216,10 @@ export default function IntegrationConfig() {
         return (
           <>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.integrations.jira_url" htmlFor="fh-integrations-jira-url" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Jira URL *
-              </label>
-              <input
+              </FieldLabelWithHelp>
+              <input id="fh-integrations-jira-url"
                 type="url"
                 value={formData.connection_config.url || ''}
                 onChange={(e) => handleConnectionConfigChange('url', e.target.value)}
@@ -228,10 +229,10 @@ export default function IntegrationConfig() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.integrations.username" htmlFor="fh-integrations-username" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Email / Username *
-              </label>
-              <input
+              </FieldLabelWithHelp>
+              <input id="fh-integrations-username"
                 type="text"
                 value={formData.connection_config.username || ''}
                 onChange={(e) => handleConnectionConfigChange('username', e.target.value)}
@@ -241,10 +242,10 @@ export default function IntegrationConfig() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.integrations.api_token" htmlFor="fh-integrations-api-token" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 API Token *
-              </label>
-              <input
+              </FieldLabelWithHelp>
+              <input id="fh-integrations-api-token"
                 type="password"
                 value={formData.connection_config.api_token || ''}
                 onChange={(e) => handleConnectionConfigChange('api_token', e.target.value)}
@@ -264,10 +265,10 @@ export default function IntegrationConfig() {
         return (
           <>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.integrations.repository_url" htmlFor="fh-integrations-repository-url" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Repository URL *
-              </label>
-              <input
+              </FieldLabelWithHelp>
+              <input id="fh-integrations-repository-url"
                 type="url"
                 value={formData.connection_config.repository_url || ''}
                 onChange={(e) => handleConnectionConfigChange('repository_url', e.target.value)}
@@ -277,10 +278,10 @@ export default function IntegrationConfig() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.integrations.access_token" htmlFor="fh-integrations-access-token" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Personal Access Token *
-              </label>
-              <input
+              </FieldLabelWithHelp>
+              <input id="fh-integrations-access-token"
                 type="password"
                 value={formData.connection_config.token || ''}
                 onChange={(e) => handleConnectionConfigChange('token', e.target.value)}
@@ -293,10 +294,10 @@ export default function IntegrationConfig() {
               </p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.integrations.branch" htmlFor="fh-integrations-branch" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Branch (optional)
-              </label>
-              <input
+              </FieldLabelWithHelp>
+              <input id="fh-integrations-branch"
                 type="text"
                 value={formData.connection_config.branch || ''}
                 onChange={(e) => handleConnectionConfigChange('branch', e.target.value)}
@@ -343,10 +344,10 @@ export default function IntegrationConfig() {
           </h2>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.integrations.integration_name" htmlFor="fh-integrations-integration-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Integration Name *
-              </label>
-              <input
+              </FieldLabelWithHelp>
+              <input id="fh-integrations-integration-name"
                 type="text"
                 name="integration_name"
                 value={formData.integration_name}
@@ -357,10 +358,10 @@ export default function IntegrationConfig() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.integrations.integration_type" htmlFor="fh-integrations-integration-type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Integration Type
-              </label>
-              <select
+              </FieldLabelWithHelp>
+              <select id="fh-integrations-integration-type"
                 name="integration_type"
                 value={formData.integration_type}
                 onChange={handleChange}
@@ -376,10 +377,10 @@ export default function IntegrationConfig() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.integrations.description" htmlFor="fh-integrations-description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Description
-              </label>
-              <textarea
+              </FieldLabelWithHelp>
+              <textarea id="fh-integrations-description"
                 name="integration_description"
                 value={formData.integration_description}
                 onChange={handleChange}
@@ -439,7 +440,7 @@ export default function IntegrationConfig() {
             Sync Configuration
           </h2>
           <div className="space-y-4">
-            <label className="flex items-center gap-2">
+            <label data-help="exempt" className="flex items-center gap-2">
               <input
                 type="checkbox"
                 name="sync_enabled"
@@ -455,10 +456,10 @@ export default function IntegrationConfig() {
             {formData.sync_enabled && (
               <>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.integrations.sync_direction" htmlFor="fh-integrations-sync-direction" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Sync Direction
-                  </label>
-                  <select
+                  </FieldLabelWithHelp>
+                  <select id="fh-integrations-sync-direction"
                     name="sync_direction"
                     value={formData.sync_direction}
                     onChange={handleChange}
@@ -470,10 +471,10 @@ export default function IntegrationConfig() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.integrations.sync_frequency_minutes" htmlFor="fh-integrations-sync-frequency-minutes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Sync Frequency (minutes)
-                  </label>
-                  <input
+                  </FieldLabelWithHelp>
+                  <input id="fh-integrations-sync-frequency-minutes"
                     type="number"
                     name="sync_frequency_minutes"
                     value={formData.sync_frequency_minutes}

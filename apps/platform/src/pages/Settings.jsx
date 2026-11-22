@@ -383,7 +383,7 @@ function SettingsBody() {
                   {Object.entries(notificationSettings).map(([key, value]) => (
                     <div key={key} className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
                       <div>
-                        <label className="text-sm font-medium text-gray-900 dark:text-white capitalize">
+                        <label data-help="exempt" className="text-sm font-medium text-gray-900 dark:text-white capitalize">
                           {key.replace(/_/g, ' ')}
                         </label>
                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -394,7 +394,7 @@ function SettingsBody() {
                           {key === 'weekly_digest' && 'Receive weekly summary emails'}
                         </p>
                       </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
+                      <label data-help="exempt" className="relative inline-flex items-center cursor-pointer">
                         <input
                           type="checkbox"
                           checked={value}

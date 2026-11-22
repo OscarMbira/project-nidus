@@ -2,6 +2,7 @@ import { DECLINE_REASON_OPTIONS } from '@nidus/shared/utils/appointmentRoleUtils
 import AppointmentTermsCard from './AppointmentTermsCard'
 import TeamMemberTermsCard from './TeamMemberTermsCard'
 import RegionalDateInput from '@nidus/ui/RegionalDateInput'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 /**
  * Acceptance / decline fields for formal appointment invitations.
@@ -30,7 +31,7 @@ export default function AppointmentAcceptPanel({
       {!showDeclineFields ? (
         <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-3 bg-gray-50 dark:bg-gray-900/50">
           <h4 className="text-sm font-semibold text-gray-900 dark:text-white">Your response</h4>
-          <label className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
+          <label data-help="exempt" className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
             <input
               type="checkbox"
               checked={!!acceptance.availabilityConfirmed}
@@ -40,16 +41,16 @@ export default function AppointmentAcceptPanel({
             I confirm I can start on the proposed date (or as agreed)
           </label>
           <div>
-            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+            <FieldLabelWithHelp helpKey="sim.manager_appointment_records.actual_start_date" htmlFor="fh-manager-appointment-records-actual-start-date" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
               Actual start date (if different)
-            </label>
-            <RegionalDateInput eventStyle
+            </FieldLabelWithHelp>
+            <RegionalDateInput id="fh-manager-appointment-records-actual-start-date" eventStyle
               value={acceptance.actualStartDate || ''}
               onChange={(e) => patch({ actualStartDate: e.target.value })}
               className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-white"
             />
           </div>
-          <label className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
+          <label data-help="exempt" className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
             <input
               type="checkbox"
               checked={!!acceptance.conflictOfInterest}
@@ -67,7 +68,7 @@ export default function AppointmentAcceptPanel({
               className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm"
             />
           ) : null}
-          <label className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
+          <label data-help="exempt" className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
             <input
               type="checkbox"
               checked={
@@ -89,10 +90,10 @@ export default function AppointmentAcceptPanel({
               : 'I confirm I have the required skills for this assignment'}
           </label>
           <div>
-            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+            <FieldLabelWithHelp helpKey="sim.manager_appointment_records.acceptance_conditions" htmlFor="fh-manager-appointment-records-acceptance-conditions" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
               Acceptance conditions (optional)
-            </label>
-            <textarea
+            </FieldLabelWithHelp>
+            <textarea id="fh-manager-appointment-records-acceptance-conditions"
               rows={2}
               value={acceptance.acceptanceConditions || ''}
               onChange={(e) => patch({ acceptanceConditions: e.target.value })}
@@ -100,10 +101,10 @@ export default function AppointmentAcceptPanel({
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+            <FieldLabelWithHelp helpKey="sim.manager_appointment_records.initial_observations" htmlFor="fh-manager-appointment-records-initial-observations" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
               Initial observations (optional)
-            </label>
-            <textarea
+            </FieldLabelWithHelp>
+            <textarea id="fh-manager-appointment-records-initial-observations"
               rows={2}
               value={acceptance.initialObservations || ''}
               onChange={(e) => patch({ initialObservations: e.target.value })}
@@ -114,10 +115,10 @@ export default function AppointmentAcceptPanel({
       ) : (
         <div className="space-y-3">
           <div>
-            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+            <FieldLabelWithHelp helpKey="sim.manager_appointment_records.decline_reason" htmlFor="fh-manager-appointment-records-decline-reason" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
               Decline reason
-            </label>
-            <select
+            </FieldLabelWithHelp>
+            <select id="fh-manager-appointment-records-decline-reason"
               value={declineReason}
               onChange={(e) => onDeclineReasonChange?.(e.target.value)}
               className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-white"
@@ -130,10 +131,10 @@ export default function AppointmentAcceptPanel({
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+            <FieldLabelWithHelp helpKey="sim.manager_appointment_records.response_note" htmlFor="fh-manager-appointment-records-response-note" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
               Note for the appointer
-            </label>
-            <textarea
+            </FieldLabelWithHelp>
+            <textarea id="fh-manager-appointment-records-response-note"
               rows={3}
               value={declineNote}
               onChange={(e) => onDeclineNoteChange?.(e.target.value)}

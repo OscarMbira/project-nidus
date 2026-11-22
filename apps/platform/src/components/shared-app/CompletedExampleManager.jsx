@@ -6,6 +6,7 @@ import {
   listInstanceTemplatesForScope,
 } from '../../services/formEngineService'
 import RowActionButton from '@nidus/ui/RowActionButton'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 /**
  * Author "completed" example instances for a shared form template — reused at every tier
@@ -129,8 +130,8 @@ export default function CompletedExampleManager({
         <div className="space-y-4 rounded border border-dashed border-gray-300 dark:border-gray-700 p-4">
           <div className="grid gap-3 md:grid-cols-2">
             <div>
-              <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Name</label>
-              <input
+              <FieldLabelWithHelp helpKey="public.form_completed_examples.name" htmlFor="fh-form-completed-examples-name" className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Name</FieldLabelWithHelp>
+              <input id="fh-form-completed-examples-name"
                 className="w-full rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-900 dark:text-gray-100"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -138,8 +139,8 @@ export default function CompletedExampleManager({
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Description (optional)</label>
-              <input
+              <FieldLabelWithHelp helpKey="public.form_completed_examples.description" htmlFor="fh-form-completed-examples-description" className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Description (optional)</FieldLabelWithHelp>
+              <input id="fh-form-completed-examples-description"
                 className="w-full rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-900 dark:text-gray-100"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}

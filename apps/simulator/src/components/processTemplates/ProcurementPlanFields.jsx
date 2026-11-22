@@ -4,6 +4,7 @@
  */
 import MultiLineListInput from '@nidus/ui/MultiLineListInput'
 import RegionalDateInput from '@nidus/ui/RegionalDateInput'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 export const PROCUREMENT_PLAN_TABS = [
   { value: 'details', label: 'Details' },
@@ -156,7 +157,7 @@ function RowEditor({ columns, rows, onChange, readOnly, addLabel }) {
 
 function TextBlock({ label, value, onChange, readOnly, rows = 4 }) {
   return (
-    <label className="block space-y-1">
+    <label data-help="exempt" className="block space-y-1">
       <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{label}</span>
       {readOnly ? (
         <p className="text-sm text-gray-900 dark:text-gray-100 whitespace-pre-wrap">{value || '—'}</p>
@@ -176,14 +177,14 @@ export default function ProcurementPlanFields({ value, onChange, readOnly = fals
       {section === 'integration' && (
       <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <label className="block space-y-1">
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Plan date</span>
+        <div className="block space-y-1">
+          <FieldLabelWithHelp helpKey="sim.procurement_management_plans.plan_date" htmlFor="procurement-plan-date" className="text-sm font-medium text-gray-700 dark:text-gray-300">Plan date</FieldLabelWithHelp>
           {readOnly ? (
             <p className="text-sm text-gray-900 dark:text-gray-100">{plan.planDate || '—'}</p>
           ) : (
-            <RegionalDateInput eventStyle value={plan.planDate} onChange={(e) => patch({ planDate: e.target.value })} className={inputClass} />
+            <RegionalDateInput eventStyle id="procurement-plan-date" value={plan.planDate} onChange={(e) => patch({ planDate: e.target.value })} className={inputClass} />
           )}
-        </label>
+        </div>
       </div>
 
       <Section title="Procurement integration">

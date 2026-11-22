@@ -178,7 +178,7 @@ export default function PlanningProjectBar({ isSim = false, autoSelectSingle = f
   return (
     <div className="mb-6 flex flex-col gap-2">
       <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-        <label className="text-sm font-medium text-gray-700 dark:text-gray-200 whitespace-nowrap">
+        <label data-help="exempt" className="text-sm font-medium text-gray-700 dark:text-gray-200 whitespace-nowrap">
           {isSim ? 'Practice Project' : 'Project'}
         </label>
         <select

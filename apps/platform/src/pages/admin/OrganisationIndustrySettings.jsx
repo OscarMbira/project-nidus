@@ -308,7 +308,7 @@ export default function OrganisationIndustrySettings() {
                           : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800'
                       }`}
                     >
-                      <label className="flex items-start gap-3 cursor-pointer">
+                      <label data-help="exempt" className="flex items-start gap-3 cursor-pointer">
                         <input
                           type="checkbox"
                           checked={checked}
@@ -320,7 +320,7 @@ export default function OrganisationIndustrySettings() {
 
                       {checked && (
                         <div className="mt-3 pl-7 space-y-3">
-                          <label className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                          <label data-help="exempt" className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
                             <input
                               type="radio"
                               name="primaryIndustry"
@@ -383,7 +383,7 @@ export default function OrganisationIndustrySettings() {
                       <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{packName}</h3>
                       <div className="space-y-2">
                         {items.map((item) => (
-                          <label
+                          <label data-help="exempt"
                             key={item.id}
                             className="flex items-center justify-between gap-3 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2.5"
                           >

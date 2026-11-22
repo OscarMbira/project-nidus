@@ -107,7 +107,7 @@ export default function FieldImagePicker({ images = [], onChange, projectId, fie
           <span className="text-xs text-gray-700 dark:text-gray-200">
             {uploading ? 'Uploading…' : 'Paste a screenshot (Ctrl+V), drop an image, or'}
           </span>
-          <label className="inline-flex cursor-pointer items-center rounded-lg bg-blue-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-blue-700">
+          <label data-help="exempt" className="inline-flex cursor-pointer items-center rounded-lg bg-blue-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-blue-700">
             Choose image
             <input
               type="file"

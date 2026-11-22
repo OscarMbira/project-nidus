@@ -340,7 +340,7 @@ function SortableFieldCard({
               </select>
             </div>
             <div className="flex items-end gap-2">
-              <label className="inline-flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 pb-2">
+              <label data-help="exempt" className="inline-flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 pb-2">
                 <input
                   type="checkbox"
                   checked={Boolean(field.required)}
@@ -1846,7 +1846,7 @@ function FormTemplateBuilderBody({ mode = 'platform' }) {
                           </span>
                         </div>
                         <div className="flex items-center gap-4">
-                          <label className="inline-flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                          <label data-help="exempt" className="inline-flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
                             <input
                               type="checkbox"
                               checked={enabled}
@@ -1860,7 +1860,7 @@ function FormTemplateBuilderBody({ mode = 'platform' }) {
                             />
                             {saving ? 'Saving…' : enabled ? 'Enabled' : 'Disabled'}
                           </label>
-                          <label
+                          <label data-help="exempt"
                             className="inline-flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400"
                             title={!enabled ? 'Required is ignored while this field is disabled' : undefined}
                           >

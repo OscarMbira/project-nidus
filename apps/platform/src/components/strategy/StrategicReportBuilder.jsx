@@ -119,7 +119,7 @@ export default function StrategicReportBuilder({ portfolioId = null, projectId =
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label data-help="exempt" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Portfolio
             </label>
             <select
@@ -137,7 +137,7 @@ export default function StrategicReportBuilder({ portfolioId = null, projectId =
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label data-help="exempt" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Project
             </label>
             <select
@@ -155,7 +155,7 @@ export default function StrategicReportBuilder({ portfolioId = null, projectId =
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label data-help="exempt" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Report Type
             </label>
             <select
@@ -173,7 +173,7 @@ export default function StrategicReportBuilder({ portfolioId = null, projectId =
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label data-help="exempt" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Status
             </label>
             <select

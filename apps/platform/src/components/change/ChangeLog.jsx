@@ -134,7 +134,7 @@ function SortIcon({ col, sort }) {
 function Field({ label, children }) {
   return (
     <div>
-      <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wide">
+      <label data-help="exempt" className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wide">
         {label}
       </label>
       {children}

@@ -168,7 +168,7 @@ export default function ChangeRequestList({ requests, onEdit, onRefresh, onAdd, 
       {/* Filters */}
       <div className="flex flex-wrap gap-4">
         <div>
-          <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+          <label data-help="exempt" className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block">
             Status
           </label>
           <select
@@ -187,7 +187,7 @@ export default function ChangeRequestList({ requests, onEdit, onRefresh, onAdd, 
         </div>
 
         <div>
-          <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+          <label data-help="exempt" className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block">
             Category
           </label>
           <select

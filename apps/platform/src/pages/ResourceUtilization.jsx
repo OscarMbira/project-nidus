@@ -101,7 +101,7 @@ export default function ResourceUtilization() {
         <div className="flex items-center gap-4 flex-wrap">
           <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4 text-gray-400" />
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Start Date:</label>
+            <label data-help="exempt" className="text-sm font-medium text-gray-700 dark:text-gray-300">Start Date:</label>
             <RegionalDateInput eventStyle
               value={selectedPeriod.start}
               onChange={(e) => setSelectedPeriod({ ...selectedPeriod, start: e.target.value })}
@@ -109,7 +109,7 @@ export default function ResourceUtilization() {
             />
           </div>
           <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">End Date:</label>
+            <label data-help="exempt" className="text-sm font-medium text-gray-700 dark:text-gray-300">End Date:</label>
             <RegionalDateInput eventStyle
               value={selectedPeriod.end}
               onChange={(e) => setSelectedPeriod({ ...selectedPeriod, end: e.target.value })}

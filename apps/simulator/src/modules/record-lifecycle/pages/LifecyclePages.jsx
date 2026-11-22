@@ -16,6 +16,7 @@ import { useSortableTable } from '@nidus/shared/hooks/useSortableTable'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 function RequestStatusPill({ status }) {
   const approved = status === 'approved'
@@ -428,9 +429,9 @@ export function AuthorisationReviewPage({ service }) {
         <div className="space-y-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 sm:p-6">
           <ApprovalChainDisplay progress={progress} />
           <div>
-            <label htmlFor="authorisation-notes" className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">
+            <FieldLabelWithHelp helpKey="sim.record_authorisation_requests.notes" htmlFor="authorisation-notes" className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">
               Justification (required)
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               id="authorisation-notes"
               className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 p-3 text-sm"
@@ -534,8 +535,8 @@ export function ConfigureLifecycleRulesPage({ service, title = 'Configure Lifecy
           Saved lifecycle rules for <strong>{saved.tableName}</strong>.
         </div>
       )}
-      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Table</label>
-      <select
+      <FieldLabelWithHelp helpKey="sim.record_lifecycle_configs.table_name" htmlFor="fh-record-lifecycle-configs-table-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Table</FieldLabelWithHelp>
+      <select id="fh-record-lifecycle-configs-table-name"
         className="w-full mb-4 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 p-2"
         value={tableName}
         onChange={(e) => setTableName(e.target.value)}
@@ -544,12 +545,12 @@ export function ConfigureLifecycleRulesPage({ service, title = 'Configure Lifecy
           <option key={t} value={t}>{t}</option>
         ))}
       </select>
-      <label className="flex items-center gap-2 mb-4 text-sm text-gray-700 dark:text-gray-300">
+      <label data-help="exempt" className="flex items-center gap-2 mb-4 text-sm text-gray-700 dark:text-gray-300">
         <input type="checkbox" checked={config.approvalEnabled} onChange={(e) => setConfig({ ...config, approvalEnabled: e.target.checked })} />
         Approval enabled
       </label>
-      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Level approval mode</label>
-      <select
+      <FieldLabelWithHelp helpKey="sim.record_lifecycle_configs.approval_mode" htmlFor="fh-record-lifecycle-configs-approval-mode" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Level approval mode</FieldLabelWithHelp>
+      <select id="fh-record-lifecycle-configs-approval-mode"
         className="w-full mb-4 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 p-2"
         value={config.levelApprovalMode}
         onChange={(e) => setConfig({ ...config, levelApprovalMode: e.target.value })}
@@ -557,7 +558,7 @@ export function ConfigureLifecycleRulesPage({ service, title = 'Configure Lifecy
         <option value="any">Any one at each level</option>
         <option value="all">All at each level</option>
       </select>
-      <label className="flex items-center gap-2 mb-2 text-sm text-gray-700 dark:text-gray-300">
+      <label data-help="exempt" className="flex items-center gap-2 mb-2 text-sm text-gray-700 dark:text-gray-300">
         <input type="checkbox" checked={config.autoArchiveEnabled} onChange={(e) => setConfig({ ...config, autoArchiveEnabled: e.target.checked })} />
         Auto-archive from History
       </label>

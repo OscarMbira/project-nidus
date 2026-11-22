@@ -99,7 +99,7 @@ export default function ProjectObjectiveMapper({ projectId, onAddMapping, onEdit
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
         <div className="flex items-center justify-between gap-4">
           <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label data-help="exempt" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Select Project
             </label>
             <select

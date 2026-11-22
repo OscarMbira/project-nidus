@@ -86,7 +86,7 @@ function LocalValueControl({ def, id, value, onChange, disabled, hideLabel = fal
         {!hideLabel && (
           <FieldLabelWithHelp helpKey={`local:${def.id}`} help={inlineHelpFromDefinition(def)} htmlFor={id} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{label}</FieldLabelWithHelp>
         )}
-        <label className="inline-flex items-center gap-2 text-sm text-gray-800 dark:text-gray-100">
+        <label data-help="exempt" className="inline-flex items-center gap-2 text-sm text-gray-800 dark:text-gray-100">
           <input
             id={id}
             type="checkbox"
@@ -428,7 +428,7 @@ export default function RegionalFormatFields({
         </div>
         {isProject && !projectOnly && (
           <div className="flex items-center justify-between gap-2 flex-wrap">
-            <label className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
+            <label data-help="exempt" className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
               <input
                 type="checkbox"
                 checked={overridden}
@@ -466,7 +466,7 @@ export default function RegionalFormatFields({
       <div key={key} className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-3 space-y-2">
         {isProject && (
           <div className="flex items-center justify-between gap-2 flex-wrap">
-            <label className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
+            <label data-help="exempt" className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
               <input
                 type="checkbox"
                 checked={overridden}

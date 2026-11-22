@@ -75,7 +75,7 @@ export default function MenuItemPicker({
               <p className="p-3 text-sm text-gray-500 dark:text-gray-400">No items match your search.</p>
             ) : (
               filteredGrantableMenuItems.map((mi) => (
-                <label
+                <label data-help="exempt"
                   key={mi.id}
                   className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-300"
                 >
@@ -175,7 +175,7 @@ function MenuItemPreview({
         ) : (
           <div className="space-y-0.5">
             {topLevel.map((item) => (
-              <label
+              <label data-help="exempt"
                 key={item.id}
                 className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 ${item.isCategory ? 'font-semibold' : 'font-medium'}`}
               >
@@ -195,7 +195,7 @@ function MenuItemPreview({
             ))}
             {groups.map((group) => (
               <div key={group.label}>
-                <label className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800">
+                <label data-help="exempt" className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800">
                   <input
                     type="checkbox"
                     checked={!!group.categoryId && selectedMenuItemIds.has(group.categoryId)}
@@ -208,7 +208,7 @@ function MenuItemPreview({
                   <ChevronDown className="h-3.5 w-3.5 text-gray-400 dark:text-gray-500 shrink-0 ml-auto" />
                 </label>
                 {group.items.map((item) => (
-                  <label
+                  <label data-help="exempt"
                     key={item.id}
                     className="flex items-center gap-2 pl-9 pr-3 py-1.5 rounded-lg text-sm text-gray-600 dark:text-gray-300 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
                   >

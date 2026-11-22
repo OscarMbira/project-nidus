@@ -24,6 +24,7 @@ import {
 } from '../../services/riskCategoryCatalogService'
 import { similarCatalogueNames } from '@nidus/shared/utils/riskCategoryMatch'
 import { riskCategoryBasePath } from './riskCategoryPaths'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 export default function RiskCategoryDetail() {
   const navigate = useNavigate()
@@ -228,7 +229,7 @@ export default function RiskCategoryDetail() {
         <form onSubmit={handleSave} className="mt-4 max-w-xl rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
           {!allowed && <p className="mb-3 text-sm text-red-600">You cannot change this record.</p>}
           {isSubcategory && isCreate && !parent && <p className="mb-3 text-sm text-red-600">Choose a category first.</p>}
-          <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300" htmlFor="risk-catalogue-name">Name</label>
+          <FieldLabelWithHelp helpKey="public.risk_categories.category_name" className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300" htmlFor="risk-catalogue-name">Name</FieldLabelWithHelp>
           <input
             id="risk-catalogue-name"
             value={name}

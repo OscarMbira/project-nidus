@@ -5,6 +5,7 @@ import { WORKFLOW_STATUS } from '../utils/customFieldConstants'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 export default function FieldGroupsPage() {
   const { platformDb, accountId, userInternalId } = useLdeContext()
@@ -93,24 +94,24 @@ export default function FieldGroupsPage() {
             value={form.description}
             onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
           />
-          <label className="text-sm flex items-center gap-2">
-            Min rows
-            <input
+          <div className="text-sm flex items-center gap-2">
+            <FieldLabelWithHelp helpKey="public.custom_field_groups.min_rows" htmlFor="fh-custom-field-groups-min-rows">Min rows</FieldLabelWithHelp>
+            <input id="fh-custom-field-groups-min-rows"
               type="number"
               className="rounded border border-gray-300 dark:border-gray-600 px-2 py-1 w-24"
               value={form.min_rows}
               onChange={(e) => setForm((f) => ({ ...f, min_rows: e.target.value }))}
             />
-          </label>
-          <label className="text-sm flex items-center gap-2">
-            Max rows
-            <input
+          </div>
+          <div className="text-sm flex items-center gap-2">
+            <FieldLabelWithHelp helpKey="public.custom_field_groups.max_rows" htmlFor="fh-custom-field-groups-max-rows">Max rows</FieldLabelWithHelp>
+            <input id="fh-custom-field-groups-max-rows"
               type="number"
               className="rounded border border-gray-300 dark:border-gray-600 px-2 py-1 w-24"
               value={form.max_rows}
               onChange={(e) => setForm((f) => ({ ...f, max_rows: e.target.value }))}
             />
-          </label>
+          </div>
           <select
             className="rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
             value={form.workflow_status}

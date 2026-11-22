@@ -253,7 +253,7 @@ const TrialProjectSetup = () => {
               </FieldLabelWithHelp>
               <div className="space-y-3">
                 {/* Platform Checkbox */}
-                <label className="flex items-start gap-3 p-4 bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-600 transition">
+                <label data-help="exempt" className="flex items-start gap-3 p-4 bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-600 transition">
                   <input
                     type="checkbox"
                     checked={formData.platformEnabled}
@@ -272,7 +272,7 @@ const TrialProjectSetup = () => {
                 </label>
 
                 {/* Simulator Checkbox */}
-                <label className="flex items-start gap-3 p-4 bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-600 transition">
+                <label data-help="exempt" className="flex items-start gap-3 p-4 bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-600 transition">
                   <input
                     type="checkbox"
                     checked={formData.simulatorEnabled}

@@ -48,7 +48,7 @@ export default function FieldPermissionMatrix({ platformDb, accountId, roles = [
                 <span className="w-40 shrink-0 text-gray-600 dark:text-gray-300">
                   {role.role_display_name || role.role_name}
                 </span>
-                <label className="inline-flex items-center gap-1">
+                <label data-help="exempt" className="inline-flex items-center gap-1">
                   <input
                     type="checkbox"
                     checked={get(role.id, field.id, 'can_view')}
@@ -56,7 +56,7 @@ export default function FieldPermissionMatrix({ platformDb, accountId, roles = [
                   />
                   View
                 </label>
-                <label className="inline-flex items-center gap-1">
+                <label data-help="exempt" className="inline-flex items-center gap-1">
                   <input
                     type="checkbox"
                     checked={get(role.id, field.id, 'can_edit')}
