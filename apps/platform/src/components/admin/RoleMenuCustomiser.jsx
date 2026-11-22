@@ -213,7 +213,7 @@ function MenuRows({
                   </div>
                 </div>
                 <div className="flex shrink-0 items-center gap-3">
-                  <label className="flex cursor-pointer items-center gap-1 text-sm text-gray-700 dark:text-gray-300">
+                  <label data-help="exempt" className="flex cursor-pointer items-center gap-1 text-sm text-gray-700 dark:text-gray-300">
                     <Eye className="h-4 w-4 text-gray-500" />
                     <input
                       type="checkbox"
@@ -223,7 +223,7 @@ function MenuRows({
                       onChange={() => onToggleView(node.id, !cur.can_view, node.is_system_menu)}
                     />
                   </label>
-                  <label className="flex cursor-pointer items-center gap-1 text-sm text-gray-700 dark:text-gray-300">
+                  <label data-help="exempt" className="flex cursor-pointer items-center gap-1 text-sm text-gray-700 dark:text-gray-300">
                     <MousePointer2 className="h-4 w-4 text-gray-500" />
                     <input
                       type="checkbox"
@@ -523,7 +523,7 @@ export default function RoleMenuCustomiser({ variant }) {
 
       <div className="mb-4 flex flex-wrap items-end gap-4">
         <div>
-          <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
+          <label data-help="exempt" className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
             Role
           </label>
           <select
@@ -539,7 +539,7 @@ export default function RoleMenuCustomiser({ variant }) {
           </select>
         </div>
         <div className="min-w-[200px] flex-1">
-          <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
+          <label data-help="exempt" className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
             Filter
           </label>
           <div className="relative">

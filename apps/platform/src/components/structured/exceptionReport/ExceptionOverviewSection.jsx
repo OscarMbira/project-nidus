@@ -84,7 +84,7 @@ function ExceptionOverviewSectionBody({ formData, onChange, errors, mode, except
             Is Forecast Breach?
           </FieldLabelWithHelp>
           <div className="flex items-center space-x-4 mt-2">
-            <label className="flex items-center">
+            <label data-help="exempt" className="flex items-center">
               <input
                 type="radio"
                 name="is_forecast_breach"
@@ -95,7 +95,7 @@ function ExceptionOverviewSectionBody({ formData, onChange, errors, mode, except
               />
               <span className="text-sm text-gray-700 dark:text-gray-300">Forecast</span>
             </label>
-            <label className="flex items-center">
+            <label data-help="exempt" className="flex items-center">
               <input
                 type="radio"
                 name="is_forecast_breach"

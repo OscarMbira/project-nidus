@@ -142,7 +142,7 @@ const GanttToolbar = ({
                   </h3>
 
                   {/* Show Critical Path */}
-                  <label className="flex items-center justify-between cursor-pointer">
+                  <label data-help="exempt" className="flex items-center justify-between cursor-pointer">
                     <span className="text-sm text-gray-700 dark:text-gray-300">Critical Path</span>
                     <input
                       type="checkbox"
@@ -153,7 +153,7 @@ const GanttToolbar = ({
                   </label>
 
                   {/* Show Baselines */}
-                  <label className="flex items-center justify-between cursor-pointer">
+                  <label data-help="exempt" className="flex items-center justify-between cursor-pointer">
                     <span className="text-sm text-gray-700 dark:text-gray-300">Baselines</span>
                     <input
                       type="checkbox"
@@ -164,7 +164,7 @@ const GanttToolbar = ({
                   </label>
 
                   {/* Show Progress */}
-                  <label className="flex items-center justify-between cursor-pointer">
+                  <label data-help="exempt" className="flex items-center justify-between cursor-pointer">
                     <span className="text-sm text-gray-700 dark:text-gray-300">Progress</span>
                     <input
                       type="checkbox"
@@ -175,7 +175,7 @@ const GanttToolbar = ({
                   </label>
 
                   {/* Show Resources */}
-                  <label className="flex items-center justify-between cursor-pointer">
+                  <label data-help="exempt" className="flex items-center justify-between cursor-pointer">
                     <span className="text-sm text-gray-700 dark:text-gray-300">Resources</span>
                     <input
                       type="checkbox"
@@ -186,7 +186,7 @@ const GanttToolbar = ({
                   </label>
 
                   {/* Show Milestones */}
-                  <label className="flex items-center justify-between cursor-pointer">
+                  <label data-help="exempt" className="flex items-center justify-between cursor-pointer">
                     <span className="text-sm text-gray-700 dark:text-gray-300">Milestones</span>
                     <input
                       type="checkbox"
@@ -196,7 +196,7 @@ const GanttToolbar = ({
                     />
                   </label>
 
-                  <label className="flex items-center justify-between cursor-pointer">
+                  <label data-help="exempt" className="flex items-center justify-between cursor-pointer">
                     <div>
                       <span className="text-sm text-gray-700 dark:text-gray-300">Confidence % in labels</span>
                       <p className="text-xs text-gray-500 dark:text-gray-400">Append forecast % to task names (left column)</p>
@@ -217,7 +217,7 @@ const GanttToolbar = ({
                   </h3>
 
                   {/* Auto-Schedule */}
-                  <label className="flex items-center justify-between cursor-pointer">
+                  <label data-help="exempt" className="flex items-center justify-between cursor-pointer">
                     <div>
                       <span className="text-sm text-gray-700 dark:text-gray-300">Auto-Schedule</span>
                       <p className="text-xs text-gray-500 dark:text-gray-400">Automatically update dependent tasks</p>

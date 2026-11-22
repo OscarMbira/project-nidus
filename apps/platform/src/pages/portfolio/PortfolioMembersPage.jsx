@@ -26,6 +26,7 @@ import {
   updatePortfolioMemberRole,
   removePortfolioMember,
 } from '../../services/portfolioRoleService'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 export default function PortfolioMembersPage() {
   const { portfolioId } = useParams()
@@ -169,8 +170,8 @@ export default function PortfolioMembersPage() {
             <form onSubmit={handleSubmit} className="mt-4 space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">User *</label>
-                  <select
+                  <FieldLabelWithHelp helpKey="public.portfolio_members.user_id" htmlFor="fh-portfolio-members-user-id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>User *</FieldLabelWithHelp>
+                  <select id="fh-portfolio-members-user-id"
                     value={form.user_id}
                     onChange={(e) => setForm((f) => ({ ...f, user_id: e.target.value }))}
                     disabled={!!editing}
@@ -184,8 +185,8 @@ export default function PortfolioMembersPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Role *</label>
-                  <select
+                  <FieldLabelWithHelp helpKey="public.portfolio_members.role" htmlFor="fh-portfolio-members-role" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Role *</FieldLabelWithHelp>
+                  <select id="fh-portfolio-members-role"
                     value={form.portfolio_role_id}
                     onChange={(e) => setForm((f) => ({ ...f, portfolio_role_id: e.target.value }))}
                     required

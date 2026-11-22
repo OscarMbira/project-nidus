@@ -172,7 +172,7 @@ export default function StakeholderImportModal({ projectId, onClose, onImportCom
                 Download CSV template
               </button>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Upload file</label>
+                <label data-help="exempt" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Upload file</label>
                 <input
                   ref={fileInputRef}
                   type="file"

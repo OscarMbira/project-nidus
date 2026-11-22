@@ -173,7 +173,7 @@ export default function ProjectContactsBulkUploadPage() {
           {!projectId && (
             <p className="text-sm text-amber-700 dark:text-amber-300">Select a project before uploading.</p>
           )}
-          <label className="flex flex-col sm:flex-row sm:items-center gap-3 cursor-pointer">
+          <label data-help="exempt" className="flex flex-col sm:flex-row sm:items-center gap-3 cursor-pointer">
             <span className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium">
               <FileSpreadsheet className="h-4 w-4" /> Browse file
             </span>

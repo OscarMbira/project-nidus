@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { AlertCircle, Plus, Trash2 } from 'lucide-react'
 import * as issueService from '../../../services/highlightReportIssueService'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 export default function HighlightReportIssuesSection({ reportId, formData, onChange, mode }) {
   const [issues, setIssues] = useState([])
@@ -73,8 +74,8 @@ export default function HighlightReportIssuesSection({ reportId, formData, onCha
 
       {formData?.issues_summary != null && (
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Issues summary</label>
-          <textarea
+          <FieldLabelWithHelp helpKey="public.highlight_reports.issues_summary" htmlFor="fh-highlight-reports-issues-summary" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Issues summary</FieldLabelWithHelp>
+          <textarea id="fh-highlight-reports-issues-summary"
             value={formData.issues_summary || ''}
             onChange={(e) => onChange('issues_summary', e.target.value)}
             disabled={disabled}

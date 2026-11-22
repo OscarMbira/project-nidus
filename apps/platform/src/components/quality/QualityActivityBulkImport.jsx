@@ -151,7 +151,7 @@ export default function QualityActivityBulkImport({ onImportComplete }) {
 
       {/* File Upload */}
       <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <label data-help="exempt" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Select CSV File
         </label>
         <div className="flex items-center gap-4">
@@ -163,7 +163,7 @@ export default function QualityActivityBulkImport({ onImportComplete }) {
             className="hidden"
             id="csv-upload"
           />
-          <label
+          <label data-help="exempt"
             htmlFor="csv-upload"
             className="flex-1 px-4 py-3 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:border-blue-500 dark:hover:border-blue-500 transition-colors"
           >

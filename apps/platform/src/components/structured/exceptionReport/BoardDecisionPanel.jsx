@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { CheckCircle, Calendar, FileText } from 'lucide-react'
 import { recordBoardDecision } from '../../../services/exceptionReportApprovalService'
 import RegionalDateInput from '@nidus/ui/RegionalDateInput'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 export default function BoardDecisionPanel({ reportId, onDecisionRecorded, mode = 'view' }) {
   const [formData, setFormData] = useState({
@@ -55,10 +56,10 @@ export default function BoardDecisionPanel({ reportId, onDecisionRecorded, mode 
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.exception_reports.board_decision" htmlFor="fh-exception-reports-board-decision" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Board Decision *
-          </label>
-          <textarea
+          </FieldLabelWithHelp>
+          <textarea id="fh-exception-reports-board-decision"
             value={formData.board_decision}
             onChange={(e) => setFormData(prev => ({ ...prev, board_decision: e.target.value }))}
             required
@@ -70,12 +71,12 @@ export default function BoardDecisionPanel({ reportId, onDecisionRecorded, mode 
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.exception_reports.board_decision_date" htmlFor="fh-exception-reports-board-decision-date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Decision Date *
-            </label>
+            </FieldLabelWithHelp>
             <div className="relative">
               <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <RegionalDateInput eventStyle
+              <RegionalDateInput id="fh-exception-reports-board-decision-date" eventStyle
                 value={formData.board_decision_date}
                 onChange={(e) => setFormData(prev => ({ ...prev, board_decision_date: e.target.value }))}
                 required
@@ -85,12 +86,12 @@ export default function BoardDecisionPanel({ reportId, onDecisionRecorded, mode 
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.exception_reports.board_decision_reference" htmlFor="fh-exception-reports-board-decision-reference" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Decision Reference
-            </label>
+            </FieldLabelWithHelp>
             <div className="relative">
               <FileText className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
+              <input id="fh-exception-reports-board-decision-reference"
                 type="text"
                 value={formData.decision_reference}
                 onChange={(e) => setFormData(prev => ({ ...prev, decision_reference: e.target.value }))}

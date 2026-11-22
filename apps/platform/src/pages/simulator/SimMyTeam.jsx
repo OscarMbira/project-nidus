@@ -373,7 +373,7 @@ export default function SimMyTeam() {
 
       <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-          <label className="text-sm font-medium text-gray-700 dark:text-gray-300 shrink-0">Practice team</label>
+          <label data-help="exempt" className="text-sm font-medium text-gray-700 dark:text-gray-300 shrink-0">Practice team</label>
           <select
             value={selectedTeamId}
             onChange={(e) => setSelectedTeamId(e.target.value)}

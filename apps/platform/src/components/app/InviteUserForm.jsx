@@ -36,6 +36,7 @@ import ManagerAppointmentForm, { MANAGER_APPOINTMENT_EMPTY } from '../pm/Manager
 import { createManagerAppointment } from '../../services/managerAppointmentService'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 import SelectField from '@nidus/ui/SelectField'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 const MODE_INVITE = 'invite'
 const INVITE_UI_FAILSAFE_MS = INVITE_HARD_LIMIT_MS + 4_000
@@ -753,12 +754,12 @@ export default function InviteUserForm({
         {pmoMode === MODE_INVITE && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.project_invitations.first_name" htmlFor="fh-project-invitations-first-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Invitee first name *
-              </label>
+              </FieldLabelWithHelp>
               <div className="relative">
                 <User className="absolute left-3 top-3 h-5 w-5 text-gray-400 pointer-events-none" />
-                <input
+                <input id="fh-project-invitations-first-name"
                   type="text"
                   required
                   value={inviteeFirstName}
@@ -770,10 +771,10 @@ export default function InviteUserForm({
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.project_invitations.last_name" htmlFor="fh-project-invitations-last-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Invitee surname *
-              </label>
-              <input
+              </FieldLabelWithHelp>
+              <input id="fh-project-invitations-last-name"
                 type="text"
                 required
                 value={inviteeLastName}
@@ -787,12 +788,12 @@ export default function InviteUserForm({
         )}
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.project_invitations.email" htmlFor="fh-project-invitations-email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Email address *
-          </label>
+          </FieldLabelWithHelp>
           <div className="relative">
             <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400 pointer-events-none" />
-            <input
+            <input id="fh-project-invitations-email"
               type="email"
               required
               value={email}
@@ -805,11 +806,11 @@ export default function InviteUserForm({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.project_invitations.role" htmlFor="fh-project-invitations-role" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Role *
-          </label>
+          </FieldLabelWithHelp>
           <div className="relative">
-            <SelectField
+            <SelectField id="fh-project-invitations-role"
               required
               value={roleId}
               onChange={setRoleId}
@@ -837,10 +838,10 @@ export default function InviteUserForm({
 
         {pmoMode === MODE_INVITE && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.project_invitations.message" htmlFor="fh-project-invitations-message" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Message (optional)
-            </label>
-            <textarea
+            </FieldLabelWithHelp>
+            <textarea id="fh-project-invitations-message"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               rows={3}

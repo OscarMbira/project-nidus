@@ -107,7 +107,7 @@ export default function LogoUpload({
             className="hidden"
             id={`upload-${assetType}`}
           />
-          <label
+          <label data-help="exempt"
             htmlFor={`upload-${assetType}`}
             className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg cursor-pointer transition-colors
               ${uploading

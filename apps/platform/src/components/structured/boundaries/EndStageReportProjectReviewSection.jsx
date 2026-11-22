@@ -1,4 +1,5 @@
 import { Target, TrendingUp, TrendingDown, DollarSign, CheckCircle, Package, AlertTriangle, Gift } from 'lucide-react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 const SIX_VARIABLES = [
   { id: 'time', label: 'Time', icon: TrendingUp, color: 'blue' },
@@ -48,10 +49,10 @@ export default function EndStageReportProjectReviewSection({ formData, onChange,
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.end_stage_reports.actual_performance" htmlFor="fh-end-stage-reports-actual-performance" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Actual Performance
-                  </label>
-                  <textarea
+                  </FieldLabelWithHelp>
+                  <textarea id="fh-end-stage-reports-actual-performance"
                     value={getVariableValue(variable.id, 'actual')}
                     onChange={(e) => setVariableValue(variable.id, 'actual', e.target.value)}
                     disabled={mode === 'view'}
@@ -64,10 +65,10 @@ export default function EndStageReportProjectReviewSection({ formData, onChange,
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.end_stage_reports.forecast" htmlFor="fh-end-stage-reports-forecast" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Forecast
-                  </label>
-                  <textarea
+                  </FieldLabelWithHelp>
+                  <textarea id="fh-end-stage-reports-forecast"
                     value={getVariableValue(variable.id, 'forecast')}
                     onChange={(e) => setVariableValue(variable.id, 'forecast', e.target.value)}
                     disabled={mode === 'view'}

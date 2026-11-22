@@ -143,7 +143,7 @@ function RMSApprovalWorkflowBody({ rms, onUpdate }) {
             </FieldLabelWithHelp>
             <div className="space-y-2 max-h-48 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-lg p-2">
               {teamMembers.map((member) => (
-                <label
+                <label data-help="exempt"
                   key={member.id}
                   className="flex items-center gap-2 p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded cursor-pointer"
                 >

@@ -133,7 +133,7 @@ export default function SprintMetricsDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="rounded-xl border border-gray-800 bg-gray-900 p-4">
-          <label className="block text-sm text-gray-400 mb-2">Sprint for charts</label>
+          <label data-help="exempt" className="block text-sm text-gray-400 mb-2">Sprint for charts</label>
           <select
             value={selectedSprintId}
             onChange={(e) => setSelectedSprintId(e.target.value)}

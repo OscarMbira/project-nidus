@@ -619,7 +619,7 @@ export default function ProjectUsers() {
       </div>
 
       {!routeProjectId && (
-        <label className="block max-w-xl">
+        <label data-help="exempt" className="block max-w-xl">
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Project</span>
           {projectList.length === 1 && !projectListLoading ? (
             <p

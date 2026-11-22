@@ -37,6 +37,7 @@ import { useSortableTable } from '@nidus/shared/hooks/useSortableTable'
 import { useViewMode } from '@nidus/shared/hooks/useViewMode'
 import ExportListMenu from '@nidus/ui/ExportListMenu'
 import ViewToggle from '@nidus/ui/ViewToggle'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 const STEPS = {
   UPLOAD: 1,
@@ -437,10 +438,10 @@ export default function BulkInviteForm({
       <div className="px-4 py-4 sm:px-6 space-y-4">
         {step === STEPS.UPLOAD && (
           <div className="space-y-4">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <FieldLabelWithHelp helpKey="public.project_invitations.default_role" htmlFor="fh-project-invitations-default-role" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Default role (for rows without a role in file) *
-            </label>
-            <SelectField
+            </FieldLabelWithHelp>
+            <SelectField id="fh-project-invitations-default-role"
               value={defaultRoleId}
               onChange={setDefaultRoleId}
               required
@@ -455,7 +456,7 @@ export default function BulkInviteForm({
 
             <fieldset className="space-y-2">
               <legend className="text-sm font-medium text-gray-700 dark:text-gray-300">Invitation message</legend>
-              <label className="flex items-center gap-2 text-sm">
+              <label data-help="exempt" className="flex items-center gap-2 text-sm">
                 <input
                   type="radio"
                   name="msgMode"
@@ -464,7 +465,7 @@ export default function BulkInviteForm({
                 />
                 Per-role auto-template (default)
               </label>
-              <label className="flex items-center gap-2 text-sm">
+              <label data-help="exempt" className="flex items-center gap-2 text-sm">
                 <input
                   type="radio"
                   name="msgMode"
@@ -778,7 +779,7 @@ export default function BulkInviteForm({
                         setPendingNewRoles(next)
                       }}
                     />
-                    <label className="flex items-center gap-1 text-xs whitespace-nowrap">
+                    <label data-help="exempt" className="flex items-center gap-1 text-xs whitespace-nowrap">
                       <input
                         type="checkbox"
                         checked={!!p.excluded}

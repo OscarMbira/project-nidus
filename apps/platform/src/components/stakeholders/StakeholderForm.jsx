@@ -806,7 +806,7 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
                         </p>
                       ) : (
                         projects.map((proj) => (
-                          <label
+                          <label data-help="exempt"
                             key={proj.id}
                             className="flex items-center gap-3 cursor-pointer rounded-lg px-3 py-2.5 hover:bg-white dark:hover:bg-gray-700 border border-transparent hover:border-gray-200 dark:hover:border-gray-600 transition-colors"
                           >
@@ -1217,7 +1217,7 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
                   { name: 'is_negatively_affected', label: 'Negatively affected' },
                   { name: 'is_positively_affected', label: 'Positively affected' },
                 ].map((item, index) => (
-                  <label key={item.name} className="flex items-center gap-3 px-4 py-3">
+                  <label data-help="exempt" key={item.name} className="flex items-center gap-3 px-4 py-3">
                     <span className="w-6 shrink-0 text-sm tabular-nums text-gray-700 dark:text-gray-200">{index + 1}</span>
                     <input
                       type="checkbox"
@@ -1239,7 +1239,7 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
                     { value: 'medium', label: 'Medium' },
                     { value: 'low', label: 'Low' },
                   ].map((option) => (
-                    <label key={option.value} className="flex items-center gap-2">
+                    <label data-help="exempt" key={option.value} className="flex items-center gap-2">
                       <input
                         type="radio"
                         name="interest_level"

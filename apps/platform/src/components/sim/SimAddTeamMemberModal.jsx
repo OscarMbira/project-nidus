@@ -126,7 +126,7 @@ function SimAddTeamMemberModalBody({ isOpen, onClose, practiceTeamId, practicePr
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Search</label>
+              <label data-help="exempt" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Search</label>
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}

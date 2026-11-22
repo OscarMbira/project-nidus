@@ -110,7 +110,7 @@ export default function PlatformAffiliatePage() {
             <input name="phone" placeholder="Phone (optional)" value={form.phone} onChange={handleChange} className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2" />
             <input name="website" placeholder="Website / social media (optional)" value={form.website} onChange={handleChange} className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2" />
             <textarea name="notes" rows={3} placeholder="How do you plan to promote Nidus?" value={form.notes} onChange={handleChange} className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2" />
-            <label className="flex items-start gap-2 text-sm">
+            <label data-help="exempt" className="flex items-start gap-2 text-sm">
               <input name="terms" type="checkbox" checked={form.terms} onChange={handleChange} className="mt-1" />
               <span>I agree to the affiliate program terms and commission policy.</span>
             </label>

@@ -175,7 +175,7 @@ export default function TaskAttachments({ taskId }) {
           <Paperclip className="h-5 w-5" />
           Attachments ({attachments.length})
         </h3>
-        <label className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors cursor-pointer flex items-center gap-2">
+        <label data-help="exempt" className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors cursor-pointer flex items-center gap-2">
           <Paperclip className="h-4 w-4" />
           Upload File
           <input

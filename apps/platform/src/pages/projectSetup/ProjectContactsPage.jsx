@@ -23,6 +23,7 @@ import {
   deleteProjectContact,
 } from '../../services/projectContactsService'
 import { listProjectFunctionalRoles, ensureProjectFunctionalRole } from '../../services/teamService'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 const EMPTY_FORM = {
   contact_name: '',
@@ -352,7 +353,7 @@ export default function ProjectContactsPage() {
               <option value="other">Other</option>
             </select>
             <div className="md:col-span-2 space-y-1">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">Email</label>
+              <FieldLabelWithHelp helpKey="public.project_contacts.emails" className="block text-sm font-medium text-gray-700 dark:text-gray-200">Email</FieldLabelWithHelp>
               <p className="text-xs text-gray-500 dark:text-gray-400">Add one email address per row. Tick Primary on the preferred address.</p>
               <MultiLineListInput
                 viewModeId="project-contact-emails"
@@ -372,7 +373,7 @@ export default function ProjectContactsPage() {
               />
             </div>
             <div className="md:col-span-2 space-y-1">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">Phone</label>
+              <FieldLabelWithHelp helpKey="public.project_contacts.phones" className="block text-sm font-medium text-gray-700 dark:text-gray-200">Phone</FieldLabelWithHelp>
               <p className="text-xs text-gray-500 dark:text-gray-400">Add one phone number per row. Tick Primary on the preferred number.</p>
               <MultiLineListInput
                 viewModeId="project-contact-phones"
@@ -389,7 +390,7 @@ export default function ProjectContactsPage() {
               />
             </div>
             <div className="md:col-span-2 space-y-1">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">Address</label>
+              <FieldLabelWithHelp helpKey="public.project_contacts.addresses" className="block text-sm font-medium text-gray-700 dark:text-gray-200">Address</FieldLabelWithHelp>
               <p className="text-xs text-gray-500 dark:text-gray-400">Add one address per row. Tick Primary on the preferred address.</p>
               <MultiLineListInput
                 viewModeId="project-contact-addresses"

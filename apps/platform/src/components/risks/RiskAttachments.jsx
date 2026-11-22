@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react'
 import { Paperclip, Download, Trash2, Upload, File, FileText, Image, FileSpreadsheet } from 'lucide-react'
 import { platformDb } from '@nidus/supabase'
 import { getAttachmentsByRisk, uploadAttachment, deleteAttachment } from '../../services/riskAttachmentService'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 export default function RiskAttachments({ riskId }) {
   const [attachments, setAttachments] = useState([])
@@ -148,7 +149,7 @@ export default function RiskAttachments({ riskId }) {
       {showUpload && (
         <div className="bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-3">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label data-help="exempt" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Select File
             </label>
             <input
@@ -163,10 +164,10 @@ export default function RiskAttachments({ riskId }) {
             )}
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.risk_attachments.description" htmlFor="fh-risk-attachments-description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Description (Optional)
-            </label>
-            <textarea
+            </FieldLabelWithHelp>
+            <textarea id="fh-risk-attachments-description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={2}

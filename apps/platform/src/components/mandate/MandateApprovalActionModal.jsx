@@ -6,6 +6,7 @@
 
 import { useState } from 'react'
 import { CheckCircle, XCircle, X } from 'lucide-react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 export default function MandateApprovalActionModal({ mandate, action, onConfirm, onCancel, processing }) {
   const [comments, setComments] = useState('')
@@ -59,10 +60,10 @@ export default function MandateApprovalActionModal({ mandate, action, onConfirm,
 
         {/* Comments */}
         <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <FieldLabelWithHelp helpKey="public.project_mandates.approval_comments" htmlFor="fh-project-mandates-approval-comments" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             {isApprove ? 'Approval Notes' : 'Rejection Reason'}{commentsRequired && <span className="text-red-500 ml-1">*</span>}
-          </label>
-          <textarea
+          </FieldLabelWithHelp>
+          <textarea id="fh-project-mandates-approval-comments"
             value={comments}
             onChange={(e) => setComments(e.target.value)}
             placeholder={isApprove ? 'Optional notes...' : 'Please state the reason for rejection...'}

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../services/supabaseClient'
 import { Save, Plus, Trash2, X } from 'lucide-react'
 import { getPriorityScales, getSeverityScales, updatePriorityScales, updateSeverityScales, getDefaultPriorityScales, getDefaultSeverityScales } from '../services/issueScaleService'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 export default function IssueScaleConfig() {
   const [organisationId, setOrganisationId] = useState(null)
@@ -226,8 +227,8 @@ export default function IssueScaleConfig() {
                 <div key={index} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
                   <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
                     <div>
-                      <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Value</label>
-                      <input
+                      <FieldLabelWithHelp helpKey="public.issue_priority_levels.value" htmlFor="fh-issue-priority-levels-value" className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Value</FieldLabelWithHelp>
+                      <input id="fh-issue-priority-levels-value"
                         type="text"
                         value={scale.scale_value}
                         onChange={(e) => handleScaleChange('priority', index, 'scale_value', e.target.value)}
@@ -236,8 +237,8 @@ export default function IssueScaleConfig() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Label</label>
-                      <input
+                      <FieldLabelWithHelp helpKey="public.issue_priority_levels.label" htmlFor="fh-issue-priority-levels-label" className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Label</FieldLabelWithHelp>
+                      <input id="fh-issue-priority-levels-label"
                         type="text"
                         value={scale.scale_label}
                         onChange={(e) => handleScaleChange('priority', index, 'scale_label', e.target.value)}
@@ -246,8 +247,8 @@ export default function IssueScaleConfig() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Order</label>
-                      <input
+                      <FieldLabelWithHelp helpKey="public.issue_priority_levels.display_order" htmlFor="fh-issue-priority-levels-display-order" className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Order</FieldLabelWithHelp>
+                      <input id="fh-issue-priority-levels-display-order"
                         type="number"
                         value={scale.scale_order}
                         onChange={(e) => handleScaleChange('priority', index, 'scale_order', parseInt(e.target.value))}
@@ -255,8 +256,8 @@ export default function IssueScaleConfig() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Response Time</label>
-                      <input
+                      <FieldLabelWithHelp helpKey="public.issue_priority_levels.response_time" htmlFor="fh-issue-priority-levels-response-time" className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Response Time</FieldLabelWithHelp>
+                      <input id="fh-issue-priority-levels-response-time"
                         type="text"
                         value={scale.response_time || ''}
                         onChange={(e) => handleScaleChange('priority', index, 'response_time', e.target.value)}
@@ -265,8 +266,8 @@ export default function IssueScaleConfig() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Color</label>
-                      <input
+                      <FieldLabelWithHelp helpKey="public.issue_priority_levels.color" htmlFor="fh-issue-priority-levels-color" className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Color</FieldLabelWithHelp>
+                      <input id="fh-issue-priority-levels-color"
                         type="color"
                         value={scale.color_code || '#6B7280'}
                         onChange={(e) => handleScaleChange('priority', index, 'color_code', e.target.value)}
@@ -283,8 +284,8 @@ export default function IssueScaleConfig() {
                     </div>
                   </div>
                   <div className="mt-2">
-                    <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Description</label>
-                    <textarea
+                    <FieldLabelWithHelp helpKey="public.issue_priority_levels.description" htmlFor="fh-issue-priority-levels-description" className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Description</FieldLabelWithHelp>
+                    <textarea id="fh-issue-priority-levels-description"
                       value={scale.description || ''}
                       onChange={(e) => handleScaleChange('priority', index, 'description', e.target.value)}
                       rows={2}
@@ -316,8 +317,8 @@ export default function IssueScaleConfig() {
                 <div key={index} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
                   <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                     <div>
-                      <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Value</label>
-                      <input
+                      <FieldLabelWithHelp helpKey="public.issue_severity_levels.value" htmlFor="fh-issue-severity-levels-value" className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Value</FieldLabelWithHelp>
+                      <input id="fh-issue-severity-levels-value"
                         type="text"
                         value={scale.scale_value}
                         onChange={(e) => handleScaleChange('severity', index, 'scale_value', e.target.value)}
@@ -326,8 +327,8 @@ export default function IssueScaleConfig() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Label</label>
-                      <input
+                      <FieldLabelWithHelp helpKey="public.issue_severity_levels.label" htmlFor="fh-issue-severity-levels-label" className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Label</FieldLabelWithHelp>
+                      <input id="fh-issue-severity-levels-label"
                         type="text"
                         value={scale.scale_label}
                         onChange={(e) => handleScaleChange('severity', index, 'scale_label', e.target.value)}
@@ -336,8 +337,8 @@ export default function IssueScaleConfig() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Order</label>
-                      <input
+                      <FieldLabelWithHelp helpKey="public.issue_severity_levels.display_order" htmlFor="fh-issue-severity-levels-display-order" className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Order</FieldLabelWithHelp>
+                      <input id="fh-issue-severity-levels-display-order"
                         type="number"
                         value={scale.scale_order}
                         onChange={(e) => handleScaleChange('severity', index, 'scale_order', parseInt(e.target.value))}
@@ -345,8 +346,8 @@ export default function IssueScaleConfig() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Color</label>
-                      <input
+                      <FieldLabelWithHelp helpKey="public.issue_severity_levels.color" htmlFor="fh-issue-severity-levels-color" className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Color</FieldLabelWithHelp>
+                      <input id="fh-issue-severity-levels-color"
                         type="color"
                         value={scale.color_code || '#6B7280'}
                         onChange={(e) => handleScaleChange('severity', index, 'color_code', e.target.value)}
@@ -364,8 +365,8 @@ export default function IssueScaleConfig() {
                   </div>
                   <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2">
                     <div>
-                      <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Description</label>
-                      <textarea
+                      <FieldLabelWithHelp helpKey="public.issue_severity_levels.description" htmlFor="fh-issue-severity-levels-description" className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Description</FieldLabelWithHelp>
+                      <textarea id="fh-issue-severity-levels-description"
                         value={scale.description || ''}
                         onChange={(e) => handleScaleChange('severity', index, 'description', e.target.value)}
                         rows={2}
@@ -374,8 +375,8 @@ export default function IssueScaleConfig() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Impact Description</label>
-                      <textarea
+                      <FieldLabelWithHelp helpKey="public.issue_severity_levels.impact_description" htmlFor="fh-issue-severity-levels-impact-description" className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Impact Description</FieldLabelWithHelp>
+                      <textarea id="fh-issue-severity-levels-impact-description"
                         value={scale.impact_description || ''}
                         onChange={(e) => handleScaleChange('severity', index, 'impact_description', e.target.value)}
                         rows={2}

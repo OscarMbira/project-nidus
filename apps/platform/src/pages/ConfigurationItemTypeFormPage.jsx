@@ -19,6 +19,7 @@ import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import SelectField from '@nidus/ui/SelectField'
 import { getConfigurationMSByProject } from '../services/configurationManagementStrategyService'
 import { addItemType, getItemTypes, updateItemType } from '../services/cfgItemTypesService'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 const CLASSIFICATIONS = [
   { value: 'major', label: 'Major' },
@@ -215,24 +216,24 @@ export default function ConfigurationItemTypeFormPage({ forceEdit = false }) {
       ) : (
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Name <span className="text-red-500">*</span></label>
-            <input disabled={readOnly} value={name} onChange={(e) => setName(e.target.value)} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-70" />
+            <FieldLabelWithHelp helpKey="public.configuration_item_types.name" htmlFor="fh-configuration-item-types-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Name <span className="text-red-500">*</span></FieldLabelWithHelp>
+            <input id="fh-configuration-item-types-name" disabled={readOnly} value={name} onChange={(e) => setName(e.target.value)} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-70" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Code <span className="text-red-500">*</span></label>
-            <input disabled={readOnly} value={code} onChange={(e) => setCode(e.target.value)} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-70" placeholder="MAJOR" />
+            <FieldLabelWithHelp helpKey="public.configuration_item_types.code" htmlFor="fh-configuration-item-types-code" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Code <span className="text-red-500">*</span></FieldLabelWithHelp>
+            <input id="fh-configuration-item-types-code" disabled={readOnly} value={code} onChange={(e) => setCode(e.target.value)} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-70" placeholder="MAJOR" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</label>
-            <textarea disabled={readOnly} value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-70" />
+            <FieldLabelWithHelp helpKey="public.configuration_item_types.description" htmlFor="fh-configuration-item-types-description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</FieldLabelWithHelp>
+            <textarea id="fh-configuration-item-types-description" disabled={readOnly} value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-70" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Classification</label>
-            <SelectField forceNative disabled={readOnly} value={classification} onChange={setClassification} options={CLASSIFICATIONS} />
+            <FieldLabelWithHelp helpKey="public.configuration_item_types.classification" htmlFor="fh-configuration-item-types-classification" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Classification</FieldLabelWithHelp>
+            <SelectField id="fh-configuration-item-types-classification" forceNative disabled={readOnly} value={classification} onChange={setClassification} options={CLASSIFICATIONS} />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Control level</label>
-            <SelectField forceNative disabled={readOnly} value={control} onChange={setControl} options={CONTROLS} />
+            <FieldLabelWithHelp helpKey="public.configuration_item_types.control_level" htmlFor="fh-configuration-item-types-control-level" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Control level</FieldLabelWithHelp>
+            <SelectField id="fh-configuration-item-types-control-level" forceNative disabled={readOnly} value={control} onChange={setControl} options={CONTROLS} />
           </div>
           {!readOnly && (
             <div className="flex justify-end">

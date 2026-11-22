@@ -6,6 +6,7 @@
 import { useState, useEffect } from 'react'
 import { Paperclip, Download, Trash2, Upload, File, FileText, Image, FileSpreadsheet } from 'lucide-react'
 import { platformDb } from '@nidus/supabase'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 export default function IssueAttachments({ issueId }) {
   const [attachments, setAttachments] = useState([])
@@ -185,7 +186,7 @@ export default function IssueAttachments({ issueId }) {
       {showUpload && (
         <div className="bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-3">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label data-help="exempt" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Select File
             </label>
             <input
@@ -200,10 +201,10 @@ export default function IssueAttachments({ issueId }) {
             )}
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.issue_attachments.attachment_type" htmlFor="fh-issue-attachments-attachment-type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Attachment Type
-            </label>
-            <select
+            </FieldLabelWithHelp>
+            <select id="fh-issue-attachments-attachment-type"
               value={attachmentType}
               onChange={(e) => setAttachmentType(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
@@ -216,10 +217,10 @@ export default function IssueAttachments({ issueId }) {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.issue_attachments.description" htmlFor="fh-issue-attachments-description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Description (Optional)
-            </label>
-            <textarea
+            </FieldLabelWithHelp>
+            <textarea id="fh-issue-attachments-description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={2}

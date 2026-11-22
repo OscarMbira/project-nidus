@@ -187,7 +187,7 @@ export default function TeamStructureSection({ formData, onChange, errors = {}, 
         {!readOnly && (
           <>
             <div className="flex flex-wrap items-center gap-2">
-              <label
+              <label data-help="exempt"
                 className={`inline-flex cursor-pointer items-center gap-1.5 rounded border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-800 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-100 dark:hover:bg-gray-800 ${busy ? 'pointer-events-none opacity-50' : ''}`}
               >
                 <Upload className="h-3.5 w-3.5" />

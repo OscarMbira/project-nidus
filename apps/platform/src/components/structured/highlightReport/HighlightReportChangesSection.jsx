@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { GitBranch, Plus, Trash2 } from 'lucide-react'
 import * as changeService from '../../../services/highlightReportChangeService'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 const STATUS_OPTIONS = [
   { value: 'approved', label: 'Approved' },
@@ -80,8 +81,8 @@ export default function HighlightReportChangesSection({ reportId, formData, onCh
 
       {formData?.changes_summary != null && (
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Changes summary</label>
-          <textarea
+          <FieldLabelWithHelp helpKey="public.highlight_reports.changes_summary" htmlFor="fh-highlight-reports-changes-summary" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Changes summary</FieldLabelWithHelp>
+          <textarea id="fh-highlight-reports-changes-summary"
             value={formData.changes_summary || ''}
             onChange={(e) => onChange('changes_summary', e.target.value)}
             disabled={disabled}

@@ -52,7 +52,7 @@ export default function RisksFilters({ filters, onFiltersChange, onClear }) {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
         {/* Search */}
         <div className="lg:col-span-2">
-          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label data-help="exempt" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
             Search
           </label>
           <div className="relative">
@@ -69,7 +69,7 @@ export default function RisksFilters({ filters, onFiltersChange, onClear }) {
 
         {/* Type */}
         <div>
-          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label data-help="exempt" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
             Type
           </label>
           <select
@@ -85,7 +85,7 @@ export default function RisksFilters({ filters, onFiltersChange, onClear }) {
 
         {/* Category */}
         <div>
-          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label data-help="exempt" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
             Category
           </label>
           <select
@@ -104,7 +104,7 @@ export default function RisksFilters({ filters, onFiltersChange, onClear }) {
 
         {/* Status */}
         <div>
-          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label data-help="exempt" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
             Status
           </label>
           <select
@@ -123,7 +123,7 @@ export default function RisksFilters({ filters, onFiltersChange, onClear }) {
 
         {/* Risk Level */}
         <div>
-          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label data-help="exempt" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
             Risk Level
           </label>
           <select
@@ -144,7 +144,7 @@ export default function RisksFilters({ filters, onFiltersChange, onClear }) {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
         {/* Proximity */}
         <div>
-          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label data-help="exempt" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
             Proximity
           </label>
           <select

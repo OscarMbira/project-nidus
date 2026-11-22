@@ -74,7 +74,7 @@ export default function PersonResponsibleSelector({
 
   return (
     <div className={`space-y-2 ${className}`}>
-      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-1">
+      <label data-help="exempt" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-1">
         <User className="w-4 h-4" />
         Person Responsible
       </label>

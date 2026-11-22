@@ -319,7 +319,7 @@ export default function RiskExportMenu({
                         onChange={() => toggleKey(key)}
                         className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500"
                       />
-                      <label
+                      <label data-help="exempt"
                         htmlFor={`risk-export-field-${key}`}
                         className="text-sm text-gray-700 dark:text-gray-300 cursor-pointer select-none"
                       >

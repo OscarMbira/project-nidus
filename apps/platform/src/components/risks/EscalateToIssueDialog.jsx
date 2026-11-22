@@ -7,6 +7,7 @@ import { useState } from 'react'
 import { X, AlertTriangle, ArrowRight, AlertCircle } from 'lucide-react'
 import { escalateRiskToIssue } from '../../services/riskService'
 import { useNavigate } from 'react-router-dom'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 export default function EscalateToIssueDialog({ risk, onClose, onSuccess }) {
   const [escalating, setEscalating] = useState(false)
@@ -114,10 +115,10 @@ export default function EscalateToIssueDialog({ risk, onClose, onSuccess }) {
 
           {/* Escalation Notes */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.risks.escalation_notes" htmlFor="fh-risks-escalation-notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Escalation Notes <span className="text-gray-500">(Optional)</span>
-            </label>
-            <textarea
+            </FieldLabelWithHelp>
+            <textarea id="fh-risks-escalation-notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={4}

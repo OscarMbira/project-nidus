@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { X, Loader } from 'lucide-react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 export default function EditMemberRoleModal({
   isOpen,
@@ -40,8 +41,8 @@ export default function EditMemberRoleModal({
             </button>
           </div>
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">{memberLabel}</p>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Role</label>
-          <select
+          <FieldLabelWithHelp helpKey="public.project_members.role" htmlFor="fh-project-members-role" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Role</FieldLabelWithHelp>
+          <select id="fh-project-members-role"
             value={roleId}
             onChange={(e) => setRoleId(e.target.value)}
             className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2"

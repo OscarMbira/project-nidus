@@ -11,6 +11,7 @@ import { platformDb } from '@nidus/supabase';
 import { RowActionButton, DetailAuditTabList, RecordAuditDetails } from '@nidus/ui';
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table';
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils';
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 const inp = 'w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
 const lbl = 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1';
@@ -70,12 +71,12 @@ export default function CustomMetricsPage() {
           ) : (
             <form onSubmit={handleSave} className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div><label className={lbl}>Metric Name <span className="text-red-500">*</span></label><input className={inp} value={form.metric_name} onChange={set('metric_name')} required /></div>
+                <div><FieldLabelWithHelp helpKey="public.custom_metrics.metric_name" htmlFor="fh-custom-metrics-metric-name" className={lbl}>Metric Name <span className="text-red-500">*</span></FieldLabelWithHelp><input id="fh-custom-metrics-metric-name" className={inp} value={form.metric_name} onChange={set('metric_name')} required /></div>
                 <div><label className={lbl}>Unit</label><input className={inp} value={form.unit} onChange={set('unit')} placeholder="e.g. %, days, $" /></div>
               </div>
-              <div><label className={lbl}>Formula</label><input className={inp} value={form.formula} onChange={set('formula')} placeholder="e.g. (completed_tasks / total_tasks) * 100" /></div>
+              <div><FieldLabelWithHelp helpKey="public.custom_metrics.formula" htmlFor="fh-custom-metrics-formula" className={lbl}>Formula</FieldLabelWithHelp><input id="fh-custom-metrics-formula" className={inp} value={form.formula} onChange={set('formula')} placeholder="e.g. (completed_tasks / total_tasks) * 100" /></div>
               <div><label className={lbl}>Description</label><textarea className={`${inp} h-16 resize-none`} value={form.description} onChange={set('description')} /></div>
-              <label className="flex items-center gap-3 cursor-pointer"><input type="checkbox" checked={form.is_shared} onChange={set('is_shared')} className="w-4 h-4 accent-blue-500" /><span className="text-sm text-gray-700 dark:text-gray-300">Share with team</span></label>
+              <label data-help="exempt" className="flex items-center gap-3 cursor-pointer"><input type="checkbox" checked={form.is_shared} onChange={set('is_shared')} className="w-4 h-4 accent-blue-500" /><span className="text-sm text-gray-700 dark:text-gray-300">Share with team</span></label>
               <div className="flex gap-3">
                 <button type="submit" disabled={saving} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 rounded-lg text-sm font-medium">{saving ? 'Saving…' : 'Save'}</button>
                 <button type="button" onClick={() => setEditing(null)} className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm">Cancel</button>

@@ -318,7 +318,7 @@ function ResponsibilityFormBody({ ppdId, responsibility = null, mode = 'create',
             </FieldLabelWithHelp>
             <div className="max-h-48 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-lg p-3 space-y-2">
               {criteria.map((criterion, index) => (
-                <label key={criterion.id} className="flex items-center gap-2 cursor-pointer">
+                <label data-help="exempt" key={criterion.id} className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={(formData.criteria_ids || []).includes(criterion.id)}

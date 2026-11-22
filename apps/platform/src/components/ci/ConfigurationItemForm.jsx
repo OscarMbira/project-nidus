@@ -17,6 +17,7 @@ import { RowActionButton } from '@nidus/ui'
 import SelectField from '@nidus/ui/SelectField'
 import { platformDb } from '../../services/supabaseClient'
 import { getItemTypes } from '../../services/cfgItemTypesService'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 const FORM_TABS = [
   { value: 'details', label: 'Details' },
@@ -210,10 +211,10 @@ export default function ConfigurationItemForm({
           <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Configuration Item Details</h2>
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.configuration_items.item_name" htmlFor="fh-configuration-items-item-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Item Name <span className="text-red-500">*</span>
-              </label>
-              <input
+              </FieldLabelWithHelp>
+              <input id="fh-configuration-items-item-name"
                 type="text"
                 value={itemData.item_name || ''}
                 onChange={(e) => setFields({ item_name: e.target.value })}
@@ -223,8 +224,8 @@ export default function ConfigurationItemForm({
               {errors.item_name && <p className="text-red-500 text-sm mt-1">{errors.item_name}</p>}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Item Description</label>
-              <textarea
+              <FieldLabelWithHelp helpKey="public.configuration_items.item_description" htmlFor="fh-configuration-items-item-description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Item Description</FieldLabelWithHelp>
+              <textarea id="fh-configuration-items-item-description"
                 value={itemData.item_description || ''}
                 onChange={(e) => setFields({ item_description: e.target.value })}
                 rows={4}
@@ -233,10 +234,10 @@ export default function ConfigurationItemForm({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.configuration_items.item_type" htmlFor="fh-configuration-items-item-type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Item Type <span className="text-red-500">*</span>
-              </label>
-              <SelectField
+              </FieldLabelWithHelp>
+              <SelectField id="fh-configuration-items-item-type"
                 forceSearchable
                 value={itemData.item_type_id || ''}
                 onChange={(value) => {

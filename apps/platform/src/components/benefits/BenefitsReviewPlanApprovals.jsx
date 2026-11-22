@@ -147,7 +147,7 @@ function BenefitsReviewPlanApprovalsBody({ planId, planStatus, onUpdate }) {
               </FieldLabelWithHelp>
               <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-4 max-h-60 overflow-y-auto bg-white dark:bg-gray-700">
                 {users.map((user) => (
-                  <label key={user.id} className="flex items-center gap-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer">
+                  <label data-help="exempt" key={user.id} className="flex items-center gap-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={selectedApprovers.includes(user.id)}

@@ -143,7 +143,7 @@ export default function IssueCommentsSection({ issueId, comments, onRefresh }) {
             <option value="answer">Answer</option>
             <option value="decision">Decision</option>
           </select>
-          <label className="flex items-center gap-2 cursor-pointer">
+          <label data-help="exempt" className="flex items-center gap-2 cursor-pointer">
             <input
               type="checkbox"
               checked={isInternal}

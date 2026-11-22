@@ -10,6 +10,7 @@ import { platformRiskPath } from '@nidus/shared/utils/projectRouteParam'
 import { platformDb } from '@nidus/supabase'
 import { getLinksByRisk, createLink, deleteLink } from '../../services/riskLinkService'
 import { getRisksByProject } from '../../services/riskService'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 export default function RiskLinksPanel({ riskId, projectId }) {
   const [links, setLinks] = useState([])
@@ -149,10 +150,10 @@ export default function RiskLinksPanel({ riskId, projectId }) {
       {showAddForm && (
         <div className="bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-3">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.risk_links.linked_risk_id" htmlFor="fh-risk-links-linked-risk-id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
               Link To Risk
-            </label>
-            <select
+            </FieldLabelWithHelp>
+            <select id="fh-risk-links-linked-risk-id"
               value={linkData.target_risk_id}
               onChange={(e) => setLinkData({ ...linkData, target_risk_id: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
@@ -167,10 +168,10 @@ export default function RiskLinksPanel({ riskId, projectId }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.risk_links.link_type" htmlFor="fh-risk-links-link-type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Link Type
-            </label>
-            <select
+            </FieldLabelWithHelp>
+            <select id="fh-risk-links-link-type"
               value={linkData.link_type}
               onChange={(e) => setLinkData({ ...linkData, link_type: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
@@ -184,10 +185,10 @@ export default function RiskLinksPanel({ riskId, projectId }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.risk_links.description" htmlFor="fh-risk-links-description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Description (Optional)
-            </label>
-            <textarea
+            </FieldLabelWithHelp>
+            <textarea id="fh-risk-links-description"
               value={linkData.link_description}
               onChange={(e) => setLinkData({ ...linkData, link_description: e.target.value })}
               rows={2}

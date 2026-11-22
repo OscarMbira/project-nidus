@@ -350,7 +350,7 @@ export default function OPAList() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" role="dialog" aria-modal="true">
           <div className="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-md w-full shadow-xl">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Use template in project</h2>
-            <label className="block mb-4">
+            <label data-help="exempt" className="block mb-4">
               <span className="text-sm">Project</span>
               <select
                 value={pickProjectId}

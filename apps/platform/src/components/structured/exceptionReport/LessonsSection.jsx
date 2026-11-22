@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Lightbulb, Plus, X, Edit2, ArrowUp } from 'lucide-react'
 import { addLesson, updateLesson, deleteLesson, escalateLessonToCorporate } from '../../../services/exceptionReportLessonsService'
 import LessonCard from './LessonCard'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 export default function LessonsSection({ reportId, lessons, onLessonsChange, formData, onChange, errors, mode }) {
   const [editingLesson, setEditingLesson] = useState(null)
@@ -95,10 +96,10 @@ export default function LessonsSection({ reportId, lessons, onLessonsChange, for
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="public.exception_reports.lessons_summary" htmlFor="fh-exception-reports-lessons-summary" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Lessons Summary
-        </label>
-        <textarea
+        </FieldLabelWithHelp>
+        <textarea id="fh-exception-reports-lessons-summary"
           value={formData.lessons_summary || ''}
           onChange={(e) => onChange('lessons_summary', e.target.value)}
           disabled={mode === 'view'}
@@ -109,10 +110,10 @@ export default function LessonsSection({ reportId, lessons, onLessonsChange, for
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="public.exception_reports.preventive_measures" htmlFor="fh-exception-reports-preventive-measures" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Preventive Measures
-        </label>
-        <textarea
+        </FieldLabelWithHelp>
+        <textarea id="fh-exception-reports-preventive-measures"
           value={formData.preventive_measures || ''}
           onChange={(e) => onChange('preventive_measures', e.target.value)}
           disabled={mode === 'view'}

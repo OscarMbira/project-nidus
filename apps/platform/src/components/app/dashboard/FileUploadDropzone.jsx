@@ -169,7 +169,7 @@ const FileUploadDropzone = memo(function FileUploadDropzone({
           accept={acceptedExtensions ? acceptedExtensions.map(ext => `.${ext}`).join(',') : undefined}
         />
         
-        <label
+        <label data-help="exempt"
           htmlFor="file-upload-input"
           className="cursor-pointer flex flex-col items-center gap-4"
         >

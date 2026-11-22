@@ -24,6 +24,7 @@ import {
 } from '../../services/industryTemplateService'
 import { parseTabularFile, buildSchedulePreview, buildStructuredListPreview } from '../../services/legacyTemplateFileParseService'
 import { extractTextFromOfficeFile } from '../../services/legacyTemplateExtractService'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 const STEPS = ['file', 'preview', 'result']
 const TRACKS = [
@@ -284,9 +285,9 @@ export default function LegacyTemplateUploadWizard({
           </div>
 
           {track === 'structured_list' && (
-            <label className="block text-sm text-slate-300">
-              List type
-              <select
+            <div className="block text-sm text-slate-300">
+              <FieldLabelWithHelp helpKey="public.legacy_template_uploads.list_type" htmlFor="fh-legacy-template-uploads-list-type">List type</FieldLabelWithHelp>
+              <select id="fh-legacy-template-uploads-list-type"
                 value={listType}
                 onChange={(e) => setListType(e.target.value)}
                 className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2"
@@ -296,7 +297,7 @@ export default function LegacyTemplateUploadWizard({
                 <option value="stakeholder_register">Stakeholder register</option>
                 <option value="budget">Budget</option>
               </select>
-            </label>
+            </div>
           )}
 
           {track === 'schedule' && (
@@ -307,7 +308,7 @@ export default function LegacyTemplateUploadWizard({
             </p>
           )}
 
-          <label className="block cursor-pointer rounded-xl border-2 border-dashed border-slate-600 p-8 text-center hover:border-blue-500">
+          <label data-help="exempt" className="block cursor-pointer rounded-xl border-2 border-dashed border-slate-600 p-8 text-center hover:border-blue-500">
             <input
               type="file"
               className="hidden"
@@ -328,14 +329,14 @@ export default function LegacyTemplateUploadWizard({
             <article key={item.id} className="space-y-3 rounded-lg border border-slate-700 bg-slate-950/60 p-4">
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div className="flex-1 space-y-2">
-                  <label className="block text-xs text-slate-400">
-                    Title
-                    <input
+                  <div className="block text-xs text-slate-400">
+                    <FieldLabelWithHelp helpKey="public.legacy_template_uploads.title" htmlFor="fh-legacy-template-uploads-title">Title</FieldLabelWithHelp>
+                    <input id="fh-legacy-template-uploads-title"
                       value={item.title}
                       onChange={(e) => updateItem(item.id, { title: e.target.value })}
                       className="mt-1 w-full rounded border border-slate-600 bg-slate-900 px-2 py-1.5 text-sm text-slate-100"
                     />
-                  </label>
+                  </div>
                   <p className="text-xs text-slate-500">{item.file?.name}</p>
                 </div>
                 <button
@@ -351,9 +352,9 @@ export default function LegacyTemplateUploadWizard({
 
               {track === 'document' && !item.error && (
                 <>
-                  <label className="block text-xs text-slate-400">
-                    Category
-                    <select
+                  <div className="block text-xs text-slate-400">
+                    <FieldLabelWithHelp helpKey="public.legacy_template_uploads.category" htmlFor="fh-legacy-template-uploads-category">Category</FieldLabelWithHelp>
+                    <select id="fh-legacy-template-uploads-category"
                       value={item.docCategory || 'other'}
                       onChange={(e) => updateItem(item.id, { docCategory: e.target.value })}
                       className="mt-1 w-full rounded border border-slate-600 bg-slate-900 px-2 py-1.5 text-sm"
@@ -363,7 +364,7 @@ export default function LegacyTemplateUploadWizard({
                       <option value="status_report">Status report / deck</option>
                       <option value="other">Other</option>
                     </select>
-                  </label>
+                  </div>
                   <pre className="max-h-40 overflow-auto whitespace-pre-wrap rounded bg-slate-900 p-2 text-xs text-slate-300">
                     {item.previewSnippet || '(No text extracted — file will still be stored.)'}
                   </pre>
@@ -388,7 +389,7 @@ export default function LegacyTemplateUploadWizard({
                     <summary className="cursor-pointer">Column mapping</summary>
                     <div className="mt-2 grid gap-2 sm:grid-cols-2">
                       {Object.keys(item.mapping || {}).map((src) => (
-                        <label key={src} className="flex items-center gap-2">
+                        <label data-help="exempt" key={src} className="flex items-center gap-2">
                           <span className="w-28 truncate text-slate-500" title={src}>{src}</span>
                           <select
                             value={item.mapping[src] || ''}

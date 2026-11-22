@@ -252,7 +252,7 @@ export function DeliverableEditor({ phases, deliverables, setDeliverables }) {
                 </option>
               ))}
             </select>
-            <label className="flex items-center gap-2 text-sm">
+            <label data-help="exempt" className="flex items-center gap-2 text-sm">
               <input type="checkbox" checked={!!d.is_mandatory} onChange={(e) => update(i, { is_mandatory: e.target.checked })} />
               Mandatory
             </label>
@@ -447,7 +447,7 @@ export function RoleEditor({ roles, setRoles }) {
               value={r.role_title}
               onChange={(e) => update(i, { role_title: e.target.value })}
             />
-            <label className="flex items-center gap-2 text-sm">
+            <label data-help="exempt" className="flex items-center gap-2 text-sm">
               <input type="checkbox" checked={!!r.is_key_role} onChange={(e) => update(i, { is_key_role: e.target.checked })} />
               Key role ★
             </label>

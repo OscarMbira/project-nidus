@@ -109,7 +109,7 @@ export default function MyQualityActions() {
       {/* Filters */}
       <div className="mb-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
         <div className="flex items-center gap-4">
-          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Filter:</label>
+          <label data-help="exempt" className="text-sm font-medium text-gray-700 dark:text-gray-300">Filter:</label>
           <select
             value={filter}
             onChange={(e) => setFilter(e.target.value)}

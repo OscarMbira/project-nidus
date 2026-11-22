@@ -89,7 +89,7 @@ export default function DailyLogTimelineView({ logId, onEntryClick }) {
       {/* Group By Selector */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 border border-transparent dark:border-gray-700">
         <div className="flex items-center gap-4">
-          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Group by:</label>
+          <label data-help="exempt" className="text-sm font-medium text-gray-700 dark:text-gray-300">Group by:</label>
           <select
             value={groupBy}
             onChange={(e) => setGroupBy(e.target.value)}

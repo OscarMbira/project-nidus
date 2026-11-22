@@ -13,6 +13,7 @@ import { ArrowLeft, AlertTriangle } from 'lucide-react'
 import { platformDb } from '@nidus/supabase'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import { getCurrentUserAccountId, getCurrentUserInternalUserId } from '@nidus/shared/utils/accountResolution'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 export default function SwitchEditionPage() {
   const navigate = useNavigate()
@@ -82,10 +83,9 @@ export default function SwitchEditionPage() {
             <p className="mt-1">You will keep: {state.kept.join(', ') || 'the planning menus'}. Risks, issues, change control, finance, portfolio, governance and other PMIS menus are hidden for everyone in <strong>{state.account.account_name}</strong>.</p>
             <p className="mt-1">No data is deleted. Upgrading again brings every menu and record back.</p>
           </div>
-          <label className="block text-sm">Reason (recorded in the audit log) *
-            <textarea rows={2} value={reason} onChange={(e) => setReason(e.target.value)} className="mt-1 w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800" />
-          </label>
-          <label className="block text-sm">Type SWITCH to confirm
+          <div className="block text-sm"><FieldLabelWithHelp helpKey="public.account_edition_changes.reason" htmlFor="fh-account-edition-changes-reason">Reason (recorded in the audit log) *</FieldLabelWithHelp><textarea id="fh-account-edition-changes-reason" rows={2} value={reason} onChange={(e) => setReason(e.target.value)} className="mt-1 w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800" />
+          </div>
+          <label data-help="exempt" className="block text-sm">Type SWITCH to confirm
             <input value={confirmText} onChange={(e) => setConfirmText(e.target.value)} className="mt-1 w-40 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800" />
           </label>
           <button type="button" disabled={!ready || busy} onClick={switchNow} className="px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-sm disabled:opacity-50">

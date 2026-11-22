@@ -8,6 +8,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { ArrowLeft, CheckCircle, AlertCircle, Rocket } from 'lucide-react'
 import { getMandateByIdOrReference, createProjectFromMandate, getDeliverables, getStakeholders } from '../../services/projectMandateService'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 export default function ProjectCreationWizard() {
   const { mandateId } = useParams()
@@ -295,10 +296,10 @@ export default function ProjectCreationWizard() {
           </p>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.projects.project_name" htmlFor="fh-projects-project-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Project Name <span className="text-red-500">*</span>
-            </label>
-            <input
+            </FieldLabelWithHelp>
+            <input id="fh-projects-project-name"
               type="text"
               name="project_name"
               value={projectData.project_name}
@@ -309,10 +310,10 @@ export default function ProjectCreationWizard() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.projects.project_description" htmlFor="fh-projects-project-description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Project Description
-            </label>
-            <textarea
+            </FieldLabelWithHelp>
+            <textarea id="fh-projects-project-description"
               name="project_description"
               value={projectData.project_description}
               onChange={handleChange}
@@ -322,10 +323,10 @@ export default function ProjectCreationWizard() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.projects.project_objectives" htmlFor="fh-projects-project-objectives" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Project Objectives
-            </label>
-            <textarea
+            </FieldLabelWithHelp>
+            <textarea id="fh-projects-project-objectives"
               name="project_objectives"
               value={projectData.project_objectives}
               onChange={handleChange}
@@ -335,10 +336,10 @@ export default function ProjectCreationWizard() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.projects.business_objective" htmlFor="fh-projects-business-objective" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Business Justification
-            </label>
-            <textarea
+            </FieldLabelWithHelp>
+            <textarea id="fh-projects-business-objective"
               name="business_justification"
               value={projectData.business_justification}
               onChange={handleChange}

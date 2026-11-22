@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { CheckCircle, XCircle, PauseCircle, X } from 'lucide-react';
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 /**
  * AuthorisationActions Component
@@ -178,10 +179,10 @@ const AuthorisationActions = ({
               </p>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.projects.rejection_reason" htmlFor="fh-projects-rejection-reason" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Rejection Reason <span className="text-red-500">*</span>
-                </label>
-                <textarea
+                </FieldLabelWithHelp>
+                <textarea id="fh-projects-rejection-reason"
                   value={rejectionReason}
                   onChange={(e) => {
                     setRejectionReason(e.target.value);
@@ -246,10 +247,10 @@ const AuthorisationActions = ({
               </p>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.projects.suspension_reason" htmlFor="fh-projects-suspension-reason" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Suspension Reason <span className="text-red-500">*</span>
-                </label>
-                <textarea
+                </FieldLabelWithHelp>
+                <textarea id="fh-projects-suspension-reason"
                   value={suspensionReason}
                   onChange={(e) => {
                     setSuspensionReason(e.target.value);

@@ -1,0 +1,104 @@
+// v1345 slice 4, wave 4t — Platform-only screens: invitations and members, configuration items and types, daily log,
+// issue / risk links, attachments and watchers, issue priority / severity scales, deliverables, exception / highlight /
+// end-stage report sections, distribution lists, tailoring, industry template rules, custom metrics, legacy template
+// upload, branding font, project contacts, authorisation reasons, edition switch.
+// Shape: [help_key, title, purpose, examples[], format_notes?, extra_notes?]. CLAUDE.md rule 77 applies.
+// Use the typographic apostrophe (’); never the word that means "inside" (SQL editor trap).
+const t = (key, title, purpose, ex, fmt = null, extra = null) => [key, title, purpose, [ex], fmt, extra]
+const DATE = ['{example_date}', 'Dates show as {date_format}.']
+
+export const MODULE = 'platform_screens'
+export const ROWS = [
+  // Invitations and membership
+  t('public.project_invitations.first_name', 'Invitee first name', 'The first name of the person you are inviting.', 'Sam'),
+  t('public.project_invitations.last_name', 'Invitee surname', 'The surname of the person you are inviting.', 'Example'),
+  t('public.project_invitations.email', 'Email address', 'Where the invitation is sent. It becomes their sign-in.', 'sam.example@company.example'),
+  t('public.project_invitations.role', 'Role', 'The role they get when they accept. It decides what they can see and do.', 'Team Member'),
+  t('public.project_invitations.message', 'Message', 'A short personal note shown in the invitation email.', 'Welcome aboard — please accept by Friday so you can join the kick-off.'),
+  t('public.project_invitations.default_role', 'Default role', 'The role given to people in the file whose row has no role.', 'Team Member'),
+  t('public.project_members.role', 'Role', 'The member’s role on this project. Changing it changes what they can see and do.', 'Project Support'),
+  t('public.portfolio_members.user_id', 'User', 'The person to add to this portfolio.', 'The person to add'),
+  t('public.portfolio_members.role', 'Role', 'Their role on the portfolio.', 'Portfolio Analyst'),
+  t('public.programme_members.user_id', 'User', 'The person to add to this programme.', 'The person to add'),
+  t('public.programme_members.role', 'Role', 'Their role on the programme.', 'Programme Manager'),
+  // Configuration items and types
+  t('public.configuration_items.item_name', 'Item name', 'The name of the product, document or component under configuration control.', 'Supplier contract v2'),
+  t('public.configuration_items.item_description', 'Item description', 'What the item is and why changes to it are controlled.', 'The signed services contract; any change needs a new version and approval.'),
+  t('public.configuration_items.item_type', 'Item type', 'The kind of item. It decides the controls that apply.', 'Contract'),
+  t('public.configuration_item_types.name', 'Name', 'The type’s name, as people see it when they classify an item.', 'Contract'),
+  t('public.configuration_item_types.code', 'Code', 'A short unique code for the type.', 'CON', 'Capital letters and numbers, no spaces.'),
+  t('public.configuration_item_types.description', 'Description', 'What belongs in this type.', 'Signed agreements with suppliers and partners.'),
+  t('public.configuration_item_types.classification', 'Classification', 'The broad group the type belongs to.', 'Document'),
+  t('public.configuration_item_types.control_level', 'Control level', 'How tightly changes to items of this type are controlled.', 'Formal change control'),
+  // Daily log
+  t('public.daily_log_entries.entry_date', 'Date', 'The day the event, action or note happened.', ...DATE),
+  t('public.daily_log_entries.entry_type', 'Type', 'What kind of note this is, so the log can be filtered.', 'Action'),
+  t('public.daily_log_entries.description', 'Description', 'What happened or what needs doing.', 'Supplier called: delivery moves from Tuesday to Thursday. Check the test window.'),
+  t('public.daily_log_entries.target_date', 'Target date', 'When an action should be done by.', ...DATE),
+  t('public.daily_log_entries.priority', 'Priority', 'How urgent the entry is.', 'High'),
+  t('public.daily_log_entries.tags', 'Tags', 'Short words that group related entries. Press Enter after each one.', 'supplier, testing'),
+  // Issues and risks — links, attachments, watchers, escalation
+  t('public.issue_attachments.attachment_type', 'Attachment type', 'What kind of file this is.', 'Evidence'),
+  t('public.issue_attachments.description', 'Description', 'What the file shows and why it is attached.', 'Screenshot of the error on the invoice screen.'),
+  t('public.issue_links.link_type', 'Link type', 'How the two issues relate.', 'Blocks'),
+  t('public.issue_links.linked_issue_id', 'Issue', 'The issue to link to.', 'The related issue'),
+  t('public.issue_watchers.user_id', 'User', 'The person who should be told about changes to this issue.', 'The person to notify'),
+  t('public.risk_attachments.description', 'Description', 'What the file shows and why it is attached.', 'Supplier’s letter confirming the delay.'),
+  t('public.risk_links.linked_risk_id', 'Link to risk', 'The risk to link to.', 'The related risk'),
+  t('public.risk_links.link_type', 'Link type', 'How the two risks relate.', 'Depends on'),
+  t('public.risk_links.description', 'Description', 'Why the risks are linked.', 'Both come from the same supplier’s capacity problem.'),
+  t('public.risks.escalation_notes', 'Escalation notes', 'Why the risk has become an issue and anything the issue owner should know.', 'The delay happened on 3 March; the go-live date is now at risk.'),
+  t('public.lessons_learned.linked_risk_id', 'Risk to link', 'The risk this lesson relates to.', 'The related risk'),
+  // Issue scales
+  t('public.issue_priority_levels.value', 'Value', 'The number used to sort and compare priorities. Higher means more urgent.', '4'),
+  t('public.issue_priority_levels.label', 'Label', 'The name people see for this priority.', 'High'),
+  t('public.issue_priority_levels.display_order', 'Order', 'Where this level appears in lists. 1 comes first.', '2'),
+  t('public.issue_priority_levels.response_time', 'Response time', 'How quickly issues at this priority should get a first response.', '1 working day'),
+  t('public.issue_priority_levels.color', 'Colour', 'The colour used for this priority in lists and charts.', '#F97316'),
+  t('public.issue_priority_levels.description', 'Description', 'When to use this priority.', 'Stops a key deliverable but has a workaround.'),
+  t('public.issue_severity_levels.value', 'Value', 'The number used to sort and compare severities. Higher means more severe.', '4'),
+  t('public.issue_severity_levels.label', 'Label', 'The name people see for this severity.', 'Major'),
+  t('public.issue_severity_levels.display_order', 'Order', 'Where this level appears in lists. 1 comes first.', '2'),
+  t('public.issue_severity_levels.color', 'Colour', 'The colour used for this severity in lists and charts.', '#DC2626'),
+  t('public.issue_severity_levels.description', 'Description', 'When to use this severity.', 'A main function does not work for many users.'),
+  t('public.issue_severity_levels.impact_description', 'Impact description', 'The typical effect of an issue at this severity.', 'Delays a milestone by more than a week.'),
+  // Deliverables
+  t('public.deliverables.title', 'Title', 'The deliverable’s name.', 'Floor 3 fit-out complete'),
+  t('public.deliverables.description', 'Description', 'What will be handed over and how you know it is done.', 'Desks, power and network ready for 60 staff, signed off by facilities.'),
+  t('public.deliverables.status', 'Status', 'Where the deliverable is now.', 'In progress'),
+  t('public.deliverables.pbs_node_id', 'PBS node', 'Where the deliverable sits in the product breakdown structure.', 'The product it belongs under'),
+  t('public.deliverables.due_date', 'Due date', 'When the deliverable is due.', ...DATE),
+  t('public.deliverables.notes', 'Notes', 'Anything else people should know.', 'Depends on the landlord’s electrical survey.'),
+  // Reports
+  t('public.exception_reports.board_decision', 'Board decision', 'What the board decided about the exception.', 'Approved option 2: extend the stage by four weeks.'),
+  t('public.exception_reports.board_decision_date', 'Decision date', 'When the board made the decision.', ...DATE),
+  t('public.exception_reports.board_decision_reference', 'Decision reference', 'The minute or decision log reference.', 'BOARD-2026-07'),
+  t('public.exception_reports.lessons_summary', 'Lessons summary', 'What this exception taught you.', 'Supplier capacity was not checked before signing.'),
+  t('public.exception_reports.preventive_measures', 'Preventive measures', 'What will stop it happening again.', 'Add a capacity check to the supplier selection checklist.'),
+  t('public.highlight_reports.changes_summary', 'Changes summary', 'Changes requested, approved or rejected this period.', 'Two change requests approved (CR-0014, CR-0015); one rejected.'),
+  t('public.end_stage_reports.actual_performance', 'Actual performance', 'How the stage did against its plan for time, cost, scope and quality.', 'Finished 5 days late and 3% over budget; all products approved.'),
+  t('public.end_stage_reports.forecast', 'Forecast', 'What you now expect for the rest of the project.', 'Go-live still 14 March if the next stage holds its plan.'),
+  t('public.checkpoint_report_distribution.recipient_id', 'Add recipient', 'Someone who should receive this checkpoint report.', 'The person to add'),
+  t('public.end_project_report_distribution.recipient_id', 'Add recipient', 'Someone who should receive the end project report.', 'The person to add'),
+  // Approvals, tailoring, templates
+  t('public.project_mandates.approval_comments', 'Approval notes / rejection reason', 'Why you are approving or rejecting the mandate. It is kept with the decision.', 'Approved: fits the 2026 workplace strategy; budget within the sponsor’s limit.'),
+  t('public.projects.rejection_reason', 'Rejection reason', 'Why the project is rejected, so the requester can act on it.', 'Business case does not show how the savings are measured.'),
+  t('public.projects.suspension_reason', 'Suspension reason', 'Why the project is paused and what must happen before it restarts.', 'Paused until the new budget year; restart review on 1 April.'),
+  t('public.document_tailoring.project_id', 'Project', 'The project the tailored document is for.', 'The project to tailor for'),
+  t('public.document_tailoring.justification', 'Justification for tailoring', 'Why this project needs a changed version of the standard document.', 'Small internal project: the full quality strategy is replaced by a one-page checklist.'),
+  t('public.industry_template_rules.classification_id', 'Classification', 'Which project classification the rule applies to. Leave blank for all.', 'Major project'),
+  t('public.industry_template_rules.required_approval_chain_template_id', 'Required approval chain', 'The approval chain projects using this template must follow.', 'The approval chain to require'),
+  t('public.industry_template_rules.required_stage_gate_names', 'Required stage gate names', 'Stage gates every project using this template must pass, separated by commas.', 'Design approval, Go-live readiness'),
+  t('public.industry_template_rules.notes', 'Notes', 'Anything people should know about the rule.', 'Agreed by the PMO board in January.'),
+  t('public.legacy_template_uploads.list_type', 'List type', 'What kind of list the uploaded file holds.', 'Risks'),
+  t('public.legacy_template_uploads.title', 'Title', 'A name for the uploaded template.', 'Old risk register template'),
+  t('public.legacy_template_uploads.category', 'Category', 'Where the template is filed.', 'Risk management'),
+  // Misc
+  t('public.custom_metrics.metric_name', 'Metric name', 'A name for the metric.', 'Average days to close an issue'),
+  t('public.custom_metrics.formula', 'Formula', 'How the metric is calculated from the fields available.', 'sum(closed_issue_days) / count(closed_issues)'),
+  t('public.organisation_branding.font_family', 'Font family', 'The typeface used across your organisation’s screens and exports.', 'Inter'),
+  t('public.project_contacts.emails', 'Email', 'The project’s contact email addresses, one per row. Tick Primary on the main one.', 'office.move@company.example'),
+  t('public.project_contacts.phones', 'Phone', 'The project’s contact numbers, one per row. Tick Primary on the main one.', '+44 20 7946 0456'),
+  t('public.project_contacts.addresses', 'Address', 'The project’s addresses, one per row. Tick Primary on the main one.', '1 Example Street, London'),
+  t('public.account_edition_changes.reason', 'Reason', 'Why the edition is being switched. It is recorded in the audit log.', 'Customer moved from the Planner trial to the full platform on 1 March.'),
+]

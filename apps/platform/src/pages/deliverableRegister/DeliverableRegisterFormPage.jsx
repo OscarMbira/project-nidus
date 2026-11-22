@@ -29,6 +29,7 @@ const STATUS_LABELS = {
 
 import RecordCustomFields from '../../components/shared-app/RecordCustomFields'
 import RegionalDateInput from '@nidus/ui/RegionalDateInput'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 export default function DeliverableRegisterFormPage({ mode: modeProp }) {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -150,35 +151,29 @@ export default function DeliverableRegisterFormPage({ mode: modeProp }) {
       {activeTab === 'details' && (
         <form onSubmit={save} className="mt-4 max-w-2xl space-y-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
           <fieldset disabled={isView} className="space-y-3">
-            <label className="block text-xs text-gray-700 dark:text-gray-200">Title
-              <input required value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+            <div className="block text-xs text-gray-700 dark:text-gray-200"><FieldLabelWithHelp helpKey="public.deliverables.title" htmlFor="fh-deliverables-title">Title</FieldLabelWithHelp><input id="fh-deliverables-title" required value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
                 className="mt-1 w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2" />
-            </label>
-            <label className="block text-xs text-gray-700 dark:text-gray-200">Description
-              <textarea value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} rows={3}
+            </div>
+            <div className="block text-xs text-gray-700 dark:text-gray-200"><FieldLabelWithHelp helpKey="public.deliverables.description" htmlFor="fh-deliverables-description">Description</FieldLabelWithHelp><textarea id="fh-deliverables-description" value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} rows={3}
                 className="mt-1 w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2" />
-            </label>
-            <label className="block text-xs text-gray-700 dark:text-gray-200">Status
-              <select value={form.status} onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
+            </div>
+            <div className="block text-xs text-gray-700 dark:text-gray-200"><FieldLabelWithHelp helpKey="public.deliverables.status" htmlFor="fh-deliverables-status">Status</FieldLabelWithHelp><select id="fh-deliverables-status" value={form.status} onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
                 className="mt-1 w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2">
                 {DELIVERABLE_STATUSES.map((s) => <option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
               </select>
-            </label>
-            <label className="block text-xs text-gray-700 dark:text-gray-200">PBS node (optional)
-              <select value={form.pbs_node_id} onChange={(e) => setForm((f) => ({ ...f, pbs_node_id: e.target.value }))}
+            </div>
+            <div className="block text-xs text-gray-700 dark:text-gray-200"><FieldLabelWithHelp helpKey="public.deliverables.pbs_node_id" htmlFor="fh-deliverables-pbs-node-id" listOptions={false}>PBS node (optional)</FieldLabelWithHelp><select id="fh-deliverables-pbs-node-id" value={form.pbs_node_id} onChange={(e) => setForm((f) => ({ ...f, pbs_node_id: e.target.value }))}
                 className="mt-1 w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2">
                 <option value="">—</option>
                 {pbsNodes.map((n) => <option key={n.id} value={n.id}>{n.node_code} {n.name}</option>)}
               </select>
-            </label>
-            <label className="block text-xs text-gray-700 dark:text-gray-200">Due date
-              <RegionalDateInput eventStyle value={form.due_date || ''} onChange={(e) => setForm((f) => ({ ...f, due_date: e.target.value }))}
+            </div>
+            <div className="block text-xs text-gray-700 dark:text-gray-200"><FieldLabelWithHelp helpKey="public.deliverables.due_date" htmlFor="fh-deliverables-due-date">Due date</FieldLabelWithHelp><RegionalDateInput id="fh-deliverables-due-date" eventStyle value={form.due_date || ''} onChange={(e) => setForm((f) => ({ ...f, due_date: e.target.value }))}
                 className="mt-1 w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2" />
-            </label>
-            <label className="block text-xs text-gray-700 dark:text-gray-200">Notes
-              <textarea value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} rows={2}
+            </div>
+            <div className="block text-xs text-gray-700 dark:text-gray-200"><FieldLabelWithHelp helpKey="public.deliverables.notes" htmlFor="fh-deliverables-notes">Notes</FieldLabelWithHelp><textarea id="fh-deliverables-notes" value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} rows={2}
                 className="mt-1 w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2" />
-            </label>
+            </div>
           </fieldset>
           {!isView && (
             <div className="flex gap-2 pt-2">

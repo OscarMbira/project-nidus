@@ -222,7 +222,7 @@ export default function StakeholderEngagementPage() {
       </div>
 
       <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Project</label>
+        <label data-help="exempt" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Project</label>
         <select value={projectId} onChange={(e) => setProjectId(e.target.value)} className="w-full max-w-md px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
           <option value="">Select project</option>
           {projects.map(p => (<option key={p.id} value={p.id}>{p.project_name} {p.project_code ? `(${p.project_code})` : ''}</option>))}

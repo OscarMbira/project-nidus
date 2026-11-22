@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { X, AlertTriangle, Link2 } from 'lucide-react'
 import { transferToRisk } from '../../services/issueTransferService'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 export default function TransferToRiskDialog({ issue, onClose, onSuccess }) {
   const [transferring, setTransferring] = useState(false)
@@ -69,15 +70,15 @@ export default function TransferToRiskDialog({ issue, onClose, onSuccess }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label data-help="exempt" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Initial Risk Assessment
             </label>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
+                <FieldLabelWithHelp helpKey="public.risks.probability" htmlFor="fh-risks-probability" className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
                   Probability (1-5)
-                </label>
-                <select
+                </FieldLabelWithHelp>
+                <select id="fh-risks-probability"
                   value={riskData.probability}
                   onChange={(e) => setRiskData({ ...riskData, probability: parseInt(e.target.value) })}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
@@ -88,10 +89,10 @@ export default function TransferToRiskDialog({ issue, onClose, onSuccess }) {
                 </select>
               </div>
               <div>
-                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
+                <FieldLabelWithHelp helpKey="public.risks.impact" htmlFor="fh-risks-impact" className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
                   Impact (1-5)
-                </label>
-                <select
+                </FieldLabelWithHelp>
+                <select id="fh-risks-impact"
                   value={riskData.impact}
                   onChange={(e) => setRiskData({ ...riskData, impact: parseInt(e.target.value) })}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"

@@ -25,6 +25,7 @@ import { inviteUserToProject, getProjectInvitations, getProjectMembers } from '.
 import Button from '@nidus/ui/Button';
 import Card from '@nidus/ui/Card';
 import PlatformHeader from '../../components/homepage/PlatformHeader';
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 export default function ProjectMemberInvitation() {
   const navigate = useNavigate();
@@ -258,10 +259,10 @@ export default function ProjectMemberInvitation() {
             <h2 className="text-xl font-semibold mb-4">Invite Team Member</h2>
             <form onSubmit={handleInviteUser} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.project_invitations.email" htmlFor="fh-project-invitations-email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Email Address *
-                </label>
-                <input
+                </FieldLabelWithHelp>
+                <input id="fh-project-invitations-email"
                   type="email"
                   value={inviteEmail}
                   onChange={(e) => setInviteEmail(e.target.value)}
@@ -272,10 +273,10 @@ export default function ProjectMemberInvitation() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.project_invitations.role" htmlFor="fh-project-invitations-role" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Role *
-                </label>
-                <select
+                </FieldLabelWithHelp>
+                <select id="fh-project-invitations-role"
                   value={inviteRoleId}
                   onChange={(e) => setInviteRoleId(e.target.value)}
                   required
@@ -291,10 +292,10 @@ export default function ProjectMemberInvitation() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.project_invitations.message" htmlFor="fh-project-invitations-message" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Message (Optional)
-                </label>
-                <textarea
+                </FieldLabelWithHelp>
+                <textarea id="fh-project-invitations-message"
                   value={inviteMessage}
                   onChange={(e) => setInviteMessage(e.target.value)}
                   rows={3}

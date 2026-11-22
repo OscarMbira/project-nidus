@@ -102,7 +102,7 @@ function DecisionFormBody({ issueId, issue, onSave, onCancel }) {
             </FieldLabelWithHelp>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
               {['approve', 'reject', 'defer', 'escalate', 'accept_concession', 'request_more_info'].map((type, index) => (
-                <label
+                <label data-help="exempt"
                   key={type}
                   className={`flex items-center p-3 border rounded-lg cursor-pointer transition-colors ${
                     formData.decision_type === type

@@ -426,7 +426,7 @@ export default function StakeholderRegisterPage() {
       <div role="tabpanel" aria-label="Stakeholder register">
       <div className="mb-4 flex flex-col gap-4 lg:flex-row lg:flex-wrap lg:items-end">
         <div className="flex-1 min-w-[200px] max-w-md">
-          <label htmlFor="stakeholder-register-project" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Project</label>
+          <label data-help="exempt" htmlFor="stakeholder-register-project" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Project</label>
           <select
             id="stakeholder-register-project"
             value={projectId}
@@ -444,7 +444,7 @@ export default function StakeholderRegisterPage() {
           </select>
         </div>
         <div className="flex-1 min-w-[200px] max-w-md">
-          <label htmlFor="stakeholder-register-search" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Search register</label>
+          <label data-help="exempt" htmlFor="stakeholder-register-search" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Search register</label>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" aria-hidden />
             <input

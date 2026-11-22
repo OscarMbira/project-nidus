@@ -488,7 +488,7 @@ function EnhancedRiskFormBody({ risk, projectId, riskRegisterId, onSave, onCance
                   Risk Type *
                 </FieldLabelWithHelp>
                 <div className="flex gap-4">
-                  <label className="flex items-center gap-2 cursor-pointer">
+                  <label data-help="exempt" className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="radio"
                       name="risk_type"
@@ -499,7 +499,7 @@ function EnhancedRiskFormBody({ risk, projectId, riskRegisterId, onSave, onCance
                     />
                     <span className="text-sm">Threat (Negative)</span>
                   </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
+                  <label data-help="exempt" className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="radio"
                       name="risk_type"

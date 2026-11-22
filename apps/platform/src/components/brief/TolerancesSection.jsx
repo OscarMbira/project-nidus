@@ -154,7 +154,7 @@ export default function TolerancesSection({ briefId, readOnly = false }) {
               <FieldLabelWithHelp helpKey="public.brief_tolerances.escalation_required" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Escalation Required
               </FieldLabelWithHelp>
-              <label className="flex items-center">
+              <label data-help="exempt" className="flex items-center">
                 <input
                   type="checkbox"
                   checked={formData.escalation_required}

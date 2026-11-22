@@ -23,6 +23,7 @@ import { validateEntry, getEntryCompleteness, needsImmediateAttention, isEntryOv
 import ExportListMenu from '@nidus/ui/ExportListMenu';
 import { RowActionButton } from '@nidus/ui';
 import RegionalDateInput from '@nidus/ui/RegionalDateInput'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 const DAILY_LOG_COLUMNS = [
   { key: 'entry_number', label: 'Entry #' },
@@ -349,8 +350,8 @@ export default function DailyLogView() {
           <form onSubmit={handleAddEntry}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date</label>
-                <RegionalDateInput eventStyle
+                <FieldLabelWithHelp helpKey="public.daily_log_entries.entry_date" htmlFor="fh-daily-log-entries-entry-date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date</FieldLabelWithHelp>
+                <RegionalDateInput id="fh-daily-log-entries-entry-date" eventStyle
                   value={formData.entry_date}
                   onChange={(e) => setFormData({ ...formData, entry_date: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
@@ -358,8 +359,8 @@ export default function DailyLogView() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type</label>
-                <select
+                <FieldLabelWithHelp helpKey="public.daily_log_entries.entry_type" htmlFor="fh-daily-log-entries-entry-type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type</FieldLabelWithHelp>
+                <select id="fh-daily-log-entries-entry-type"
                   value={formData.entry_type}
                   onChange={(e) => setFormData({ ...formData, entry_type: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
@@ -375,8 +376,8 @@ export default function DailyLogView() {
                 </select>
               </div>
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description *</label>
-                <textarea
+                <FieldLabelWithHelp helpKey="public.daily_log_entries.description" htmlFor="fh-daily-log-entries-description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description *</FieldLabelWithHelp>
+                <textarea id="fh-daily-log-entries-description"
                   value={formData.description}
                   onChange={(e) => {
                     setFormData({ ...formData, description: e.target.value });
@@ -421,8 +422,8 @@ export default function DailyLogView() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Target Date</label>
-                  <RegionalDateInput eventStyle
+                  <FieldLabelWithHelp helpKey="public.daily_log_entries.target_date" htmlFor="fh-daily-log-entries-target-date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Target Date</FieldLabelWithHelp>
+                  <RegionalDateInput id="fh-daily-log-entries-target-date" eventStyle
                     value={formData.target_date}
                     onChange={(e) => {
                       setFormData({ ...formData, target_date: e.target.value });
@@ -439,8 +440,8 @@ export default function DailyLogView() {
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Priority</label>
-                  <select
+                  <FieldLabelWithHelp helpKey="public.daily_log_entries.priority" htmlFor="fh-daily-log-entries-priority" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Priority</FieldLabelWithHelp>
+                  <select id="fh-daily-log-entries-priority"
                     value={formData.priority}
                     onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
@@ -453,7 +454,7 @@ export default function DailyLogView() {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tags</label>
+                <FieldLabelWithHelp helpKey="public.daily_log_entries.tags" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tags</FieldLabelWithHelp>
                 <TagInput
                   tags={formData.tags || []}
                   onChange={(tags) => setFormData({ ...formData, tags })}

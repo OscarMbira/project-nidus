@@ -50,7 +50,7 @@ export default function TimesheetReviewPanel({ approveReasons, rejectReasons, pr
         {reasonCatalog.map((reason) => {
           const checked = selectedReasonIds.includes(reason.id)
           return (
-            <label key={reason.id}
+            <label data-help="exempt" key={reason.id}
               className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs cursor-pointer ${checked
                 ? 'border-blue-500 bg-blue-50 text-blue-700 dark:border-blue-500 dark:bg-blue-900/30 dark:text-blue-300'
                 : 'border-gray-300 text-gray-600 hover:bg-gray-100 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800'}`}>

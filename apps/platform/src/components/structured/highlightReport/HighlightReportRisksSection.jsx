@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { ShieldAlert, Plus, Trash2 } from 'lucide-react'
 import * as riskService from '../../../services/highlightReportRiskService'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 export default function HighlightReportRisksSection({ reportId, formData, onChange, mode }) {
   const [risks, setRisks] = useState([])
@@ -73,8 +74,8 @@ export default function HighlightReportRisksSection({ reportId, formData, onChan
 
       {formData?.risks_summary != null && (
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Risks summary</label>
-          <textarea
+          <FieldLabelWithHelp helpKey="public.highlight_reports.risks_summary" htmlFor="fh-highlight-reports-risks-summary" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Risks summary</FieldLabelWithHelp>
+          <textarea id="fh-highlight-reports-risks-summary"
             value={formData.risks_summary || ''}
             onChange={(e) => onChange('risks_summary', e.target.value)}
             disabled={disabled}

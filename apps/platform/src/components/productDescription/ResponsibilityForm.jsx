@@ -200,7 +200,7 @@ function ResponsibilityFormBody({ responsibility, onSubmit, onCancel, projectId,
             </FieldLabelWithHelp>
             <div className="max-h-40 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-lg p-2">
               {acceptanceCriteria.map(criterion => (
-                <label key={criterion.id} className="flex items-center p-2 hover:bg-gray-50 dark:hover:bg-gray-800 rounded">
+                <label data-help="exempt" key={criterion.id} className="flex items-center p-2 hover:bg-gray-50 dark:hover:bg-gray-800 rounded">
                   <input
                     type="checkbox"
                     checked={formData.acceptance_criteria_ids?.includes(criterion.id) || false}

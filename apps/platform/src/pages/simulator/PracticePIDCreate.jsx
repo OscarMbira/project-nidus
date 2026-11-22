@@ -7,6 +7,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { createPracticePID } from '../../services/sim/practicePIDService'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 export default function PracticePIDCreate() {
   const navigate = useNavigate()
@@ -53,12 +54,12 @@ export default function PracticePIDCreate() {
       ) : (
       <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 space-y-6">
         <div>
-          <label className="block text-sm font-medium mb-2">PID Title *</label>
-          <input type="text" required value={formData.pid_title} onChange={(e) => setFormData({ ...formData, pid_title: e.target.value })} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
+          <FieldLabelWithHelp helpKey="sim.practice_project_initiation_documents.pid_title" htmlFor="fh-practice-project-initiation-documents-pid-title" className="block text-sm font-medium mb-2">PID Title *</FieldLabelWithHelp>
+          <input id="fh-practice-project-initiation-documents-pid-title" type="text" required value={formData.pid_title} onChange={(e) => setFormData({ ...formData, pid_title: e.target.value })} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-2">Description</label>
-          <textarea value={formData.pid_description} onChange={(e) => setFormData({ ...formData, pid_description: e.target.value })} rows={4} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
+          <FieldLabelWithHelp helpKey="sim.practice_project_initiation_documents.pid_description" htmlFor="fh-practice-project-initiation-documents-pid-description" className="block text-sm font-medium mb-2">Description</FieldLabelWithHelp>
+          <textarea id="fh-practice-project-initiation-documents-pid-description" value={formData.pid_description} onChange={(e) => setFormData({ ...formData, pid_description: e.target.value })} rows={4} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
         </div>
         <div className="flex justify-end gap-4">
           <button type="button" onClick={() => navigate(-1)} className="px-4 py-2 border rounded-lg">Cancel</button>

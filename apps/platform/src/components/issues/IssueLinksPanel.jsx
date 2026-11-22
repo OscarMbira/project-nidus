@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link2, Plus, X, ExternalLink } from 'lucide-react'
 import { supabase } from '../../services/supabaseClient'
 import { getIssues } from '../../services/issueService'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 export default function IssueLinksPanel({ issue, projectId }) {
   const [links, setLinks] = useState([])
@@ -149,10 +150,10 @@ export default function IssueLinksPanel({ issue, projectId }) {
         <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
           <div className="space-y-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="public.issue_links.link_type" htmlFor="fh-issue-links-link-type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Link Type
-              </label>
-              <select
+              </FieldLabelWithHelp>
+              <select id="fh-issue-links-link-type"
                 value={linkType}
                 onChange={(e) => setLinkType(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
@@ -164,10 +165,10 @@ export default function IssueLinksPanel({ issue, projectId }) {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="public.issue_links.linked_issue_id" htmlFor="fh-issue-links-linked-issue-id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" listOptions={false}>
                 Issue
-              </label>
-              <select
+              </FieldLabelWithHelp>
+              <select id="fh-issue-links-linked-issue-id"
                 value={selectedIssueId}
                 onChange={(e) => setSelectedIssueId(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"

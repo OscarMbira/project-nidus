@@ -272,7 +272,7 @@ export default function GovernanceChartsGallery({ projectId, disabled = false })
   return (
     <div className="space-y-3">
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">Governance charts</label>
+        <label data-help="exempt" className="block text-sm font-medium text-gray-700 dark:text-gray-200">Governance charts</label>
         <p className="text-xs text-gray-500 dark:text-gray-400">
           Upload or paste org/governance diagrams (images or PDF). Up to {MAX_GOVERNANCE_CHARTS} files, {maxMb}MB each.
           Delete removes the file from storage.
@@ -321,7 +321,7 @@ export default function GovernanceChartsGallery({ projectId, disabled = false })
               }`}
             >
               <div className="flex flex-wrap items-center gap-2">
-                <label
+                <label data-help="exempt"
                   className={`inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm font-medium text-gray-800 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 ${
                     busy || atCap ? 'pointer-events-none opacity-50' : ''
                   }`}

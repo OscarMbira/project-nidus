@@ -17,6 +17,7 @@ import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import { getPmoConfigAccess, getProjectClassifications } from '../../services/projectClassificationService'
 import { getApprovalChainTemplates } from '../../services/organisationApprovalChainService'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 const TABS = ['phases', 'activities', 'deliverables', 'risks', 'milestones', 'roles']
 
@@ -130,28 +131,28 @@ function TemplateGovernancePanel({ templateId }) {
         <form onSubmit={handleSubmit} className="rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Classification (blank = default for all)</label>
-              <select value={form.classification_id} onChange={(e) => setForm((f) => ({ ...f, classification_id: e.target.value }))} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white">
+              <FieldLabelWithHelp helpKey="public.industry_template_rules.classification_id" htmlFor="fh-industry-template-rules-classification-id" className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Classification (blank = default for all)</FieldLabelWithHelp>
+              <select id="fh-industry-template-rules-classification-id" value={form.classification_id} onChange={(e) => setForm((f) => ({ ...f, classification_id: e.target.value }))} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white">
                 <option value="">Default (no classification)</option>
                 {classifications.map((c) => <option key={c.id} value={c.id}>{c.classification_name}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Required approval chain (optional)</label>
-              <select value={form.required_approval_chain_template_id} onChange={(e) => setForm((f) => ({ ...f, required_approval_chain_template_id: e.target.value }))} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white">
+              <FieldLabelWithHelp helpKey="public.industry_template_rules.required_approval_chain_template_id" htmlFor="fh-industry-template-rules-required-approval-chain-template-id" className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1" listOptions={false}>Required approval chain (optional)</FieldLabelWithHelp>
+              <select id="fh-industry-template-rules-required-approval-chain-template-id" value={form.required_approval_chain_template_id} onChange={(e) => setForm((f) => ({ ...f, required_approval_chain_template_id: e.target.value }))} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white">
                 <option value="">None</option>
                 {chains.map((c) => <option key={c.id} value={c.id}>{c.chain_name}</option>)}
               </select>
             </div>
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Required stage gate names (comma-separated)</label>
-            <input type="text" value={form.required_stage_gate_names} onChange={(e) => setForm((f) => ({ ...f, required_stage_gate_names: e.target.value }))} placeholder="e.g. Initiation Gate, Design Gate, Go-Live Gate" className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white" />
+            <FieldLabelWithHelp helpKey="public.industry_template_rules.required_stage_gate_names" htmlFor="fh-industry-template-rules-required-stage-gate-names" className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Required stage gate names (comma-separated)</FieldLabelWithHelp>
+            <input id="fh-industry-template-rules-required-stage-gate-names" type="text" value={form.required_stage_gate_names} onChange={(e) => setForm((f) => ({ ...f, required_stage_gate_names: e.target.value }))} placeholder="e.g. Initiation Gate, Design Gate, Go-Live Gate" className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white" />
             <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Each name becomes a stage gate review automatically provisioned when a project is created from this template with this classification.</p>
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Notes</label>
-            <textarea value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} rows={2} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white" />
+            <FieldLabelWithHelp helpKey="public.industry_template_rules.notes" htmlFor="fh-industry-template-rules-notes" className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Notes</FieldLabelWithHelp>
+            <textarea id="fh-industry-template-rules-notes" value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} rows={2} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white" />
           </div>
           <div className="flex gap-2">
             <button type="submit" disabled={saving} className="px-3 py-1.5 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 disabled:opacity-50">{saving ? 'Saving…' : 'Save profile'}</button>

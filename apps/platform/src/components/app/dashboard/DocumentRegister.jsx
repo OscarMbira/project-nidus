@@ -303,7 +303,7 @@ const DocumentRegister = memo(function DocumentRegister({
           </div>
           
           {/* Mandatory Only Toggle */}
-          <label className="flex items-center gap-2 cursor-pointer">
+          <label data-help="exempt" className="flex items-center gap-2 cursor-pointer">
             <input
               type="checkbox"
               checked={mandatoryOnly}

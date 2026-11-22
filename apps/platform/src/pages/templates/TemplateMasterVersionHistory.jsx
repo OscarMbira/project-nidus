@@ -41,7 +41,7 @@ export default function TemplateMasterVersionHistory() {
       {err && <p className="text-red-600 mb-4">{err}</p>}
       <div className="grid md:grid-cols-2 gap-4 mb-6">
         <div>
-          <label className="text-sm text-gray-500">Version A</label>
+          <label data-help="exempt" className="text-sm text-gray-500">Version A</label>
           <select
             value={a?.id || ''}
             onChange={(e) => setA(rows.find((r) => r.id === e.target.value) || null)}
@@ -56,7 +56,7 @@ export default function TemplateMasterVersionHistory() {
           </select>
         </div>
         <div>
-          <label className="text-sm text-gray-500">Version B</label>
+          <label data-help="exempt" className="text-sm text-gray-500">Version B</label>
           <select
             value={b?.id || ''}
             onChange={(e) => setB(rows.find((r) => r.id === e.target.value) || null)}

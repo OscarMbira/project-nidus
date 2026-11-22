@@ -60,7 +60,7 @@ export default function LessonsFilters({ filters, onFiltersChange, onClear }) {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         {/* Search */}
         <div className="lg:col-span-2">
-          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label data-help="exempt" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
             Search
           </label>
           <div className="relative">
@@ -77,7 +77,7 @@ export default function LessonsFilters({ filters, onFiltersChange, onClear }) {
 
         {/* Category */}
         <div>
-          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label data-help="exempt" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
             Category
           </label>
           <select
@@ -96,7 +96,7 @@ export default function LessonsFilters({ filters, onFiltersChange, onClear }) {
 
         {/* Effect Type */}
         <div>
-          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label data-help="exempt" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
             Effect
           </label>
           <select
@@ -115,7 +115,7 @@ export default function LessonsFilters({ filters, onFiltersChange, onClear }) {
 
         {/* Status */}
         <div>
-          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label data-help="exempt" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
             Status
           </label>
           <select
@@ -136,7 +136,7 @@ export default function LessonsFilters({ filters, onFiltersChange, onClear }) {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
         {/* Scope */}
         <div>
-          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label data-help="exempt" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
             Scope
           </label>
           <select
@@ -155,7 +155,7 @@ export default function LessonsFilters({ filters, onFiltersChange, onClear }) {
 
         {/* Priority */}
         <div>
-          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label data-help="exempt" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
             Priority
           </label>
           <select
@@ -174,7 +174,7 @@ export default function LessonsFilters({ filters, onFiltersChange, onClear }) {
 
         {/* Corporate Only */}
         <div>
-          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label data-help="exempt" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
             Corporate
           </label>
           <select

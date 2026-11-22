@@ -24,6 +24,7 @@ import {
   updateProgrammeMemberRole,
   removeProgrammeMember,
 } from '../../services/programmeRoleService'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 export default function ProgrammeMembersPage() {
   const { programmeId } = useParams()
@@ -167,8 +168,8 @@ export default function ProgrammeMembersPage() {
             <form onSubmit={handleSubmit} className="mt-4 space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">User *</label>
-                  <select
+                  <FieldLabelWithHelp helpKey="public.programme_members.user_id" htmlFor="fh-programme-members-user-id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>User *</FieldLabelWithHelp>
+                  <select id="fh-programme-members-user-id"
                     value={form.user_id}
                     onChange={(e) => setForm((f) => ({ ...f, user_id: e.target.value }))}
                     disabled={!!editing}
@@ -182,8 +183,8 @@ export default function ProgrammeMembersPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Role *</label>
-                  <select
+                  <FieldLabelWithHelp helpKey="public.programme_members.role" htmlFor="fh-programme-members-role" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Role *</FieldLabelWithHelp>
+                  <select id="fh-programme-members-role"
                     value={form.programme_role_id}
                     onChange={(e) => setForm((f) => ({ ...f, programme_role_id: e.target.value }))}
                     required

@@ -388,7 +388,7 @@ function StakeholderAnalysisFormBody({ analysis, stakeholderId, projectId, stake
               <FieldLabelWithHelp as="span" helpKey="public.stakeholder_analysis.power_sources" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Power sources</FieldLabelWithHelp>
               <div className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                 {POWER_SOURCES.map((src, index) => (
-                  <label key={src} className="flex items-center gap-3 px-4 py-3">
+                  <label data-help="exempt" key={src} className="flex items-center gap-3 px-4 py-3">
                     <span className="w-6 shrink-0 text-sm tabular-nums text-gray-700 dark:text-gray-200">{index + 1}</span>
                     <input
                       type="checkbox"

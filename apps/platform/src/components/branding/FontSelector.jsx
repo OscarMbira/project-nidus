@@ -1,4 +1,5 @@
-/**
+
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'/**
  * FontSelector
  * Dropdown font-family chooser that injects a Google Fonts
  * <link> on selection and renders a live preview sentence.
@@ -49,10 +50,10 @@ export default function FontSelector({ value = 'inter', onChange }) {
   return (
     <div className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+        <FieldLabelWithHelp helpKey="public.organisation_branding.font_family" htmlFor="fh-organisation-branding-font-family" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
           Font Family
-        </label>
-        <select
+        </FieldLabelWithHelp>
+        <select id="fh-organisation-branding-font-family"
           value={value}
           onChange={handleChange}
           className="w-full max-w-xs px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"

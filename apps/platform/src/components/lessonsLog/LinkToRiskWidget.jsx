@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { AlertTriangle, Plus, ExternalLink } from 'lucide-react'
 import { supabase } from '../../services/supabaseClient'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 export default function LinkToRiskWidget({ lesson, projectId, onRiskLinked }) {
   const [risks, setRisks] = useState([])
@@ -84,10 +85,10 @@ export default function LinkToRiskWidget({ lesson, projectId, onRiskLinked }) {
       ) : (
         <div className="space-y-3">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.lessons_learned.linked_risk_id" htmlFor="fh-lessons-learned-linked-risk-id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
               Select Risk to Link
-            </label>
-            <select
+            </FieldLabelWithHelp>
+            <select id="fh-lessons-learned-linked-risk-id"
               value={selectedRiskId || ''}
               onChange={(e) => setSelectedRiskId(e.target.value || null)}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"

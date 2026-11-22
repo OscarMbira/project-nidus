@@ -10,6 +10,7 @@ import { createTailoredCopy } from '../../services/documentTailoringService'
 import { getMyProjects } from '../../services/projectService'
 import { platformDb } from '@nidus/supabase'
 import toast from 'react-hot-toast'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 export default function TailorDocumentModal({ 
   isOpen, 
@@ -168,10 +169,10 @@ export default function TailorDocumentModal({
 
             {/* Project Selector */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.document_tailoring.project_id" htmlFor="fh-document-tailoring-project-id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                 Select Project *
-              </label>
-              <select
+              </FieldLabelWithHelp>
+              <select id="fh-document-tailoring-project-id"
                 value={formData.projectId}
                 onChange={(e) => {
                   setFormData({ ...formData, projectId: e.target.value })
@@ -203,10 +204,10 @@ export default function TailorDocumentModal({
 
             {/* Justification */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.document_tailoring.justification" htmlFor="fh-document-tailoring-justification" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Justification for Tailoring *
-              </label>
-              <textarea
+              </FieldLabelWithHelp>
+              <textarea id="fh-document-tailoring-justification"
                 value={formData.justification}
                 onChange={(e) => {
                   setFormData({ ...formData, justification: e.target.value })

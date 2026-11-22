@@ -20,6 +20,7 @@ import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import { practicePidToForm, practicePidFormToUpdate } from '@nidus/shared/utils/practicePidForm'
 import { simDb } from '@nidus/supabase'
 import { getPracticePIDById, updatePracticePID } from '../../services/sim/practicePIDService'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 const TABS = [
   { value: 'definition', label: 'Definition' },
@@ -35,7 +36,7 @@ const labelClass = 'block text-sm font-medium text-gray-700 dark:text-gray-300 m
 function TextArea({ name, label, value, onChange, rows = 4, hint }) {
   return (
     <div>
-      <label htmlFor={`pid-${name}`} className={labelClass}>{label}</label>
+      <FieldLabelWithHelp helpKey={`sim.practice_project_initiation_documents.${name}`} htmlFor={`pid-${name}`} className={labelClass}>{label}</FieldLabelWithHelp>
       <textarea id={`pid-${name}`} name={name} value={value} onChange={onChange} rows={rows} className={inputClass} />
       {hint && <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{hint}</p>}
     </div>
@@ -182,7 +183,7 @@ export default function PracticePIDEdit() {
             {activeTab === 'definition' && (
               <>
                 <div>
-                  <label htmlFor="pid-pid_title" className={labelClass}>PID title *</label>
+                  <FieldLabelWithHelp helpKey="sim.practice_project_initiation_documents.pid_title" htmlFor="pid-pid_title" className={labelClass}>PID title *</FieldLabelWithHelp>
                   <input id="pid-pid_title" name="pid_title" type="text" value={form.pid_title} onChange={handleChange} className={inputClass} />
                   {titleError && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{titleError}</p>}
                 </div>
@@ -218,7 +219,7 @@ export default function PracticePIDEdit() {
                     ['tolerance_scope', 'Scope tolerance', 'e.g. Training pack may be simplified'], ['tolerance_quality', 'Quality tolerance', 'e.g. 95% complete records']]
                     .map(([name, label, placeholder]) => (
                       <div key={name}>
-                        <label htmlFor={`pid-${name}`} className={labelClass}>{label}</label>
+                        <FieldLabelWithHelp helpKey={`sim.practice_project_initiation_documents.${name}`} htmlFor={`pid-${name}`} className={labelClass}>{label}</FieldLabelWithHelp>
                         <input id={`pid-${name}`} name={name} type="text" value={form[name]} onChange={handleChange} placeholder={placeholder} className={inputClass} />
                       </div>
                     ))}
