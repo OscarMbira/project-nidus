@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import { createEEF, listEEFCategories, listProjectsForOrganisation } from '../../services/eefService'
@@ -20,7 +22,7 @@ const initial = {
   on_hold_reason: '',
 }
 
-export default function EEFCreate() {
+function EEFCreateBody() {
   const navigate = useNavigate()
   const [formTab, setFormTab] = useState('wizard')
   const [step, setStep] = useState(1)
@@ -144,23 +146,23 @@ export default function EEFCreate() {
 
       {step === 1 && (
         <div className="space-y-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-          <label className="block">
+          <FieldLabelWithHelp helpKey="public.enterprise_environment_factors.title" className="block">
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Title *</span>
             <input
               className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 min-h-[44px]"
               value={form.title}
               onChange={(e) => set('title', e.target.value)}
             />
-          </label>
-          <label className="block">
+          </FieldLabelWithHelp>
+          <FieldLabelWithHelp helpKey="public.enterprise_environment_factors.description" className="block">
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Description</span>
             <textarea
               className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 min-h-[100px]"
               value={form.description}
               onChange={(e) => set('description', e.target.value)}
             />
-          </label>
-          <label className="block">
+          </FieldLabelWithHelp>
+          <FieldLabelWithHelp helpKey="public.enterprise_environment_factors.category_id" className="block">
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Category</span>
             <select
               className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 min-h-[44px]"
@@ -174,9 +176,9 @@ export default function EEFCreate() {
                 </option>
               ))}
             </select>
-          </label>
+          </FieldLabelWithHelp>
           <div className="grid sm:grid-cols-2 gap-4">
-            <label className="block">
+            <FieldLabelWithHelp helpKey="public.enterprise_environment_factors.eef_type" className="block">
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">EEF type</span>
               <select
                 className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 min-h-[44px]"
@@ -186,8 +188,8 @@ export default function EEFCreate() {
                 <option value="internal">Internal</option>
                 <option value="external">External</option>
               </select>
-            </label>
-            <label className="block">
+            </FieldLabelWithHelp>
+            <FieldLabelWithHelp helpKey="public.enterprise_environment_factors.status" className="block">
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Status</span>
               <select
                 className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 min-h-[44px]"
@@ -198,7 +200,7 @@ export default function EEFCreate() {
                 <option value="under_review">Under review</option>
                 <option value="inactive">Inactive</option>
               </select>
-            </label>
+            </FieldLabelWithHelp>
           </div>
           <div className="flex justify-end gap-2 pt-4">
             <button type="button" className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600" onClick={() => setStep(2)}>
@@ -211,7 +213,7 @@ export default function EEFCreate() {
       {step === 2 && (
         <div className="space-y-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
           <div className="grid sm:grid-cols-3 gap-4">
-            <label className="block">
+            <FieldLabelWithHelp helpKey="public.enterprise_environment_factors.impact_level" className="block">
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Impact level</span>
               <select
                 className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 min-h-[44px]"
@@ -222,8 +224,8 @@ export default function EEFCreate() {
                 <option value="medium">Medium</option>
                 <option value="low">Low</option>
               </select>
-            </label>
-            <label className="block">
+            </FieldLabelWithHelp>
+            <FieldLabelWithHelp helpKey="public.enterprise_environment_factors.impact_direction" className="block">
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Impact direction</span>
               <select
                 className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 min-h-[44px]"
@@ -234,8 +236,8 @@ export default function EEFCreate() {
                 <option value="negative">Negative</option>
                 <option value="neutral">Neutral</option>
               </select>
-            </label>
-            <label className="block sm:col-span-1">
+            </FieldLabelWithHelp>
+            <FieldLabelWithHelp helpKey="public.enterprise_environment_factors.related_project_id" className="block sm:col-span-1" listOptions={false}>
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Related project</span>
               <select
                 className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 min-h-[44px]"
@@ -249,32 +251,32 @@ export default function EEFCreate() {
                   </option>
                 ))}
               </select>
-            </label>
+            </FieldLabelWithHelp>
           </div>
-          <label className="block">
+          <FieldLabelWithHelp helpKey="public.enterprise_environment_factors.source_reference" className="block">
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Source / reference</span>
             <input
               className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 min-h-[44px]"
               value={form.source_reference}
               onChange={(e) => set('source_reference', e.target.value)}
             />
-          </label>
-          <label className="block">
+          </FieldLabelWithHelp>
+          <FieldLabelWithHelp helpKey="public.enterprise_environment_factors.notes" className="block">
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Notes</span>
             <textarea
               className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 min-h-[80px]"
               value={form.notes}
               onChange={(e) => set('notes', e.target.value)}
             />
-          </label>
-          <label className="block">
+          </FieldLabelWithHelp>
+          <FieldLabelWithHelp helpKey="public.enterprise_environment_factors.on_hold_reason" className="block">
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">On-hold reason (if saving as draft)</span>
             <input
               className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 min-h-[44px]"
               value={form.on_hold_reason}
               onChange={(e) => set('on_hold_reason', e.target.value)}
             />
-          </label>
+          </FieldLabelWithHelp>
           <div className="flex flex-wrap justify-between gap-2 pt-4">
             <button type="button" className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600" onClick={() => setStep(1)}>
               Back
@@ -303,5 +305,20 @@ export default function EEFCreate() {
       </>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.enterprise_environment_factors.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'title', 'description', 'category_id', 'eef_type', 'status', 'impact_level', 'impact_direction',
+  'related_project_id', 'source_reference', 'notes', 'on_hold_reason',
+].map((name) => `public.enterprise_environment_factors.${name}`)
+
+export default function EEFCreate(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <EEFCreateBody {...props} />
+    </FieldHelpScope>
   )
 }

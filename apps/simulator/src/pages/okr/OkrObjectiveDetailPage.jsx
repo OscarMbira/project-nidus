@@ -5,6 +5,8 @@
  * GAP-03, v963 Phase 8.
  */
 import { useEffect, useState } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Pencil, Plus, Trash2 } from 'lucide-react'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
@@ -40,24 +42,24 @@ function KeyResultRowForm({ initial, onCancel, onSave, saving }) {
   return (
     <div className="p-4 bg-gray-50 dark:bg-gray-900/40 rounded-lg border border-gray-200 dark:border-gray-700 space-y-3">
       <div>
-        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Key result title *</label>
+        <FieldLabelWithHelp helpKey="sim.key_results.kr_title" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1" required>Key result title *</FieldLabelWithHelp>
         <input type="text" value={form.kr_title} onChange={set('kr_title')} className={inputClass} />
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div>
-          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Target</label>
+          <FieldLabelWithHelp helpKey="sim.key_results.target_value" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Target</FieldLabelWithHelp>
           <input type="number" value={form.target_value} onChange={set('target_value')} className={inputClass} />
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Current</label>
+          <FieldLabelWithHelp helpKey="sim.key_results.current_value" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Current</FieldLabelWithHelp>
           <input type="number" value={form.current_value} onChange={set('current_value')} className={inputClass} />
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Unit</label>
+          <FieldLabelWithHelp helpKey="sim.key_results.unit_label" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Unit</FieldLabelWithHelp>
           <input type="text" value={form.unit_label} onChange={set('unit_label')} className={inputClass} placeholder="%, $, count…" />
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Health</label>
+          <FieldLabelWithHelp helpKey="sim.key_results.health_status" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Health</FieldLabelWithHelp>
           <select value={form.health_status} onChange={set('health_status')} className={inputClass}>
             <option value="on_track">On track</option>
             <option value="at_risk">At risk</option>
@@ -83,7 +85,7 @@ function KeyResultRowForm({ initial, onCancel, onSave, saving }) {
   )
 }
 
-export default function OkrObjectiveDetailPage() {
+function OkrObjectiveDetailPageBody() {
   const { objectiveId } = useParams()
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
@@ -289,5 +291,22 @@ export default function OkrObjectiveDetailPage() {
         </AuditDetailsPanel>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.key_results.kr_title',
+  'sim.key_results.target_value',
+  'sim.key_results.current_value',
+  'sim.key_results.unit_label',
+  'sim.key_results.health_status',
+]
+
+export default function OkrObjectiveDetailPage(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <OkrObjectiveDetailPageBody {...props} />
+    </FieldHelpScope>
   )
 }

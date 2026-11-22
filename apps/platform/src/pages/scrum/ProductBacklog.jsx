@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useParams, useNavigate } from 'react-router-dom'
 
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
@@ -23,7 +25,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { supabase } from '../../services/supabaseClient'
 import { RowActionButton } from '@nidus/ui'
 
-export default function ProductBacklog() {
+function ProductBacklogBody() {
   const { projectId, routeKey } = usePlatformProjectId()
   const navigate = useNavigate()
   const [project, setProject] = useState(null)
@@ -613,9 +615,9 @@ function BacklogTab({ stories, epics, isReordering, onAddStory, onEditStory, sho
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.user_stories.story_title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
               Story Title *
-            </label>
+            </FieldLabelWithHelp>
             <input
               type="text"
               name="story_title"
@@ -627,9 +629,9 @@ function BacklogTab({ stories, epics, isReordering, onAddStory, onEditStory, sho
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.user_stories.story_as_a" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               As a...
-            </label>
+            </FieldLabelWithHelp>
             <input
               type="text"
               name="story_as_a"
@@ -641,9 +643,9 @@ function BacklogTab({ stories, epics, isReordering, onAddStory, onEditStory, sho
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.user_stories.story_i_want" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               I want...
-            </label>
+            </FieldLabelWithHelp>
             <input
               type="text"
               name="story_i_want"
@@ -655,9 +657,9 @@ function BacklogTab({ stories, epics, isReordering, onAddStory, onEditStory, sho
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.user_stories.story_so_that" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               So that...
-            </label>
+            </FieldLabelWithHelp>
             <input
               type="text"
               name="story_so_that"
@@ -669,9 +671,9 @@ function BacklogTab({ stories, epics, isReordering, onAddStory, onEditStory, sho
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.user_stories.story_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Description
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               name="story_description"
               value={formData.story_description}
@@ -683,9 +685,9 @@ function BacklogTab({ stories, epics, isReordering, onAddStory, onEditStory, sho
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.user_stories.story_points" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Story Points
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="number"
                 name="story_points"
@@ -698,9 +700,9 @@ function BacklogTab({ stories, epics, isReordering, onAddStory, onEditStory, sho
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.user_stories.priority" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Priority
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="number"
                 name="priority"
@@ -713,9 +715,9 @@ function BacklogTab({ stories, epics, isReordering, onAddStory, onEditStory, sho
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.user_stories.epic_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
               Epic
-            </label>
+            </FieldLabelWithHelp>
             <select
               name="epic_id"
               value={formData.epic_id}
@@ -730,9 +732,9 @@ function BacklogTab({ stories, epics, isReordering, onAddStory, onEditStory, sho
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.user_stories.acceptance_criteria" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Acceptance Criteria
-            </label>
+            </FieldLabelWithHelp>
             <div className="space-y-2 mb-2">
               {formData.acceptance_criteria.map((criteria, index) => (
                 <div key={index} className="flex items-center gap-2">
@@ -886,9 +888,9 @@ function EpicsTab({ epics, onAddEpic, onEditEpic, showEpicForm, editingEpic, onS
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.epics.epic_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
               Epic Name *
-            </label>
+            </FieldLabelWithHelp>
             <input
               type="text"
               name="epic_name"
@@ -900,9 +902,9 @@ function EpicsTab({ epics, onAddEpic, onEditEpic, showEpicForm, editingEpic, onS
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.epics.epic_goal" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Epic Goal
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               name="epic_goal"
               value={formData.epic_goal}
@@ -913,9 +915,9 @@ function EpicsTab({ epics, onAddEpic, onEditEpic, showEpicForm, editingEpic, onS
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.epics.epic_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Description
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               name="epic_description"
               value={formData.epic_description}
@@ -926,9 +928,9 @@ function EpicsTab({ epics, onAddEpic, onEditEpic, showEpicForm, editingEpic, onS
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.epics.priority" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Priority
-            </label>
+            </FieldLabelWithHelp>
             <input
               type="number"
               name="priority"
@@ -1025,3 +1027,17 @@ function EpicsTab({ epics, onAddEpic, onEditEpic, showEpicForm, editingEpic, onS
   )
 }
 
+// v1345 slice 4: field help for this component (public.user_stories.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'story_title', 'story_as_a', 'story_i_want', 'story_so_that', 'story_description', 'story_points',
+  'priority', 'epic_id', 'acceptance_criteria',
+].map((name) => `public.user_stories.${name}`).concat(['epic_name', 'epic_goal', 'epic_description', 'priority'].map((name) => `public.epics.${name}`))
+
+export default function ProductBacklog(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ProductBacklogBody {...props} />
+    </FieldHelpScope>
+  )
+}

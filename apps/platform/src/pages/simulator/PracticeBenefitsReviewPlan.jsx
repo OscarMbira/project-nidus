@@ -3,6 +3,8 @@
  */
 
 import { useState, useEffect } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { FileText, Plus } from 'lucide-react'
 import { RowActionButton } from '@nidus/ui'
@@ -14,7 +16,7 @@ const PRACTICE_BRP_COLUMNS = [
   { key: 'scope_description', label: 'Scope' }
 ]
 
-export default function PracticeBenefitsReviewPlan() {
+function PracticeBenefitsReviewPlanBody() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const projectId = searchParams.get('projectId')
@@ -94,11 +96,11 @@ export default function PracticeBenefitsReviewPlan() {
       ) : editing ? (
         <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 space-y-6">
           <div>
-            <label className="block text-sm font-medium mb-2">Plan Title *</label>
+            <FieldLabelWithHelp helpKey="sim.practice_benefits_review_plans.plan_title" className="block text-sm font-medium mb-2" required>Plan Title *</FieldLabelWithHelp>
             <input type="text" required value={formData.plan_title} onChange={(e) => setFormData({ ...formData, plan_title: e.target.value })} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-2">Scope Description</label>
+            <FieldLabelWithHelp helpKey="sim.practice_benefits_review_plans.scope_description" className="block text-sm font-medium mb-2">Scope Description</FieldLabelWithHelp>
             <textarea value={formData.scope_description} onChange={(e) => setFormData({ ...formData, scope_description: e.target.value })} rows={4} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
           </div>
           <div className="flex justify-end gap-4">
@@ -119,5 +121,19 @@ export default function PracticeBenefitsReviewPlan() {
         </div>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (sim.practice_benefits_review_plans.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'plan_title', 'scope_description',
+].map((name) => `sim.practice_benefits_review_plans.${name}`)
+
+export default function PracticeBenefitsReviewPlan(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <PracticeBenefitsReviewPlanBody {...props} />
+    </FieldHelpScope>
   )
 }

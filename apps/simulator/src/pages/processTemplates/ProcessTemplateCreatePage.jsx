@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { ArrowLeft, Pause } from 'lucide-react'
@@ -20,7 +22,7 @@ import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesContext'
 import ProcurementPlanFields, { emptyProcurementPlan, normalizeProcurementPlan, PROCUREMENT_PLAN_TABS } from '../../components/processTemplates/ProcurementPlanFields'
 
-export default function ProcessTemplateCreatePage({ roleKey: roleKeyProp, basePath, sim: simProp }) {
+function ProcessTemplateCreatePageBody({ roleKey: roleKeyProp, basePath, sim: simProp }) {
   const { slug } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
@@ -140,7 +142,7 @@ export default function ProcessTemplateCreatePage({ roleKey: roleKeyProp, basePa
           <ProcurementPlanFields section={activeTab} value={planData} onChange={setPlanData} />
         )}
         {activeTab === 'details' && (<>
-        <label className="block">
+        <FieldLabelWithHelp helpKey="sim.process_templates.title" className="block">
           <span className="text-sm text-gray-400">Title</span>
           <input
             value={title}
@@ -148,8 +150,8 @@ export default function ProcessTemplateCreatePage({ roleKey: roleKeyProp, basePa
             className="mt-1 w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             required
           />
-        </label>
-        <label className="block">
+        </FieldLabelWithHelp>
+        <FieldLabelWithHelp helpKey="sim.process_templates.description" className="block">
           <span className="text-sm text-gray-400">Description</span>
           <textarea
             value={description}
@@ -157,8 +159,8 @@ export default function ProcessTemplateCreatePage({ roleKey: roleKeyProp, basePa
             rows={3}
             className="mt-1 w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
           />
-        </label>
-        <label className="block">
+        </FieldLabelWithHelp>
+        <FieldLabelWithHelp helpKey="sim.process_templates.notes" className="block">
           <span className="text-sm text-gray-700 dark:text-gray-300">{isProcurementPlan ? 'Additional notes' : 'Notes'}</span>
           <textarea
             value={notes}
@@ -166,12 +168,12 @@ export default function ProcessTemplateCreatePage({ roleKey: roleKeyProp, basePa
             rows={5}
             className="mt-1 w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm"
           />
-        </label>
+        </FieldLabelWithHelp>
         {canCreateMasterTemplate(roleKey) && (
-          <label className="flex items-center gap-2 text-sm text-gray-300">
+          <FieldLabelWithHelp helpKey="sim.process_templates.is_master" className="flex items-center gap-2 text-sm text-gray-300">
             <input type="checkbox" checked={isMaster} onChange={(e) => setIsMaster(e.target.checked)} />
             Save as master template (PMO)
-          </label>
+          </FieldLabelWithHelp>
         )}
         </>)}
         <div className="flex flex-wrap gap-2 pt-2">
@@ -202,5 +204,21 @@ export default function ProcessTemplateCreatePage({ roleKey: roleKeyProp, basePa
       )}
       {successModal}
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.process_templates.title',
+  'sim.process_templates.description',
+  'sim.process_templates.notes',
+  'sim.process_templates.is_master',
+]
+
+export default function ProcessTemplateCreatePage(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ProcessTemplateCreatePageBody {...props} />
+    </FieldHelpScope>
   )
 }

@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Link, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import { createTemplate, listTemplateCategories } from '../../services/templateLibraryService'
@@ -8,7 +10,7 @@ import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 
 const BASE = '/platform/templates'
 
-export default function TemplateCreate() {
+function TemplateCreateBody() {
   const navigate = useNavigate()
   const [step, setStep] = useState(1)
   const [accountId, setAccountId] = useState(null)
@@ -135,7 +137,7 @@ export default function TemplateCreate() {
 
       {step === 1 && (
         <div className="space-y-4">
-          <label className="block">
+          <FieldLabelWithHelp helpKey="public.template_library.category_id" className="block">
             <span className="text-sm text-gray-600 dark:text-gray-400">Category</span>
             <select
               value={form.category_id}
@@ -149,8 +151,8 @@ export default function TemplateCreate() {
                 </option>
               ))}
             </select>
-          </label>
-          <label className="block">
+          </FieldLabelWithHelp>
+          <FieldLabelWithHelp helpKey="public.template_library.template_type_code" className="block">
             <span className="text-sm text-gray-600 dark:text-gray-400">Template type</span>
             <select
               value={form.template_type_code}
@@ -163,7 +165,7 @@ export default function TemplateCreate() {
                 </option>
               ))}
             </select>
-          </label>
+          </FieldLabelWithHelp>
           <button type="button" onClick={() => setStep(2)} className="px-4 py-2 rounded-lg bg-violet-600 text-white">
             Next
           </button>
@@ -172,15 +174,15 @@ export default function TemplateCreate() {
 
       {step === 2 && (
         <div className="space-y-4">
-          <label className="block">
+          <FieldLabelWithHelp helpKey="public.template_library.title" className="block">
             <span className="text-sm">Title *</span>
             <input
               value={form.title}
               onChange={(e) => set('title', e.target.value)}
               className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2"
             />
-          </label>
-          <label className="block">
+          </FieldLabelWithHelp>
+          <FieldLabelWithHelp helpKey="public.template_library.description" className="block">
             <span className="text-sm">Description</span>
             <textarea
               value={form.description}
@@ -188,8 +190,8 @@ export default function TemplateCreate() {
               rows={3}
               className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2"
             />
-          </label>
-          <label className="block">
+          </FieldLabelWithHelp>
+          <FieldLabelWithHelp helpKey="public.template_library.purpose" className="block">
             <span className="text-sm">Purpose</span>
             <textarea
               value={form.purpose}
@@ -197,15 +199,15 @@ export default function TemplateCreate() {
               rows={2}
               className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2"
             />
-          </label>
-          <label className="block">
+          </FieldLabelWithHelp>
+          <FieldLabelWithHelp helpKey="public.template_library.tags" className="block">
             <span className="text-sm">Tags (comma-separated)</span>
             <input
               value={form.tags}
               onChange={(e) => set('tags', e.target.value)}
               className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2"
             />
-          </label>
+          </FieldLabelWithHelp>
           <div className="flex gap-2">
             <button type="button" onClick={() => setStep(1)} className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600">
               Back
@@ -219,7 +221,7 @@ export default function TemplateCreate() {
 
       {step === 3 && (
         <div className="space-y-4">
-          <label className="block">
+          <FieldLabelWithHelp helpKey="public.template_library.content" className="block">
             <span className="text-sm">Structured content (JSON)</span>
             <textarea
               value={form.contentJson}
@@ -227,7 +229,7 @@ export default function TemplateCreate() {
               rows={16}
               className="mt-1 w-full font-mono text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-900 text-gray-100 px-3 py-2"
             />
-          </label>
+          </FieldLabelWithHelp>
           <div className="flex gap-2">
             <button type="button" onClick={() => setStep(2)} className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600">
               Back
@@ -241,7 +243,7 @@ export default function TemplateCreate() {
 
       {step === 4 && (
         <div className="space-y-4">
-          <label className="block">
+          <FieldLabelWithHelp helpKey="public.template_library.status" className="block">
             <span className="text-sm">Save as</span>
             <select
               value={form.status}
@@ -251,7 +253,7 @@ export default function TemplateCreate() {
               <option value="draft">Draft</option>
               <option value="published">Published</option>
             </select>
-          </label>
+          </FieldLabelWithHelp>
           <p className="text-sm text-gray-600 dark:text-gray-400">Review fields, then save.</p>
           <div className="flex gap-2">
             <button type="button" onClick={() => setStep(3)} className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600">
@@ -271,5 +273,19 @@ export default function TemplateCreate() {
       </>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.template_library.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'category_id', 'template_type_code', 'title', 'description', 'purpose', 'tags', 'content', 'status',
+].map((name) => `public.template_library.${name}`)
+
+export default function TemplateCreate(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <TemplateCreateBody {...props} />
+    </FieldHelpScope>
   )
 }

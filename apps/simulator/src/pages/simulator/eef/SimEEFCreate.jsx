@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import { createEEF, listEEFCategories, listSimulationRunsForPicker } from '../../../services/sim/simEEFService'
 import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 
-export default function SimEEFCreate() {
+function SimEEFCreateBody() {
   const navigate = useNavigate()
   const [accountId, setAccountId] = useState(null)
   const [categories, setCategories] = useState([])
@@ -101,15 +103,15 @@ export default function SimEEFCreate() {
         </div>
       ) : (
       <div className="space-y-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-        <label className="block">
+        <FieldLabelWithHelp helpKey="sim.enterprise_environment_factors.title" className="block">
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Title *</span>
           <input className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 min-h-[44px]" value={form.title} onChange={(e) => set('title', e.target.value)} />
-        </label>
-        <label className="block">
+        </FieldLabelWithHelp>
+        <FieldLabelWithHelp helpKey="sim.enterprise_environment_factors.description" className="block">
           <span className="text-sm font-medium">Description</span>
           <textarea className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 min-h-[80px]" value={form.description} onChange={(e) => set('description', e.target.value)} />
-        </label>
-        <label className="block">
+        </FieldLabelWithHelp>
+        <FieldLabelWithHelp helpKey="sim.enterprise_environment_factors.category_id" className="block">
           <span className="text-sm font-medium">Category</span>
           <select className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 min-h-[44px]" value={form.category_id} onChange={(e) => set('category_id', e.target.value)}>
             <option value="">—</option>
@@ -119,8 +121,8 @@ export default function SimEEFCreate() {
               </option>
             ))}
           </select>
-        </label>
-        <label className="block">
+        </FieldLabelWithHelp>
+        <FieldLabelWithHelp helpKey="sim.enterprise_environment_factors.related_simulation_run_id" className="block" listOptions={false}>
           <span className="text-sm font-medium">Related simulation run</span>
           <select
             className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 min-h-[44px]"
@@ -134,7 +136,7 @@ export default function SimEEFCreate() {
               </option>
             ))}
           </select>
-        </label>
+        </FieldLabelWithHelp>
         <div className="flex flex-wrap gap-2 justify-end">
           <button type="button" disabled={saving} className="px-4 py-2 rounded-lg border border-amber-500 text-amber-700" onClick={() => submit(true)}>
             <Save className="h-4 w-4 inline" /> On hold
@@ -146,5 +148,19 @@ export default function SimEEFCreate() {
       </div>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (sim.enterprise_environment_factors.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'title', 'description', 'category_id', 'related_simulation_run_id',
+].map((name) => `sim.enterprise_environment_factors.${name}`)
+
+export default function SimEEFCreate(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <SimEEFCreateBody {...props} />
+    </FieldHelpScope>
   )
 }

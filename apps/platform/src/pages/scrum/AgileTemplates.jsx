@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
 import { listTemplates, upsertTemplate } from '../../services/agileTemplateService'
 import { supabase } from '../../services/supabaseClient'
 
-export default function AgileTemplates() {
+function AgileTemplatesBody() {
   const { projectId, loading: pidLoading, error: pidErr } = usePlatformProjectId()
   const navigate = useNavigate()
   const [rows, setRows] = useState([])
@@ -73,7 +75,7 @@ export default function AgileTemplates() {
       <p className="text-gray-400 text-sm mb-6">Project-level reusable checklists.</p>
 
       <div className="max-w-xl space-y-4 rounded-xl border border-gray-800 bg-gray-900 p-4">
-        <label className="block text-sm text-gray-400">Template type</label>
+        <FieldLabelWithHelp helpKey="public.project_agile_templates.template_type" className="block text-sm text-gray-400">Template type</FieldLabelWithHelp>
         <select
           value={draft.template_type}
           onChange={(e) => setDraft({ ...draft, template_type: e.target.value })}
@@ -82,16 +84,16 @@ export default function AgileTemplates() {
           <option value="dod">Definition of Done</option>
           <option value="dor">Definition of Ready</option>
         </select>
-        <label className="flex items-center gap-2 text-sm">
+        <FieldLabelWithHelp helpKey="public.project_agile_templates.auto_apply_to_new_stories" className="flex items-center gap-2 text-sm">
           <input
             type="checkbox"
             checked={draft.auto_apply_to_new_stories}
             onChange={(e) => setDraft({ ...draft, auto_apply_to_new_stories: e.target.checked })}
           />
           Auto-apply to new stories
-        </label>
+        </FieldLabelWithHelp>
         <div className="space-y-2">
-          <label className="text-sm text-gray-400">Items</label>
+          <FieldLabelWithHelp helpKey="public.project_agile_templates.items" className="text-sm text-gray-400">Items</FieldLabelWithHelp>
           {draft.items.map((it, idx) => (
             <div key={idx} className="flex gap-2">
               <input
@@ -129,5 +131,19 @@ export default function AgileTemplates() {
         ))}
       </ul>
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.project_agile_templates.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'template_type', 'auto_apply_to_new_stories', 'items',
+].map((name) => `public.project_agile_templates.${name}`)
+
+export default function AgileTemplates(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <AgileTemplatesBody {...props} />
+    </FieldHelpScope>
   )
 }

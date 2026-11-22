@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import { getTemplateById, updateTemplate, listTemplateCategories } from '../../../services/sim/simTemplateLibraryService'
@@ -13,7 +15,7 @@ import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/
 
 const BASE = '/simulator/templates'
 
-export default function TemplateEdit() {
+function TemplateEditBody() {
   const { id } = useParams()
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
@@ -157,15 +159,15 @@ export default function TemplateEdit() {
         </div>
       ) : (
       <div className="space-y-4">
-        <label className="block">
+        <FieldLabelWithHelp helpKey="sim.template_library.title" className="block">
           <span className="text-sm">Title</span>
           <input
             value={form.title}
             onChange={(e) => set('title', e.target.value)}
             className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2"
           />
-        </label>
-        <label className="block">
+        </FieldLabelWithHelp>
+        <FieldLabelWithHelp helpKey="sim.template_library.category_id" className="block">
           <span className="text-sm">Category</span>
           <select
             value={form.category_id}
@@ -179,8 +181,8 @@ export default function TemplateEdit() {
               </option>
             ))}
           </select>
-        </label>
-        <label className="block">
+        </FieldLabelWithHelp>
+        <FieldLabelWithHelp helpKey="sim.template_library.status" className="block">
           <span className="text-sm">Status</span>
           <select
             value={form.status}
@@ -192,16 +194,16 @@ export default function TemplateEdit() {
             <option value="archived">archived</option>
             <option value="deprecated">deprecated</option>
           </select>
-        </label>
-        <label className="block">
+        </FieldLabelWithHelp>
+        <FieldLabelWithHelp helpKey="sim.template_library.version_note" className="block">
           <span className="text-sm">Optional note (for your records; version history is automatic)</span>
           <input
             value={versionNote}
             onChange={(e) => setVersionNote(e.target.value)}
             className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2"
           />
-        </label>
-        <label className="block">
+        </FieldLabelWithHelp>
+        <FieldLabelWithHelp helpKey="sim.template_library.content" className="block">
           <span className="text-sm">Content JSON</span>
           <textarea
             value={form.contentJson}
@@ -209,7 +211,7 @@ export default function TemplateEdit() {
             rows={14}
             className="mt-1 w-full font-mono text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-900 text-gray-100 px-3 py-2"
           />
-        </label>
+        </FieldLabelWithHelp>
         <button
           type="button"
           disabled={saving}
@@ -221,5 +223,19 @@ export default function TemplateEdit() {
       </div>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (sim.template_library.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'title', 'category_id', 'status', 'version_note', 'content',
+].map((name) => `sim.template_library.${name}`)
+
+export default function TemplateEdit(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <TemplateEditBody {...props} />
+    </FieldHelpScope>
   )
 }

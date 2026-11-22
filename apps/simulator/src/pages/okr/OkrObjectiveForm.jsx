@@ -3,6 +3,8 @@
  * apps/platform/src/pages/okr/OkrObjectiveForm.jsx. Routed page per rule 65.
  */
 import { useEffect, useMemo, useState } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { platformDb } from '@nidus/supabase'
@@ -15,7 +17,7 @@ import { listCycles, getObjective, createObjective, updateObjective } from '../.
 const inputClass = 'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm'
 const BASE = '/simulator/pm/okr/objectives'
 
-export default function OkrObjectiveForm() {
+function OkrObjectiveFormBody() {
   const { objectiveId } = useParams()
   const navigate = useNavigate()
   const { showSuccess, modal } = useSuccessModal()
@@ -141,7 +143,7 @@ export default function OkrObjectiveForm() {
       ) : (<>
       <div className="space-y-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Cycle *</label>
+          <FieldLabelWithHelp helpKey="sim.objectives.cycle_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>Cycle *</FieldLabelWithHelp>
           <select value={cycleId} onChange={(e) => setCycleId(e.target.value)} className={inputClass}>
             <option value="">Select a cycle…</option>
             {cycles.map((c) => (
@@ -153,16 +155,16 @@ export default function OkrObjectiveForm() {
           )}
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Objective title *</label>
+          <FieldLabelWithHelp helpKey="sim.objectives.title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>Objective title *</FieldLabelWithHelp>
           <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} className={inputClass} />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
+          <FieldLabelWithHelp helpKey="sim.objectives.description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</FieldLabelWithHelp>
           <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className={inputClass} />
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Scope</label>
+            <FieldLabelWithHelp helpKey="sim.objectives.scope_level" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Scope</FieldLabelWithHelp>
             <select value={scopeLevel} onChange={(e) => setScopeLevel(e.target.value)} className={inputClass}>
               <option value="organisation">Organisation</option>
               <option value="department">Department</option>
@@ -170,7 +172,7 @@ export default function OkrObjectiveForm() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Health</label>
+            <FieldLabelWithHelp helpKey="sim.objectives.health_status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Health</FieldLabelWithHelp>
             <select value={healthStatus} onChange={(e) => setHealthStatus(e.target.value)} className={inputClass}>
               <option value="on_track">On track</option>
               <option value="at_risk">At risk</option>
@@ -179,7 +181,7 @@ export default function OkrObjectiveForm() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Progress %</label>
+            <FieldLabelWithHelp helpKey="sim.objectives.progress_pct" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Progress %</FieldLabelWithHelp>
             <input type="number" min="0" max="100" value={progressPct} onChange={(e) => setProgressPct(e.target.value)} className={inputClass} />
           </div>
         </div>
@@ -201,5 +203,23 @@ export default function OkrObjectiveForm() {
       </>)}
       {modal}
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.objectives.cycle_id',
+  'sim.objectives.title',
+  'sim.objectives.description',
+  'sim.objectives.scope_level',
+  'sim.objectives.health_status',
+  'sim.objectives.progress_pct',
+]
+
+export default function OkrObjectiveForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <OkrObjectiveFormBody {...props} />
+    </FieldHelpScope>
   )
 }

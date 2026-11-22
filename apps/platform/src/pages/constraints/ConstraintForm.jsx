@@ -4,6 +4,8 @@
  * apps/platform/src/pages/assumptions/AssumptionForm.jsx's structure.
  */
 import { useState, useEffect, useMemo } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
@@ -38,7 +40,7 @@ const STATUS_OPTIONS = [
   { value: 'resolved', label: 'Resolved' },
 ]
 
-export default function ConstraintForm() {
+function ConstraintFormBody() {
   const { id } = useParams()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -166,7 +168,7 @@ export default function ConstraintForm() {
 
       <div className="space-y-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Constraint *</label>
+          <FieldLabelWithHelp helpKey="public.constraints_register.constraint_text" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>Constraint *</FieldLabelWithHelp>
           <textarea
             value={constraintText}
             onChange={(e) => setConstraintText(e.target.value)}
@@ -178,7 +180,7 @@ export default function ConstraintForm() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
+            <FieldLabelWithHelp helpKey="public.constraints_register.category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</FieldLabelWithHelp>
             <SelectField
               options={CATEGORY_OPTIONS}
               value={category}
@@ -187,7 +189,7 @@ export default function ConstraintForm() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
+            <FieldLabelWithHelp helpKey="public.constraints_register.status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</FieldLabelWithHelp>
             <SelectField
               options={STATUS_OPTIONS}
               value={status}
@@ -196,7 +198,7 @@ export default function ConstraintForm() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Owner</label>
+            <FieldLabelWithHelp helpKey="public.constraints_register.owner_user_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" listOptions={false}>Owner</FieldLabelWithHelp>
             <SelectField
               options={ownerOptions}
               value={ownerUserId}
@@ -205,7 +207,7 @@ export default function ConstraintForm() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Due date</label>
+            <FieldLabelWithHelp helpKey="public.constraints_register.due_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Due date</FieldLabelWithHelp>
             <input
               type="date"
               value={dueDate}
@@ -214,7 +216,7 @@ export default function ConstraintForm() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Impact</label>
+            <FieldLabelWithHelp helpKey="public.constraints_register.impact_severity" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Impact</FieldLabelWithHelp>
             <SelectField
               options={IMPACT_OPTIONS}
               value={impactSeverity}
@@ -225,7 +227,7 @@ export default function ConstraintForm() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</label>
+          <FieldLabelWithHelp helpKey="public.constraints_register.notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</FieldLabelWithHelp>
           <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className={inputClass} />
         </div>
       </div>
@@ -245,5 +247,19 @@ export default function ConstraintForm() {
       </div>
       {modal}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.constraints_register.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'constraint_text', 'category', 'status', 'owner_user_id', 'due_date', 'impact_severity', 'notes',
+].map((name) => `public.constraints_register.${name}`)
+
+export default function ConstraintForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ConstraintFormBody {...props} />
+    </FieldHelpScope>
   )
 }

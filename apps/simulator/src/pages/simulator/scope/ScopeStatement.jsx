@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { Plus } from 'lucide-react'
@@ -153,7 +155,7 @@ const TABS = [
   { value: 'audit', label: 'Audit details' },
 ]
 
-export default function ScopeStatement() {
+function ScopeStatementBody() {
   const { projectId } = useParams()
   const { canEdit } = useSimPracticeOwner(projectId)
   const { showSuccess, modal } = useSuccessModal()
@@ -350,7 +352,7 @@ export default function ScopeStatement() {
                   ['product_scope_description', 'Product scope description'],
                 ].map(([k, lab]) => (
                   <div key={k}>
-                    <label className="mb-1 block text-xs text-gray-600 dark:text-gray-400">{lab}</label>
+                    <FieldLabelWithHelp helpKey={`sim.scope_statements.${k}`} className="mb-1 block text-xs text-gray-600 dark:text-gray-400">{lab}</FieldLabelWithHelp>
                     <textarea
                       value={form[k]}
                       onChange={(e) => setForm((f) => ({ ...f, [k]: e.target.value }))}
@@ -471,7 +473,7 @@ export default function ScopeStatement() {
             <div className="mt-4 rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-900">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="mb-1 block text-xs text-gray-600 dark:text-gray-400">Status</label>
+                  <FieldLabelWithHelp helpKey="sim.scope_statements.status" className="mb-1 block text-xs text-gray-600 dark:text-gray-400">Status</FieldLabelWithHelp>
                   <select
                     value={form.status}
                     onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
@@ -483,7 +485,7 @@ export default function ScopeStatement() {
                   </select>
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs text-gray-600 dark:text-gray-400">Version</label>
+                  <FieldLabelWithHelp helpKey="sim.scope_statements.version" className="mb-1 block text-xs text-gray-600 dark:text-gray-400">Version</FieldLabelWithHelp>
                   <input
                     value={form.version}
                     onChange={(e) => setForm((f) => ({ ...f, version: e.target.value }))}
@@ -518,5 +520,19 @@ export default function ScopeStatement() {
       )}
       {modal}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (sim.scope_statements.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'project_description', 'product_scope_description', 'status', 'version',
+].map((name) => `sim.scope_statements.${name}`)
+
+export default function ScopeStatement(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ScopeStatementBody {...props} />
+    </FieldHelpScope>
   )
 }

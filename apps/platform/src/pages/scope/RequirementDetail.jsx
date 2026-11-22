@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { useProjectRole } from '@nidus/shared/hooks/useProjectRole'
@@ -68,7 +70,7 @@ function buildSections(extrasAvailable) {
   ]
 }
 
-export default function RequirementDetail() {
+function RequirementDetailBody() {
   const { reqId } = useParams()
   const { projectId, routeKey } = usePlatformProjectId()
   const navigate = useNavigate()
@@ -306,7 +308,7 @@ export default function RequirementDetail() {
           {formTab === 'details' && (<>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Code</label>
+              <FieldLabelWithHelp helpKey="public.requirements_register.requirement_code" className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Code</FieldLabelWithHelp>
               <input
                 value={form.requirement_code}
                 onChange={(e) => setForm((f) => ({ ...f, requirement_code: e.target.value }))}
@@ -315,7 +317,7 @@ export default function RequirementDetail() {
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Version</label>
+              <FieldLabelWithHelp helpKey="public.requirements_register.version" className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Version</FieldLabelWithHelp>
               <input
                 value={form.version}
                 onChange={(e) => setForm((f) => ({ ...f, version: e.target.value }))}
@@ -325,7 +327,7 @@ export default function RequirementDetail() {
             </div>
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Name *</label>
+            <FieldLabelWithHelp helpKey="public.requirements_register.name" className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400" required>Name *</FieldLabelWithHelp>
             <input
               value={form.name}
               onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
@@ -334,7 +336,7 @@ export default function RequirementDetail() {
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Description</label>
+            <FieldLabelWithHelp helpKey="public.requirements_register.description" className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Description</FieldLabelWithHelp>
             <textarea
               value={form.description}
               onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
@@ -345,7 +347,7 @@ export default function RequirementDetail() {
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Category</label>
+              <FieldLabelWithHelp helpKey="public.requirements_register.category" className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Category</FieldLabelWithHelp>
               <select
                 value={form.category}
                 onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
@@ -362,7 +364,7 @@ export default function RequirementDetail() {
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Priority (MoSCoW)</label>
+              <FieldLabelWithHelp helpKey="public.requirements_register.priority" className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Priority (MoSCoW)</FieldLabelWithHelp>
               <select
                 value={form.priority}
                 onChange={(e) => setForm((f) => ({ ...f, priority: e.target.value }))}
@@ -378,7 +380,7 @@ export default function RequirementDetail() {
             </div>
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Source stakeholder</label>
+            <FieldLabelWithHelp helpKey="public.requirements_register.source_stakeholder_id" className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400" listOptions={false}>Source stakeholder</FieldLabelWithHelp>
             <select
               value={form.source_stakeholder_id}
               onChange={(e) => setForm((f) => ({ ...f, source_stakeholder_id: e.target.value }))}
@@ -394,7 +396,7 @@ export default function RequirementDetail() {
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Status</label>
+            <FieldLabelWithHelp helpKey="public.requirements_register.status" className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Status</FieldLabelWithHelp>
             <select
               value={form.status}
               onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
@@ -419,7 +421,7 @@ export default function RequirementDetail() {
           </>)}
           {formTab === 'acceptance' && (
             <div>
-              <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Acceptance criteria</label>
+              <FieldLabelWithHelp helpKey="public.requirements_register.acceptance_criteria" className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Acceptance criteria</FieldLabelWithHelp>
               <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">One criterion per line. Each line should be something that can be shown to be true.</p>
               <MultiLineListInput
                 viewModeId="requirement-acceptance-criteria"
@@ -444,7 +446,7 @@ export default function RequirementDetail() {
           )}
           {formTab === 'traceability' && (
             <div>
-              <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Traceability tag</label>
+              <FieldLabelWithHelp helpKey="public.requirements_register.traceability_tag" className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Traceability tag</FieldLabelWithHelp>
               <input
                 value={form.traceability_tag}
                 onChange={(e) => setForm((f) => ({ ...f, traceability_tag: e.target.value }))}
@@ -480,5 +482,20 @@ export default function RequirementDetail() {
         </div>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.requirements_register.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'requirement_code', 'version', 'name', 'description', 'category', 'priority', 'source_stakeholder_id',
+  'status', 'acceptance_criteria', 'traceability_tag',
+].map((name) => `public.requirements_register.${name}`)
+
+export default function RequirementDetail(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <RequirementDetailBody {...props} />
+    </FieldHelpScope>
   )
 }

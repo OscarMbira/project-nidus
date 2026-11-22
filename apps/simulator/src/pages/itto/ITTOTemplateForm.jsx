@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { X, Plus, Trash2, ChevronRight, ChevronLeft } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { ITTO_PROCESS_GROUPS, ITTO_KNOWLEDGE_AREAS } from '@nidus/shared/constants/ittoConstants'
@@ -29,7 +31,7 @@ const emptyOutput = () => ({
   destination: '',
 })
 
-export default function ITTOTemplateForm({
+function ITTOTemplateFormBody({
   open,
   onClose,
   onSaved,
@@ -216,16 +218,16 @@ export default function ITTOTemplateForm({
 
           {step === 1 && (
             <div className="space-y-4">
-              <label className="block">
+              <FieldLabelWithHelp helpKey="sim.itto_templates.name" className="block">
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Name</span>
                 <input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-gray-900 dark:text-white"
                 />
-              </label>
+              </FieldLabelWithHelp>
               <div className="grid sm:grid-cols-2 gap-4">
-                <label className="block">
+                <FieldLabelWithHelp helpKey="sim.itto_templates.process_group" className="block">
                   <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Process group</span>
                   <select
                     value={processGroup}
@@ -238,8 +240,8 @@ export default function ITTOTemplateForm({
                       </option>
                     ))}
                   </select>
-                </label>
-                <label className="block">
+                </FieldLabelWithHelp>
+                <FieldLabelWithHelp helpKey="sim.itto_templates.knowledge_area" className="block">
                   <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Knowledge area</span>
                   <select
                     value={knowledgeArea}
@@ -252,9 +254,9 @@ export default function ITTOTemplateForm({
                       </option>
                     ))}
                   </select>
-                </label>
+                </FieldLabelWithHelp>
               </div>
-              <label className="block">
+              <FieldLabelWithHelp helpKey="sim.itto_templates.description" className="block">
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Description</span>
                 <textarea
                   value={description}
@@ -262,22 +264,22 @@ export default function ITTOTemplateForm({
                   rows={3}
                   className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-gray-900 dark:text-white"
                 />
-              </label>
-              <label className="block">
+              </FieldLabelWithHelp>
+              <FieldLabelWithHelp helpKey="sim.itto_templates.tags" className="block">
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Tags (comma-separated)</span>
                 <input
                   value={tags}
                   onChange={(e) => setTags(e.target.value)}
                   className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-gray-900 dark:text-white"
                 />
-              </label>
+              </FieldLabelWithHelp>
               <div className="flex flex-wrap gap-4 items-center">
-                <label className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                <FieldLabelWithHelp helpKey="sim.itto_templates.is_draft" className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
                   <input type="checkbox" checked={isDraft} onChange={(e) => setIsDraft(e.target.checked)} />
                   Save as draft (on hold)
-                </label>
+                </FieldLabelWithHelp>
                 {!isDraft && (
-                  <label className="block">
+                  <FieldLabelWithHelp helpKey="sim.itto_templates.status" className="block">
                     <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Status</span>
                     <select
                       value={status}
@@ -287,11 +289,11 @@ export default function ITTOTemplateForm({
                       <option value="active">active</option>
                       <option value="archived">archived</option>
                     </select>
-                  </label>
+                  </FieldLabelWithHelp>
                 )}
               </div>
               {isDraft && (
-                <label className="block">
+                <FieldLabelWithHelp helpKey="sim.itto_templates.draft_expires_at" className="block">
                   <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Draft expiry (optional)</span>
                   <input
                     type="datetime-local"
@@ -299,7 +301,7 @@ export default function ITTOTemplateForm({
                     onChange={(e) => setDraftExpiresAt(e.target.value)}
                     className="mt-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-gray-900 dark:text-white"
                   />
-                </label>
+                </FieldLabelWithHelp>
               )}
             </div>
           )}
@@ -507,4 +509,24 @@ export default function ITTOTemplateForm({
   )
 
   return modal
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.itto_templates.name',
+  'sim.itto_templates.process_group',
+  'sim.itto_templates.knowledge_area',
+  'sim.itto_templates.description',
+  'sim.itto_templates.tags',
+  'sim.itto_templates.is_draft',
+  'sim.itto_templates.status',
+  'sim.itto_templates.draft_expires_at',
+]
+
+export default function ITTOTemplateForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ITTOTemplateFormBody {...props} />
+    </FieldHelpScope>
+  )
 }

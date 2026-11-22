@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { X, Plus, Trash2, ChevronRight, ChevronLeft } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { ITTO_PROCESS_GROUPS, ITTO_KNOWLEDGE_AREAS } from '@nidus/shared/constants/ittoConstants'
@@ -29,7 +31,7 @@ const emptyOutput = () => ({
   destination: '',
 })
 
-export default function ProjectITTOForm({
+function ProjectITTOFormBody({
   open,
   onClose,
   onSaved,
@@ -217,15 +219,15 @@ export default function ProjectITTOForm({
 
           {step === 1 && (
             <div className="space-y-4">
-              <label className="block">
+              <FieldLabelWithHelp helpKey="public.project_ittos.name" className="block">
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Name</span>
                 <input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-gray-900 dark:text-white"
                 />
-              </label>
-              <label className="block">
+              </FieldLabelWithHelp>
+              <FieldLabelWithHelp helpKey="public.project_ittos.tailoring_notes" className="block">
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Tailoring notes</span>
                 <textarea
                   value={tailoringNotes}
@@ -233,9 +235,9 @@ export default function ProjectITTOForm({
                   rows={2}
                   className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-gray-900 dark:text-white"
                 />
-              </label>
+              </FieldLabelWithHelp>
               <div className="grid sm:grid-cols-2 gap-4">
-                <label className="block">
+                <FieldLabelWithHelp helpKey="public.project_ittos.process_group" className="block">
                   <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Process group</span>
                   <select
                     value={processGroup}
@@ -248,8 +250,8 @@ export default function ProjectITTOForm({
                       </option>
                     ))}
                   </select>
-                </label>
-                <label className="block">
+                </FieldLabelWithHelp>
+                <FieldLabelWithHelp helpKey="public.project_ittos.knowledge_area" className="block">
                   <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Knowledge area</span>
                   <select
                     value={knowledgeArea}
@@ -262,9 +264,9 @@ export default function ProjectITTOForm({
                       </option>
                     ))}
                   </select>
-                </label>
+                </FieldLabelWithHelp>
               </div>
-              <label className="block">
+              <FieldLabelWithHelp helpKey="public.project_ittos.description" className="block">
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Description</span>
                 <textarea
                   value={description}
@@ -272,22 +274,22 @@ export default function ProjectITTOForm({
                   rows={3}
                   className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-gray-900 dark:text-white"
                 />
-              </label>
-              <label className="block">
+              </FieldLabelWithHelp>
+              <FieldLabelWithHelp helpKey="public.project_ittos.tags" className="block">
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Tags (comma-separated)</span>
                 <input
                   value={tags}
                   onChange={(e) => setTags(e.target.value)}
                   className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-gray-900 dark:text-white"
                 />
-              </label>
+              </FieldLabelWithHelp>
               <div className="flex flex-wrap gap-4 items-center">
-                <label className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                <FieldLabelWithHelp helpKey="public.project_ittos.is_draft" className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
                   <input type="checkbox" checked={isDraft} onChange={(e) => setIsDraft(e.target.checked)} />
                   Save as draft (on hold)
-                </label>
+                </FieldLabelWithHelp>
                 {!isDraft && (
-                  <label className="block">
+                  <FieldLabelWithHelp helpKey="public.project_ittos.status" className="block">
                     <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Status</span>
                     <select
                       value={status}
@@ -297,11 +299,11 @@ export default function ProjectITTOForm({
                       <option value="active">active</option>
                       <option value="archived">archived</option>
                     </select>
-                  </label>
+                  </FieldLabelWithHelp>
                 )}
               </div>
               {isDraft && (
-                <label className="block">
+                <FieldLabelWithHelp helpKey="public.project_ittos.draft_expires_at" className="block">
                   <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Draft expiry (optional)</span>
                   <input
                     type="datetime-local"
@@ -309,7 +311,7 @@ export default function ProjectITTOForm({
                     onChange={(e) => setDraftExpiresAt(e.target.value)}
                     className="mt-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-gray-900 dark:text-white"
                   />
-                </label>
+                </FieldLabelWithHelp>
               )}
             </div>
           )}
@@ -514,5 +516,20 @@ export default function ProjectITTOForm({
         </div>
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.project_ittos.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'name', 'tailoring_notes', 'process_group', 'knowledge_area', 'description', 'tags', 'status',
+  'draft_expires_at',
+].map((name) => `public.project_ittos.${name}`)
+
+export default function ProjectITTOForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ProjectITTOFormBody {...props} />
+    </FieldHelpScope>
   )
 }

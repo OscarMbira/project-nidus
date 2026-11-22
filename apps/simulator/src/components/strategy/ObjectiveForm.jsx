@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { X, Save, Target, Calendar, TrendingUp } from 'lucide-react';
 import { saveStrategicObjective } from '../../services/strategicService';
 import { supabase } from '../../services/supabaseClient';
 
-export default function ObjectiveForm({ objective, onSave, onCancel }) {
+function ObjectiveFormBody({ objective, onSave, onCancel }) {
   const [formData, setFormData] = useState({
     objective_code: '',
     objective_name: '',
@@ -163,9 +165,9 @@ export default function ObjectiveForm({ objective, onSave, onCancel }) {
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.strategic_objectives.objective_code" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Objective Code *
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   name="objective_code"
@@ -178,9 +180,9 @@ export default function ObjectiveForm({ objective, onSave, onCancel }) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.strategic_objectives.objective_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Objective Name *
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   name="objective_name"
@@ -193,9 +195,9 @@ export default function ObjectiveForm({ objective, onSave, onCancel }) {
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.strategic_objectives.objective_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Description
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   name="objective_description"
                   value={formData.objective_description}
@@ -215,9 +217,9 @@ export default function ObjectiveForm({ objective, onSave, onCancel }) {
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.strategic_objectives.portfolio_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                   Portfolio
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="portfolio_id"
                   value={formData.portfolio_id}
@@ -234,9 +236,9 @@ export default function ObjectiveForm({ objective, onSave, onCancel }) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.strategic_objectives.parent_objective_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                   Parent Objective
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="parent_objective_id"
                   value={formData.parent_objective_id}
@@ -253,9 +255,9 @@ export default function ObjectiveForm({ objective, onSave, onCancel }) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.strategic_objectives.objective_owner_user_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                   Objective Owner
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="objective_owner_user_id"
                   value={formData.objective_owner_user_id}
@@ -280,9 +282,9 @@ export default function ObjectiveForm({ objective, onSave, onCancel }) {
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.strategic_objectives.objective_category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Category *
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="objective_category"
                   value={formData.objective_category}
@@ -302,9 +304,9 @@ export default function ObjectiveForm({ objective, onSave, onCancel }) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.strategic_objectives.objective_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Type *
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="objective_type"
                   value={formData.objective_type}
@@ -321,9 +323,9 @@ export default function ObjectiveForm({ objective, onSave, onCancel }) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.strategic_objectives.objective_level" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Level *
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="objective_level"
                   value={formData.objective_level}
@@ -338,9 +340,9 @@ export default function ObjectiveForm({ objective, onSave, onCancel }) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.strategic_objectives.priority" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Priority *
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="priority"
                   value={formData.priority}
@@ -356,9 +358,9 @@ export default function ObjectiveForm({ objective, onSave, onCancel }) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.strategic_objectives.objective_status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Status *
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="objective_status"
                   value={formData.objective_status}
@@ -376,9 +378,9 @@ export default function ObjectiveForm({ objective, onSave, onCancel }) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.strategic_objectives.strategic_impact" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Strategic Impact
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="strategic_impact"
                   value={formData.strategic_impact}
@@ -402,9 +404,9 @@ export default function ObjectiveForm({ objective, onSave, onCancel }) {
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.strategic_objectives.measurement_unit" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Measurement Unit
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   name="measurement_unit"
@@ -416,9 +418,9 @@ export default function ObjectiveForm({ objective, onSave, onCancel }) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.strategic_objectives.baseline_value" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Baseline Value
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="number"
                   name="baseline_value"
@@ -430,9 +432,9 @@ export default function ObjectiveForm({ objective, onSave, onCancel }) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.strategic_objectives.target_value" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Target Value
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="number"
                   name="target_value"
@@ -444,9 +446,9 @@ export default function ObjectiveForm({ objective, onSave, onCancel }) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.strategic_objectives.current_value" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Current Value
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="number"
                   name="current_value"
@@ -458,9 +460,9 @@ export default function ObjectiveForm({ objective, onSave, onCancel }) {
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.strategic_objectives.success_criteria" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Success Criteria
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   name="success_criteria"
                   value={formData.success_criteria}
@@ -472,9 +474,9 @@ export default function ObjectiveForm({ objective, onSave, onCancel }) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.strategic_objectives.strategic_importance" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Strategic Importance (%)
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="number"
                   name="strategic_importance"
@@ -488,9 +490,9 @@ export default function ObjectiveForm({ objective, onSave, onCancel }) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.strategic_objectives.objective_weight" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Objective Weight (%)
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="number"
                   name="objective_weight"
@@ -513,9 +515,9 @@ export default function ObjectiveForm({ objective, onSave, onCancel }) {
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.strategic_objectives.objective_start_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Start Date
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="date"
                   name="objective_start_date"
@@ -526,9 +528,9 @@ export default function ObjectiveForm({ objective, onSave, onCancel }) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.strategic_objectives.objective_target_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Target Date *
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="date"
                   name="objective_target_date"
@@ -540,9 +542,9 @@ export default function ObjectiveForm({ objective, onSave, onCancel }) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.strategic_objectives.objective_completion_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Completion Date
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="date"
                   name="objective_completion_date"
@@ -595,3 +597,36 @@ export default function ObjectiveForm({ objective, onSave, onCancel }) {
   );
 }
 
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.strategic_objectives.objective_code',
+  'sim.strategic_objectives.objective_name',
+  'sim.strategic_objectives.objective_description',
+  'sim.strategic_objectives.portfolio_id',
+  'sim.strategic_objectives.parent_objective_id',
+  'sim.strategic_objectives.objective_owner_user_id',
+  'sim.strategic_objectives.objective_category',
+  'sim.strategic_objectives.objective_type',
+  'sim.strategic_objectives.objective_level',
+  'sim.strategic_objectives.priority',
+  'sim.strategic_objectives.objective_status',
+  'sim.strategic_objectives.strategic_impact',
+  'sim.strategic_objectives.measurement_unit',
+  'sim.strategic_objectives.baseline_value',
+  'sim.strategic_objectives.target_value',
+  'sim.strategic_objectives.current_value',
+  'sim.strategic_objectives.success_criteria',
+  'sim.strategic_objectives.strategic_importance',
+  'sim.strategic_objectives.objective_weight',
+  'sim.strategic_objectives.objective_start_date',
+  'sim.strategic_objectives.objective_target_date',
+  'sim.strategic_objectives.objective_completion_date',
+]
+
+export default function ObjectiveForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ObjectiveFormBody {...props} />
+    </FieldHelpScope>
+  )
+}

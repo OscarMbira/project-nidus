@@ -3,6 +3,8 @@
  * apps/platform/src/pages/okr/OkrCycleForm.jsx. Routed page per rule 65.
  */
 import { useEffect, useMemo, useState } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { platformDb } from '@nidus/supabase'
@@ -15,7 +17,7 @@ import { getCycle, createCycle, updateCycle } from '../../services/okrService'
 const inputClass = 'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm'
 const BASE = '/simulator/pm/okr/cycles'
 
-export default function OkrCycleForm() {
+function OkrCycleFormBody() {
   const { cycleId } = useParams()
   const navigate = useNavigate()
   const { showSuccess, modal } = useSuccessModal()
@@ -131,16 +133,16 @@ export default function OkrCycleForm() {
       ) : (<>
       <div className="space-y-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Cycle name *</label>
+          <FieldLabelWithHelp helpKey="sim.okr_cycles.cycle_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>Cycle name *</FieldLabelWithHelp>
           <input type="text" value={cycleName} onChange={(e) => setCycleName(e.target.value)} className={inputClass} placeholder="Q1 2026" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Cycle code *</label>
+          <FieldLabelWithHelp helpKey="sim.okr_cycles.cycle_code" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>Cycle code *</FieldLabelWithHelp>
           <input type="text" value={cycleCode} onChange={(e) => setCycleCode(e.target.value)} className={inputClass} placeholder="2026-Q1" />
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Period type</label>
+            <FieldLabelWithHelp helpKey="sim.okr_cycles.period_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Period type</FieldLabelWithHelp>
             <select value={periodType} onChange={(e) => setPeriodType(e.target.value)} className={inputClass}>
               <option value="quarter">Quarter</option>
               <option value="half_year">Half year</option>
@@ -149,7 +151,7 @@ export default function OkrCycleForm() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
+            <FieldLabelWithHelp helpKey="sim.okr_cycles.status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</FieldLabelWithHelp>
             <select value={status} onChange={(e) => setStatus(e.target.value)} className={inputClass}>
               <option value="draft">Draft</option>
               <option value="active">Active</option>
@@ -159,11 +161,11 @@ export default function OkrCycleForm() {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Start date *</label>
+            <FieldLabelWithHelp helpKey="sim.okr_cycles.start_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>Start date *</FieldLabelWithHelp>
             <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className={inputClass} />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">End date *</label>
+            <FieldLabelWithHelp helpKey="sim.okr_cycles.end_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>End date *</FieldLabelWithHelp>
             <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className={inputClass} />
           </div>
         </div>
@@ -185,5 +187,23 @@ export default function OkrCycleForm() {
       </>)}
       {modal}
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.okr_cycles.cycle_name',
+  'sim.okr_cycles.cycle_code',
+  'sim.okr_cycles.period_type',
+  'sim.okr_cycles.status',
+  'sim.okr_cycles.start_date',
+  'sim.okr_cycles.end_date',
+]
+
+export default function OkrCycleForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <OkrCycleFormBody {...props} />
+    </FieldHelpScope>
   )
 }

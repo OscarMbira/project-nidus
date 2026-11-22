@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { X, Lock } from 'lucide-react'
 import toast from 'react-hot-toast'
 import MultiLineListInput from '@nidus/ui/MultiLineListInput'
@@ -17,7 +19,7 @@ const STEPS = ['Basic', 'Impact', 'Resolution', 'Links']
 
 import RecordCustomFields from '../../components/shared-app/RecordCustomFields'
 
-export default function DelayForm({
+function DelayFormBody({
   open,
   onClose,
   onSaved,
@@ -176,7 +178,7 @@ export default function DelayForm({
         <div className="px-4 pb-4 space-y-3">
           {step === 0 && (
             <>
-              <label className="block text-sm">
+              <FieldLabelWithHelp helpKey="public.project_delays.title" className="block text-sm">
                 Title *
                 <input
                   className={fieldClass}
@@ -184,8 +186,8 @@ export default function DelayForm({
                   disabled={!write}
                   onChange={(e) => set('title', e.target.value)}
                 />
-              </label>
-              <label className="block text-sm">
+              </FieldLabelWithHelp>
+              <FieldLabelWithHelp helpKey="public.project_delays.delay_category" className="block text-sm">
                 Category
                 <select
                   className={fieldClass}
@@ -199,8 +201,8 @@ export default function DelayForm({
                     </option>
                   ))}
                 </select>
-              </label>
-              <label className="block text-sm">
+              </FieldLabelWithHelp>
+              <FieldLabelWithHelp helpKey="public.project_delays.responsible_party" className="block text-sm">
                 Responsible party
                 <input
                   className={fieldClass}
@@ -208,8 +210,8 @@ export default function DelayForm({
                   disabled={!write}
                   onChange={(e) => set('responsible_party', e.target.value)}
                 />
-              </label>
-              <label className="block text-sm">
+              </FieldLabelWithHelp>
+              <FieldLabelWithHelp helpKey="public.project_delays.identified_date" className="block text-sm">
                 Identified date
                 <input
                   type="date"
@@ -218,8 +220,8 @@ export default function DelayForm({
                   disabled={!write}
                   onChange={(e) => set('identified_date', e.target.value)}
                 />
-              </label>
-              <label className="block text-sm">
+              </FieldLabelWithHelp>
+              <FieldLabelWithHelp helpKey="public.project_delays.severity" className="block text-sm">
                 Severity
                 <select
                   className={fieldClass}
@@ -233,9 +235,9 @@ export default function DelayForm({
                     </option>
                   ))}
                 </select>
-              </label>
+              </FieldLabelWithHelp>
               {form.source_type === 'from_template' && (
-                <label className="block text-sm">
+                <FieldLabelWithHelp helpKey="public.project_delays.tailoring_notes" className="block text-sm">
                   Tailoring notes
                   <textarea
                     className={fieldClass}
@@ -244,7 +246,7 @@ export default function DelayForm({
                     disabled={!write}
                     onChange={(e) => set('tailoring_notes', e.target.value)}
                   />
-                </label>
+                </FieldLabelWithHelp>
               )}
             </>
           )}
@@ -289,7 +291,7 @@ export default function DelayForm({
                   disabled={!write}
                 />
               </div>
-              <label className="block text-sm">
+              <FieldLabelWithHelp helpKey="public.project_delays.original_baseline_date" className="block text-sm">
                 Original baseline date
                 <input
                   type="date"
@@ -298,8 +300,8 @@ export default function DelayForm({
                   disabled={!write}
                   onChange={(e) => set('original_baseline_date', e.target.value)}
                 />
-              </label>
-              <label className="block text-sm">
+              </FieldLabelWithHelp>
+              <FieldLabelWithHelp helpKey="public.project_delays.revised_forecast_date" className="block text-sm">
                 Revised forecast date
                 <input
                   type="date"
@@ -308,13 +310,13 @@ export default function DelayForm({
                   disabled={!write}
                   onChange={(e) => set('revised_forecast_date', e.target.value)}
                 />
-              </label>
+              </FieldLabelWithHelp>
             </>
           )}
 
           {step === 2 && (
             <>
-              <label className="block text-sm">
+              <FieldLabelWithHelp helpKey="public.project_delays.resolution_plan" className="block text-sm">
                 Resolution plan
                 <textarea
                   className={fieldClass}
@@ -323,8 +325,8 @@ export default function DelayForm({
                   disabled={!write}
                   onChange={(e) => set('resolution_plan', e.target.value)}
                 />
-              </label>
-              <label className="block text-sm">
+              </FieldLabelWithHelp>
+              <FieldLabelWithHelp helpKey="public.project_delays.resolution_owner_id" className="block text-sm" listOptions={false}>
                 Resolution owner (user id)
                 <input
                   className={`${fieldClass} font-mono text-xs`}
@@ -332,8 +334,8 @@ export default function DelayForm({
                   disabled={!write}
                   onChange={(e) => set('resolution_owner_id', e.target.value || null)}
                 />
-              </label>
-              <label className="block text-sm">
+              </FieldLabelWithHelp>
+              <FieldLabelWithHelp helpKey="public.project_delays.resolution_target_date" className="block text-sm">
                 Resolution target date
                 <input
                   type="date"
@@ -342,8 +344,8 @@ export default function DelayForm({
                   disabled={!write}
                   onChange={(e) => set('resolution_target_date', e.target.value)}
                 />
-              </label>
-              <label className="block text-sm">
+              </FieldLabelWithHelp>
+              <FieldLabelWithHelp helpKey="public.project_delays.status" className="block text-sm">
                 Status
                 <select
                   className={fieldClass}
@@ -357,7 +359,7 @@ export default function DelayForm({
                     </option>
                   ))}
                 </select>
-              </label>
+              </FieldLabelWithHelp>
             </>
           )}
 
@@ -435,5 +437,21 @@ export default function DelayForm({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
       {panel}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.project_delays.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'title', 'delay_category', 'responsible_party', 'identified_date', 'severity', 'tailoring_notes',
+  'original_baseline_date', 'revised_forecast_date', 'resolution_plan', 'resolution_owner_id',
+  'resolution_target_date', 'status',
+].map((name) => `public.project_delays.${name}`)
+
+export default function DelayForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <DelayFormBody {...props} />
+    </FieldHelpScope>
   )
 }

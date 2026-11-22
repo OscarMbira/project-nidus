@@ -1,4 +1,5 @@
 import { useState, useCallback, memo } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Plus, X } from 'lucide-react'
 
 /**
@@ -77,9 +78,9 @@ function ScopeList({ scopeItems = [], scopeExclusions = [], onChange, errors = {
     <div className="space-y-6">
       {/* In-Scope Deliverables */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="sim.project_mandates.scope" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           In-Scope Deliverables
-        </label>
+        </FieldLabelWithHelp>
         <div className="space-y-3">
           <div className="flex gap-2">
             <div className="flex-1">
@@ -126,9 +127,9 @@ function ScopeList({ scopeItems = [], scopeExclusions = [], onChange, errors = {
 
       {/* Out-of-Scope Exclusions */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="sim.project_mandates.scope_exclusions" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Out-of-Scope (Exclusions)
-        </label>
+        </FieldLabelWithHelp>
         <div className="space-y-3">
           <div className="flex gap-2">
             <div className="flex-1">

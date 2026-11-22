@@ -1,8 +1,10 @@
 import { useState } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { format } from 'date-fns'
 import { CheckCircle, Clock, AlertTriangle, Save, Edit2 } from 'lucide-react'
 
-export default function StandupCard({ member, standupNote, selectedDate, onSave, currentUserId }) {
+function StandupCardBody({ member, standupNote, selectedDate, onSave, currentUserId }) {
   const [isEditing, setIsEditing] = useState(!standupNote)
   const [formData, setFormData] = useState({
     what_did_i_do_yesterday: standupNote?.what_did_i_do_yesterday || '',
@@ -85,9 +87,9 @@ export default function StandupCard({ member, standupNote, selectedDate, onSave,
       {isEditing ? (
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.daily_scrum_notes.what_did_i_do_yesterday" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               What did I do yesterday?
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               name="what_did_i_do_yesterday"
               value={formData.what_did_i_do_yesterday}
@@ -99,9 +101,9 @@ export default function StandupCard({ member, standupNote, selectedDate, onSave,
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.daily_scrum_notes.what_will_i_do_today" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               What will I do today?
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               name="what_will_i_do_today"
               value={formData.what_will_i_do_today}
@@ -113,9 +115,9 @@ export default function StandupCard({ member, standupNote, selectedDate, onSave,
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.daily_scrum_notes.any_blockers" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Any blockers?
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               name="any_blockers"
               value={formData.any_blockers}
@@ -127,9 +129,9 @@ export default function StandupCard({ member, standupNote, selectedDate, onSave,
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.daily_scrum_notes.additional_notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Additional Notes (optional)
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               name="additional_notes"
               value={formData.additional_notes}
@@ -214,3 +216,16 @@ export default function StandupCard({ member, standupNote, selectedDate, onSave,
   )
 }
 
+// v1345 slice 4: field help for this component (public.daily_scrum_notes.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'what_did_i_do_yesterday', 'what_will_i_do_today', 'any_blockers', 'additional_notes',
+].map((name) => `public.daily_scrum_notes.${name}`)
+
+export default function StandupCard(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <StandupCardBody {...props} />
+    </FieldHelpScope>
+  )
+}

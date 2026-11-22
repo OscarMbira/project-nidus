@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, Check, PauseCircle } from 'lucide-react'
 import { useOPATailoringContext } from '../../lib/useOPATailoringContext'
@@ -8,7 +10,7 @@ import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 const STEPS = ['Name & describe', 'Field visibility', 'Review & save']
 
-export default function ProjectOPACopy() {
+function ProjectOPACopyBody() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const location = useLocation()
@@ -200,7 +202,7 @@ export default function ProjectOPACopy() {
         <div className="grid lg:grid-cols-2 gap-8">
           <div className="space-y-4">
             {!editId && !fromOpa && (
-              <label className="block">
+              <FieldLabelWithHelp helpKey="sim.project_opa_copies.source_opa_id" className="block">
                 <span className="text-sm font-medium">Source OPA ID</span>
                 <input
                   value={sourceOpaId}
@@ -208,9 +210,9 @@ export default function ProjectOPACopy() {
                   className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 min-h-[44px]"
                   placeholder="Paste template OPA UUID"
                 />
-              </label>
+              </FieldLabelWithHelp>
             )}
-            <label className="block">
+            <FieldLabelWithHelp helpKey="sim.project_opa_copies.custom_title" className="block">
               <span className="text-sm font-medium">Custom title</span>
               <input
                 value={customTitle}
@@ -218,8 +220,8 @@ export default function ProjectOPACopy() {
                 className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 min-h-[44px]"
                 required
               />
-            </label>
-            <label className="block">
+            </FieldLabelWithHelp>
+            <FieldLabelWithHelp helpKey="sim.project_opa_copies.custom_description" className="block">
               <span className="text-sm font-medium">Description</span>
               <textarea
                 value={customDescription}
@@ -227,16 +229,16 @@ export default function ProjectOPACopy() {
                 rows={3}
                 className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2"
               />
-            </label>
-            <label className="block">
+            </FieldLabelWithHelp>
+            <FieldLabelWithHelp helpKey="sim.project_opa_copies.version" className="block">
               <span className="text-sm font-medium">Version</span>
               <input
                 value={version}
                 onChange={(e) => setVersion(e.target.value)}
                 className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2"
               />
-            </label>
-            <label className="block">
+            </FieldLabelWithHelp>
+            <FieldLabelWithHelp helpKey="sim.project_opa_copies.status" className="block">
               <span className="text-sm font-medium">Status</span>
               <select
                 value={status}
@@ -247,8 +249,8 @@ export default function ProjectOPACopy() {
                 <option value="draft">Draft</option>
                 <option value="active">Active</option>
               </select>
-            </label>
-            <label className="block">
+            </FieldLabelWithHelp>
+            <FieldLabelWithHelp helpKey="sim.project_opa_copies.notes" className="block">
               <span className="text-sm font-medium">Notes</span>
               <textarea
                 value={notes}
@@ -256,12 +258,12 @@ export default function ProjectOPACopy() {
                 rows={2}
                 className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2"
               />
-            </label>
-            <label className="flex items-center gap-2">
+            </FieldLabelWithHelp>
+            <FieldLabelWithHelp helpKey="sim.project_opa_copies.is_on_hold" className="flex items-center gap-2">
               <input type="checkbox" checked={isOnHold} onChange={(e) => setIsOnHold(e.target.checked)} />
               <PauseCircle className="h-4 w-4 text-amber-600" />
               <span className="text-sm">Put on hold (draft queue)</span>
-            </label>
+            </FieldLabelWithHelp>
             {isOnHold && (
               <input
                 value={onHoldReason}
@@ -420,5 +422,24 @@ export default function ProjectOPACopy() {
         )}
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.project_opa_copies.source_opa_id',
+  'sim.project_opa_copies.custom_title',
+  'sim.project_opa_copies.custom_description',
+  'sim.project_opa_copies.version',
+  'sim.project_opa_copies.status',
+  'sim.project_opa_copies.notes',
+  'sim.project_opa_copies.is_on_hold',
+]
+
+export default function ProjectOPACopy(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ProjectOPACopyBody {...props} />
+    </FieldHelpScope>
   )
 }

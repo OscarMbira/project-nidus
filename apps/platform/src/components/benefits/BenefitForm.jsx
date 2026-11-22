@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { X, Save, Target, Calendar, ArrowLeft } from 'lucide-react';
 import { saveBenefit } from '../../services/benefitsService';
 import { platformDb } from '@nidus/supabase';
@@ -28,7 +30,7 @@ function membershipRows(rows, nestedKey) {
   return [...byId.values()];
 }
 
-export default function BenefitForm({ benefit, onSave, onCancel, onHoldComplete, usePageLayout = false }) {
+function BenefitFormBody({ benefit, onSave, onCancel, onHoldComplete, usePageLayout = false }) {
   const [formData, setFormData] = useState({
     benefit_code: '',
     benefit_name: '',
@@ -319,9 +321,9 @@ export default function BenefitForm({ benefit, onSave, onCancel, onHoldComplete,
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.benefits.benefit_code" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Benefit Code *
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   name="benefit_code"
@@ -334,9 +336,9 @@ export default function BenefitForm({ benefit, onSave, onCancel, onHoldComplete,
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.benefits.benefit_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Benefit Name *
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   name="benefit_name"
@@ -349,9 +351,9 @@ export default function BenefitForm({ benefit, onSave, onCancel, onHoldComplete,
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.benefits.benefit_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Description
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   name="benefit_description"
                   value={formData.benefit_description}
@@ -371,9 +373,9 @@ export default function BenefitForm({ benefit, onSave, onCancel, onHoldComplete,
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.benefits.portfolio_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                   Portfolio
-                </label>
+                </FieldLabelWithHelp>
                 <SelectField
                   id="portfolio_id"
                   name="portfolio_id"
@@ -388,9 +390,9 @@ export default function BenefitForm({ benefit, onSave, onCancel, onHoldComplete,
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.benefits.programme_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                   Programme
-                </label>
+                </FieldLabelWithHelp>
                 <SelectField
                   id="programme_id"
                   name="programme_id"
@@ -405,9 +407,9 @@ export default function BenefitForm({ benefit, onSave, onCancel, onHoldComplete,
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.benefits.project_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                   Project
-                </label>
+                </FieldLabelWithHelp>
                 <SelectField
                   id="project_id"
                   name="project_id"
@@ -427,9 +429,9 @@ export default function BenefitForm({ benefit, onSave, onCancel, onHoldComplete,
           <div className={formTab === 'benefit' ? 'space-y-4' : 'hidden'}>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.benefits.benefit_category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Category *
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="benefit_category"
                   value={formData.benefit_category}
@@ -449,9 +451,9 @@ export default function BenefitForm({ benefit, onSave, onCancel, onHoldComplete,
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.benefits.benefit_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Type *
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="benefit_type"
                   value={formData.benefit_type}
@@ -466,9 +468,9 @@ export default function BenefitForm({ benefit, onSave, onCancel, onHoldComplete,
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.benefits.benefit_status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Status *
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="benefit_status"
                   value={formData.benefit_status}
@@ -487,9 +489,9 @@ export default function BenefitForm({ benefit, onSave, onCancel, onHoldComplete,
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.benefits.measurement_unit" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Measurement Unit
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="measurement_unit"
                   value={formData.measurement_unit}
@@ -508,9 +510,9 @@ export default function BenefitForm({ benefit, onSave, onCancel, onHoldComplete,
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.benefits.tracking_frequency" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Tracking Frequency
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="tracking_frequency"
                   value={formData.tracking_frequency}
@@ -526,9 +528,9 @@ export default function BenefitForm({ benefit, onSave, onCancel, onHoldComplete,
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.benefits.benefit_owner_user_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                   Benefit Owner
-                </label>
+                </FieldLabelWithHelp>
                 <SelectField
                   id="benefit_owner_user_id"
                   name="benefit_owner_user_id"
@@ -549,9 +551,9 @@ export default function BenefitForm({ benefit, onSave, onCancel, onHoldComplete,
           <div className={formTab === 'values' ? 'space-y-4' : 'hidden'}>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.benefits.baseline_value" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Baseline Value
-                </label>
+                </FieldLabelWithHelp>
                 <SmartAmountInput
                   value={formData.baseline_value}
                   onChange={(value) => setFormData(prev => ({ ...prev, baseline_value: value }))}
@@ -560,9 +562,9 @@ export default function BenefitForm({ benefit, onSave, onCancel, onHoldComplete,
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.benefits.target_value" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Target Value
-                </label>
+                </FieldLabelWithHelp>
                 <SmartAmountInput
                   value={formData.target_value}
                   onChange={(value) => setFormData(prev => ({ ...prev, target_value: value }))}
@@ -571,9 +573,9 @@ export default function BenefitForm({ benefit, onSave, onCancel, onHoldComplete,
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.benefits.current_value" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Current Value
-                </label>
+                </FieldLabelWithHelp>
                 <SmartAmountInput
                   value={formData.current_value}
                   onChange={(value) => setFormData(prev => ({ ...prev, current_value: value }))}
@@ -582,9 +584,9 @@ export default function BenefitForm({ benefit, onSave, onCancel, onHoldComplete,
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.benefits.realized_value" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Realized Value
-                </label>
+                </FieldLabelWithHelp>
                 <SmartAmountInput
                   value={formData.realized_value}
                   onChange={(value) => setFormData(prev => ({ ...prev, realized_value: value }))}
@@ -593,9 +595,9 @@ export default function BenefitForm({ benefit, onSave, onCancel, onHoldComplete,
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.benefits.estimated_value" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" isAmount>
                   Estimated Value
-                </label>
+                </FieldLabelWithHelp>
                 <SmartAmountInput
                   value={formData.estimated_value}
                   onChange={(value) => setFormData(prev => ({ ...prev, estimated_value: value }))}
@@ -604,9 +606,9 @@ export default function BenefitForm({ benefit, onSave, onCancel, onHoldComplete,
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.benefits.realized_value_currency" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" isAmount>
                   Realized Value (Currency)
-                </label>
+                </FieldLabelWithHelp>
                 <SmartAmountInput
                   value={formData.realized_value_currency}
                   onChange={(value) => setFormData(prev => ({ ...prev, realized_value_currency: value }))}
@@ -615,9 +617,9 @@ export default function BenefitForm({ benefit, onSave, onCancel, onHoldComplete,
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.benefits.value_currency" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Currency
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="value_currency"
                   value={formData.value_currency}
@@ -634,9 +636,9 @@ export default function BenefitForm({ benefit, onSave, onCancel, onHoldComplete,
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.benefits.realization_probability" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Realization Probability (%)
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="number"
                   name="realization_probability"
@@ -660,9 +662,9 @@ export default function BenefitForm({ benefit, onSave, onCancel, onHoldComplete,
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.benefits.expected_realization_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Expected Realization Date
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="date"
                   name="expected_realization_date"
@@ -673,9 +675,9 @@ export default function BenefitForm({ benefit, onSave, onCancel, onHoldComplete,
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.benefits.actual_realization_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Actual Realization Date
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="date"
                   name="actual_realization_date"
@@ -754,3 +756,20 @@ export default function BenefitForm({ benefit, onSave, onCancel, onHoldComplete,
   );
 }
 
+// v1345 slice 4: field help for this component (public.benefits.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'benefit_code', 'benefit_name', 'benefit_description', 'portfolio_id', 'programme_id', 'project_id',
+  'benefit_category', 'benefit_type', 'benefit_status', 'measurement_unit', 'tracking_frequency',
+  'benefit_owner_user_id', 'baseline_value', 'target_value', 'current_value', 'realized_value',
+  'estimated_value', 'realized_value_currency', 'value_currency', 'realization_probability',
+  'expected_realization_date', 'actual_realization_date',
+].map((name) => `public.benefits.${name}`)
+
+export default function BenefitForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <BenefitFormBody {...props} />
+    </FieldHelpScope>
+  )
+}

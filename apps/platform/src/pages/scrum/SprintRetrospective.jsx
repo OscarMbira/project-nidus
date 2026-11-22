@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useParams, useNavigate } from 'react-router-dom'
 
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
@@ -8,7 +10,7 @@ import { Plus, ThumbsUp, MessageSquare, CheckCircle, X, Save, AlertCircle } from
 import RetroBoard from '../../components/scrum/RetroBoard'
 import ActionItemTracker from '../../components/scrum/ActionItemTracker'
 
-export default function SprintRetrospective() {
+function SprintRetrospectiveBody() {
   const { sprintId } = useParams()
   const { projectId, routeKey } = usePlatformProjectId()
   const navigate = useNavigate()
@@ -228,9 +230,9 @@ export default function SprintRetrospective() {
         {showAddItem && (
           <div className="mb-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg space-y-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.retrospective_items.item_text" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Item Text
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={newItem.item_text}
                 onChange={(e) => setNewItem({ ...newItem, item_text: e.target.value })}
@@ -241,9 +243,9 @@ export default function SprintRetrospective() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.retrospective_items.item_category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Category
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   value={newItem.item_category}
                   onChange={(e) => setNewItem({ ...newItem, item_category: e.target.value })}
@@ -257,9 +259,9 @@ export default function SprintRetrospective() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.retrospective_items.item_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Type
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   value={newItem.item_type}
                   onChange={(e) => setNewItem({ ...newItem, item_type: e.target.value })}
@@ -315,3 +317,16 @@ export default function SprintRetrospective() {
   )
 }
 
+// v1345 slice 4: field help for this component (public.retrospective_items.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'item_text', 'item_category', 'item_type',
+].map((name) => `public.retrospective_items.${name}`)
+
+export default function SprintRetrospective(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <SprintRetrospectiveBody {...props} />
+    </FieldHelpScope>
+  )
+}

@@ -4,6 +4,8 @@
  */
 
 import { useMemo, useState } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Plus, X, Check } from 'lucide-react'
 import { useViewMode } from '@nidus/shared/hooks/useViewMode'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
@@ -25,7 +27,7 @@ function userLabel(user) {
   return name || email || user.id || ''
 }
 
-export default function ScopeItemsWithOwnerTable({
+function ScopeItemsWithOwnerTableBody({
   value = '',
   onChange,
   users = [],
@@ -105,9 +107,9 @@ export default function ScopeItemsWithOwnerTable({
     <div className="space-y-3">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          <FieldLabelWithHelp helpKey="public.benefits_review_plans.scope_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
             3. Scope Description
-          </label>
+          </FieldLabelWithHelp>
           <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
             Add each benefits scope to measure, and assign the benefit owner responsible for it.
           </p>
@@ -251,9 +253,9 @@ export default function ScopeItemsWithOwnerTable({
       {!disabled && (
         <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-end">
           <div className="flex-[2] min-w-0">
-            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+            <FieldLabelWithHelp helpKey="public.benefits_review_plans.scope_item" className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
               Scope item
-            </label>
+            </FieldLabelWithHelp>
             <input
               type="text"
               value={itemDraft}
@@ -269,9 +271,9 @@ export default function ScopeItemsWithOwnerTable({
             />
           </div>
           <div className="flex-1 min-w-0">
-            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+            <FieldLabelWithHelp helpKey="public.benefits_review_plans.scope_item_owner" className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1" listOptions={false}>
               Benefit owner
-            </label>
+            </FieldLabelWithHelp>
             <SelectField
               id="brp-scope-add-owner"
               value={ownerDraft}
@@ -321,5 +323,19 @@ export default function ScopeItemsWithOwnerTable({
         </p>
       </Modal>
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.benefits_review_plans.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'scope_description', 'scope_item', 'scope_item_owner',
+].map((name) => `public.benefits_review_plans.${name}`)
+
+export default function ScopeItemsWithOwnerTable(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ScopeItemsWithOwnerTableBody {...props} />
+    </FieldHelpScope>
   )
 }

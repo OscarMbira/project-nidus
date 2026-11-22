@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import { getOPAById, listOPACategories, listProjectsForOrganisation, updateOPA } from '../../services/opaService'
@@ -14,7 +16,7 @@ import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 const OPA_TYPES = ['template', 'guideline', 'standard', 'procedure', 'policy', 'historical_info', 'lessons_learned', 'other']
 
-export default function OPAEdit() {
+function OPAEditBody() {
   const { id } = useParams()
   const navigate = useNavigate()
   const [categories, setCategories] = useState([])
@@ -158,23 +160,23 @@ export default function OPAEdit() {
         </p>
       )}
       <div className="space-y-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-        <label className="block">
+        <FieldLabelWithHelp helpKey="public.organisational_process_assets.title" className="block">
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Title *</span>
           <input
             className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 min-h-[44px]"
             value={form.title}
             onChange={(e) => set('title', e.target.value)}
           />
-        </label>
-        <label className="block">
+        </FieldLabelWithHelp>
+        <FieldLabelWithHelp helpKey="public.organisational_process_assets.description" className="block">
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Description</span>
           <textarea
             className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 min-h-[100px]"
             value={form.description}
             onChange={(e) => set('description', e.target.value)}
           />
-        </label>
-        <label className="block">
+        </FieldLabelWithHelp>
+        <FieldLabelWithHelp helpKey="public.organisational_process_assets.category_id" className="block">
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Category</span>
           <select
             className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 min-h-[44px]"
@@ -188,9 +190,9 @@ export default function OPAEdit() {
               </option>
             ))}
           </select>
-        </label>
+        </FieldLabelWithHelp>
         <div className="grid sm:grid-cols-2 gap-4">
-          <label className="block">
+          <FieldLabelWithHelp helpKey="public.organisational_process_assets.opa_type" className="block">
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">OPA type</span>
             <select
               className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 min-h-[44px]"
@@ -203,8 +205,8 @@ export default function OPAEdit() {
                 </option>
               ))}
             </select>
-          </label>
-          <label className="block">
+          </FieldLabelWithHelp>
+          <FieldLabelWithHelp helpKey="public.organisational_process_assets.status" className="block">
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Status</span>
             <select
               className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 min-h-[44px]"
@@ -216,26 +218,26 @@ export default function OPAEdit() {
               <option value="archived">Archived</option>
               <option value="deprecated">Deprecated</option>
             </select>
-          </label>
+          </FieldLabelWithHelp>
         </div>
-        <label className="block">
+        <FieldLabelWithHelp helpKey="public.organisational_process_assets.version" className="block">
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Version</span>
           <input
             className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 min-h-[44px]"
             value={form.version}
             onChange={(e) => set('version', e.target.value)}
           />
-        </label>
-        <label className="block">
+        </FieldLabelWithHelp>
+        <FieldLabelWithHelp helpKey="public.organisational_process_assets.document_reference" className="block">
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Document reference</span>
           <input
             className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 min-h-[44px]"
             value={form.document_reference}
             onChange={(e) => set('document_reference', e.target.value)}
           />
-        </label>
+        </FieldLabelWithHelp>
         <div className="grid sm:grid-cols-2 gap-4">
-          <label className="block">
+          <FieldLabelWithHelp helpKey="public.organisational_process_assets.effective_date" className="block">
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Effective date</span>
             <input
               type="date"
@@ -243,8 +245,8 @@ export default function OPAEdit() {
               value={form.effective_date}
               onChange={(e) => set('effective_date', e.target.value)}
             />
-          </label>
-          <label className="block">
+          </FieldLabelWithHelp>
+          <FieldLabelWithHelp helpKey="public.organisational_process_assets.expiry_date" className="block">
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Expiry date</span>
             <input
               type="date"
@@ -252,17 +254,17 @@ export default function OPAEdit() {
               value={form.expiry_date}
               onChange={(e) => set('expiry_date', e.target.value)}
             />
-          </label>
+          </FieldLabelWithHelp>
         </div>
-        <label className="block">
+        <FieldLabelWithHelp helpKey="public.organisational_process_assets.tags" className="block">
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Tags</span>
           <input
             className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 min-h-[44px]"
             value={form.tags}
             onChange={(e) => set('tags', e.target.value)}
           />
-        </label>
-        <label className="block">
+        </FieldLabelWithHelp>
+        <FieldLabelWithHelp helpKey="public.organisational_process_assets.related_project_id" className="block" listOptions={false}>
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Related project</span>
           <select
             className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 min-h-[44px]"
@@ -276,28 +278,28 @@ export default function OPAEdit() {
               </option>
             ))}
           </select>
-        </label>
-        <label className="block">
+        </FieldLabelWithHelp>
+        <FieldLabelWithHelp helpKey="public.organisational_process_assets.notes" className="block">
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Notes</span>
           <textarea
             className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 min-h-[80px]"
             value={form.notes}
             onChange={(e) => set('notes', e.target.value)}
           />
-        </label>
-        <label className="flex items-center gap-2">
+        </FieldLabelWithHelp>
+        <FieldLabelWithHelp helpKey="public.organisational_process_assets.is_on_hold" className="flex items-center gap-2">
           <input type="checkbox" checked={form.is_on_hold} onChange={(e) => set('is_on_hold', e.target.checked)} />
           <span className="text-sm text-gray-700 dark:text-gray-300">On hold</span>
-        </label>
+        </FieldLabelWithHelp>
         {form.is_on_hold && (
-          <label className="block">
+          <FieldLabelWithHelp helpKey="public.organisational_process_assets.on_hold_reason" className="block">
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">On-hold reason</span>
             <input
               className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 min-h-[44px]"
               value={form.on_hold_reason}
               onChange={(e) => set('on_hold_reason', e.target.value)}
             />
-          </label>
+          </FieldLabelWithHelp>
         )}
         <div className="flex justify-end pt-4">
           <button type="button" disabled={saving} onClick={save} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-sky-600 text-white">
@@ -308,5 +310,20 @@ export default function OPAEdit() {
       </>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.organisational_process_assets.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'title', 'description', 'category_id', 'opa_type', 'status', 'version', 'document_reference',
+  'effective_date', 'expiry_date', 'tags', 'related_project_id', 'notes', 'is_on_hold', 'on_hold_reason',
+].map((name) => `public.organisational_process_assets.${name}`)
+
+export default function OPAEdit(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <OPAEditBody {...props} />
+    </FieldHelpScope>
   )
 }

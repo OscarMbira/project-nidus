@@ -4,6 +4,8 @@
  */
 
 import { useState, useEffect } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import {
@@ -11,7 +13,7 @@ import {
   updatePracticeBenefitsReviewPlan,
 } from '../../services/sim/practiceBenefitsService'
 
-export default function PracticeBenefitsReviewPlanEditPage() {
+function PracticeBenefitsReviewPlanEditPageBody() {
   const { id } = useParams()
   const navigate = useNavigate()
   const [plan, setPlan] = useState(null)
@@ -104,7 +106,7 @@ export default function PracticeBenefitsReviewPlanEditPage() {
 
       <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 space-y-6">
         <div>
-          <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Plan Title *</label>
+          <FieldLabelWithHelp helpKey="sim.practice_benefits_review_plans.plan_title" className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300" required>Plan Title *</FieldLabelWithHelp>
           <input
             type="text"
             required
@@ -114,7 +116,7 @@ export default function PracticeBenefitsReviewPlanEditPage() {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Scope Description</label>
+          <FieldLabelWithHelp helpKey="sim.practice_benefits_review_plans.scope_description" className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Scope Description</FieldLabelWithHelp>
           <textarea
             value={formData.scope_description}
             onChange={(e) => setFormData({ ...formData, scope_description: e.target.value })}
@@ -123,7 +125,7 @@ export default function PracticeBenefitsReviewPlanEditPage() {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Measurement Approach</label>
+          <FieldLabelWithHelp helpKey="sim.practice_benefits_review_plans.measurement_approach" className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Measurement Approach</FieldLabelWithHelp>
           <textarea
             value={formData.measurement_approach}
             onChange={(e) => setFormData({ ...formData, measurement_approach: e.target.value })}
@@ -149,5 +151,19 @@ export default function PracticeBenefitsReviewPlanEditPage() {
         </div>
       </form>
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (sim.practice_benefits_review_plans.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'plan_title', 'scope_description', 'measurement_approach',
+].map((name) => `sim.practice_benefits_review_plans.${name}`)
+
+export default function PracticeBenefitsReviewPlanEditPage(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <PracticeBenefitsReviewPlanEditPageBody {...props} />
+    </FieldHelpScope>
   )
 }

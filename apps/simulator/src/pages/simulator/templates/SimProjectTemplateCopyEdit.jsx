@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import { getCopyById, updateCopy } from '../../../services/sim/simProjectTemplateCopyService'
@@ -12,7 +14,7 @@ import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/
 
 const BASE = '/simulator/templates'
 
-export default function ProjectTemplateCopyEdit() {
+function ProjectTemplateCopyEditBody() {
   const { copyId } = useParams()
   const navigate = useNavigate()
   const [row, setRow] = useState(null)
@@ -119,23 +121,23 @@ export default function ProjectTemplateCopyEdit() {
         </div>
       ) : (
       <>
-      <label className="block mb-4">
+      <FieldLabelWithHelp helpKey="sim.project_template_copies.title" className="block mb-4">
         <span className="text-sm">Title</span>
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2"
         />
-      </label>
-      <label className="block mb-4">
+      </FieldLabelWithHelp>
+      <FieldLabelWithHelp helpKey="sim.project_template_copies.change_note" className="block mb-4">
         <span className="text-sm">Optional change note</span>
         <input
           value={changeNote}
           onChange={(e) => setChangeNote(e.target.value)}
           className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2"
         />
-      </label>
-      <label className="block mb-4">
+      </FieldLabelWithHelp>
+      <FieldLabelWithHelp helpKey="sim.project_template_copies.content" className="block mb-4">
         <span className="text-sm">Content (JSON)</span>
         <textarea
           value={contentJson}
@@ -143,7 +145,7 @@ export default function ProjectTemplateCopyEdit() {
           rows={16}
           className="mt-1 w-full font-mono text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-900 text-gray-100 px-3 py-2"
         />
-      </label>
+      </FieldLabelWithHelp>
       <button
         type="button"
         disabled={saving}
@@ -155,5 +157,19 @@ export default function ProjectTemplateCopyEdit() {
       </>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (sim.project_template_copies.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'title', 'change_note', 'content',
+].map((name) => `sim.project_template_copies.${name}`)
+
+export default function ProjectTemplateCopyEdit(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ProjectTemplateCopyEditBody {...props} />
+    </FieldHelpScope>
   )
 }

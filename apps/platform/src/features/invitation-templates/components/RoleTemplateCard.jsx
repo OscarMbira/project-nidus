@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Save, RotateCcw, Shield } from 'lucide-react'
 import TemplatePreviewPanel from './TemplatePreviewPanel'
 import { upsertTemplate, resetTemplateToDefault } from '../api/invitationTemplatesApi'
@@ -22,7 +24,7 @@ import { resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
  *   onSaved: () => void,
  * }} props
  */
-export default function RoleTemplateCard({
+function RoleTemplateCardBody({
   accountId,
   authUserId,
   roleMeta,
@@ -119,7 +121,7 @@ export default function RoleTemplateCard({
             <p className="text-xs font-mono text-gray-500 dark:text-gray-400 truncate">{roleName}</p>
           </div>
         </div>
-        <label className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300 shrink-0">
+        <FieldLabelWithHelp helpKey="public.invitation_message_templates.is_active" className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300 shrink-0">
           <input
             type="checkbox"
             checked={active}
@@ -128,7 +130,7 @@ export default function RoleTemplateCard({
             className="rounded border-gray-300 dark:border-gray-600"
           />
           Active
-        </label>
+        </FieldLabelWithHelp>
       </div>
 
       <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
@@ -156,7 +158,7 @@ export default function RoleTemplateCard({
       ) : (
       <>
       <div>
-        <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Label</label>
+        <FieldLabelWithHelp helpKey="public.invitation_message_templates.label" className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Label</FieldLabelWithHelp>
         <input
           type="text"
           value={label}
@@ -167,9 +169,9 @@ export default function RoleTemplateCard({
       </div>
 
       <div>
-        <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
+        <FieldLabelWithHelp helpKey="public.invitation_message_templates.subject" className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
           Subject line (reserved for future email integration)
-        </label>
+        </FieldLabelWithHelp>
         <input
           type="text"
           value={subject}
@@ -181,7 +183,7 @@ export default function RoleTemplateCard({
       </div>
 
       <div>
-        <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Message body</label>
+        <FieldLabelWithHelp helpKey="public.invitation_message_templates.body" className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Message body</FieldLabelWithHelp>
         <textarea
           value={body}
           onChange={(e) => setBody(e.target.value)}
@@ -236,5 +238,19 @@ export default function RoleTemplateCard({
         </div>
       )}
     </article>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.invitation_message_templates.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'label', 'subject', 'body',
+].map((name) => `public.invitation_message_templates.${name}`)
+
+export default function RoleTemplateCard(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <RoleTemplateCardBody {...props} />
+    </FieldHelpScope>
   )
 }

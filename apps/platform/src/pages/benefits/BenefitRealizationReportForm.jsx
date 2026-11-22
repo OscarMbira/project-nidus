@@ -3,6 +3,8 @@
  * (taxonomy §3, Benefits). Rule 65 + rule 63.1 Audit tab.
  */
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Save, Loader, FileCheck } from 'lucide-react';
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js';
@@ -24,7 +26,7 @@ const REPORT_TYPES = [
 
 const REPORT_STATUSES = ['draft', 'final', 'archived'];
 
-export default function BenefitRealizationReportForm({ forceEdit = false }) {
+function BenefitRealizationReportFormBody({ forceEdit = false }) {
   const { id } = useParams();
   const navigate = useNavigate();
   const { projectId } = usePlatformProjectId();
@@ -173,7 +175,7 @@ export default function BenefitRealizationReportForm({ forceEdit = false }) {
                 <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-800 dark:text-red-200">{error}</div>
               )}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Report name *</label>
+                <FieldLabelWithHelp helpKey="public.benefit_realization_reports.report_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>Report name *</FieldLabelWithHelp>
                 <input
                   type="text"
                   value={reportName}
@@ -183,7 +185,7 @@ export default function BenefitRealizationReportForm({ forceEdit = false }) {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</label>
+                <FieldLabelWithHelp helpKey="public.benefit_realization_reports.report_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</FieldLabelWithHelp>
                 <textarea
                   value={reportDescription}
                   onChange={(e) => setReportDescription(e.target.value)}
@@ -193,7 +195,7 @@ export default function BenefitRealizationReportForm({ forceEdit = false }) {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Report type</label>
+                  <FieldLabelWithHelp helpKey="public.benefit_realization_reports.report_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Report type</FieldLabelWithHelp>
                   <select
                     value={reportType}
                     onChange={(e) => setReportType(e.target.value)}
@@ -205,7 +207,7 @@ export default function BenefitRealizationReportForm({ forceEdit = false }) {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status</label>
+                  <FieldLabelWithHelp helpKey="public.benefit_realization_reports.report_status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status</FieldLabelWithHelp>
                   <select
                     value={reportStatus}
                     onChange={(e) => setReportStatus(e.target.value)}
@@ -219,7 +221,7 @@ export default function BenefitRealizationReportForm({ forceEdit = false }) {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Report date</label>
+                  <FieldLabelWithHelp helpKey="public.benefit_realization_reports.report_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Report date</FieldLabelWithHelp>
                   <input
                     type="date"
                     value={reportDate}
@@ -228,7 +230,7 @@ export default function BenefitRealizationReportForm({ forceEdit = false }) {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Period start</label>
+                  <FieldLabelWithHelp helpKey="public.benefit_realization_reports.report_start_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Period start</FieldLabelWithHelp>
                   <input
                     type="date"
                     value={reportStartDate}
@@ -237,7 +239,7 @@ export default function BenefitRealizationReportForm({ forceEdit = false }) {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Period end</label>
+                  <FieldLabelWithHelp helpKey="public.benefit_realization_reports.report_end_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Period end</FieldLabelWithHelp>
                   <input
                     type="date"
                     value={reportEndDate}
@@ -247,7 +249,7 @@ export default function BenefitRealizationReportForm({ forceEdit = false }) {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Notes</label>
+                <FieldLabelWithHelp helpKey="public.benefit_realization_reports.notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Notes</FieldLabelWithHelp>
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
@@ -297,4 +299,19 @@ export default function BenefitRealizationReportForm({ forceEdit = false }) {
       {successModal}
     </div>
   );
+}
+
+// v1345 slice 4: field help for this component (public.benefit_realization_reports.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'report_name', 'report_description', 'report_type', 'report_status', 'report_date', 'report_start_date',
+  'report_end_date', 'notes',
+].map((name) => `public.benefit_realization_reports.${name}`)
+
+export default function BenefitRealizationReportForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <BenefitRealizationReportFormBody {...props} />
+    </FieldHelpScope>
+  )
 }

@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useParams, useNavigate } from 'react-router-dom'
 
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
@@ -7,7 +9,7 @@ import { format } from 'date-fns'
 import { CheckCircle, XCircle, Users, MessageSquare, Star, Plus, Save } from 'lucide-react'
 import DemoChecklist from '../../components/scrum/DemoChecklist'
 
-export default function SprintReview() {
+function SprintReviewBody() {
   const { sprintId } = useParams()
   const { projectId, routeKey } = usePlatformProjectId()
   const navigate = useNavigate()
@@ -325,9 +327,9 @@ export default function SprintReview() {
         {showFeedbackForm && (
           <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.sprint_review_feedback.feedback_text" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Feedback
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={newFeedback.feedback_text}
                 onChange={(e) => setNewFeedback({ ...newFeedback, feedback_text: e.target.value })}
@@ -338,9 +340,9 @@ export default function SprintReview() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.sprint_review_feedback.feedback_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Type
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   value={newFeedback.feedback_type}
                   onChange={(e) => setNewFeedback({ ...newFeedback, feedback_type: e.target.value })}
@@ -353,9 +355,9 @@ export default function SprintReview() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.sprint_review_feedback.rating" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Rating (1-5)
-                </label>
+                </FieldLabelWithHelp>
                 <div className="flex gap-1">
                   {[1, 2, 3, 4, 5].map((rating) => (
                     <button
@@ -380,13 +382,13 @@ export default function SprintReview() {
                 onChange={(e) => setNewFeedback({ ...newFeedback, requires_action: e.target.checked })}
                 className="rounded"
               />
-              <label className="text-sm text-gray-700 dark:text-gray-300">Requires action</label>
+              <FieldLabelWithHelp helpKey="public.sprint_review_feedback.requires_action" className="text-sm text-gray-700 dark:text-gray-300">Requires action</FieldLabelWithHelp>
             </div>
             {newFeedback.requires_action && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.sprint_review_feedback.action_item_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Action Item Description
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   value={newFeedback.action_item_description}
                   onChange={(e) => setNewFeedback({ ...newFeedback, action_item_description: e.target.value })}
@@ -471,3 +473,16 @@ export default function SprintReview() {
   )
 }
 
+// v1345 slice 4: field help for this component (public.sprint_review_feedback.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'feedback_text', 'feedback_type', 'rating', 'requires_action', 'action_item_description',
+].map((name) => `public.sprint_review_feedback.${name}`)
+
+export default function SprintReview(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <SprintReviewBody {...props} />
+    </FieldHelpScope>
+  )
+}

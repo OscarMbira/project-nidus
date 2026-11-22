@@ -2,6 +2,8 @@
  * Add or edit one benefit measurement on its own page.
  */
 import { useState, useEffect, useMemo } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, Save, Loader } from 'lucide-react'
 import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesContext'
@@ -27,7 +29,7 @@ function today() {
   return new Date().toISOString().split('T')[0]
 }
 
-export default function BenefitMeasurementForm() {
+function BenefitMeasurementFormBody() {
   const { id } = useParams()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -209,29 +211,29 @@ export default function BenefitMeasurementForm() {
               <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-800 dark:text-red-200">{error}</div>
             )}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" htmlFor="measurement-date">Measurement Date *</label>
+              <FieldLabelWithHelp helpKey="sim.benefit_measurements.measurement_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" htmlFor="measurement-date" required>Measurement Date *</FieldLabelWithHelp>
               <input id="measurement-date" type="date" required value={measurementDate} onChange={(e) => setMeasurementDate(e.target.value)} className={inputClass} />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" htmlFor="measurement-value">Measurement Value *</label>
+              <FieldLabelWithHelp helpKey="sim.benefit_measurements.measurement_value" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" htmlFor="measurement-value" required>Measurement Value *</FieldLabelWithHelp>
               <input id="measurement-value" type="number" required step="0.01" value={measurementValue} onChange={(e) => setMeasurementValue(e.target.value)} className={inputClass} />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" htmlFor="measurement-type">Measurement Type</label>
+                <FieldLabelWithHelp helpKey="sim.benefit_measurements.measurement_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" htmlFor="measurement-type">Measurement Type</FieldLabelWithHelp>
                 <select id="measurement-type" value={measurementType} onChange={(e) => setMeasurementType(e.target.value)} className={inputClass}>
                   {TYPES.map((type) => <option key={type.value} value={type.value}>{type.label}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" htmlFor="measurement-quality">Data Quality</label>
+                <FieldLabelWithHelp helpKey="sim.benefit_measurements.data_quality" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" htmlFor="measurement-quality">Data Quality</FieldLabelWithHelp>
                 <select id="measurement-quality" value={dataQuality} onChange={(e) => setDataQuality(e.target.value)} className={`${inputClass} capitalize`}>
                   {QUALITIES.map((quality) => <option key={quality} value={quality} className="capitalize">{quality}</option>)}
                 </select>
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" htmlFor="measurement-notes">Notes</label>
+              <FieldLabelWithHelp helpKey="sim.benefit_measurements.notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" htmlFor="measurement-notes">Notes</FieldLabelWithHelp>
               <textarea id="measurement-notes" rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} className={inputClass} placeholder="Additional notes about this measurement..." />
             </div>
             <div className="flex gap-3 pt-2">
@@ -272,5 +274,22 @@ export default function BenefitMeasurementForm() {
       </div>
       {successModal}
     </div>
+  )
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.benefit_measurements.measurement_date',
+  'sim.benefit_measurements.measurement_value',
+  'sim.benefit_measurements.measurement_type',
+  'sim.benefit_measurements.data_quality',
+  'sim.benefit_measurements.notes',
+]
+
+export default function BenefitMeasurementForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <BenefitMeasurementFormBody {...props} />
+    </FieldHelpScope>
   )
 }

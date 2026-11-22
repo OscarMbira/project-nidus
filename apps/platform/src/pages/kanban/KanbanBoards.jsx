@@ -1,4 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useParams, useNavigate } from 'react-router-dom'
 
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
@@ -11,7 +13,7 @@ import { useViewMode } from '@nidus/shared/hooks/useViewMode'
 import ViewToggle from '@nidus/ui/ViewToggle'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
-export default function KanbanBoards() {
+function KanbanBoardsBody() {
   const { projectId, routeKey } = usePlatformProjectId()
   const navigate = useNavigate()
   const [boards, setBoards] = useState([])
@@ -390,9 +392,9 @@ function CreateBoardForm({ onSave, onClose }) {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.kanban_boards.board_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
               Board Name *
-            </label>
+            </FieldLabelWithHelp>
             <input
               type="text"
               name="board_name"
@@ -405,9 +407,9 @@ function CreateBoardForm({ onSave, onClose }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.kanban_boards.board_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Description
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               name="board_description"
               value={formData.board_description}
@@ -419,9 +421,9 @@ function CreateBoardForm({ onSave, onClose }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.kanban_boards.board_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Board Type
-            </label>
+            </FieldLabelWithHelp>
             <select
               name="board_type"
               value={formData.board_type}
@@ -435,9 +437,9 @@ function CreateBoardForm({ onSave, onClose }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.kanban_boards.card_color_scheme" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Card Color Scheme
-            </label>
+            </FieldLabelWithHelp>
             <select
               name="card_color_scheme"
               value={formData.card_color_scheme}
@@ -452,7 +454,7 @@ function CreateBoardForm({ onSave, onClose }) {
           </div>
 
           <div className="space-y-3">
-            <label className="flex items-center">
+            <FieldLabelWithHelp helpKey="public.kanban_boards.show_aging_indicators" className="flex items-center">
               <input
                 type="checkbox"
                 name="show_card_aging"
@@ -463,8 +465,8 @@ function CreateBoardForm({ onSave, onClose }) {
               <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
                 Show card aging indicators
               </span>
-            </label>
-            <label className="flex items-center">
+            </FieldLabelWithHelp>
+            <FieldLabelWithHelp helpKey="public.kanban_boards.show_blocked_indicators" className="flex items-center">
               <input
                 type="checkbox"
                 name="show_blocked_indicators"
@@ -475,8 +477,8 @@ function CreateBoardForm({ onSave, onClose }) {
               <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
                 Show blocked item indicators
               </span>
-            </label>
-            <label className="flex items-center">
+            </FieldLabelWithHelp>
+            <FieldLabelWithHelp helpKey="public.kanban_boards.allow_card_creation" className="flex items-center">
               <input
                 type="checkbox"
                 name="allow_card_creation"
@@ -487,7 +489,7 @@ function CreateBoardForm({ onSave, onClose }) {
               <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
                 Allow card creation on board
               </span>
-            </label>
+            </FieldLabelWithHelp>
           </div>
 
           <div className="flex justify-end gap-4 pt-4">
@@ -512,3 +514,17 @@ function CreateBoardForm({ onSave, onClose }) {
   )
 }
 
+// v1345 slice 4: field help for this component (public.kanban_boards.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'board_name', 'board_description', 'board_type', 'card_color_scheme', 'show_aging_indicators',
+  'show_blocked_indicators', 'allow_card_creation',
+].map((name) => `public.kanban_boards.${name}`)
+
+export default function KanbanBoards(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <KanbanBoardsBody {...props} />
+    </FieldHelpScope>
+  )
+}

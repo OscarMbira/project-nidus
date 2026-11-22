@@ -4,6 +4,8 @@
  */
 
 import { useMemo, useState } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Plus, X, Check } from 'lucide-react'
 import { useViewMode } from '@nidus/shared/hooks/useViewMode'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
@@ -18,7 +20,7 @@ import Modal from '@nidus/ui/Modal'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import SelectField from '@nidus/ui/SelectField'
 
-export default function MeasurementTimingLinkTable({
+function MeasurementTimingLinkTableBody({
   approachValue = '',
   value = '',
   onChange,
@@ -103,9 +105,9 @@ export default function MeasurementTimingLinkTable({
     <div className="space-y-3">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          <FieldLabelWithHelp helpKey="public.benefits_review_plans.measurement_timing_rationale" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
             Measurement Timing Rationale
-          </label>
+          </FieldLabelWithHelp>
           <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
             Pick a measurement point from the approach list, then add its timing. Shown as Measurement Point | Timing.
           </p>
@@ -261,9 +263,9 @@ export default function MeasurementTimingLinkTable({
       {!disabled && (
         <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-end">
           <div className="flex-1 min-w-0">
-            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+            <FieldLabelWithHelp helpKey="public.benefits_review_plans.measurement_point" className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
               Measurement point
-            </label>
+            </FieldLabelWithHelp>
             <SelectField
               id="brp-timing-add-point"
               value={selectedPoint}
@@ -274,9 +276,9 @@ export default function MeasurementTimingLinkTable({
             />
           </div>
           <div className="flex-[2] min-w-0">
-            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+            <FieldLabelWithHelp helpKey="public.benefits_review_plans.measurement_timing" className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
               Measurement timing
-            </label>
+            </FieldLabelWithHelp>
             <input
               type="text"
               value={timingDraft}
@@ -333,5 +335,19 @@ export default function MeasurementTimingLinkTable({
         </p>
       </Modal>
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.benefits_review_plans.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'measurement_timing_rationale', 'measurement_point', 'measurement_timing',
+].map((name) => `public.benefits_review_plans.${name}`)
+
+export default function MeasurementTimingLinkTable(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <MeasurementTimingLinkTableBody {...props} />
+    </FieldHelpScope>
   )
 }

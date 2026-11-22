@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Link, useNavigate, useParams, useLocation } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { ArrowLeft, Pause } from 'lucide-react'
@@ -26,7 +28,7 @@ import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesContext'
 import ProcurementPlanFields, { emptyProcurementPlan, normalizeProcurementPlan, PROCUREMENT_PLAN_TABS } from '../../components/processTemplates/ProcurementPlanFields'
 
-export default function ProcessTemplateEditPage({ roleKey: roleKeyProp, basePath, sim: simProp }) {
+function ProcessTemplateEditPageBody({ roleKey: roleKeyProp, basePath, sim: simProp }) {
   const { slug, id } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
@@ -217,7 +219,7 @@ export default function ProcessTemplateEditPage({ roleKey: roleKeyProp, basePath
           <ProcurementPlanFields section={activeTab} value={planData} onChange={setPlanData} />
         )}
         {activeTab === 'details' && (<>
-        <label className="block">
+        <FieldLabelWithHelp helpKey="public.process_templates.title" className="block">
           <span className="text-sm text-gray-400">Title</span>
           <input
             value={title}
@@ -225,8 +227,8 @@ export default function ProcessTemplateEditPage({ roleKey: roleKeyProp, basePath
             className="mt-1 w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             required
           />
-        </label>
-        <label className="block">
+        </FieldLabelWithHelp>
+        <FieldLabelWithHelp helpKey="public.process_templates.description" className="block">
           <span className="text-sm text-gray-400">Description</span>
           <textarea
             value={description}
@@ -234,8 +236,8 @@ export default function ProcessTemplateEditPage({ roleKey: roleKeyProp, basePath
             rows={3}
             className="mt-1 w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
           />
-        </label>
-        <label className="block">
+        </FieldLabelWithHelp>
+        <FieldLabelWithHelp helpKey="public.process_templates.notes" className="block">
           <span className="text-sm text-gray-700 dark:text-gray-300">{isProcurementPlan ? 'Additional notes' : 'Notes'}</span>
           <textarea
             value={notes}
@@ -243,8 +245,8 @@ export default function ProcessTemplateEditPage({ roleKey: roleKeyProp, basePath
             rows={5}
             className="mt-1 w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm"
           />
-        </label>
-        <label className="block">
+        </FieldLabelWithHelp>
+        <FieldLabelWithHelp helpKey="public.process_templates.status" className="block">
           <span className="text-sm text-gray-400">Status</span>
           <select
             value={status}
@@ -255,7 +257,7 @@ export default function ProcessTemplateEditPage({ roleKey: roleKeyProp, basePath
             <option value="active">Active</option>
             <option value="on_hold">On hold</option>
           </select>
-        </label>
+        </FieldLabelWithHelp>
         {row.is_master && !canCreateMasterTemplate(roleKey) && (
           <p className="text-xs text-amber-400">This is a master template — read-only for your role.</p>
         )}
@@ -281,5 +283,19 @@ export default function ProcessTemplateEditPage({ roleKey: roleKeyProp, basePath
       )}
       {successModal}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.process_templates.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'title', 'description', 'status',
+].map((name) => `public.process_templates.${name}`)
+
+export default function ProcessTemplateEditPage(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ProcessTemplateEditPageBody {...props} />
+    </FieldHelpScope>
   )
 }

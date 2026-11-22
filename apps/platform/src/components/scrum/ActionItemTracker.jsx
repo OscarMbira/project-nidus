@@ -1,9 +1,11 @@
 import { useState } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { supabase } from '../../services/supabaseClient'
 import { format } from 'date-fns'
 import { Plus, CheckCircle, Clock, XCircle, Circle, User, Calendar, Save, X } from 'lucide-react'
 
-export default function ActionItemTracker({ actionItems, sprintId, projectId, onUpdate, currentUserId }) {
+function ActionItemTrackerBody({ actionItems, sprintId, projectId, onUpdate, currentUserId }) {
   const [showAddForm, setShowAddForm] = useState(false)
   const [newActionItem, setNewActionItem] = useState({
     action_description: '',
@@ -129,9 +131,9 @@ export default function ActionItemTracker({ actionItems, sprintId, projectId, on
       {showAddForm && (
         <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg space-y-3">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.retrospective_action_items.action_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Action Description
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               value={newActionItem.action_description}
               onChange={(e) => setNewActionItem({ ...newActionItem, action_description: e.target.value })}
@@ -142,9 +144,9 @@ export default function ActionItemTracker({ actionItems, sprintId, projectId, on
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.retrospective_action_items.action_priority" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Priority
-              </label>
+              </FieldLabelWithHelp>
               <select
                 value={newActionItem.action_priority}
                 onChange={(e) => setNewActionItem({ ...newActionItem, action_priority: e.target.value })}
@@ -157,9 +159,9 @@ export default function ActionItemTracker({ actionItems, sprintId, projectId, on
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.retrospective_action_items.target_completion_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Target Completion Date
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="date"
                 value={newActionItem.target_completion_date}
@@ -334,3 +336,16 @@ function ActionItemCard({ item, onUpdateStatus, currentUserId }) {
   )
 }
 
+// v1345 slice 4: field help for this component (public.retrospective_action_items.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'action_description', 'action_priority', 'target_completion_date',
+].map((name) => `public.retrospective_action_items.${name}`)
+
+export default function ActionItemTracker(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ActionItemTrackerBody {...props} />
+    </FieldHelpScope>
+  )
+}

@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Link, useParams } from 'react-router-dom'
 import { useSimPracticeOwner } from '../../../lib/useSimPracticeOwner'
 import { simGetScopeManagementPlan, simSaveScopeManagementPlan } from '../../../services/sim/simPlanningService'
@@ -37,7 +39,7 @@ const SECTIONS = [
   },
 ]
 
-export default function ScopeManagementPlan() {
+function ScopeManagementPlanBody() {
   const { projectId } = useParams()
   const { canEdit } = useSimPracticeOwner(projectId)
   const [loading, setLoading] = useState(true)
@@ -191,7 +193,7 @@ export default function ScopeManagementPlan() {
           ['scope_baseline_info', 'Scope baseline information'],
         ].map(([key, label]) => (
           <div key={key}>
-            <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">{label}</label>
+            <FieldLabelWithHelp helpKey={`sim.scope_management_plans.${key}`} className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">{label}</FieldLabelWithHelp>
             <textarea
               value={form[key]}
               onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
@@ -203,7 +205,7 @@ export default function ScopeManagementPlan() {
         ))}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="mb-1 block text-xs text-gray-600 dark:text-gray-400">Status</label>
+            <FieldLabelWithHelp helpKey="sim.scope_management_plans.status" className="mb-1 block text-xs text-gray-600 dark:text-gray-400">Status</FieldLabelWithHelp>
             <select
               value={form.status}
               onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
@@ -215,7 +217,7 @@ export default function ScopeManagementPlan() {
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-xs text-gray-600 dark:text-gray-400">Version</label>
+            <FieldLabelWithHelp helpKey="sim.scope_management_plans.version" className="mb-1 block text-xs text-gray-600 dark:text-gray-400">Version</FieldLabelWithHelp>
             <input
               value={form.version}
               onChange={(e) => setForm((f) => ({ ...f, version: e.target.value }))}
@@ -247,5 +249,21 @@ export default function ScopeManagementPlan() {
       </div>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (sim.scope_management_plans.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'scope_definition_approach', 'change_control_process', 'scope_validation_method',
+  'deliverable_acceptance_process', 'roles_responsibilities', 'wbs_maintenance_process',
+  'scope_baseline_info', 'status', 'version',
+].map((name) => `sim.scope_management_plans.${name}`)
+
+export default function ScopeManagementPlan(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ScopeManagementPlanBody {...props} />
+    </FieldHelpScope>
   )
 }

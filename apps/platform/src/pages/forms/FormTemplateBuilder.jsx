@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { platformDb, simDb } from '@nidus/supabase'
 import { Plus, Trash2, GripVertical, FileSpreadsheet } from 'lucide-react'
@@ -298,7 +300,7 @@ function SortableFieldCard({
           </button>
           <div className="grid flex-1 gap-3 md:grid-cols-4">
             <div>
-              <label className={labelClass}>Field key</label>
+              <FieldLabelWithHelp helpKey="public.form_template_fields.field_key" className={labelClass}>Field key</FieldLabelWithHelp>
               <input
                 className={`${inputClass} disabled:cursor-not-allowed disabled:opacity-60`}
                 value={field.key}
@@ -309,7 +311,7 @@ function SortableFieldCard({
               />
             </div>
             <div>
-              <label className={labelClass}>Label</label>
+              <FieldLabelWithHelp helpKey="public.form_template_fields.label" className={labelClass}>Label</FieldLabelWithHelp>
               <input
                 className={inputClass}
                 value={field.label}
@@ -318,7 +320,7 @@ function SortableFieldCard({
               />
             </div>
             <div>
-              <label className={labelClass}>Type</label>
+              <FieldLabelWithHelp helpKey="public.form_template_fields.field_type" className={labelClass}>Type</FieldLabelWithHelp>
               <select
                 className={inputClass}
                 value={field.type}
@@ -386,7 +388,7 @@ function SortableFieldCard({
       {(field.type === 'text' || field.type === 'textarea') && (
         <div className="grid gap-3 md:grid-cols-4 pl-6">
           <div>
-            <label className={labelClass} htmlFor={`field-min-${sectionIndex}-${fieldIndex}`}>Min chars</label>
+            <FieldLabelWithHelp helpKey="public.form_template_fields.min_length" className={labelClass} htmlFor={`field-min-${sectionIndex}-${fieldIndex}`}>Min chars</FieldLabelWithHelp>
             <input
               id={`field-min-${sectionIndex}-${fieldIndex}`}
               type="number"
@@ -398,7 +400,7 @@ function SortableFieldCard({
             />
           </div>
           <div>
-            <label className={labelClass} htmlFor={`field-max-${sectionIndex}-${fieldIndex}`}>Max chars</label>
+            <FieldLabelWithHelp helpKey="public.form_template_fields.max_length" className={labelClass} htmlFor={`field-max-${sectionIndex}-${fieldIndex}`}>Max chars</FieldLabelWithHelp>
             <input
               id={`field-max-${sectionIndex}-${fieldIndex}`}
               type="number"
@@ -416,7 +418,7 @@ function SortableFieldCard({
       )}
       {field.type === 'select' && (
         <div>
-          <label className={labelClass}>Options</label>
+          <FieldLabelWithHelp helpKey="public.form_template_fields.options" className={labelClass}>Options</FieldLabelWithHelp>
           <SelectOptionsEditor
             value={field.options || []}
             onChange={(options) => updateField(sectionIndex, fieldIndex, { options })}
@@ -429,7 +431,7 @@ function SortableFieldCard({
       {field.type === 'attachment' && (
         <div className="grid gap-3 md:grid-cols-4 pl-6">
           <div>
-            <label className={labelClass}>Accepted files</label>
+            <FieldLabelWithHelp helpKey="public.form_template_fields.accept" className={labelClass}>Accepted files</FieldLabelWithHelp>
             <select
               className={inputClass}
               value={field.accept === 'image' ? 'image' : 'any'}
@@ -440,7 +442,7 @@ function SortableFieldCard({
             </select>
           </div>
           <div>
-            <label className={labelClass}>Max files</label>
+            <FieldLabelWithHelp helpKey="public.form_template_fields.max_files" className={labelClass}>Max files</FieldLabelWithHelp>
             <input
               type="number"
               min={1}
@@ -618,7 +620,7 @@ function SortableFieldTableRow({
       {field.type === 'select' && (
         <tr className="border-t border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30">
           <td colSpan={10} className="px-3 py-2">
-            <label className={labelClass}>Options for {field.label || field.key}</label>
+            <FieldLabelWithHelp helpKey="public.form_template_fields.options" className={labelClass}>Options for {field.label || field.key}</FieldLabelWithHelp>
             <SelectOptionsEditor
               value={field.options || []}
               onChange={(options) => updateField(sectionIndex, fieldIndex, { options })}
@@ -631,7 +633,7 @@ function SortableFieldTableRow({
           <td colSpan={10} className="px-3 py-2">
             <div className="flex flex-wrap items-end gap-3">
               <div>
-                <label className={labelClass}>Accepted files</label>
+                <FieldLabelWithHelp helpKey="public.form_template_fields.accept" className={labelClass}>Accepted files</FieldLabelWithHelp>
                 <select
                   className={tableInputClass}
                   value={field.accept === 'image' ? 'image' : 'any'}
@@ -642,7 +644,7 @@ function SortableFieldTableRow({
                 </select>
               </div>
               <div>
-                <label className={labelClass}>Max files</label>
+                <FieldLabelWithHelp helpKey="public.form_template_fields.max_files" className={labelClass}>Max files</FieldLabelWithHelp>
                 <input
                   type="number"
                   min={1}
@@ -663,7 +665,7 @@ function SortableFieldTableRow({
   )
 }
 
-export default function FormTemplateBuilder({ mode = 'platform' }) {
+function FormTemplateBuilderBody({ mode = 'platform' }) {
   const { templateCode: editCode } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
@@ -1557,7 +1559,7 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
           <h2 className="text-sm font-semibold">Template details</h2>
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <label className={labelClass} htmlFor="template_code">Template code</label>
+              <FieldLabelWithHelp helpKey="public.form_template_fields.template_code" className={labelClass} htmlFor="template_code">Template code</FieldLabelWithHelp>
               <input
                 id="template_code"
                 className={inputClass}
@@ -1568,7 +1570,7 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
               />
             </div>
             <div>
-              <label className={labelClass} htmlFor="template_name">Name</label>
+              <FieldLabelWithHelp helpKey="public.form_template_fields.template_name" className={labelClass} htmlFor="template_name">Name</FieldLabelWithHelp>
               <input
                 id="template_name"
                 className={inputClass}
@@ -1578,7 +1580,7 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
               />
             </div>
             <div>
-              <label className={labelClass} htmlFor="process_group">Process group</label>
+              <FieldLabelWithHelp helpKey="public.form_template_fields.process_group" className={labelClass} htmlFor="process_group">Process group</FieldLabelWithHelp>
               <select
                 id="process_group"
                 className={inputClass}
@@ -1591,7 +1593,7 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
               </select>
             </div>
             <div className="flex items-end">
-              <label className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+              <FieldLabelWithHelp helpKey="public.form_template_fields.is_active" className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
                 <input
                   type="checkbox"
                   checked={form.is_active}
@@ -1599,7 +1601,7 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
                   className="rounded border-gray-600"
                 />
                 Active (published to project managers)
-              </label>
+              </FieldLabelWithHelp>
               {!form.is_active && (
                 <span className="ml-3 text-xs text-amber-500">Draft — hidden from non-PMO users</span>
               )}
@@ -1671,7 +1673,7 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
               <div className="flex flex-wrap items-end gap-3 justify-between">
                 <div className="grid flex-1 gap-3 md:grid-cols-2">
                   <div>
-                    <label className={labelClass}>Section key</label>
+                    <FieldLabelWithHelp helpKey="public.form_template_fields.section_key" className={labelClass}>Section key</FieldLabelWithHelp>
                     <input
                       className={inputClass}
                       value={section.key}
@@ -1680,7 +1682,7 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
                     />
                   </div>
                   <div>
-                    <label className={labelClass}>Section title</label>
+                    <FieldLabelWithHelp helpKey="public.form_template_fields.section_title" className={labelClass}>Section title</FieldLabelWithHelp>
                     <input
                       className={inputClass}
                       value={section.title}
@@ -1879,7 +1881,7 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
                       </div>
                       <div className="flex flex-wrap items-center gap-3">
                         <div className="flex items-center gap-1.5">
-                          <label className="text-xs text-gray-500 dark:text-gray-400" htmlFor={`${mapKey}-label-override`}>Label</label>
+                          <FieldLabelWithHelp helpKey="public.form_template_fields.label" className="text-xs text-gray-500 dark:text-gray-400" htmlFor={`${mapKey}-label-override`}>Label</FieldLabelWithHelp>
                           <input
                             id={`${mapKey}-label-override`}
                             className="rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1 text-xs text-gray-900 dark:text-gray-100 w-40"
@@ -1891,7 +1893,7 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
                           />
                         </div>
                         <div className="flex items-center gap-1.5">
-                          <label className="text-xs text-gray-500 dark:text-gray-400" htmlFor={`${mapKey}-type-override`}>Type</label>
+                          <FieldLabelWithHelp helpKey="public.form_template_fields.field_type" className="text-xs text-gray-500 dark:text-gray-400" htmlFor={`${mapKey}-type-override`}>Type</FieldLabelWithHelp>
                           <select
                             id={`${mapKey}-type-override`}
                             className="rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1 text-xs text-gray-900 dark:text-gray-100"
@@ -1925,7 +1927,7 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
                         {showLengthControls && (
                           <>
                             <div className="flex items-center gap-1.5">
-                              <label className="text-xs text-gray-500 dark:text-gray-400" htmlFor={`${mapKey}-min-length`}>Min</label>
+                              <FieldLabelWithHelp helpKey="public.form_template_fields.min_length" className="text-xs text-gray-500 dark:text-gray-400" htmlFor={`${mapKey}-min-length`}>Min</FieldLabelWithHelp>
                               <input
                                 id={`${mapKey}-min-length`}
                                 type="number"
@@ -1942,7 +1944,7 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
                               />
                             </div>
                             <div className="flex items-center gap-1.5">
-                              <label className="text-xs text-gray-500 dark:text-gray-400" htmlFor={`${mapKey}-max-length`}>Max</label>
+                              <FieldLabelWithHelp helpKey="public.form_template_fields.max_length" className="text-xs text-gray-500 dark:text-gray-400" htmlFor={`${mapKey}-max-length`}>Max</FieldLabelWithHelp>
                               <input
                                 id={`${mapKey}-max-length`}
                                 type="number"
@@ -1968,7 +1970,7 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
                       </div>
                       {typeDraft?.type === 'select' && (
                         <div className="rounded border border-dashed border-gray-300 dark:border-gray-700 p-2">
-                          <label className={labelClass}>Options for this override</label>
+                          <FieldLabelWithHelp helpKey="public.form_template_fields.options" className={labelClass}>Options for this override</FieldLabelWithHelp>
                           <SelectOptionsEditor
                             value={typeDraft.options}
                             onChange={(options) => setTypeOverrideDrafts((prev) => ({ ...prev, [mapKey]: { ...prev[mapKey], options } }))}
@@ -2056,7 +2058,7 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
                         </div>
                         {editOptionsDraft && (
                           <div className="rounded border border-dashed border-gray-300 dark:border-gray-700 p-2">
-                            <label className={labelClass}>Edit options for {addition.field_definition?.label || addition.field_key}</label>
+                            <FieldLabelWithHelp helpKey="public.form_template_fields.options" className={labelClass}>Edit options for {addition.field_definition?.label || addition.field_key}</FieldLabelWithHelp>
                             <SelectOptionsEditor
                               value={editOptionsDraft}
                               onChange={(options) => setEditOptionsDrafts((prev) => ({ ...prev, [mapKey]: options }))}
@@ -2093,7 +2095,7 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
 
               <div className="mt-3 grid gap-3 rounded border border-dashed border-gray-300 dark:border-gray-700 p-3 md:grid-cols-5">
                 <div>
-                  <label className={labelClass}>Section</label>
+                  <FieldLabelWithHelp helpKey="public.form_template_fields.section_key" className={labelClass}>Section</FieldLabelWithHelp>
                   <select
                     className={inputClass}
                     value={newLocalField.sectionKey}
@@ -2106,7 +2108,7 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
                   </select>
                 </div>
                 <div>
-                  <label className={labelClass}>Field key</label>
+                  <FieldLabelWithHelp helpKey="public.form_template_fields.field_key" className={labelClass}>Field key</FieldLabelWithHelp>
                   <input
                     className={inputClass}
                     value={newLocalField.key}
@@ -2114,7 +2116,7 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
                   />
                 </div>
                 <div>
-                  <label className={labelClass}>Label</label>
+                  <FieldLabelWithHelp helpKey="public.form_template_fields.label" className={labelClass}>Label</FieldLabelWithHelp>
                   <input
                     className={inputClass}
                     value={newLocalField.label}
@@ -2122,7 +2124,7 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
                   />
                 </div>
                 <div>
-                  <label className={labelClass}>Type</label>
+                  <FieldLabelWithHelp helpKey="public.form_template_fields.field_type" className={labelClass}>Type</FieldLabelWithHelp>
                   <select
                     className={inputClass}
                     value={newLocalField.type}
@@ -2134,19 +2136,19 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
                   </select>
                 </div>
                 <div className="flex items-end gap-2">
-                  <label className="inline-flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 pb-2">
+                  <FieldLabelWithHelp helpKey="public.form_template_fields.is_required" className="inline-flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 pb-2">
                     <input
                       type="checkbox"
                       checked={newLocalField.required}
                       onChange={(e) => setNewLocalField((prev) => ({ ...prev, required: e.target.checked }))}
                     />
                     Required
-                  </label>
+                  </FieldLabelWithHelp>
                 </div>
                 {(newLocalField.type === 'text' || newLocalField.type === 'textarea') && (
                   <>
                     <div>
-                      <label className={labelClass}>Min chars</label>
+                      <FieldLabelWithHelp helpKey="public.form_template_fields.min_length" className={labelClass}>Min chars</FieldLabelWithHelp>
                       <input
                         type="number"
                         min={0}
@@ -2157,7 +2159,7 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
                       />
                     </div>
                     <div>
-                      <label className={labelClass}>Max chars</label>
+                      <FieldLabelWithHelp helpKey="public.form_template_fields.max_length" className={labelClass}>Max chars</FieldLabelWithHelp>
                       <input
                         type="number"
                         min={0}
@@ -2171,7 +2173,7 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
                 )}
                 {newLocalField.type === 'select' && (
                   <div className="md:col-span-5">
-                    <label className={labelClass}>Options</label>
+                    <FieldLabelWithHelp helpKey="public.form_template_fields.options" className={labelClass}>Options</FieldLabelWithHelp>
                     <SelectOptionsEditor
                       value={newLocalField.options}
                       onChange={(options) => setNewLocalField((prev) => ({ ...prev, options }))}
@@ -2181,7 +2183,7 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
                 {newLocalField.type === 'attachment' && (
                   <>
                     <div>
-                      <label className={labelClass}>Accepted files</label>
+                      <FieldLabelWithHelp helpKey="public.form_template_fields.accept" className={labelClass}>Accepted files</FieldLabelWithHelp>
                       <select
                         className={inputClass}
                         value={newLocalField.accept}
@@ -2192,7 +2194,7 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
                       </select>
                     </div>
                     <div>
-                      <label className={labelClass}>Max files</label>
+                      <FieldLabelWithHelp helpKey="public.form_template_fields.max_files" className={labelClass}>Max files</FieldLabelWithHelp>
                       <input
                         type="number"
                         min={1}
@@ -2278,9 +2280,9 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
                           {field.label || field.key}
                         </p>
                         <div className="space-y-1">
-                          <label className="text-[11px] uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                          <FieldLabelWithHelp helpKey="public.form_template_fields.guidance" className="text-[11px] uppercase tracking-wide text-gray-500 dark:text-gray-400">
                             Guidance (offline / on-screen help)
-                          </label>
+                          </FieldLabelWithHelp>
                           <textarea
                             rows={3}
                             value={guidanceValues[field.key] ?? ''}
@@ -2290,9 +2292,9 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-[11px] uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                          <FieldLabelWithHelp helpKey="public.form_template_fields.default_value" className="text-[11px] uppercase tracking-wide text-gray-500 dark:text-gray-400">
                             Sample / example (pre-fill + Plain export)
-                          </label>
+                          </FieldLabelWithHelp>
                           <FormFieldRenderer
                             field={field}
                             value={defaultValues[field.key]}
@@ -2374,5 +2376,21 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
       </form>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.form_template_fields.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'field_key', 'label', 'field_type', 'min_length', 'max_length', 'options', 'accept', 'max_files',
+  'template_code', 'template_name', 'process_group', 'is_active', 'section_key', 'section_title',
+  'is_required', 'guidance', 'default_value',
+].map((name) => `public.form_template_fields.${name}`)
+
+export default function FormTemplateBuilder(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <FormTemplateBuilderBody {...props} />
+    </FieldHelpScope>
   )
 }

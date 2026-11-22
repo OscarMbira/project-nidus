@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Link, useParams } from 'react-router-dom'
 import { useSimPracticeOwner } from '../../../lib/useSimPracticeOwner'
 import { simListTraceability, simSaveTraceabilityRow, simSoftDeleteTraceRow } from '../../../services/sim/simPlanningService'
@@ -12,7 +14,7 @@ const COLS = [
   { key: 'status', label: 'Status' },
 ]
 
-export default function TraceabilityMatrix() {
+function TraceabilityMatrixBody() {
   const { projectId } = useParams()
   const { canEdit } = useSimPracticeOwner(projectId)
   const [loading, setLoading] = useState(true)
@@ -134,7 +136,7 @@ export default function TraceabilityMatrix() {
             <h3 className="text-lg font-semibold text-white">{editing === 'new' ? 'Add trace row' : 'Edit row'}</h3>
             <div className="mt-4 space-y-3">
               <div>
-                <label className="mb-1 block text-xs text-gray-400">Requirement</label>
+                <FieldLabelWithHelp helpKey="sim.requirements_traceability_matrix.requirement_id" className="mb-1 block text-xs text-gray-400" listOptions={false}>Requirement</FieldLabelWithHelp>
                 <select
                   value={form.requirement_id}
                   onChange={(e) => setForm((f) => ({ ...f, requirement_id: e.target.value }))}
@@ -148,7 +150,7 @@ export default function TraceabilityMatrix() {
                 </select>
               </div>
               <div>
-                <label className="mb-1 block text-xs text-gray-400">WBS node</label>
+                <FieldLabelWithHelp helpKey="sim.requirements_traceability_matrix.wbs_node_id" className="mb-1 block text-xs text-gray-400" listOptions={false}>WBS node</FieldLabelWithHelp>
                 <select
                   value={form.wbs_node_id}
                   onChange={(e) => setForm((f) => ({ ...f, wbs_node_id: e.target.value }))}
@@ -163,7 +165,7 @@ export default function TraceabilityMatrix() {
                 </select>
               </div>
               <div>
-                <label className="mb-1 block text-xs text-gray-400">Deliverable description</label>
+                <FieldLabelWithHelp helpKey="sim.requirements_traceability_matrix.deliverable_description" className="mb-1 block text-xs text-gray-400">Deliverable description</FieldLabelWithHelp>
                 <textarea
                   value={form.deliverable_description}
                   onChange={(e) => setForm((f) => ({ ...f, deliverable_description: e.target.value }))}
@@ -172,7 +174,7 @@ export default function TraceabilityMatrix() {
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs text-gray-400">Status</label>
+                <FieldLabelWithHelp helpKey="sim.requirements_traceability_matrix.status" className="mb-1 block text-xs text-gray-400">Status</FieldLabelWithHelp>
                 <select
                   value={form.status}
                   onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
@@ -195,5 +197,19 @@ export default function TraceabilityMatrix() {
         </div>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (sim.requirements_traceability_matrix.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'requirement_id', 'wbs_node_id', 'deliverable_description', 'status',
+].map((name) => `sim.requirements_traceability_matrix.${name}`)
+
+export default function TraceabilityMatrix(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <TraceabilityMatrixBody {...props} />
+    </FieldHelpScope>
   )
 }

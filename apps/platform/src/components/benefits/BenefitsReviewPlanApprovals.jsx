@@ -4,13 +4,15 @@
  */
 
 import { useState, useEffect } from 'react';
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { CheckCircle, XCircle, Clock, Plus, User, MessageSquare } from 'lucide-react';
 import { getApprovals, requestApproval, recordApproval, getMyPendingApprovals } from '../../services/benefitsReviewPlanService';
 import { platformDb } from '../../services/supabaseClient';
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
-export default function BenefitsReviewPlanApprovals({ planId, planStatus, onUpdate }) {
+function BenefitsReviewPlanApprovalsBody({ planId, planStatus, onUpdate }) {
   const [approvals, setApprovals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showRequestForm, setShowRequestForm] = useState(false);
@@ -140,9 +142,9 @@ export default function BenefitsReviewPlanApprovals({ planId, planStatus, onUpda
         <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.benefits_review_plan_approvals.approver_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required listOptions={false}>
                 Select Approvers *
-              </label>
+              </FieldLabelWithHelp>
               <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-4 max-h-60 overflow-y-auto bg-white dark:bg-gray-700">
                 {users.map((user) => (
                   <label key={user.id} className="flex items-center gap-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer">
@@ -280,4 +282,18 @@ export default function BenefitsReviewPlanApprovals({ planId, planStatus, onUpda
       </div>
     </div>
   );
+}
+
+// v1345 slice 4: field help for this component (public.benefits_review_plan_approvals.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'approver_id',
+].map((name) => `public.benefits_review_plan_approvals.${name}`)
+
+export default function BenefitsReviewPlanApprovals(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <BenefitsReviewPlanApprovalsBody {...props} />
+    </FieldHelpScope>
+  )
 }

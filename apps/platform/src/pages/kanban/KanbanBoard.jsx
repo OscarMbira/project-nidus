@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useParams, useNavigate } from 'react-router-dom'
 
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
@@ -197,7 +199,7 @@ function DroppableColumn({ column, cards, onCardClick, onCreateCard, wipLimit })
   )
 }
 
-export default function KanbanBoard() {
+function KanbanBoardBody() {
   const { boardId } = useParams()
   const { projectId, routeKey } = usePlatformProjectId()
   const navigate = useNavigate()
@@ -745,9 +747,9 @@ function CardForm({ columnId, onSave, onClose }) {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.kanban_cards.card_title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
               Card Title *
-            </label>
+            </FieldLabelWithHelp>
             <input
               type="text"
               name="card_title"
@@ -760,9 +762,9 @@ function CardForm({ columnId, onSave, onClose }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.kanban_cards.card_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Description
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               name="card_description"
               value={formData.card_description}
@@ -775,9 +777,9 @@ function CardForm({ columnId, onSave, onClose }) {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.kanban_cards.priority" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Priority
-              </label>
+              </FieldLabelWithHelp>
               <select
                 name="priority"
                 value={formData.priority}
@@ -792,9 +794,9 @@ function CardForm({ columnId, onSave, onClose }) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.kanban_cards.card_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Card Type
-              </label>
+              </FieldLabelWithHelp>
               <select
                 name="card_type"
                 value={formData.card_type}
@@ -812,9 +814,9 @@ function CardForm({ columnId, onSave, onClose }) {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.kanban_cards.assigned_to_user_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                 Assign To
-              </label>
+              </FieldLabelWithHelp>
               <select
                 name="assigned_to_user_id"
                 value={formData.assigned_to_user_id}
@@ -831,9 +833,9 @@ function CardForm({ columnId, onSave, onClose }) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.kanban_cards.due_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Due Date
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="date"
                 name="due_date"
@@ -866,3 +868,16 @@ function CardForm({ columnId, onSave, onClose }) {
   )
 }
 
+// v1345 slice 4: field help for this component (public.kanban_cards.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'card_title', 'card_description', 'priority', 'card_type', 'assigned_to_user_id', 'due_date',
+].map((name) => `public.kanban_cards.${name}`)
+
+export default function KanbanBoard(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <KanbanBoardBody {...props} />
+    </FieldHelpScope>
+  )
+}

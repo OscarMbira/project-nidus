@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect, useCallback, useMemo, memo } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Plus, AlertCircle } from 'lucide-react'
 import { getConstraintCategories } from '../../services/constraintCategoryService'
 import { getSimConstraintCategories } from '../../services/simConstraintCategoryService'
@@ -350,9 +351,9 @@ function ConstraintSelector({
         <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 space-y-4 border border-gray-200 dark:border-gray-600">
           {/* Category Select */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="sim.scenario_constraints.category_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
               Constraint Category <span className="text-red-500">*</span>
-            </label>
+            </FieldLabelWithHelp>
             <ConstraintCategorySelect
               categories={categories}
               selectedCategoryId={newConstraint.categoryId}
@@ -372,9 +373,9 @@ function ConstraintSelector({
           {/* Operand Select (for numeric constraints) */}
           {showOperand && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.scenario_constraints.operand" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Comparison <span className="text-red-500">*</span>
-              </label>
+              </FieldLabelWithHelp>
               <ConstraintOperandSelect
                 value={newConstraint.operand}
                 onChange={handleOperandChange}
@@ -393,9 +394,9 @@ function ConstraintSelector({
           {/* Value Input */}
           {showValueInput && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.scenario_constraints.value" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Value <span className="text-red-500">*</span>
-              </label>
+              </FieldLabelWithHelp>
               <ConstraintValueInput
                 category={newConstraint.category}
                 operand={newConstraint.operand}
@@ -425,9 +426,9 @@ function ConstraintSelector({
 
           {/* Notes (optional) */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="sim.scenario_constraints.notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Notes (Optional)
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               value={newConstraint.notes || ''}
               onChange={(e) => handleValueChange({ notes: e.target.value })}

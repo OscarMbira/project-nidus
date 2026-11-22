@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import { createCopyFromMaster } from '../../services/projectTemplateCopyService'
@@ -9,7 +11,7 @@ import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 
 const BASE = '/platform/templates'
 
-export default function ProjectTemplateCopyCreate() {
+function ProjectTemplateCopyCreateBody() {
   const [searchParams] = useSearchParams()
   const templateId = searchParams.get('templateId')
   const navigate = useNavigate()
@@ -93,7 +95,7 @@ export default function ProjectTemplateCopyCreate() {
 
       {formTab === 'details' && (
       <>
-      <label className="block mb-4">
+      <FieldLabelWithHelp helpKey="public.project_template_copies.project_id" className="block mb-4" listOptions={false}>
         <span className="text-sm">Project</span>
         <select
           value={projectId}
@@ -107,15 +109,15 @@ export default function ProjectTemplateCopyCreate() {
             </option>
           ))}
         </select>
-      </label>
-      <label className="block mb-4">
+      </FieldLabelWithHelp>
+      <FieldLabelWithHelp helpKey="public.project_template_copies.title" className="block mb-4">
         <span className="text-sm">Title</span>
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2"
         />
-      </label>
+      </FieldLabelWithHelp>
       <button
         type="button"
         disabled={saving || !templateId}
@@ -127,5 +129,19 @@ export default function ProjectTemplateCopyCreate() {
       </>
       )}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.project_template_copies.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'project_id', 'title',
+].map((name) => `public.project_template_copies.${name}`)
+
+export default function ProjectTemplateCopyCreate(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <ProjectTemplateCopyCreateBody {...props} />
+    </FieldHelpScope>
   )
 }
