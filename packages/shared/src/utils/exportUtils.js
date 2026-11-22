@@ -47,6 +47,34 @@ function fieldTable(field) {
 }
 
 /**
+ * Multi-line / multi-item field values as a real table for layout exports (rule 38.1 amend —
+ * View / PDF / Word / PowerPoint / Print). Flat exports still use one item per line.
+ * @param {{ isList?: boolean, items?: string[] }|null} parsed
+ * @param {string} [itemColumnLabel='Item']
+ */
+export function listItemsAsTable(parsed, itemColumnLabel = 'Item') {
+  if (!parsed?.isList || !Array.isArray(parsed.items) || parsed.items.length === 0) return null
+  const header = String(itemColumnLabel || 'Item').trim() || 'Item'
+  return {
+    headers: ['#', header],
+    rows: parsed.items.map((item, i) => [String(i + 1), item == null || item === '' ? '—' : String(item)]),
+  }
+}
+
+/**
+ * Prefer an explicit field.table; otherwise turn a multi-item value into a # | Item table
+ * only when the section builder opted in via `itemColumnLabel` (so long prose is not forced
+ * into stacked tables — rule 38.1, logical use only).
+ * @returns {{ headers: string[], rows: string[][] }|null}
+ */
+export function resolveLayoutFieldTable(field, recordValue) {
+  const explicit = fieldTable(field)
+  if (explicit) return explicit
+  if (field?.fact || !field?.itemColumnLabel) return null
+  return listItemsAsTable(parseFieldValue(recordValue), field.itemColumnLabel)
+}
+
+/**
  * Column widths as fractions (sum 1), weighted by how much text each column holds so long
  * descriptions get more room than short codes. Every column gets at least 10%.
  */
@@ -398,14 +426,38 @@ function splitEmDashSeparatedList(text) {
 }
 
 /**
+ * Rejoin lines that are only a broken thousand-group ("380" + "000 a year…").
+ * Old comma-split bugs and accidental Enter keys left these in seed / stored text.
+ */
+function rejoinBrokenThousandGroups(lines) {
+  const out = []
+  for (const line of lines) {
+    const prev = out[out.length - 1]
+    if (
+      prev &&
+      /\d{1,3}$/.test(prev) &&
+      !/,\d{1,3}$/.test(prev) &&
+      /^\d{3}(?:\D|$)/.test(line)
+    ) {
+      out[out.length - 1] = `${prev},${line}`
+    } else {
+      out.push(line)
+    }
+  }
+  return out
+}
+
+/**
  * Newline-separated values, including "Intro:\nbullet\nbullet" storage form
  * and recovery of a prior bad split where the intro was stored as the first bullet.
  */
 function splitNewlineList(text) {
-  const lines = String(text || '')
-    .split('\n')
-    .map((line) => line.trim())
-    .filter(Boolean)
+  const lines = rejoinBrokenThousandGroups(
+    String(text || '')
+      .split('\n')
+      .map((line) => line.trim())
+      .filter(Boolean),
+  )
   if (lines.length < 2) return null
 
   const withIntro = extractIntroFromLines(lines)
@@ -898,6 +950,9 @@ export {
   fieldGuidanceLines,
   guidedCellValue,
   resolveBranding,
+  fieldTable,
+  sectionRenderSteps,
+  factsTable,
   BULLET,
 }
 
@@ -1129,8 +1184,15 @@ export async function exportRecordToWord(sections, record, baseFilename, brandin
         continue
       }
 
-      const table = fieldTable(field)
+      const table = resolveLayoutFieldTable(field, record[key])
       if (table) {
+        const parsedForIntro = parseFieldValue(record[key])
+        if (parsedForIntro?.isList && parsedForIntro.intro) {
+          children.push(new Paragraph({
+            children: [new TextRun({ text: parsedForIntro.intro })],
+            spacing: { after: 60 },
+          }))
+        }
         pushTable(table)
         continue
       }
@@ -1146,23 +1208,22 @@ export async function exportRecordToWord(sections, record, baseFilename, brandin
         if (parsed.items.length === 0 && !parsed.intro) {
           children.push(new Paragraph({
             children: [new TextRun({ text: blankPlaceholder })],
-            spacing: { after: WORD_SPACING.bodyAfter }
+            spacing: { after: WORD_SPACING.bodyAfter },
           }))
         } else {
           parsed.items.forEach((item, i) => {
             const text = item || blankPlaceholder
             children.push(new Paragraph({
               text,
-              // Keep "1. …" / "• …" as plain lines — don't double-wrap with Word bullets
               ...(itemHasOwnListMarker(text) ? {} : { bullet: { level: 0 } }),
-              spacing: { after: i < parsed.items.length - 1 ? 60 : WORD_SPACING.bodyAfter }
+              spacing: { after: i < parsed.items.length - 1 ? 60 : WORD_SPACING.bodyAfter },
             }))
           })
         }
       } else {
         children.push(new Paragraph({
           children: [new TextRun({ text: parsed.text || blankPlaceholder })],
-          spacing: { after: WORD_SPACING.bodyAfter }
+          spacing: { after: WORD_SPACING.bodyAfter },
         }))
       }
     }
@@ -1357,8 +1418,13 @@ export async function exportRecordToPPT(sections, record, baseFilename, branding
         continue
       }
 
-      const table = fieldTable(field)
+      const table = resolveLayoutFieldTable(field, record[key])
       if (table) {
+        const parsedForIntro = parseFieldValue(record[key])
+        if (parsedForIntro?.isList && parsedForIntro.intro) {
+          slide.addText(parsedForIntro.intro, { x: marginX, y, w, h: lineHeight, fontSize: labelFontSize, color: bodyColor })
+          y += lineHeight + gapAfterLabel
+        }
         addPptTable(table)
         continue
       }
@@ -1726,7 +1792,18 @@ export function exportRecordToPrint(sectionsOrFields, record, baseFilename, bran
         const guidanceHtml = fieldGuidanceLines(field)
           .map((line) => `<div style="font-size:12px;font-style:italic;color:#666;margin-top:2px;">${escapeHtml(line)}</div>`)
           .join('')
-        const valueHtml = attachmentCellHtml(key) ?? blocksHtml(field) ?? tableFieldHtml(field) ?? escapeHtml(displayValue(record[key], blankPlaceholder))
+        const layoutTable = resolveLayoutFieldTable(field, record[key])
+        const listIntro = (() => {
+          if (!layoutTable || fieldTable(field)) return ''
+          const p = parseFieldValue(record[key])
+          return p?.isList && p.intro
+            ? `<p style="margin:0 0 6px;">${escapeHtml(p.intro)}</p>`
+            : ''
+        })()
+        const valueHtml = attachmentCellHtml(key)
+          ?? blocksHtml(field)
+          ?? (layoutTable ? `${listIntro}${tableHtml(layoutTable)}` : null)
+          ?? escapeHtml(displayValue(record[key], blankPlaceholder))
         body += `<tr><td style="font-weight:bold;padding:4px 8px;vertical-align:top;">${escapeHtml(l)}${guidanceHtml}</td><td style="padding:4px 8px;">${valueHtml}</td></tr>`
       })
       body += '</table>'
@@ -1920,7 +1997,7 @@ async function _buildRecordPdfDocument(sections, record, title, branding, blankP
     if (Array.isArray(assets)) return labelH + (assets.length ? 60 : 14)
     const blocks = fieldBlocks(field)
     if (blocks) return labelH + blockStartHeight(blocks[0])
-    const table = fieldTable(field)
+    const table = resolveLayoutFieldTable(field, record[field.key])
     if (table) return labelH + tableStartHeight(table)
     doc.setFontSize(9)
     return labelH + Math.min(doc.splitTextToSize(fieldValueText(field), maxWidth).length, 2) * 12
@@ -2075,13 +2152,18 @@ async function _buildRecordPdfDocument(sections, record, title, branding, blankP
         continue
       }
 
-      const table = fieldTable(field)
+      const table = resolveLayoutFieldTable(field, record[key])
       if (table) {
+        const parsedForIntro = parseFieldValue(record[key])
+        if (parsedForIntro?.isList && parsedForIntro.intro && !fieldTable(field)) {
+          drawLines(parsedForIntro.intro)
+          y += 4
+        }
         drawTable(table)
         continue
       }
 
-      // Flow long values across pages line by line.
+      // Flow long values / bullets across pages line by line.
       drawLines(fieldValueText(field))
       y += 10
     }

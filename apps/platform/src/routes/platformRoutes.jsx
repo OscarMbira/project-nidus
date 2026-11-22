@@ -140,6 +140,8 @@ import {
   ProjectFunctionalRoleCreate,
   ProjectFunctionalRoleFromLibrary,
   MyTeam,
+  MyTeamMemberPage,
+  MyTeamFunctionalRolePage,
   Governance,
   Portfolio,
   PortfolioCreatePage,
@@ -1570,10 +1572,66 @@ export function PlatformRouteElements() {
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
+                              <Route path="my-team/members/new" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <MyTeamMemberPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="my-team/members/:memberId/edit" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <MyTeamMemberPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="my-team/roles/new" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <MyTeamFunctionalRolePage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="my-team/roles/:roleId/edit" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <MyTeamFunctionalRolePage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
                               <Route path="my-team" element={
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
                                     <MyTeam />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="teams/my-team/members/new" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <MyTeamMemberPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="teams/my-team/members/:memberId/edit" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <MyTeamMemberPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="teams/my-team/roles/new" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <MyTeamFunctionalRolePage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="teams/my-team/roles/:roleId/edit" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <MyTeamFunctionalRolePage />
                                   </ProtectedRoute>
                                 </Suspense>
                               } />

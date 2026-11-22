@@ -9,9 +9,8 @@
  *   "Keep for later" draft for new tasks (rule 37); success modal (rule 16).
  * - v1265: `tasks/new?parent=<task code or id>` creates a sub-task (Plan sheet + button); it is
  *   placed last among its siblings.
- * - v1265: the form is also shown as a modal over the schedule views (components/TaskModal.jsx,
- *   owner decision 2026-10-12, rule 65 task-form exception). `TaskForm` is the shared body; the
- *   route screen and the modal only differ in how they open, close and move between modes.
+ * - Every schedule view opens this page (hooks/useTaskPage.js). The v1265 modal was removed by
+ *   owner request (2026-11-14), so the task form follows rule 65 like other record forms.
  */
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams, useLocation, useSearchParams } from 'react-router-dom'
@@ -30,6 +29,8 @@ import { ConflictBanner, ChooseProject, Loading } from '../../components/Schedul
 import { useScheduleData, useScheduleLinks, useScheduleProjectId } from '../../hooks/useSchedule.js'
 import { DEPENDENCY_TYPES, dependencyShort, ScheduleConflictError, expectedVersionsOf, taskBaselineDates } from '../../services/scheduleData.js'
 import { predecessorChoices } from '../../services/planOutline.js'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const EMPTY = {
   task_name: '', task_description: '', estimated_duration_days: 1, is_milestone: false,
@@ -134,10 +135,14 @@ function BaselineSummary({ task, form, baselines }) {
 const input = 'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-800'
 const labelCls = 'block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1'
 
-function Field({ label, children, hint }) {
+/**
+ * A labelled task field. The wrapping label element links the nested control; the help (rule 76) sits on the label text
+ * itself (FieldLabelWithHelp as a span), so the outer label is marked exempt for the coverage check.
+ */
+function Field({ label, children, hint, helpKey, listOptions = true }) {
   return (
-    <label className="block">
-      <span className={labelCls}>{label}</span>
+    <label data-help="exempt" className="block">
+      <FieldLabelWithHelp as="span" helpKey={helpKey} listOptions={listOptions} className={labelCls}>{label}</FieldLabelWithHelp>
       {children}
       {hint && <span className="mt-1 block text-xs text-gray-500 dark:text-gray-400">{hint}</span>}
     </label>
@@ -165,15 +170,14 @@ export default function TaskFormScreen() {
 }
 
 /**
- * The task form body. mode 'new' | 'view' | 'edit'; variant 'page' | 'modal'.
+ * The task form body. mode 'new' | 'view' | 'edit'.
  * onClose() leaves; onModeChange(mode, key) switches view ↔ edit; onSaved(key) after a save.
  */
-export function TaskForm({ taskKey = null, mode = 'view', parentKey = null, variant = 'page', onClose, onModeChange, onSaved, renderClose = null }) {
+export function TaskForm({ taskKey = null, mode = 'view', parentKey = null, onClose, onModeChange, onSaved }) {
   const data = useScheduleData()
   const { projectId, loading: projectLoading } = useScheduleProjectId()
   const isNew = mode === 'new'
   const isEdit = mode !== 'view'
-  const inModal = variant === 'modal'
   const { showSuccess, modal } = useSuccessModal()
 
   const [tab, setTab] = useState('details')
@@ -325,11 +329,7 @@ export function TaskForm({ taskKey = null, mode = 'view', parentKey = null, vari
 
   const requestClose = () => confirmDiscard(() => onClose?.())
   if (!projectId) return <div className="p-6">{projectLoading ? <Loading /> : <ChooseProject />}</div>
-  if (loading) {
-    return inModal
-      ? <div className="flex items-start justify-between"><h1 id="task-modal-title" className="sr-only">Task</h1><Loading text="Loading task…" />{renderClose?.(requestClose)}</div>
-      : <Loading text="Loading task…" />
-  }
+  if (loading) return <Loading text="Loading task…" />
 
   const title = isNew ? (parentTask ? 'New sub-task' : 'New task') : `${isEdit ? 'Edit' : ''} ${task?.task_name || 'Task'}`.trim()
   const tabs = [
@@ -343,11 +343,11 @@ export function TaskForm({ taskKey = null, mode = 'view', parentKey = null, vari
   const linkName = (id) => { const t = byId.get(id); return t ? `${t.task_code ? `${t.task_code} · ` : ''}${t.task_name}` : 'Unknown task' }
 
   return (
-    <div className={inModal ? 'space-y-4' : 'w-full px-3 sm:px-4 lg:px-5 xl:px-6 py-6 space-y-4 max-w-5xl'}>
-      {!inModal && <BackButton label="Back to schedule" />}
+    <div className="w-full px-3 sm:px-4 lg:px-5 xl:px-6 py-6 space-y-4 max-w-5xl">
+      <BackButton label="Back to schedule" />
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 id={inModal ? 'task-modal-title' : undefined} className={`${inModal ? 'text-xl' : 'text-2xl'} font-bold text-gray-900 dark:text-white`}>{title}</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{title}</h1>
           {task?.task_code && <p className="font-mono text-sm text-blue-600 dark:text-blue-400">{task.task_code}</p>}
         </div>
         <div className="flex flex-wrap gap-2">
@@ -363,7 +363,6 @@ export function TaskForm({ taskKey = null, mode = 'view', parentKey = null, vari
               </button>
             </>
           )}
-          {renderClose?.(requestClose)}
         </div>
       </div>
 
@@ -393,14 +392,14 @@ export function TaskForm({ taskKey = null, mode = 'view', parentKey = null, vari
         {/* v1265: the old long Details tab is split into Details / Schedule / Progress so each fits on screen. */}
         {tab === 'details' && (
           <fieldset disabled={disabled} className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="sm:col-span-2"><Field label="Task name *"><input className={input} value={form.task_name} onChange={set('task_name')} maxLength={200} /></Field></div>
-            <div className="sm:col-span-2"><Field label="Description"><textarea className={input} rows={4} value={form.task_description || ''} onChange={set('task_description')} /></Field></div>
-            <Field label="Priority" hint="How important this task is. Whether it is on the critical path is worked out from the schedule (Schedule tab).">
+            <div className="sm:col-span-2"><Field label="Task name *" helpKey="public.tasks.task_name"><input className={input} value={form.task_name} onChange={set('task_name')} maxLength={200} /></Field></div>
+            <div className="sm:col-span-2"><Field label="Description" helpKey="public.tasks.task_description"><textarea className={input} rows={4} value={form.task_description || ''} onChange={set('task_description')} /></Field></div>
+            <Field label="Priority" helpKey="public.tasks.priority" hint="How important this task is. Whether it is on the critical path is worked out from the schedule (Schedule tab).">
               <select className={input} value={form.priority || 'medium'} onChange={set('priority')}>
                 <option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option><option value="critical">Critical</option>
               </select>
             </Field>
-            <Field label="Assigned to" hint={team.length ? undefined : 'Add people to the project team to assign them.'}>
+            <Field label="Assigned to" helpKey="public.tasks.assigned_to_user_id" listOptions={false} hint={team.length ? undefined : 'Add people to the project team to assign them.'}>
               <SelectField
                 options={team.map((m) => ({ value: m.id, label: m.name }))}
                 value={form.assigned_to_user_id || ''}
@@ -416,20 +415,20 @@ export function TaskForm({ taskKey = null, mode = 'view', parentKey = null, vari
 
         {tab === 'schedule' && (
           <fieldset disabled={disabled} className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Field label="Duration (working days)" hint={form.is_milestone ? 'Milestones have no duration.' : undefined}>
+            <Field label="Duration (working days)" helpKey="public.tasks.estimated_duration_days" hint={form.is_milestone ? 'Milestones have no duration.' : undefined}>
               <input type="number" min={1} className={input} value={form.is_milestone ? 0 : form.estimated_duration_days} onChange={set('estimated_duration_days')} disabled={disabled || form.is_milestone} />
             </Field>
-            <label className="flex items-center gap-2 text-sm text-gray-800 dark:text-gray-200 sm:mt-6">
+            <label data-help="exempt" className="flex items-center gap-2 text-sm text-gray-800 dark:text-gray-200 sm:mt-6">
               <input type="checkbox" checked={!!form.is_milestone} onChange={set('is_milestone')} /> Milestone
             </label>
-            <Field label="Scheduling" hint={form.schedule_mode === 'manual' ? 'You set the dates; links do not move this task.' : 'Dates are worked out from links and the calendar.'}>
+            <Field label="Scheduling" helpKey="public.tasks.scheduling_mode" hint={form.schedule_mode === 'manual' ? 'You set the dates; links do not move this task.' : 'Dates are worked out from links and the calendar.'}>
               <select className={input} value={form.schedule_mode} onChange={setMode}>
                 <option value="auto">Automatic</option>
                 <option value="manual">Manual</option>
               </select>
             </Field>
             {form.schedule_mode === 'auto' ? (
-              <Field label="Date constraint">
+              <Field label="Date constraint" helpKey="public.tasks.constraint_type">
                 <select className={input} value={form.constraint_type} onChange={set('constraint_type')}>
                   {CONSTRAINTS.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
                 </select>
@@ -441,10 +440,10 @@ export function TaskForm({ taskKey = null, mode = 'view', parentKey = null, vari
               label={form.schedule_mode === 'manual' ? 'Planned start *' : 'Planned start'}
               hint={form.schedule_mode === 'auto' ? 'Calculated from links. Type a date to set it yourself.' : undefined}
             >
-              <input type="date" className={input} value={form.planned_start_date || ''} onChange={setPlanned('planned_start_date')} />
+              <RegionalDateInput eventStyle className={input} value={form.planned_start_date || ''} onChange={setPlanned('planned_start_date')} />
             </Field>
-            <Field label="Planned finish" hint={form.schedule_mode === 'auto' ? 'Calculated from the start and duration.' : undefined}>
-              <input type="date" className={input} value={form.planned_end_date || ''} onChange={setPlanned('planned_end_date')} />
+            <Field label="Planned finish" helpKey="public.tasks.planned_end_date" hint={form.schedule_mode === 'auto' ? 'Calculated from the start and duration.' : undefined}>
+              <RegionalDateInput eventStyle className={input} value={form.planned_end_date || ''} onChange={setPlanned('planned_end_date')} />
             </Field>
             {switchedToManual && (
               <p role="status" className="sm:col-span-2 -mt-2 text-xs text-amber-700 dark:text-amber-300">
@@ -452,7 +451,7 @@ export function TaskForm({ taskKey = null, mode = 'view', parentKey = null, vari
               </p>
             )}
             {form.schedule_mode === 'auto' && form.constraint_type !== 'asap' && (
-              <Field label="Constraint date *"><input type="date" className={input} value={form.constraint_date || ''} onChange={set('constraint_date')} /></Field>
+              <Field label="Constraint date *" helpKey="public.tasks.constraint_date"><RegionalDateInput eventStyle className={input} value={form.constraint_date || ''} onChange={set('constraint_date')} /></Field>
             )}
             {!isNew && (
               <p className="sm:col-span-2 text-xs text-gray-500 dark:text-gray-400">
@@ -464,10 +463,10 @@ export function TaskForm({ taskKey = null, mode = 'view', parentKey = null, vari
 
         {tab === 'progress' && (
           <fieldset disabled={disabled} className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Field label="% done"><input type="number" min={0} max={100} className={input} value={form.percentage_complete} onChange={set('percentage_complete')} /></Field>
-            <Field label="Estimated hours"><input type="number" min={0} step="0.5" className={input} value={form.estimated_hours ?? ''} onChange={set('estimated_hours')} /></Field>
-            <Field label="Actual start"><input type="date" className={input} value={form.actual_start_date || ''} onChange={set('actual_start_date')} /></Field>
-            <Field label="Actual finish"><input type="date" className={input} value={form.actual_end_date || ''} onChange={set('actual_end_date')} /></Field>
+            <Field label="% done" helpKey="public.tasks.percentage_complete"><input type="number" min={0} max={100} className={input} value={form.percentage_complete} onChange={set('percentage_complete')} /></Field>
+            <Field label="Estimated hours" helpKey="public.tasks.estimated_hours"><input type="number" min={0} step="0.5" className={input} value={form.estimated_hours ?? ''} onChange={set('estimated_hours')} /></Field>
+            <Field label="Actual start" helpKey="public.tasks.actual_start_date"><RegionalDateInput eventStyle className={input} value={form.actual_start_date || ''} onChange={set('actual_start_date')} /></Field>
+            <Field label="Actual finish" helpKey="public.tasks.actual_end_date"><RegionalDateInput eventStyle className={input} value={form.actual_end_date || ''} onChange={set('actual_end_date')} /></Field>
             {isEdit && dateWarnings(form).map((w) => (
               <p key={w} role="status" className="sm:col-span-2 text-xs text-amber-700 dark:text-amber-300">{w}</p>
             ))}
@@ -493,7 +492,7 @@ export function TaskForm({ taskKey = null, mode = 'view', parentKey = null, vari
                 <div className="sm:col-span-2">
                   {/* v1265: searchable (rule 69), plan order with outline numbers; tasks the scheduler
                       would refuse are not offered. "Only my tasks" is optional (off by default). */}
-                  <Field label="Add a task this one comes after">
+                  <Field label="Add a task this one comes after" helpKey="public.task_dependencies.predecessor_task_id" listOptions={false}>
                     <SelectField
                       options={predecessorChoices(tasks, task, { existing: predecessors.map((d) => d.predecessor_task_id), userId: me })
                         .filter((o) => !onlyMine || o.mine)}
@@ -505,18 +504,18 @@ export function TaskForm({ taskKey = null, mode = 'view', parentKey = null, vari
                       forceSearchable
                     />
                   </Field>
-                  <label className="mt-1 flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
+                  <label data-help="exempt" className="mt-1 flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
                     <input type="checkbox" checked={onlyMine} onChange={(e) => setOnlyMine(e.target.checked)} disabled={!me} />
                     Only my tasks
                   </label>
                 </div>
-                <Field label="Type">
+                <Field label="Type" helpKey="public.task_dependencies.dependency_type">
                   <select className={input} value={newLink.type} onChange={(e) => setNewLink({ ...newLink, type: e.target.value })}>
                     {DEPENDENCY_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
                   </select>
                 </Field>
                 <div className="flex gap-2 items-end">
-                  <Field label="Lag (days)"><input type="number" className={input} value={newLink.lag} onChange={(e) => setNewLink({ ...newLink, lag: e.target.value })} /></Field>
+                  <Field label="Lag (days)" helpKey="public.task_dependencies.lag_days"><input type="number" className={input} value={newLink.lag} onChange={(e) => setNewLink({ ...newLink, lag: e.target.value })} /></Field>
                   <button type="button" onClick={addLink} disabled={!newLink.predecessorId} className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm disabled:opacity-50">Add</button>
                 </div>
               </div>

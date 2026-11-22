@@ -367,15 +367,29 @@ export default function SystemHeader({
               <nav className="hidden xl:flex items-center gap-0.5 flex-shrink-0 ml-1">
                 {navLinks.map((link, index) => {
                   const isActive = isActiveLink(link.path)
+                  const linkClassName = `px-2 py-2 rounded-lg text-sm font-medium transition-all duration-200 relative whitespace-nowrap ${
+                    isActive
+                      ? 'text-blue-700 dark:text-white bg-blue-50 dark:bg-white/25 backdrop-blur-sm shadow-sm dark:shadow-md font-semibold border border-blue-100 dark:border-transparent'
+                      : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10'
+                  }`
+                  if (link.openInNewTab) {
+                    return (
+                      <a
+                        key={index}
+                        href={link.path}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={linkClassName}
+                      >
+                        {link.label}
+                      </a>
+                    )
+                  }
                   return (
                     <Link
                       key={index}
                       to={link.path}
-                      className={`px-2 py-2 rounded-lg text-sm font-medium transition-all duration-200 relative whitespace-nowrap ${
-                        isActive
-                          ? 'text-blue-700 dark:text-white bg-blue-50 dark:bg-white/25 backdrop-blur-sm shadow-sm dark:shadow-md font-semibold border border-blue-100 dark:border-transparent'
-                          : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10'
-                      }`}
+                      className={linkClassName}
                     >
                       {link.label}
                       {isActive && (
@@ -639,16 +653,31 @@ export default function SystemHeader({
             <nav className="px-4 py-3 space-y-1">
               {navLinks.map((link, index) => {
                 const isActive = isActiveLink(link.path)
+                const mobileClassName = `block px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  isActive
+                    ? 'text-blue-700 dark:text-white bg-blue-50 dark:bg-white/25 backdrop-blur-sm shadow-sm dark:shadow-md font-semibold border border-blue-100 dark:border-transparent'
+                    : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10'
+                }`
+                if (link.openInNewTab) {
+                  return (
+                    <a
+                      key={index}
+                      href={link.path}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => setMobileNavOpen(false)}
+                      className={mobileClassName}
+                    >
+                      {link.label}
+                    </a>
+                  )
+                }
                 return (
                   <Link
                     key={index}
                     to={link.path}
                     onClick={() => setMobileNavOpen(false)}
-                    className={`block px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                      isActive
-                        ? 'text-blue-700 dark:text-white bg-blue-50 dark:bg-white/25 backdrop-blur-sm shadow-sm dark:shadow-md font-semibold border border-blue-100 dark:border-transparent'
-                        : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10'
-                    }`}
+                    className={mobileClassName}
                   >
                     {link.label}
                   </Link>

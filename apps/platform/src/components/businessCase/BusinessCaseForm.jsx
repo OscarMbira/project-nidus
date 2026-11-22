@@ -17,6 +17,8 @@ import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 import MultiLineListInput from '@nidus/ui/MultiLineListInput'
 import TableListInput from '@nidus/ui/TableListInput'
+import RecordCustomFields from '../shared-app/RecordCustomFields'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const KEY_MILESTONE_COLUMNS = [
   { key: 'milestone', label: 'Milestone' },
@@ -49,7 +51,7 @@ const RISK_RATINGS = [
   { value: 'critical', label: 'Critical' },
 ]
 
-function BusinessCaseFormBody({ data, onChange, errors = {} }) {
+function BusinessCaseFormBody({ data, onChange, errors = {}, projectId = null }) {
   const [activeSection, setActiveSection] = useState('summary')
   const [auditUserLabels, setAuditUserLabels] = useState({})
 
@@ -84,10 +86,23 @@ function BusinessCaseFormBody({ data, onChange, errors = {} }) {
           ariaLabel="Business case sections"
           tabs={[
             ...SECTIONS.map((s) => ({ value: s.id, label: s.label })),
+            { value: 'custom-fields', label: 'Custom Fields' },
             { value: 'audit', label: 'Audit details' },
           ]}
         />
       </div>
+
+      {activeSection === 'custom-fields' && (
+        <RecordCustomFields
+          projectId={projectId || data?.project_id}
+          entityType="business_case"
+          entityId={data?.id}
+          screenCode="business_case_detail"
+          mode="edit"
+          alwaysShow
+          title="Custom Fields"
+        />
+      )}
 
       {activeSection === 'audit' && (
         !data?.id ? (
@@ -200,11 +215,11 @@ function BusinessCaseFormBody({ data, onChange, errors = {} }) {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <FieldLabelWithHelp helpKey="public.business_cases.start_date" className={labelClass}>Planned Start Date</FieldLabelWithHelp>
-              <input type="date" {...field('start_date')} className={inputClass} />
+              <RegionalDateInput eventStyle {...field('start_date')} className={inputClass} />
             </div>
             <div>
               <FieldLabelWithHelp helpKey="public.business_cases.end_date" className={labelClass}>Planned End Date</FieldLabelWithHelp>
-              <input type="date" {...field('end_date')} className={inputClass} />
+              <RegionalDateInput eventStyle {...field('end_date')} className={inputClass} />
             </div>
           </div>
           <div>

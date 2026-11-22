@@ -174,6 +174,9 @@ function ProjectFormTabs({ activeTab, setActiveTab, formData }) {
         return !!(
           formData.mandate_status ||
           formData.business_case_status ||
+          formData.brief_status ||
+          formData.pid_status ||
+          formData.benefits_review_plan_status ||
           formData.funding_approval_status ||
           formData.rfp_reference ||
           formData.document_repository_url

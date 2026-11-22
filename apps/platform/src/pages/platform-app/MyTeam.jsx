@@ -4,7 +4,8 @@
  */
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
-import { Users, UserPlus, Pencil, Trash2, Search } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Users, UserPlus, Search } from 'lucide-react'
 import { platformDb } from '@nidus/supabase'
 import { isPmoAdmin } from '../../services/organisationRoleService'
 import { useCurrentProject } from '../../lib/CurrentProjectContext'
@@ -14,18 +15,15 @@ import {
   getAllTeamsWithMembers,
   getTeamMembers,
   getTeamFunctionalRoles,
-  addTeamFunctionalRole,
-  updateTeamFunctionalRole,
   deleteTeamFunctionalRole,
   removeTeamMember,
 } from '../../services/teamService'
 import PermissionGate from '../../components/auth/PermissionGate'
-import AddTeamMemberModal from '../../components/teams/AddTeamMemberModal'
-import EditTeamMemberModal from '../../components/teams/EditTeamMemberModal'
-import ManageFunctionalRoleModal from '../../components/teams/ManageFunctionalRoleModal'
 import ExportListMenu from '@nidus/ui/ExportListMenu'
 import ViewToggle from '@nidus/ui/ViewToggle'
 import SortToolbar from '@nidus/ui/SortToolbar'
+import RowActionButton from '@nidus/ui/RowActionButton'
+import RowNumberBadge from '@nidus/ui/RowNumberBadge'
 import { useSortableTable } from '@nidus/shared/hooks/useSortableTable'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import toast from 'react-hot-toast'
@@ -61,8 +59,10 @@ function readView(key, fallback = 'list') {
 }
 
 export default function MyTeam() {
+  const navigate = useNavigate()
   const { currentProjectId, currentProject, loading: projectLoading } = useCurrentProject()
   const seesProjectTeams = Boolean(currentProjectId) && userIsProjectManager(currentProject)
+  const [appUserId, setAppUserId] = useState(null)
   const [pmo, setPmo] = useState(false)
   const [pmoMode, setPmoMode] = useState('mine')
   const [loading, setLoading] = useState(true)
@@ -77,9 +77,6 @@ export default function MyTeam() {
   const [memberView, setMemberView] = useState(() => readView(MEMBERS_VIEW_KEY))
   const [roleView, setRoleView] = useState(() => readView(ROLES_VIEW_KEY))
   const [successBanner, setSuccessBanner] = useState(null)
-  const [addOpen, setAddOpen] = useState(false)
-  const [editMember, setEditMember] = useState(null)
-  const [roleModal, setRoleModal] = useState(null)
 
   const memberSort = useSortableTable({
     defaultSort: { column: 'name', direction: 'asc' },
@@ -102,6 +99,13 @@ export default function MyTeam() {
     if (!user?.id) return
     const admin = await isPmoAdmin(user.id)
     setPmo(admin)
+    // teams.team_lead_user_id references public.users.id (not auth uid)
+    const { data: profile } = await platformDb
+      .from('users')
+      .select('id')
+      .eq('auth_user_id', user.id)
+      .maybeSingle()
+    setAppUserId(profile?.id || null)
 
     if (admin && pmoMode === 'all') {
       const res = await getAllTeamsWithMembers()
@@ -290,6 +294,11 @@ export default function MyTeam() {
 
   const handleDeleteRole = async (fr) => {
     if (!selectedTeamId) return
+    if (fr._count > 0) {
+      toast.error('Remove members from this role before deleting it')
+      return
+    }
+    if (!confirm(`Delete functional role “${fr.role_label}”?`)) return
     const res = await deleteTeamFunctionalRole(selectedTeamId, fr.id)
     if (res.success) {
       setSuccessBanner({ op: 'role_deleted', id: fr.id, label: fr.role_label })
@@ -298,27 +307,14 @@ export default function MyTeam() {
     } else toast.error(res.error || 'Delete failed')
   }
 
-  const onSaveNewRole = async (label) => {
-    if (!selectedTeamId) return
-    const res = await addTeamFunctionalRole(selectedTeamId, label)
-    if (res.success) {
-      setSuccessBanner({ op: 'role_added', id: res.data?.id, label })
-      toast.success('Functional role added')
-      setRoleModal(null)
-      loadMembersAndRoles()
-    } else toast.error(res.error || 'Save failed')
+  const memberCreatePath = () => {
+    const pid = selectedTeam?.project_id || currentProjectId || ''
+    return `/platform/my-team/members/new?teamId=${encodeURIComponent(selectedTeamId)}&projectId=${encodeURIComponent(pid)}`
   }
-
-  const onSaveEditRole = async (label) => {
-    if (!roleModal?.row) return
-    const res = await updateTeamFunctionalRole(roleModal.row.id, label)
-    if (res.success) {
-      setSuccessBanner({ op: 'role_updated', id: roleModal.row.id, label })
-      toast.success('Functional role updated')
-      setRoleModal(null)
-      loadMembersAndRoles()
-    } else toast.error(res.error || 'Save failed')
-  }
+  const memberEditPath = (id) => `/platform/my-team/members/${encodeURIComponent(id)}/edit`
+  const roleCreatePath = () =>
+    `/platform/my-team/roles/new?teamId=${encodeURIComponent(selectedTeamId)}`
+  const roleEditPath = (id) => `/platform/my-team/roles/${encodeURIComponent(id)}/edit`
 
   const openProjectName = currentProject?.projectName || 'this project'
   const emptyTeamMessage = pmo && pmoMode === 'all'
@@ -351,9 +347,18 @@ export default function MyTeam() {
 
   const projectName = selectedTeam?.projects?.project_name || '—'
   const projectId = selectedTeam?.project_id
-  /** PMO "All teams" uses org-wide access; project-scoped PermissionGate would hide actions for some projects. */
+  /** Hide project name when the header already scopes the page to one project. */
+  const showProjectOnTeamPicker = !seesProjectTeams || (pmo && pmoMode === 'all')
+  /** Team leads / PMs own this page; PMO "All teams" is org-wide. Others still need team.manage. */
+  const canManageSelectedTeam = Boolean(
+    (pmo && pmoMode === 'all') ||
+    seesProjectTeams ||
+    (appUserId && selectedTeam?.team_lead_user_id === appUserId)
+  )
   const manageMembersUi = (node) =>
-    pmo && pmoMode === 'all' ? node : <PermissionGate permission="team.manage" projectId={projectId}>{node}</PermissionGate>
+    canManageSelectedTeam
+      ? node
+      : <PermissionGate permission="team.manage" projectId={projectId}>{node}</PermissionGate>
 
   return (
     <div className="max-w-6xl mx-auto p-4 sm:p-6 space-y-6">
@@ -407,26 +412,30 @@ export default function MyTeam() {
         </div>
       )}
 
-      <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 space-y-3">
+      <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-          <label className="text-sm font-medium text-gray-700 dark:text-gray-300 shrink-0">Team</label>
+          <label data-help="exempt" className="text-sm font-medium text-gray-700 dark:text-gray-300 shrink-0">Team</label>
           <select
             value={selectedTeamId}
             onChange={(e) => setSelectedTeamId(e.target.value)}
             className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-gray-900 dark:text-white min-h-[44px]"
           >
-            {teamList.map((t, index) => (
+            {teamList.map((t) => (
               <option key={t.id} value={t.id}>
-                {t.team_name} — {t.projects?.project_name || 'Project'}
+                {showProjectOnTeamPicker
+                  ? `${t.team_name} — ${t.projects?.project_name || 'Project'}`
+                  : t.team_name}
               </option>
             ))}
           </select>
         </div>
         {selectedTeam && (
-          <div className="flex flex-wrap gap-4 text-sm text-gray-600 dark:text-gray-400">
-            <span>
-              <span className="font-medium text-gray-800 dark:text-gray-200">Project:</span> {projectName}
-            </span>
+          <div className="flex flex-wrap gap-4 text-sm text-gray-600 dark:text-gray-300">
+            {showProjectOnTeamPicker && (
+              <span>
+                <span className="font-medium text-gray-800 dark:text-gray-200">Project:</span> {projectName}
+              </span>
+            )}
             <span>
               <span className="font-medium text-gray-800 dark:text-gray-200">Type:</span>{' '}
               {selectedTeam.team_type || '—'}
@@ -486,7 +495,7 @@ export default function MyTeam() {
               {manageMembersUi(
                 <button
                   type="button"
-                  onClick={() => setAddOpen(true)}
+                  onClick={() => navigate(memberCreatePath())}
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white min-h-[44px]"
                 >
                   <UserPlus className="w-4 h-4" />
@@ -551,24 +560,18 @@ export default function MyTeam() {
                       </td>
                       <td className="px-3 py-2 text-right">
                         {manageMembersUi(
-                          <>
-                            <button
-                              type="button"
-                              onClick={() => setEditMember(m)}
-                              className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 mr-1"
-                              aria-label="Edit"
-                            >
-                              <Pencil className="w-4 h-4" />
-                            </button>
-                            <button
-                              type="button"
+                          <div className="inline-flex items-center justify-end gap-0.5">
+                            <RowActionButton
+                              variant="edit"
+                              label="Edit member"
+                              onClick={() => navigate(memberEditPath(m.id))}
+                            />
+                            <RowActionButton
+                              variant="delete"
+                              label="Remove member"
                               onClick={() => handleRemoveMember(m)}
-                              className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-red-600"
-                              aria-label="Remove"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </>
+                            />
+                          </div>
                         )}
                       </td>
                     </tr>
@@ -581,7 +584,7 @@ export default function MyTeam() {
               {filteredMembers.map((m, index) => (
                 <div
                   key={m.id}
-                  className="rounded-lg border border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-900"
+                  className="rounded-lg border border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-800"
                 >
                   <div className="font-medium text-gray-900 dark:text-white">{m.users?.full_name || m.users?.email}</div>
                   <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{m.users?.email}</div>
@@ -591,25 +594,21 @@ export default function MyTeam() {
                   <div className="text-sm">
                     <span className="text-gray-500">Allocation:</span> {m.allocation_percentage ?? '—'}%
                   </div>
-                  <div className="mt-3 flex justify-end gap-2">
-                  <RowNumberBadge number={getDisplayRowNumber(index)} className="shrink-0" />
+                  <div className="mt-3 flex items-center justify-between gap-2">
+                    <RowNumberBadge number={getDisplayRowNumber(index)} className="shrink-0" />
                     {manageMembersUi(
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => setEditMember(m)}
-                          className="px-3 py-1.5 rounded border border-gray-300 dark:border-gray-600 text-sm"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          type="button"
+                      <div className="inline-flex items-center gap-0.5">
+                        <RowActionButton
+                          variant="edit"
+                          label="Edit member"
+                          onClick={() => navigate(memberEditPath(m.id))}
+                        />
+                        <RowActionButton
+                          variant="delete"
+                          label="Remove member"
                           onClick={() => handleRemoveMember(m)}
-                          className="px-3 py-1.5 rounded border border-red-300 text-red-600 text-sm"
-                        >
-                          Remove
-                        </button>
-                      </>
+                        />
+                      </div>
                     )}
                   </div>
                 </div>
@@ -676,7 +675,7 @@ export default function MyTeam() {
               {manageMembersUi(
                 <button
                   type="button"
-                  onClick={() => setRoleModal({ mode: 'add' })}
+                  onClick={() => navigate(roleCreatePath())}
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white min-h-[44px]"
                 >
                   Add role
@@ -741,23 +740,19 @@ export default function MyTeam() {
                       <td className="px-3 py-2 tabular-nums">{fr._count}</td>
                       <td className="px-3 py-2 text-right">
                         {manageMembersUi(
-                          <>
-                            <button
-                              type="button"
-                              onClick={() => setRoleModal({ mode: 'edit', row: fr })}
-                              className="px-2 py-1 rounded border border-gray-300 dark:border-gray-600 mr-2"
-                            >
-                              Edit
-                            </button>
-                            <button
-                              type="button"
+                          <div className="inline-flex items-center justify-end gap-0.5">
+                            <RowActionButton
+                              variant="edit"
+                              label="Edit functional role"
+                              onClick={() => navigate(roleEditPath(fr.id))}
+                            />
+                            <RowActionButton
+                              variant="delete"
+                              label={fr._count > 0 ? 'Remove members before deleting this role' : 'Delete functional role'}
                               disabled={fr._count > 0}
                               onClick={() => handleDeleteRole(fr)}
-                              className="px-2 py-1 rounded border border-red-300 text-red-600 disabled:opacity-40"
-                            >
-                              Delete
-                            </button>
-                          </>
+                            />
+                          </div>
                         )}
                       </td>
                     </tr>
@@ -770,30 +765,26 @@ export default function MyTeam() {
               {roleRows.map((fr, index) => (
                 <div
                   key={fr.id}
-                  className="rounded-lg border border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-900"
+                  className="rounded-lg border border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-800"
                 >
                   <div className="font-medium text-gray-900 dark:text-white">{fr.role_label}</div>
                   <div className="text-sm text-gray-500 mt-1">Members using: {fr._count}</div>
-                  <div className="mt-3 flex gap-2 justify-end">
-                  <RowNumberBadge number={getDisplayRowNumber(index)} className="shrink-0" />
+                  <div className="mt-3 flex items-center justify-between gap-2">
+                    <RowNumberBadge number={getDisplayRowNumber(index)} className="shrink-0" />
                     {manageMembersUi(
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => setRoleModal({ mode: 'edit', row: fr })}
-                          className="px-3 py-1.5 rounded border text-sm"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          type="button"
+                      <div className="inline-flex items-center gap-0.5">
+                        <RowActionButton
+                          variant="edit"
+                          label="Edit functional role"
+                          onClick={() => navigate(roleEditPath(fr.id))}
+                        />
+                        <RowActionButton
+                          variant="delete"
+                          label={fr._count > 0 ? 'Remove members before deleting this role' : 'Delete functional role'}
                           disabled={fr._count > 0}
                           onClick={() => handleDeleteRole(fr)}
-                          className="px-3 py-1.5 rounded border border-red-300 text-red-600 text-sm disabled:opacity-40"
-                        >
-                          Delete
-                        </button>
-                      </>
+                        />
+                      </div>
                     )}
                   </div>
                 </div>
@@ -802,37 +793,6 @@ export default function MyTeam() {
           )}
         </div>
       )}
-
-      <AddTeamMemberModal
-        isOpen={addOpen}
-        onClose={() => setAddOpen(false)}
-        teamId={selectedTeamId}
-        projectId={projectId}
-        onSuccess={() => {
-          setSuccessBanner({ op: 'member_added' })
-          loadMembersAndRoles()
-        }}
-      />
-
-      <EditTeamMemberModal
-        isOpen={!!editMember}
-        onClose={() => setEditMember(null)}
-        teamId={selectedTeamId}
-        member={editMember}
-        onSuccess={() => {
-          setSuccessBanner({ op: 'member_updated', id: editMember?.id })
-          loadMembersAndRoles()
-        }}
-      />
-
-      <ManageFunctionalRoleModal
-        isOpen={!!roleModal}
-        onClose={() => setRoleModal(null)}
-        mode={roleModal?.mode === 'edit' ? 'edit' : 'add'}
-        title={roleModal?.mode === 'edit' ? 'Edit functional role' : 'Add functional role'}
-        initialLabel={roleModal?.row?.role_label || ''}
-        onSave={roleModal?.mode === 'edit' ? onSaveEditRole : onSaveNewRole}
-      />
     </div>
   )
 }

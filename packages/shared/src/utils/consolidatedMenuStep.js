@@ -1,7 +1,7 @@
 /**
  * v1341 — the consolidated-sidebar step of useMenu's applyFetchResult, shared by Platform and
- * Simulator (rule 34.1). Returns null when the organisation's switch is off (or nothing could be
- * built), so the caller keeps today's sidebar exactly as before; otherwise the consolidated items
+ * Simulator (rule 34.1). Returns null when the system-wide switch is off (v1528) or nothing could
+ * be built, so the caller keeps today's sidebar exactly as before; otherwise the consolidated items
  * and the extras published for the slot tab strip and Go to page search.
  * Dependencies are injectable so the step can be unit-tested without a database.
  */

@@ -7,14 +7,16 @@ import { useEffect, useMemo, useState } from 'react'
 import PlanSheet from '../../components/PlanSheet.jsx'
 import ScheduleLayout, { ChooseProject, Loading } from '../../components/ScheduleLayout.jsx'
 import { useSchedule, useScheduleProjectId } from '../../hooks/useSchedule.js'
-import { useTaskModal } from '../../hooks/useTaskModal.js'
+import { useTaskPage } from '../../hooks/useTaskPage.js'
 import { useTaskDelete } from '../../hooks/useTaskDelete.jsx'
 import { usePlanDateFormat } from '../../hooks/usePlanDateFormat.js'
 import { toEngineCalendar } from '../../services/scheduleData.js'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 export default function ScheduleGanttScreen() {
-  const { openTask, newTask } = useTaskModal()
+  const { openTask, newTask } = useTaskPage()
   const { projectId, loading: projectLoading } = useScheduleProjectId()
   const schedule = useSchedule(projectId)
   const { askDelete, dialog: deleteDialog } = useTaskDelete(schedule, projectId)
@@ -82,11 +84,11 @@ export default function ScheduleGanttScreen() {
       schedule={projectId ? schedule : null}
       actions={
         <>
-          <label className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200" title="Planned % is measured up to this date. Leave blank to use today.">
-            Status date
-            <input type="date" value={statusDraft} onChange={(e) => setStatusDraft(e.target.value)}
+          <div className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200" title="Planned % is measured up to this date. Leave blank to use today.">
+            <FieldLabelWithHelp helpKey="public.project_schedules.status_date" htmlFor="fh-project-schedules-status-date">Status date</FieldLabelWithHelp>
+            <RegionalDateInput eventStyle id="fh-project-schedules-status-date" value={statusDraft} onChange={(e) => setStatusDraft(e.target.value)}
               className="px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
-          </label>
+          </div>
           {(statusDraft || '') !== (statusDate || '') && (
             <button type="button" onClick={saveStatusDate} className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm">Save date</button>
           )}

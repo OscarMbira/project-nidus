@@ -1,7 +1,7 @@
 /**
- * Project Mandate — record export sections (rule 38.1). Single values form Detail | Value tables;
- * constraints, associated documents, customers / users and dependencies (v1447) are real tables. Flat exports
- * (Excel / CSV / XML / JSON) read the one-value-per-field record from buildMandateExportRecord().
+ * Project Mandate — record export sections (rule 38.1).
+ * Short facts → Detail | Value; opted-in lists → `# | Item`; long prose → heading + paragraph;
+ * constraints / documents / stakeholders / dependencies / deliverables → real tables.
  */
 
 import { cellText, compactTable, listText, tableLines, withFieldExtras, humanizeToken } from './recordExportHelpers'
@@ -16,18 +16,18 @@ export const MANDATE_EXPORT_SECTIONS = [
     { key: 'project_created_date', label: 'Project Created Date', fact: true },
   ]},
   { title: '1. Purpose', fields: [{ key: 'purpose', label: 'Purpose' }] },
-  { title: '2. Authority', fields: [{ key: 'authority_responsible', label: 'Authority Responsible' }] },
+  { title: '2. Authority', fields: [{ key: 'authority_responsible', label: 'Authority Responsible', itemColumnLabel: 'Authority' }] },
   { title: '3. Background', fields: [{ key: 'background', label: 'Background' }] },
-  { title: '4. Project Objectives', fields: [{ key: 'project_objectives', label: 'Objectives' }] },
+  { title: '4. Project Objectives', fields: [{ key: 'project_objectives', label: 'Objectives', itemColumnLabel: 'Objective' }] },
   { title: '5. Scope', fields: [
-    { key: 'scope', label: 'In-Scope' },
-    { key: 'scope_exclusions', label: 'Out-of-Scope Exclusions' },
+    { key: 'scope', label: 'In-Scope', itemColumnLabel: 'In scope' },
+    { key: 'scope_exclusions', label: 'Out-of-Scope Exclusions', itemColumnLabel: 'Exclusion' },
   ]},
   { title: '6. Constraints', fields: [{ key: 'constraints_summary', label: 'Constraints' }] },
-  { title: '7. Interfaces', fields: [{ key: 'interfaces', label: 'Interfaces' }] },
+  { title: '7. Interfaces', fields: [{ key: 'interfaces', label: 'Interfaces', itemColumnLabel: 'Interface' }] },
   { title: '8. Quality Expectations', fields: [
     { key: 'quality_priority_label', label: 'Quality Priority', fact: true },
-    { key: 'quality_expectations', label: 'Quality Expectations' },
+    { key: 'quality_expectations', label: 'Quality Expectations', itemColumnLabel: 'Expectation' },
   ]},
   { title: '9. Outline Business Case', fields: [{ key: 'outline_business_case', label: 'Outline Business Case' }] },
   { title: '10. Associated Documents', fields: [{ key: 'associated_documents_summary', label: 'Associated Documents' }] },
@@ -37,9 +37,8 @@ export const MANDATE_EXPORT_SECTIONS = [
   ]},
   { title: '12. Customers, Users and Stakeholders', fields: [{ key: 'stakeholders_summary', label: 'Customers, Users and Stakeholders' }] },
   { title: '13. Dependencies', fields: [{ key: 'dependencies_summary', label: 'Dependencies' }] },
-  // v1344: assumptions, known risks and key deliverables
-  { title: '14. Assumptions', fields: [{ key: 'assumptions', label: 'Assumptions' }] },
-  { title: '15. Known Risks and Issues', fields: [{ key: 'outline_risks', label: 'Known Risks and Issues' }] },
+  { title: '14. Assumptions', fields: [{ key: 'assumptions', label: 'Assumptions', itemColumnLabel: 'Assumption' }] },
+  { title: '15. Known Risks and Issues', fields: [{ key: 'outline_risks', label: 'Known Risks and Issues', itemColumnLabel: 'Risk / issue' }] },
   { title: '16. Key Deliverables', fields: [{ key: 'deliverables_summary', label: 'Key Deliverables' }] },
 ]
 

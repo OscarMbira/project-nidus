@@ -1,8 +1,8 @@
 /**
  * PPTStylePreview — slide-carousel rendering of a record the way exportRecordToPPT would
- * lay it out (one slide per section, branded title bar + key-value body), for in-app "View"
- * (v853) rather than download. Reuses exportUtils.js's shared field-mapping helpers so
- * preview and export never diverge.
+ * lay it out (one slide per section, Detail | Value + # | Item tables), for in-app "View"
+ * (v853) rather than download. Reuses exportUtils.js helpers so preview and export never
+ * diverge (rule 38.1).
  */
 
 import { useEffect, useMemo, useState } from 'react'
@@ -13,7 +13,45 @@ import {
   itemHasOwnListMarker,
   fieldGuidanceLines,
   resolveBranding,
+  sectionRenderSteps,
+  factsTable,
+  resolveLayoutFieldTable,
+  fieldTable,
 } from '@nidus/shared/utils/exportUtils'
+
+function PreviewTable({ table, headerColor, compact }) {
+  if (!table?.headers?.length || !table?.rows?.length) return null
+  const cell = compact ? 'px-1.5 py-1 text-[11px]' : 'px-2 py-1.5 text-xs'
+  return (
+    <div className="overflow-x-auto mb-2">
+      <table className="w-full border-collapse border border-gray-200 dark:border-gray-700">
+        <thead>
+          <tr style={{ backgroundColor: headerColor }}>
+            {table.headers.map((h) => (
+              <th key={h} className={`${cell} text-left text-white font-semibold border border-gray-200 dark:border-gray-700`}>
+                {h}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {table.rows.map((row, ri) => (
+            <tr key={ri} className="bg-white dark:bg-gray-900">
+              {table.headers.map((_, ci) => (
+                <td
+                  key={ci}
+                  className={`${cell} align-top whitespace-pre-wrap border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300`}
+                >
+                  {row[ci] ?? ''}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
 
 export default function PPTStylePreview({
   sections = [],
@@ -31,12 +69,9 @@ export default function PPTStylePreview({
     const slides = []
     sections.forEach(({ title: sectionTitle, fields }, sIdx) => {
       if (!sectionTitle || !fields?.length) return
-      const slideFields = fields.map((field) => {
-        const numberedLabel = flatNumberedFields[flatIdx]?.label ?? (field.label || field.key)
-        flatIdx += 1
-        return { field, numberedLabel }
-      })
-      slides.push({ title: sectionTitles[sIdx], fields: slideFields })
+      const steps = sectionRenderSteps(fields, flatIdx)
+      flatIdx += fields.length
+      slides.push({ title: sectionTitles[sIdx], steps, flatNumberedFields })
     })
     const ref = record?.mandate_reference || record?.document_ref || record?.reference_number || record?.id || ''
     const title = record?.mandate_title || record?.report_title || record?.name || record?.title || baseFilename
@@ -50,6 +85,7 @@ export default function PPTStylePreview({
   const goPrev = () => setIndex((i) => Math.max(0, i - 1))
   const goNext = () => setIndex((i) => Math.min(totalSlides - 1, i + 1))
   const headerColor = `#${headerHex}`
+  const slide = index > 0 ? contentSlides[index - 1] : null
 
   return (
     <div className="flex flex-col items-center gap-3">
@@ -63,10 +99,22 @@ export default function PPTStylePreview({
         ) : (
           <>
             <div className="px-6 py-3" style={{ backgroundColor: headerColor }}>
-              <h2 className="text-white font-semibold text-sm">{contentSlides[index - 1].title}</h2>
+              <h2 className="text-white font-semibold text-sm">{slide.title}</h2>
             </div>
             <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3">
-              {contentSlides[index - 1].fields.map(({ field, numberedLabel }) => {
+              {slide.steps.map((step, stepIdx) => {
+                if (step.facts) {
+                  return (
+                    <PreviewTable
+                      key={`facts-${stepIdx}`}
+                      table={factsTable(step.facts, record, slide.flatNumberedFields, blankPlaceholder)}
+                      headerColor={headerColor}
+                      compact
+                    />
+                  )
+                }
+                const { field, index: fieldIndex } = step
+                const numberedLabel = slide.flatNumberedFields[fieldIndex]?.label ?? (field.label || field.key)
                 const guidance = fieldGuidanceLines(field)
                 const fieldAssets = attachmentAssets[field.key]
                 if (Array.isArray(fieldAssets)) {
@@ -107,6 +155,7 @@ export default function PPTStylePreview({
                     </div>
                   )
                 }
+                const layoutTable = resolveLayoutFieldTable(field, record[field.key])
                 const parsed = parseFieldValue(record[field.key])
                 return (
                   <div key={field.key}>
@@ -114,7 +163,16 @@ export default function PPTStylePreview({
                     {guidance.map((line, i) => (
                       <p key={i} className="text-[11px] italic text-gray-400 dark:text-gray-500">{line}</p>
                     ))}
-                    {parsed.isList ? (
+                    {layoutTable ? (
+                      <>
+                        {parsed?.isList && parsed.intro && !fieldTable(field) ? (
+                          <p className="text-xs text-gray-600 dark:text-gray-400 whitespace-pre-wrap mb-1">
+                            {parsed.intro}
+                          </p>
+                        ) : null}
+                        <PreviewTable table={layoutTable} headerColor={headerColor} compact />
+                      </>
+                    ) : parsed.isList ? (
                       parsed.items.length === 0 && !parsed.intro ? (
                         <p className="text-xs text-gray-600 dark:text-gray-400">{blankPlaceholder}</p>
                       ) : (
@@ -185,7 +243,9 @@ export default function PPTStylePreview({
         >
           <ChevronRight className="w-4 h-4" />
         </button>
-        <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">{index + 1} / {totalSlides}</span>
+        <span className="text-xs text-gray-500 dark:text-gray-400 tabular-nums">
+          {index + 1} / {totalSlides}
+        </span>
       </div>
     </div>
   )

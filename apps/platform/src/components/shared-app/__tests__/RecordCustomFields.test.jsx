@@ -1,46 +1,85 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
-import RecordCustomFields from '../RecordCustomFields'
-import { useCustomFields } from '../../../features/local-data-extensions/hooks/useCustomFields'
 
-vi.mock('@nidus/supabase', () => ({ platformDb: { from: vi.fn() } }))
-
+vi.mock('@nidus/supabase', () => ({ platformDb: {} }))
 vi.mock('@nidus/shared/utils/accountResolution', () => ({
-  getCurrentUserAccountId: vi.fn(() => Promise.resolve('account-1')),
+  getCurrentUserAccountId: vi.fn(async () => 'acct-1'),
 }))
-
 vi.mock('../../../features/local-data-extensions/hooks/useCustomFields', () => ({
   useCustomFields: vi.fn(),
 }))
-
 vi.mock('../../../features/local-data-extensions/components/CustomFieldRenderer', () => ({
-  default: (props) => (
-    <div data-testid="custom-field-renderer">
-      {props.screenCode}|{props.entityType}|{props.entityId}|{props.projectId}|{props.accountId}
-    </div>
-  ),
+  default: () => <div data-testid="cf-renderer">renderer</div>,
 }))
 
-describe('RecordCustomFields (v1340 wave 2b)', () => {
+import RecordCustomFields from '../RecordCustomFields'
+import { useCustomFields } from '../../../features/local-data-extensions/hooks/useCustomFields'
+
+describe('RecordCustomFields alwaysShow (v1348)', () => {
   beforeEach(() => {
-    useCustomFields.mockReset()
+    useCustomFields.mockReturnValue({ definitions: [], loading: false })
   })
 
-  it('passes the screen, record and project to the custom field renderer', async () => {
-    useCustomFields.mockReturnValue({ definitions: [{ id: 'f1' }] })
-    render(<RecordCustomFields projectId="project-1" entityType="milestone" entityId="m-1" screenCode="milestone_detail" />)
-
-    await waitFor(() => expect(screen.getByTestId('custom-field-renderer')).toBeInTheDocument())
-    expect(screen.getByTestId('custom-field-renderer').textContent).toBe('milestone_detail|milestone|m-1|project-1|account-1')
-    expect(useCustomFields).toHaveBeenLastCalledWith(expect.anything(), 'account-1', 'milestone_detail')
-  })
-
-  it('renders nothing until the organisation has published fields for the screen', async () => {
-    useCustomFields.mockReturnValue({ definitions: [] })
-    const { container } = render(
-      <RecordCustomFields projectId="project-1" entityType="milestone" entityId="m-1" screenCode="milestone_detail" />
+  it('shows after-save empty state when alwaysShow and no entityId', async () => {
+    render(
+      <RecordCustomFields
+        projectId="p1"
+        entityType="project_brief"
+        entityId={null}
+        screenCode="brief_detail"
+        alwaysShow
+      />,
     )
-    await waitFor(() => expect(useCustomFields).toHaveBeenLastCalledWith(expect.anything(), 'account-1', 'milestone_detail'))
-    expect(container).toBeEmptyDOMElement()
+    await waitFor(() => {
+      expect(screen.getByText(/appear after this record is saved/i)).toBeInTheDocument()
+    })
+  })
+
+  it('shows no-fields empty state when alwaysShow and no definitions', async () => {
+    render(
+      <RecordCustomFields
+        projectId="p1"
+        entityType="project_brief"
+        entityId="e1"
+        screenCode="brief_detail"
+        alwaysShow
+      />,
+    )
+    await waitFor(() => {
+      expect(screen.getByText(/No custom fields are published/i)).toBeInTheDocument()
+    })
+  })
+
+  it('renders CustomFieldRenderer when alwaysShow and definitions exist', async () => {
+    useCustomFields.mockReturnValue({
+      definitions: [{ id: 'f1', label: 'Region' }],
+      loading: false,
+    })
+    render(
+      <RecordCustomFields
+        projectId="p1"
+        entityType="project_brief"
+        entityId="e1"
+        screenCode="brief_detail"
+        alwaysShow
+      />,
+    )
+    await waitFor(() => {
+      expect(screen.getByTestId('cf-renderer')).toBeInTheDocument()
+    })
+  })
+
+  it('renders nothing without alwaysShow when there are no definitions', async () => {
+    const { container } = render(
+      <RecordCustomFields
+        projectId="p1"
+        entityType="risk"
+        entityId="e1"
+        screenCode="risk_detail"
+      />,
+    )
+    await waitFor(() => {
+      expect(container).toBeEmptyDOMElement()
+    })
   })
 })

@@ -34,6 +34,7 @@ import { createMilestone } from '../services/milestoneService'
 import { getOrgIndustryOptions } from '../services/organisationIndustryService.js'
 import { replaceProjectIndustries } from '../services/projectIndustryService.js'
 import { listProjectAttributeOptions } from '@nidus/shared/services/projectAttributeOptionsService'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 // Removed skeleton loader for faster initial render
 
@@ -90,6 +91,9 @@ const PROJECT_CREATE_EXPORT_SECTIONS = [
     { key: 'external_vendors_required', label: 'External Vendors Required' },
     { key: 'mandate_status', label: 'Mandate Status' },
     { key: 'business_case_status', label: 'Business Case Status' },
+    { key: 'brief_status', label: 'Brief / Charter Status' },
+    { key: 'pid_status', label: 'PID Status' },
+    { key: 'benefits_review_plan_status', label: 'Benefits Review Plan Status' },
     { key: 'rfp_reference', label: 'RFP Reference' },
     { key: 'funding_approval_status', label: 'Funding Approval Status' },
     { key: 'document_repository_url', label: 'Document Repository URL' }
@@ -207,6 +211,9 @@ export default function ProjectsCreate() {
     // Phase 2: Document Governance (Section F)
     mandate_status: fromMandate?.mandate_status || '',
     business_case_status: '',
+    brief_status: '',
+    pid_status: '',
+    benefits_review_plan_status: '',
     rfp_reference: '',
     funding_approval_status: '',
     document_repository_url: '',
@@ -761,6 +768,9 @@ export default function ProjectsCreate() {
           // Phase 2: Document Governance (Section F)
           mandate_status: formData.mandate_status || null,
           business_case_status: formData.business_case_status || null,
+          brief_status: formData.brief_status || null,
+          pid_status: formData.pid_status || null,
+          benefits_review_plan_status: formData.benefits_review_plan_status || null,
           rfp_reference: formData.rfp_reference || null,
           funding_approval_status: formData.funding_approval_status || null,
           document_repository_url: formData.document_repository_url || null,
@@ -1190,6 +1200,9 @@ export default function ProjectsCreate() {
     external_vendors_required: formData.external_vendors_required,
     mandate_status: formData.mandate_status,
     business_case_status: formData.business_case_status,
+    brief_status: formData.brief_status,
+    pid_status: formData.pid_status,
+    benefits_review_plan_status: formData.benefits_review_plan_status,
     funding_approval_status: formData.funding_approval_status,
     rfp_reference: formData.rfp_reference,
     document_repository_url: formData.document_repository_url,
@@ -1211,7 +1224,8 @@ export default function ProjectsCreate() {
     formData.initial_risk_rating, formData.complexity_rating, formData.delivery_complexity,
     formData.regulatory_impact, formData.data_sensitivity, formData.estimated_effort,
     formData.key_skills_required, formData.external_vendors_required,
-    formData.mandate_status, formData.business_case_status, formData.funding_approval_status,
+    formData.mandate_status, formData.business_case_status, formData.brief_status,
+    formData.pid_status, formData.benefits_review_plan_status, formData.funding_approval_status,
     formData.rfp_reference, formData.document_repository_url,
     selectedPortfolioId, selectedProgrammeId,
   ])
@@ -1259,9 +1273,9 @@ export default function ProjectsCreate() {
       {/* Read-only: source mandate for this new project (above step navigation) */}
       {sourceMandateLabel && (
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+          <FieldLabelWithHelp helpKey="public.projects.source_mandate_id" className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
             Source mandate
-          </label>
+          </FieldLabelWithHelp>
           <div
             className="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800/50 text-gray-700 dark:text-gray-300 font-mono text-sm"
             aria-readonly
@@ -1369,7 +1383,7 @@ export default function ProjectsCreate() {
 
         {/* Submit Buttons */}
         <div className="space-y-3 pt-4">
-          <label className="flex items-start gap-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/60 p-3 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
+          <label data-help="exempt" className="flex items-start gap-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/60 p-3 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
             <input
               type="checkbox"
               className="mt-0.5 rounded border-gray-300 dark:border-gray-600"

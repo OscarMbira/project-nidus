@@ -29,12 +29,14 @@ import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken } from '@nidus/shared/utils/auditDisplayUtils'
 import ExportRecordMenu from '@nidus/ui/ExportRecordMenu'
 import { buildMandateExportSections, buildMandateExportRecord } from '@nidus/shared/utils/mandateExportSections'
+import RecordCustomFields from '../../components/shared-app/RecordCustomFields'
+import { useLdeExportParts } from '../../lib/useLdeExportParts'
 
 // Saved row by row (SQL v1447 dependencies; v160 deliverables).
 const DEPENDENCY_SERVICE = { list: getDependencies, add: addDependency, update: updateDependency, remove: deleteDependency }
 const DELIVERABLE_SERVICE = { list: getDeliverables, add: addDeliverable, update: updateDeliverable, remove: deleteDeliverable }
 
-const TABS = [...MANDATE_TABS, { value: 'audit', label: 'Audit details' }]
+const TABS = [...MANDATE_TABS, { value: 'custom-fields', label: 'Custom Fields' }, { value: 'audit', label: 'Audit details' }]
 // Which tab shows each validated field, to open it when a check fails.
 const FIELD_TAB = { mandate_title: 'purpose', scope: 'scope', proposed_executive_name: 'people', project_objectives: 'objectives', constraints: 'objectives' }
 
@@ -74,6 +76,14 @@ export default function ProjectMandateEdit() {
   const [initialSnapshot, setInitialSnapshot] = useState(null)
 
   const { draftId, saveStatus, draftCount, canCreateDraft, autoSave } = useDraftQueue('project_mandate', internalMandateId)
+
+  const lde = useLdeExportParts({
+    entityType: 'project_mandate',
+    entityId: internalMandateId,
+    projectId: mandateRecord?.project_id,
+    screenCode: 'mandate_detail',
+    enabled: !!internalMandateId && !!mandateRecord?.project_id,
+  })
 
   // Rule 52: warn before leaving with unsaved changes.
   const isDirty = useMemo(() => initialSnapshot !== null && JSON.stringify(formData) !== initialSnapshot, [formData, initialSnapshot])
@@ -246,8 +256,8 @@ export default function ProjectMandateEdit() {
             </p>
           </div>
           <ExportRecordMenu
-            sections={buildMandateExportSections(formData)}
-            record={buildMandateExportRecord(formData)}
+            sections={[...buildMandateExportSections(formData), ...(lde.section ? [lde.section] : [])]}
+            record={{ ...buildMandateExportRecord(formData), ...lde.mergedRecord }}
             baseFilename={`Mandate_${formData.mandate_reference || mandateRef || 'Draft'}`}
           />
         </div>
@@ -285,7 +295,19 @@ export default function ProjectMandateEdit() {
         </AuditDetailsPanel>
       )}
 
-      {activeTab !== 'audit' && (
+      {activeTab === 'custom-fields' && (
+        <RecordCustomFields
+          projectId={mandateRecord?.project_id}
+          entityType="project_mandate"
+          entityId={internalMandateId}
+          screenCode="mandate_detail"
+          mode="edit"
+          alwaysShow
+          title="Custom Fields"
+        />
+      )}
+
+      {activeTab !== 'audit' && activeTab !== 'custom-fields' && (
         <form onSubmit={handleSubmit} className="space-y-6">
           <MandateFieldTabs
             activeTab={activeTab}

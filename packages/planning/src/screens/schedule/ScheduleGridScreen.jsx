@@ -8,7 +8,7 @@ import { RowActionButton } from '@nidus/ui'
 import PlanningTable from '../../components/PlanningTable.jsx'
 import ScheduleLayout, { ChooseProject, Loading } from '../../components/ScheduleLayout.jsx'
 import { useSchedule, useScheduleProjectId } from '../../hooks/useSchedule.js'
-import { useTaskModal } from '../../hooks/useTaskModal.js'
+import { useTaskPage } from '../../hooks/useTaskPage.js'
 import { useTaskDelete } from '../../hooks/useTaskDelete.jsx'
 
 export const taskKey = (t) => t.task_code || t.id
@@ -28,7 +28,7 @@ export const TASK_COLUMNS = [
 ]
 
 export default function ScheduleGridScreen() {
-  const { openTask, newTask } = useTaskModal()
+  const { openTask, newTask } = useTaskPage()
   const { projectId, loading: projectLoading } = useScheduleProjectId()
   const schedule = useSchedule(projectId)
   // v1265: shared delete flow (a summary task goes with its sub-tasks, after a warning).

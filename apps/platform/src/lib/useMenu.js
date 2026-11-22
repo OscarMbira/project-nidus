@@ -967,7 +967,7 @@ function useMenuProvider(layoutScopeProp = null) {
         const isProjectScopedLayout = layoutScope === 'pm' || layoutScope === 'tm'
         const accountId = await getCurrentUserAccountId()
         if (!accountId) industryGroupingIncomplete = true
-        // v1341 — one consolidated menu per role when the organisation's switch is on (D11 / D20).
+        // v1341 / v1528 — one consolidated menu per role when the system-wide switch is on.
         // With the switch off the step returns null and the sidebar is exactly as before.
         const step = await applyConsolidatedMenuStep({
           app: 'platform',

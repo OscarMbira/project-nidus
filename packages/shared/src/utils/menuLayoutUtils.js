@@ -196,10 +196,28 @@ const PMO_ONLY_PLATFORM_PREFIXES = [
   '/platform/admin/',
 ]
 
+/**
+ * Match a shared PM prefix on a path-segment boundary so `/platform/brief` does not
+ * claim `/platform/briefs/...` (and the same for similar singular/plural pairs).
+ */
+function pathMatchesPrefix(pathname, prefix) {
+  const p = String(pathname || '')
+  const pre = String(prefix || '')
+  if (!pre) return false
+  return p === pre || p.startsWith(`${pre}/`)
+}
+
+/** PMO workflow hubs under /platform/* — must not force the PM shell (RoleScopeGate). */
+const PM_SHARED_PLATFORM_EXCLUSIONS = [
+  '/platform/mandates/approvals',
+  '/platform/briefs/approvals',
+]
+
 export function isSharedPmPlatformPath(pathname = '') {
   const p = String(pathname || '').toLowerCase()
   if (p.startsWith('/pm/') || p === '/pm') return true
-  return PM_SHARED_PLATFORM_PREFIXES.some((prefix) => p.startsWith(prefix))
+  if (PM_SHARED_PLATFORM_EXCLUSIONS.some((ex) => pathMatchesPrefix(p, ex))) return false
+  return PM_SHARED_PLATFORM_PREFIXES.some((prefix) => pathMatchesPrefix(p, prefix))
 }
 
 export function isPmoOnlyPlatformPath(pathname = '') {

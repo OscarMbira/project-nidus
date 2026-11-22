@@ -1,7 +1,13 @@
 /**
- * Project Brief / Project Charter — record export sections (rule 38.1), in the order of the brief
- * form's tabs. Single values form Detail | Value tables; tolerances, products, role descriptions
- * and references are real tables. Flat exports read buildBriefExportRecord().
+ * Project Brief / Project Charter — record export sections (rule 38.1).
+ *
+ * Layout rules (logical use — do not stack tables for every field):
+ * - Short single values → Detail | Value (`fact: true`), grouped at the top of a section
+ * - One-statement-per-line lists → `# | Item` tables only when `itemColumnLabel` is set
+ * - Long narrative prose → numbered heading + paragraph (not forced into tables)
+ * - Child records (tolerances, products, roles, milestones, references) → real multi-column tables
+ *
+ * Flat exports read buildBriefExportRecord().
  */
 
 import {
@@ -29,30 +35,35 @@ export const BRIEF_EXPORT_SECTIONS = [
   ]},
   { title: 'Project Definition', fields: [
     { key: 'background', label: 'Background' },
-    { key: 'project_objectives', label: 'Project Objectives' },
-    { key: 'desired_outcomes', label: 'Desired Outcomes' },
-    { key: 'constraints', label: 'Constraints' },
-    { key: 'assumptions', label: 'Assumptions' },
+    { key: 'project_objectives', label: 'Project Objectives', itemColumnLabel: 'Objective' },
+    { key: 'desired_outcomes', label: 'Desired Outcomes', itemColumnLabel: 'Outcome' },
+    { key: 'constraints', label: 'Constraints', itemColumnLabel: 'Constraint' },
+    { key: 'assumptions', label: 'Assumptions', itemColumnLabel: 'Assumption' },
   ]},
   { title: 'Scope', fields: [
-    { key: 'project_scope', label: 'Project Scope' },
-    { key: 'scope_exclusions', label: 'Scope Exclusions' },
+    { key: 'project_scope', label: 'Project Scope', itemColumnLabel: 'In scope' },
+    { key: 'scope_exclusions', label: 'Scope Exclusions', itemColumnLabel: 'Exclusion' },
   ]},
   { title: 'Project Tolerances', fields: [{ key: 'project_tolerances', label: 'Tolerances' }] },
-  { title: 'Interested Parties', fields: [{ key: 'users_and_interested_parties', label: 'Users and Interested Parties' }] },
-  { title: 'Interfaces', fields: [{ key: 'interfaces', label: 'Interfaces' }] },
+  { title: 'Interested Parties', fields: [
+    { key: 'users_and_interested_parties', label: 'Users and Interested Parties', itemColumnLabel: 'Party' },
+  ]},
+  { title: 'Interfaces', fields: [
+    { key: 'interfaces', label: 'Interfaces', itemColumnLabel: 'Interface' },
+  ]},
   { title: 'Business Case', fields: [
     { key: 'business_option_selected', label: 'Business Option Selected', fact: true },
     { key: 'dis_benefits_included_label', label: 'Dis-benefits Captured', fact: true },
-    { key: 'outline_business_case_summary', label: 'Outline Business Case Summary' },
+    // Summary stays in the same Detail | Value table as the short facts above (one table, not stacked).
+    { key: 'outline_business_case_summary', label: 'Outline Business Case Summary', fact: true },
     { key: 'dis_benefits_description', label: 'Dis-benefits' },
   ]},
   { title: 'Product Description', fields: [
     { key: 'product_description', label: 'Project Product' },
     { key: 'products_summary', label: 'Products' },
-    { key: 'customer_quality_expectations', label: 'Customer Quality Expectations' },
-    { key: 'user_acceptance_criteria', label: 'Acceptance Criteria' },
-    { key: 'operations_maintenance_criteria', label: 'Operations and Maintenance Criteria' },
+    { key: 'customer_quality_expectations', label: 'Customer Quality Expectations', itemColumnLabel: 'Expectation' },
+    { key: 'user_acceptance_criteria', label: 'Acceptance Criteria', itemColumnLabel: 'Criterion' },
+    { key: 'operations_maintenance_criteria', label: 'Operations and Maintenance Criteria', itemColumnLabel: 'Criterion' },
   ]},
   { title: 'Project Approach', fields: [
     { key: 'solution_type_label', label: 'Solution Type', fact: true },
@@ -62,7 +73,9 @@ export const BRIEF_EXPORT_SECTIONS = [
     { key: 'operational_environment', label: 'Operational Environment' },
     { key: 'approach_justification', label: 'Justification' },
   ]},
-  { title: 'Team Structure', fields: [{ key: 'team_structure_description', label: 'Team Structure' }] },
+  { title: 'Team Structure', fields: [
+    { key: 'team_structure_description', label: 'Team Structure' },
+  ]},
   { title: 'Role Descriptions', fields: [{ key: 'roles_summary', label: 'Role Descriptions' }] },
   { title: 'Milestones', fields: [{ key: 'milestones_summary', label: 'Milestones' }] },
   { title: 'References', fields: [
@@ -81,6 +94,9 @@ const LIST_KEYS = [
   'scope_exclusions',
   'user_acceptance_criteria',
   'operations_maintenance_criteria',
+  'users_and_interested_parties',
+  'interfaces',
+  'customer_quality_expectations',
 ]
 
 /** Tolerance rows: the brief's tolerance records, else "Area: limit" lines of the tolerances text. */

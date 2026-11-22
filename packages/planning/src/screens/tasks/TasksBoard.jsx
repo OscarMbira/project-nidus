@@ -30,7 +30,7 @@ import { getCurrentUserAccountId, getCurrentUserInternalUserId } from '@nidus/sh
 import { loadResolvedRegionalFormatSettings } from '@nidus/shared/services/regionalFormatSettingsService'
 import { formatRegionalDate } from '@nidus/shared/utils/formatRegionalSettings'
 import { useScheduleProjectId } from '../../hooks/useSchedule.js'
-import { useTaskModal } from '../../hooks/useTaskModal.js'
+import { useTaskPage } from '../../hooks/useTaskPage.js'
 import {
   groupTasksByStatus,
   resolveDropStatusId,
@@ -206,9 +206,9 @@ const DroppableStatusColumn = memo(function DroppableStatusColumn({
   )
 })
 
-/** v1265: `embedded` (the schedule's Board tab) — inside ScheduleLayout; tasks open in the task modal. */
+/** v1265: `embedded` (the schedule's Board tab) — inside ScheduleLayout; tasks open on the schedule's task page. */
 export default function TasksBoard({ embedded = false }) {
-  const taskModal = useTaskModal()
+  const taskPage = useTaskPage()
   const navigate = useNavigate()
   const source = useTaskSource()
   const { projectId: contextProjectId, loading: projectContextLoading } = useScheduleProjectId()
@@ -348,9 +348,9 @@ export default function TasksBoard({ embedded = false }) {
 
   const openTask = useCallback((taskId) => {
     const task = tasksRef.current.find((t) => t.id === taskId) || { id: taskId }
-    if (embedded) taskModal.openTask(task)
+    if (embedded) taskPage.openTask(task)
     else navigate(source.taskPath(task))
-  }, [navigate, source, embedded, taskModal])
+  }, [navigate, source, embedded, taskPage])
 
   const onProjectFilterChange = useCallback((value) => {
     userChangedFilter.current = true
@@ -495,7 +495,7 @@ export default function TasksBoard({ embedded = false }) {
       {embedded ? (
         <div className="mb-4 flex items-center justify-between gap-3">
           <p className="text-sm text-gray-600 dark:text-gray-300">Drag a card to another column to change its status. Changes save straight away.</p>
-          <button type="button" onClick={() => taskModal.newTask()} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors">+ New Task</button>
+          <button type="button" onClick={() => taskPage.newTask()} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors">+ New Task</button>
         </div>
       ) : (
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

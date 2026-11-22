@@ -15,7 +15,7 @@ export default function SimulatorAppHeader({ onSidebarToggle = null }) {
     { label: 'Scenarios', path: '/simulator/scenarios' },
     { label: 'My Simulations', path: '/simulator/runs' },
     { label: 'Learning Path', path: '/simulator/learning-path' },
-    { label: 'Documentation', path: '/documentation/simulator' },
+    { label: 'Documentation', path: '/documentation/simulator', openInNewTab: true },
   ]
 
   return (

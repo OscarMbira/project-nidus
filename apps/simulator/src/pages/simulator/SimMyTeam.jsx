@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Users, UserPlus, Search } from 'lucide-react'
 import { RowActionButton } from '@nidus/ui'
 import { platformDb } from '../../services/supabase/supabaseClient'
@@ -13,11 +13,10 @@ import {
   getSimTeamsVisibleToUser,
   getSimAllTeamsWithMembers,
   getSimTeamMembers,
-  listPracticeProjectFunctionalRoles,
+  getSimTeamFunctionalRoles,
+  deleteSimTeamFunctionalRole,
   removeSimTeamMember,
 } from '../../services/sim/simTeamService'
-import SimAddTeamMemberModal from '../../components/sim/SimAddTeamMemberModal'
-import SimEditTeamMemberModal from '../../components/sim/SimEditTeamMemberModal'
 import ExportListMenu from '@nidus/ui/ExportListMenu'
 import ViewToggle from '@nidus/ui/ViewToggle'
 import SortToolbar from '@nidus/ui/SortToolbar'
@@ -41,6 +40,7 @@ function readView(key, fallback = 'list') {
 }
 
 export default function SimMyTeam() {
+  const navigate = useNavigate()
   const { showToast } = useToast()
   const [pmo, setPmo] = useState(false)
   const [seesProjectTeams, setSeesProjectTeams] = useState(false)
@@ -57,8 +57,6 @@ export default function SimMyTeam() {
   const [memberView, setMemberView] = useState(() => readView(MEMBERS_VIEW_KEY))
   const [roleView, setRoleView] = useState(() => readView(ROLES_VIEW_KEY))
   const [successBanner, setSuccessBanner] = useState(null)
-  const [addOpen, setAddOpen] = useState(false)
-  const [editMember, setEditMember] = useState(null)
 
   const memberSort = useSortableTable({
     defaultSort: { column: 'name', direction: 'asc' },
@@ -127,15 +125,11 @@ export default function SimMyTeam() {
 
   const loadMembersAndRoles = useCallback(async () => {
     if (!selectedTeamId) return
-    const team = teamList.find((t) => t.id === selectedTeamId)
-    const practiceProjectId = team?.practice_project_id
     setMembersLoading(true)
     try {
       const [m, r] = await Promise.all([
         getSimTeamMembers(selectedTeamId),
-        practiceProjectId
-          ? listPracticeProjectFunctionalRoles(practiceProjectId)
-          : Promise.resolve({ success: true, data: [] }),
+        getSimTeamFunctionalRoles(selectedTeamId),
       ])
       if (m.success) setMembers(m.data || [])
       else showToast('error', m.error || 'Failed to load members')
@@ -144,7 +138,7 @@ export default function SimMyTeam() {
     } finally {
       setMembersLoading(false)
     }
-  }, [selectedTeamId, teamList, showToast])
+  }, [selectedTeamId, showToast])
 
   useEffect(() => {
     if (selectedTeamId) loadMembersAndRoles()
@@ -259,11 +253,35 @@ export default function SimMyTeam() {
     } else showToast('error', res.error || 'Remove failed')
   }
 
+  const handleDeleteRole = async (fr) => {
+    if (!selectedTeamId) return
+    if (fr._count > 0) {
+      showToast('error', 'Remove members from this role before deleting it')
+      return
+    }
+    if (!confirm(`Delete functional role “${fr.role_label}”?`)) return
+    const res = await deleteSimTeamFunctionalRole(selectedTeamId, fr.id)
+    if (res.success) {
+      setSuccessBanner({ op: 'role_deleted', id: fr.id, label: fr.role_label })
+      showToast('success', 'Functional role deleted')
+      loadMembersAndRoles()
+    } else showToast('error', res.error || 'Delete failed')
+  }
+
   const practiceProjectId = selectedTeam?.practice_project_id
   const practiceProjectName = selectedTeam?.practice_projects?.project_name || '—'
   const projectRolesPath = practiceProjectId
     ? `/simulator/practice-project-roles?practiceProjectId=${encodeURIComponent(practiceProjectId)}`
     : '/simulator/practice-project-roles'
+
+  const memberCreatePath = () =>
+    `/simulator/practice-teams/my-team/members/new?teamId=${encodeURIComponent(selectedTeamId)}&practiceProjectId=${encodeURIComponent(practiceProjectId || '')}`
+  const memberEditPath = (id) =>
+    `/simulator/practice-teams/my-team/members/${encodeURIComponent(id)}/edit`
+  const roleCreatePath = () =>
+    `/simulator/practice-teams/my-team/roles/new?teamId=${encodeURIComponent(selectedTeamId)}`
+  const roleEditPath = (id) =>
+    `/simulator/practice-teams/my-team/roles/${encodeURIComponent(id)}/edit`
 
   if (loading || !teamList.length) {
     return (
@@ -347,7 +365,7 @@ export default function SimMyTeam() {
 
       <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-          <label className="text-sm font-medium text-gray-700 dark:text-gray-300 shrink-0">Practice team</label>
+          <label data-help="exempt" className="text-sm font-medium text-gray-700 dark:text-gray-300 shrink-0">Practice team</label>
           <select
             value={selectedTeamId}
             onChange={(e) => setSelectedTeamId(e.target.value)}
@@ -422,7 +440,7 @@ export default function SimMyTeam() {
               />
               <button
                 type="button"
-                onClick={() => setAddOpen(true)}
+                onClick={() => navigate(memberCreatePath())}
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white min-h-[44px]"
               >
                 <UserPlus className="w-4 h-4" />
@@ -485,16 +503,18 @@ export default function SimMyTeam() {
                         {m.joined_at ? String(m.joined_at).slice(0, 10) : '—'}
                       </td>
                       <td className="px-3 py-2 text-right">
-                        <RowActionButton
-                          variant="edit"
-                          label="Edit member"
-                          onClick={() => setEditMember(m)}
-                        />
-                        <RowActionButton
-                          variant="delete"
-                          label="Remove member"
-                          onClick={() => handleRemoveMember(m)}
-                        />
+                        <div className="inline-flex items-center justify-end gap-0.5">
+                          <RowActionButton
+                            variant="edit"
+                            label="Edit member"
+                            onClick={() => navigate(memberEditPath(m.id))}
+                          />
+                          <RowActionButton
+                            variant="delete"
+                            label="Remove member"
+                            onClick={() => handleRemoveMember(m)}
+                          />
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -516,18 +536,20 @@ export default function SimMyTeam() {
                   <div className="text-sm">
                     <span className="text-gray-500">Allocation:</span> {m.allocation_percentage ?? '—'}%
                   </div>
-                  <div className="mt-3 flex justify-end gap-2">
-                  <RowNumberBadge number={getDisplayRowNumber(index)} className="shrink-0" />
-                    <RowActionButton
-                      variant="edit"
-                      label="Edit member"
-                      onClick={() => setEditMember(m)}
-                    />
-                    <RowActionButton
-                      variant="delete"
-                      label="Remove member"
-                      onClick={() => handleRemoveMember(m)}
-                    />
+                  <div className="mt-3 flex items-center justify-between gap-2">
+                    <RowNumberBadge number={getDisplayRowNumber(index)} className="shrink-0" />
+                    <div className="inline-flex items-center gap-0.5">
+                      <RowActionButton
+                        variant="edit"
+                        label="Edit member"
+                        onClick={() => navigate(memberEditPath(m.id))}
+                      />
+                      <RowActionButton
+                        variant="delete"
+                        label="Remove member"
+                        onClick={() => handleRemoveMember(m)}
+                      />
+                    </div>
                   </div>
                 </div>
               ))}
@@ -559,7 +581,7 @@ export default function SimMyTeam() {
                   <tbody>
                     {pmoRolesSummary.map((row, i) => (
                       <tr key={`${row.teamId}-${row.roleLabel}-${i}`} className="border-t border-gray-200 dark:border-gray-600">
-                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
+                    <TableRowNumberCell number={getDisplayRowNumber(i)} />
                         <td className="py-1 pr-2">{row.teamName}</td>
                         <td className="py-1 pr-2">{row.projectName}</td>
                         <td className="py-1 pr-2">{row.roleLabel}</td>
@@ -592,10 +614,17 @@ export default function SimMyTeam() {
               />
               <Link
                 to={projectRolesPath}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 min-h-[44px]"
+              >
+                Project roles catalog
+              </Link>
+              <button
+                type="button"
+                onClick={() => navigate(roleCreatePath())}
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white min-h-[44px]"
               >
-                Manage Project Roles
-              </Link>
+                Add role
+              </button>
             </div>
           </div>
 
@@ -644,6 +673,7 @@ export default function SimMyTeam() {
                         </span>
                       </button>
                     </th>
+                    <th className="text-right px-3 py-2">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -652,6 +682,21 @@ export default function SimMyTeam() {
                     <TableRowNumberCell number={getDisplayRowNumber(index)} />
                       <td className="px-3 py-2 text-gray-900 dark:text-white">{fr.role_label}</td>
                       <td className="px-3 py-2 tabular-nums">{fr._count}</td>
+                      <td className="px-3 py-2 text-right">
+                        <div className="inline-flex items-center justify-end gap-0.5">
+                          <RowActionButton
+                            variant="edit"
+                            label="Edit functional role"
+                            onClick={() => navigate(roleEditPath(fr.id))}
+                          />
+                          <RowActionButton
+                            variant="delete"
+                            label={fr._count > 0 ? 'Remove members before deleting this role' : 'Delete functional role'}
+                            disabled={fr._count > 0}
+                            onClick={() => handleDeleteRole(fr)}
+                          />
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -666,36 +711,28 @@ export default function SimMyTeam() {
                 >
                   <div className="font-medium text-gray-900 dark:text-white">{fr.role_label}</div>
                   <div className="text-sm text-gray-500 mt-1">Members using: {fr._count}</div>
-                  <div className="mt-2 text-xs text-gray-500">#{getDisplayRowNumber(index)}</div>
+                  <div className="mt-3 flex items-center justify-between gap-2">
+                    <RowNumberBadge number={getDisplayRowNumber(index)} className="shrink-0" />
+                    <div className="inline-flex items-center gap-0.5">
+                      <RowActionButton
+                        variant="edit"
+                        label="Edit functional role"
+                        onClick={() => navigate(roleEditPath(fr.id))}
+                      />
+                      <RowActionButton
+                        variant="delete"
+                        label={fr._count > 0 ? 'Remove members before deleting this role' : 'Delete functional role'}
+                        disabled={fr._count > 0}
+                        onClick={() => handleDeleteRole(fr)}
+                      />
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
           )}
         </div>
       )}
-
-      <SimAddTeamMemberModal
-        isOpen={addOpen}
-        onClose={() => setAddOpen(false)}
-        practiceTeamId={selectedTeamId}
-        practiceProjectId={practiceProjectId}
-        onSuccess={() => {
-          setSuccessBanner({ op: 'member_added' })
-          loadMembersAndRoles()
-        }}
-      />
-
-      <SimEditTeamMemberModal
-        isOpen={!!editMember}
-        onClose={() => setEditMember(null)}
-        practiceTeamId={selectedTeamId}
-        practiceProjectId={practiceProjectId}
-        member={editMember}
-        onSuccess={() => {
-          setSuccessBanner({ op: 'member_updated', id: editMember?.id })
-          loadMembersAndRoles()
-        }}
-      />
     </div>
   )
 }

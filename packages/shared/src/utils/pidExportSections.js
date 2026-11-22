@@ -24,22 +24,22 @@ export const PID_EXPORT_SECTIONS = [
   ]},
   { title: 'Project Definition', fields: [
     { key: 'project_definition', label: 'Project Definition' },
-    { key: 'project_scope', label: 'Project Scope' },
-    { key: 'exclusions', label: 'Exclusions' },
-    { key: 'success_criteria', label: 'Success Criteria' },
-    { key: 'project_outcomes', label: 'Outcomes' },
-    { key: 'expected_benefits', label: 'Expected Benefits' },
+    { key: 'project_scope', label: 'Project Scope', itemColumnLabel: 'In scope' },
+    { key: 'exclusions', label: 'Exclusions', itemColumnLabel: 'Exclusion' },
+    { key: 'success_criteria', label: 'Success Criteria', itemColumnLabel: 'Criterion' },
+    { key: 'project_outcomes', label: 'Outcomes', itemColumnLabel: 'Outcome' },
+    { key: 'expected_benefits', label: 'Expected Benefits', itemColumnLabel: 'Benefit' },
   ]},
   { title: 'Objectives', fields: [
-    { key: 'project_objectives', label: 'Objectives' },
+    { key: 'project_objectives', label: 'Objectives', itemColumnLabel: 'Objective' },
     { key: 'objectives_summary', label: 'Objective Details' },
   ]},
   { title: 'Interfaces', fields: [
-    { key: 'interfaces', label: 'Interfaces' },
+    { key: 'interfaces', label: 'Interfaces', itemColumnLabel: 'Interface' },
     { key: 'interfaces_summary', label: 'Interface Details' },
   ]},
   { title: 'Dependencies', fields: [
-    { key: 'dependencies', label: 'Dependencies' },
+    { key: 'dependencies', label: 'Dependencies', itemColumnLabel: 'Dependency' },
     { key: 'dependencies_summary', label: 'Dependency Details' },
   ]},
   { title: 'Approach', fields: [
@@ -54,11 +54,11 @@ export const PID_EXPORT_SECTIONS = [
   ]},
   { title: 'Team Structure', fields: [{ key: 'team_summary', label: 'Team' }] },
   { title: 'Tolerances', fields: [
-    { key: 'tolerance_levels', label: 'Tolerance Levels' },
+    { key: 'tolerance_levels', label: 'Tolerance Levels', itemColumnLabel: 'Tolerance' },
     { key: 'tolerances_summary', label: 'Tolerance Details' },
   ]},
   { title: 'Reporting', fields: [
-    { key: 'reporting_arrangements', label: 'Reporting Arrangements' },
+    { key: 'reporting_arrangements', label: 'Reporting Arrangements', itemColumnLabel: 'Arrangement' },
     { key: 'reporting_summary', label: 'Reports' },
   ]},
   { title: 'Controls', fields: [

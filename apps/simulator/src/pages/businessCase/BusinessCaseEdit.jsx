@@ -26,6 +26,7 @@ import InheritedBusinessCaseFields, {
   BUSINESS_CASE_CATEGORY,
 } from '../../features/local-data-extensions/components/InheritedBusinessCaseFields'
 import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
+import { useLdeExportParts } from '../../lib/useLdeExportParts'
 import {
   buildBusinessCaseExportSections,
   buildBusinessCaseExportRecord,
@@ -48,6 +49,13 @@ export default function BusinessCaseEdit() {
   const [saving, setSaving] = useState(false)
   const [errors, setErrors] = useState({})
   const [activeTab, setActiveTab] = useState('main')
+  const lde = useLdeExportParts({
+    entityType: 'business_case',
+    entityId: businessCase?.id,
+    projectId: businessCase?.project_id,
+    screenCode: 'business_case_detail',
+    enabled: !!businessCase?.id && !!businessCase?.project_id,
+  })
 
   const fetchData = useCallback(async () => {
     try {
@@ -196,7 +204,7 @@ export default function BusinessCaseEdit() {
   const projectId = businessCase.project_id
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header */}
       <div className="mb-6">
         <button
@@ -219,8 +227,8 @@ export default function BusinessCaseEdit() {
           </div>
           <div className="flex flex-wrap items-center gap-2 sm:pt-1">
             <ExportRecordButtons
-              sections={buildBusinessCaseExportSections({ ...businessCase, ...form })}
-              record={buildBusinessCaseExportRecord({ ...businessCase, ...form })}
+              sections={[...buildBusinessCaseExportSections({ ...businessCase, ...form }), ...(lde.section ? [lde.section] : [])]}
+              record={{ ...buildBusinessCaseExportRecord({ ...businessCase, ...form }), ...lde.mergedRecord }}
               baseFilename={businessCaseExportFilename(businessCase)}
             />
           </div>
@@ -256,7 +264,7 @@ export default function BusinessCaseEdit() {
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
         {activeTab === 'main' && (
           <>
-            <BusinessCaseForm data={form} onChange={handleChange} errors={errors} />
+            <BusinessCaseForm data={form} onChange={handleChange} errors={errors} projectId={projectId} />
             {accountId && projectId && id && (
               <InheritedBusinessCaseFields
                 db={platformDb}

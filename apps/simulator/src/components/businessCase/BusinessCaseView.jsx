@@ -21,6 +21,7 @@ import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 import TableListInput from '@nidus/ui/TableListInput'
+import RecordCustomFields from '../shared-app/RecordCustomFields'
 
 const KEY_MILESTONE_COLUMNS = [
   { key: 'milestone', label: 'Milestone' },
@@ -87,7 +88,24 @@ export default function BusinessCaseViewComponent({
 
   return (
     <div className="space-y-4">
-      <DetailAuditTabList activeTab={activeTab} onChange={setActiveTab} ariaLabel="Business case sections" />
+      <DetailAuditTabList
+        activeTab={activeTab}
+        onChange={setActiveTab}
+        ariaLabel="Business case sections"
+        extraTab={{ value: 'custom-fields', label: 'Custom Fields' }}
+      />
+
+      {activeTab === 'custom-fields' && (
+        <RecordCustomFields
+          projectId={businessCase.project_id}
+          entityType="business_case"
+          entityId={businessCase.id}
+          screenCode="business_case_detail"
+          mode="view"
+          alwaysShow
+          title="Custom Fields"
+        />
+      )}
 
       {activeTab === 'audit' && (
         <AuditDetailsPanel description="Who created or changed this business case, and how it is classified.">

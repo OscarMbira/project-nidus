@@ -124,7 +124,7 @@ export async function getSimTeamMembers(practiceTeamId) {
     const { data, error } = await simDb
       .from('practice_team_members')
       .select(
-        'id, practice_team_id, user_id, member_role, allocation_percentage, joined_at, left_at, is_active'
+        'id, practice_team_id, user_id, member_role, allocation_percentage, allocation_start_date, allocation_end_date, member_comments, joined_at, left_at, is_active, created_at, updated_at'
       )
       .eq('practice_team_id', practiceTeamId)
       .eq('is_active', true)
@@ -136,6 +136,27 @@ export async function getSimTeamMembers(practiceTeamId) {
   } catch (error) {
     console.error('getSimTeamMembers:', error)
     return { success: false, data: [], error: error.message }
+  }
+}
+
+export async function getSimTeamMemberById(memberId) {
+  try {
+    if (!memberId) return { success: false, data: null, error: 'Member id is required' }
+    const { data, error } = await simDb
+      .from('practice_team_members')
+      .select(
+        `id, practice_team_id, user_id, member_role, allocation_percentage, allocation_start_date, allocation_end_date, member_comments, joined_at, left_at, is_active, created_at, updated_at,
+         practice_teams:practice_teams!practice_team_id ( id, team_name, practice_project_id, practice_projects ( id, project_name ) )`
+      )
+      .eq('id', memberId)
+      .maybeSingle()
+    if (error) throw error
+    if (!data) return { success: false, data: null, error: 'Member not found' }
+    const [enriched] = await enrichAuthUsers([data])
+    return { success: true, data: enriched }
+  } catch (error) {
+    console.error('getSimTeamMemberById:', error)
+    return { success: false, data: null, error: error.message }
   }
 }
 
@@ -183,7 +204,7 @@ export async function getSimAssignablePracticeMembers(practiceProjectId, practic
   }
 }
 
-export async function addSimTeamMember(practiceTeamId, authUserId, memberRole, allocationPct) {
+export async function addSimTeamMember(practiceTeamId, authUserId, memberRole, allocationPct, extra = {}) {
   try {
     const { data, error } = await simDb
       .from('practice_team_members')
@@ -192,7 +213,10 @@ export async function addSimTeamMember(practiceTeamId, authUserId, memberRole, a
         user_id: authUserId,
         member_role: memberRole || null,
         allocation_percentage: allocationPct ?? 100,
-        is_active: true,
+        allocation_start_date: extra.allocation_start_date || null,
+        allocation_end_date: extra.allocation_end_date || null,
+        member_comments: extra.member_comments || null,
+        is_active: extra.is_active !== false,
       })
       .select()
       .single()
@@ -205,15 +229,31 @@ export async function addSimTeamMember(practiceTeamId, authUserId, memberRole, a
   }
 }
 
-export async function updateSimTeamMember(teamMemberId, memberRole, allocationPct) {
+export async function updateSimTeamMember(teamMemberId, memberRole, allocationPct, extra = {}) {
   try {
+    const patch = {
+      member_role: memberRole,
+      allocation_percentage: allocationPct,
+      updated_at: new Date().toISOString(),
+    }
+    if (Object.prototype.hasOwnProperty.call(extra, 'allocation_start_date')) {
+      patch.allocation_start_date = extra.allocation_start_date || null
+    }
+    if (Object.prototype.hasOwnProperty.call(extra, 'allocation_end_date')) {
+      patch.allocation_end_date = extra.allocation_end_date || null
+    }
+    if (Object.prototype.hasOwnProperty.call(extra, 'member_comments')) {
+      patch.member_comments = extra.member_comments || null
+    }
+    if (Object.prototype.hasOwnProperty.call(extra, 'is_active')) {
+      patch.is_active = !!extra.is_active
+      if (!extra.is_active) {
+        patch.left_at = new Date().toISOString()
+      }
+    }
     const { data, error } = await simDb
       .from('practice_team_members')
-      .update({
-        member_role: memberRole,
-        allocation_percentage: allocationPct,
-        updated_at: new Date().toISOString(),
-      })
+      .update(patch)
       .eq('id', teamMemberId)
       .select()
       .single()
@@ -249,7 +289,7 @@ export async function getSimTeamFunctionalRoles(practiceTeamId) {
   try {
     const { data, error } = await simDb
       .from('practice_team_functional_roles')
-      .select('id, practice_team_id, role_label, sort_order, is_active')
+      .select('id, practice_team_id, role_label, required_skills, sort_order, is_active, created_at, updated_at')
       .eq('practice_team_id', practiceTeamId)
       .eq('is_active', true)
       .order('sort_order', { ascending: true })
@@ -262,17 +302,49 @@ export async function getSimTeamFunctionalRoles(practiceTeamId) {
   }
 }
 
-export async function addSimTeamFunctionalRole(practiceTeamId, roleLabel) {
+export async function getSimTeamFunctionalRoleById(roleId) {
+  try {
+    if (!roleId) return { success: false, data: null, error: 'Role id is required' }
+    const { data, error } = await simDb
+      .from('practice_team_functional_roles')
+      .select(
+        `id, practice_team_id, role_label, required_skills, sort_order, is_active, created_at, updated_at,
+         practice_teams:practice_teams!practice_team_id ( id, team_name, practice_project_id )`
+      )
+      .eq('id', roleId)
+      .maybeSingle()
+    if (error) throw error
+    if (!data) return { success: false, data: null, error: 'Role not found' }
+    return { success: true, data }
+  } catch (error) {
+    console.error('getSimTeamFunctionalRoleById:', error)
+    return { success: false, data: null, error: error.message }
+  }
+}
+
+export async function addSimTeamFunctionalRole(practiceTeamId, roleLabel, requiredSkills = null, sortOrder = null) {
   try {
     const label = (roleLabel || '').trim()
     if (!label) return { success: false, error: 'Role label is required' }
+    let order = sortOrder
+    if (order == null || Number.isNaN(Number(order))) {
+      const { data: maxRow } = await simDb
+        .from('practice_team_functional_roles')
+        .select('sort_order')
+        .eq('practice_team_id', practiceTeamId)
+        .order('sort_order', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+      order = (maxRow?.sort_order ?? 0) + 10
+    }
 
     const { data, error } = await simDb
       .from('practice_team_functional_roles')
       .insert({
         practice_team_id: practiceTeamId,
         role_label: label,
-        sort_order: 999,
+        required_skills: (requiredSkills || '').trim() || null,
+        sort_order: Number(order) || 999,
         is_active: true,
       })
       .select()
@@ -286,14 +358,21 @@ export async function addSimTeamFunctionalRole(practiceTeamId, roleLabel) {
   }
 }
 
-export async function updateSimTeamFunctionalRole(roleId, roleLabel) {
+export async function updateSimTeamFunctionalRole(roleId, roleLabel, requiredSkills = undefined, sortOrder = undefined) {
   try {
     const label = (roleLabel || '').trim()
     if (!label) return { success: false, error: 'Role label is required' }
+    const patch = { role_label: label, updated_at: new Date().toISOString() }
+    if (requiredSkills !== undefined) {
+      patch.required_skills = (requiredSkills || '').trim() || null
+    }
+    if (sortOrder !== undefined) {
+      patch.sort_order = Number(sortOrder) || 0
+    }
 
     const { data, error } = await simDb
       .from('practice_team_functional_roles')
-      .update({ role_label: label, updated_at: new Date().toISOString() })
+      .update(patch)
       .eq('id', roleId)
       .select()
       .single()

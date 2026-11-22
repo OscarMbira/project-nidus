@@ -3,27 +3,39 @@ import { useNavigate } from 'react-router-dom'
 import { Shield, FileEdit, ArrowLeft, AlertCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
 import ExportRecordMenu from '@nidus/ui/ExportRecordMenu'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
 import { parseMultiLineValue } from '@nidus/ui/MultiLineListInput'
+import RecordCustomFields from '../../components/shared-app/RecordCustomFields'
+import { useLdeExportParts } from '../../lib/useLdeExportParts'
 import { getTeamCharter } from '../../services/teamCharterService'
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId'
+
+const VIEW_TABS = [
+  { value: 'details', label: 'Details' },
+  { value: 'custom-fields', label: 'Custom Fields' },
+  { value: 'audit', label: 'Audit details' },
+]
 
 const EXPORT_SECTIONS = [
   {
     title: 'Identity',
     fields: [
-      { key: 'title', label: 'Title' },
-      { key: 'status', label: 'Status' },
-      { key: 'project', label: 'Project' },
+      { key: 'title', label: 'Title', fact: true },
+      { key: 'status', label: 'Status', fact: true },
+      { key: 'project', label: 'Project', fact: true },
     ],
   },
   {
     title: 'Charter Content',
     fields: [
       { key: 'purpose', label: 'Purpose' },
-      { key: 'objectives', label: 'Objectives' },
-      { key: 'values', label: 'Team Values' },
-      { key: 'ways_of_working', label: 'Ways of Working' },
-      { key: 'norms', label: 'Team Norms' },
+      { key: 'objectives', label: 'Objectives', itemColumnLabel: 'Objective' },
+      { key: 'values', label: 'Team Values', itemColumnLabel: 'Value' },
+      { key: 'ways_of_working', label: 'Ways of Working', itemColumnLabel: 'Way of working' },
+      { key: 'norms', label: 'Team Norms', itemColumnLabel: 'Norm' },
       { key: 'accountability', label: 'Accountability' },
       { key: 'communication_plan', label: 'Communication Plan' },
       { key: 'raci_notes', label: 'RACI Notes' },
@@ -63,10 +75,18 @@ export default function TeamCharterPage() {
   const navigate = useNavigate()
   const [charter, setCharter] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState('details')
+  const lde = useLdeExportParts({
+    entityType: 'team_charter',
+    entityId: charter?.id,
+    projectId,
+    screenCode: 'team_charter_detail',
+    enabled: !!charter?.id,
+  })
 
   const editPath = routeKey
-    ? `/platform/team-charter/edit?projectId=${encodeURIComponent(routeKey)}`
-    : '/platform/team-charter/edit'
+    ? `/simulator/team-charter/edit?projectId=${encodeURIComponent(routeKey)}`
+    : '/simulator/team-charter/edit'
 
   const exportRecord = useMemo(() => {
     if (!charter) return null
@@ -138,8 +158,8 @@ export default function TeamCharterPage() {
           <div className="flex flex-wrap items-center gap-2">
             {exportRecord && (
               <ExportRecordMenu
-                sections={EXPORT_SECTIONS}
-                record={exportRecord}
+                sections={lde.section ? [...EXPORT_SECTIONS, lde.section] : EXPORT_SECTIONS}
+                record={{ ...exportRecord, ...lde.mergedRecord }}
                 baseFilename={`TeamCharter_${routeKey || projectId || 'record'}`}
               />
             )}
@@ -192,14 +212,55 @@ export default function TeamCharterPage() {
               </span>
             </div>
 
-            <Section title="Purpose" content={charter.purpose} />
-            <Section title="Objectives" content={charter.objectives} />
-            <Section title="Team Values" content={charter.values} />
-            <Section title="Ways of Working" content={charter.ways_of_working} />
-            <Section title="Team Norms" content={charter.norms} />
-            <Section title="Accountability" content={charter.accountability} />
-            <Section title="Communication Plan" content={charter.communication_plan} />
-            <Section title="RACI Notes" content={charter.raci_notes} />
+            <DetailAuditTabList
+              tabs={VIEW_TABS}
+              activeTab={activeTab}
+              onChange={setActiveTab}
+              ariaLabel="Team Charter sections"
+            />
+
+            {activeTab === 'custom-fields' ? (
+              <RecordCustomFields
+                projectId={projectId}
+                entityType="team_charter"
+                entityId={charter.id}
+                screenCode="team_charter_detail"
+                mode="view"
+                alwaysShow
+              />
+            ) : activeTab === 'audit' ? (
+              <AuditDetailsPanel>
+                <AuditCard title="Identity">
+                  <AuditField label="Title" value={charter.title} />
+                  <AuditField label="Status" value={charter.status} />
+                  <AuditField label="Project" value={routeKey || projectId} />
+                </AuditCard>
+                <AuditCard title="Classification">
+                  <AuditField label="Record type" value="Team Charter" />
+                </AuditCard>
+                <AuditCard title="Record history">
+                  <AuditField
+                    label="Created"
+                    value={charter.created_at ? new Date(charter.created_at).toLocaleString() : '—'}
+                  />
+                  <AuditField
+                    label="Updated"
+                    value={charter.updated_at ? new Date(charter.updated_at).toLocaleString() : '—'}
+                  />
+                </AuditCard>
+              </AuditDetailsPanel>
+            ) : (
+              <>
+                <Section title="Purpose" content={charter.purpose} />
+                <Section title="Objectives" content={charter.objectives} />
+                <Section title="Team Values" content={charter.values} />
+                <Section title="Ways of Working" content={charter.ways_of_working} />
+                <Section title="Team Norms" content={charter.norms} />
+                <Section title="Accountability" content={charter.accountability} />
+                <Section title="Communication Plan" content={charter.communication_plan} />
+                <Section title="RACI Notes" content={charter.raci_notes} />
+              </>
+            )}
           </>
         )}
       </div>

@@ -15,8 +15,10 @@ import AuditField from '@nidus/ui/AuditField';
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
 import MultiLineListInput from '@nidus/ui/MultiLineListInput';
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
+import RecordCustomFields from '../shared-app/RecordCustomFields';
 import MeasurementTimingLinkTable from './MeasurementTimingLinkTable';
 import ScopeItemsWithOwnerTable from './ScopeItemsWithOwnerTable';
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 /** Coerce DB text / legacy JSON-array values into a newline-joined string for MultiLineListInput. */
 function toMultilineText(value) {
@@ -269,8 +271,7 @@ export default function BenefitsReviewPlanForm({ plan, projectId, onSave, onCanc
                 <FieldLabelWithHelp helpKey="public.benefits_review_plans.plan_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Plan Date *
                 </FieldLabelWithHelp>
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   name="plan_date"
                   value={formData.plan_date}
                   onChange={handleChange}
@@ -527,8 +528,7 @@ export default function BenefitsReviewPlanForm({ plan, projectId, onSave, onCanc
                 <FieldLabelWithHelp helpKey="public.benefits_review_plans.baseline_recording_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Baseline Recording Date
                 </FieldLabelWithHelp>
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   name="baseline_recording_date"
                   value={formData.baseline_recording_date || ''}
                   onChange={handleChange}
@@ -643,8 +643,30 @@ export default function BenefitsReviewPlanForm({ plan, projectId, onSave, onCanc
       </div>
 
       <div className="px-6 pt-4">
-        <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+        <DetailAuditTabList
+          activeTab={formTab}
+          onChange={setFormTab}
+          ariaLabel="Benefits review plan sections"
+          tabs={[
+            { value: 'wizard', label: 'Details' },
+            { value: 'custom-fields', label: 'Custom Fields' },
+            { value: 'audit', label: 'Audit details' },
+          ]}
+        />
       </div>
+
+      {formTab === 'custom-fields' && (
+        <div className="p-6">
+          <RecordCustomFields
+            projectId={projectId || formData.project_id}
+            entityType="benefits_review_plan"
+            entityId={plan?.id}
+            screenCode="benefits_review_plan_detail"
+            mode="edit"
+            alwaysShow
+          />
+        </div>
+      )}
 
       {formTab === 'audit' && (
           <div className="p-6">

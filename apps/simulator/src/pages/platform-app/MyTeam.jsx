@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
-import { Users, UserPlus, Pencil, Trash2, Search } from 'lucide-react'
+import { Users, UserPlus, Search } from 'lucide-react'
 import { platformDb } from '@nidus/supabase'
 import { isPmoAdmin } from '../../services/organisationRoleService'
 import {
@@ -24,6 +24,8 @@ import ManageFunctionalRoleModal from '../../components/teams/ManageFunctionalRo
 import ExportListMenu from '@nidus/ui/ExportListMenu'
 import ViewToggle from '@nidus/ui/ViewToggle'
 import SortToolbar from '@nidus/ui/SortToolbar'
+import RowActionButton from '@nidus/ui/RowActionButton'
+import RowNumberBadge from '@nidus/ui/RowNumberBadge'
 import { useSortableTable } from '@nidus/shared/hooks/useSortableTable'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { useToast } from '@nidus/shared/hooks/useToast'
@@ -44,6 +46,7 @@ function readView(key, fallback = 'list') {
 
 export default function MyTeam() {
   const { showToast } = useToast()
+  const [appUserId, setAppUserId] = useState(null)
   const [pmo, setPmo] = useState(false)
   const [pmoMode, setPmoMode] = useState('mine')
   const [loading, setLoading] = useState(true)
@@ -83,6 +86,13 @@ export default function MyTeam() {
     if (!user?.id) return
     const admin = await isPmoAdmin(user.id)
     setPmo(admin)
+    // teams.team_lead_user_id references public.users.id (not auth uid)
+    const { data: profile } = await platformDb
+      .from('users')
+      .select('id')
+      .eq('auth_user_id', user.id)
+      .maybeSingle()
+    setAppUserId(profile?.id || null)
 
     if (admin && pmoMode === 'all') {
       const res = await getAllTeamsWithMembers()
@@ -319,9 +329,15 @@ export default function MyTeam() {
 
   const projectName = selectedTeam?.projects?.project_name || '—'
   const projectId = selectedTeam?.project_id
-  /** PMO "All teams" uses org-wide access; project-scoped PermissionGate would hide actions for some projects. */
+  /** Team leads own this page; PMO "All teams" is org-wide. Others still need team.manage. */
+  const canManageSelectedTeam = Boolean(
+    (pmo && pmoMode === 'all') ||
+    (appUserId && selectedTeam?.team_lead_user_id === appUserId)
+  )
   const manageMembersUi = (node) =>
-    pmo && pmoMode === 'all' ? node : <PermissionGate permission="team.manage" projectId={projectId}>{node}</PermissionGate>
+    canManageSelectedTeam
+      ? node
+      : <PermissionGate permission="team.manage" projectId={projectId}>{node}</PermissionGate>
 
   return (
     <div className="max-w-6xl mx-auto p-4 sm:p-6 space-y-6">
@@ -375,7 +391,7 @@ export default function MyTeam() {
 
       <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-          <label className="text-sm font-medium text-gray-700 dark:text-gray-300 shrink-0">Team</label>
+          <label data-help="exempt" className="text-sm font-medium text-gray-700 dark:text-gray-300 shrink-0">Team</label>
           <select
             value={selectedTeamId}
             onChange={(e) => setSelectedTeamId(e.target.value)}
@@ -517,24 +533,18 @@ export default function MyTeam() {
                       </td>
                       <td className="px-3 py-2 text-right">
                         {manageMembersUi(
-                          <>
-                            <button
-                              type="button"
+                          <div className="inline-flex items-center justify-end gap-0.5">
+                            <RowActionButton
+                              variant="edit"
+                              label="Edit member"
                               onClick={() => setEditMember(m)}
-                              className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 mr-1"
-                              aria-label="Edit"
-                            >
-                              <Pencil className="w-4 h-4" />
-                            </button>
-                            <button
-                              type="button"
+                            />
+                            <RowActionButton
+                              variant="delete"
+                              label="Remove member"
                               onClick={() => handleRemoveMember(m)}
-                              className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-red-600"
-                              aria-label="Remove"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </>
+                            />
+                          </div>
                         )}
                       </td>
                     </tr>
@@ -557,25 +567,21 @@ export default function MyTeam() {
                   <div className="text-sm">
                     <span className="text-gray-500">Allocation:</span> {m.allocation_percentage ?? '—'}%
                   </div>
-                  <div className="mt-3 flex justify-end gap-2">
-                  <RowNumberBadge number={getDisplayRowNumber(index)} className="shrink-0" />
+                  <div className="mt-3 flex items-center justify-between gap-2">
+                    <RowNumberBadge number={getDisplayRowNumber(index)} className="shrink-0" />
                     {manageMembersUi(
-                      <>
-                        <button
-                          type="button"
+                      <div className="inline-flex items-center gap-0.5">
+                        <RowActionButton
+                          variant="edit"
+                          label="Edit member"
                           onClick={() => setEditMember(m)}
-                          className="px-3 py-1.5 rounded border border-gray-300 dark:border-gray-600 text-sm"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          type="button"
+                        />
+                        <RowActionButton
+                          variant="delete"
+                          label="Remove member"
                           onClick={() => handleRemoveMember(m)}
-                          className="px-3 py-1.5 rounded border border-red-300 text-red-600 text-sm"
-                        >
-                          Remove
-                        </button>
-                      </>
+                        />
+                      </div>
                     )}
                   </div>
                 </div>
@@ -707,23 +713,19 @@ export default function MyTeam() {
                       <td className="px-3 py-2 tabular-nums">{fr._count}</td>
                       <td className="px-3 py-2 text-right">
                         {manageMembersUi(
-                          <>
-                            <button
-                              type="button"
+                          <div className="inline-flex items-center justify-end gap-0.5">
+                            <RowActionButton
+                              variant="edit"
+                              label="Edit functional role"
                               onClick={() => setRoleModal({ mode: 'edit', row: fr })}
-                              className="px-2 py-1 rounded border border-gray-300 dark:border-gray-600 mr-2"
-                            >
-                              Edit
-                            </button>
-                            <button
-                              type="button"
+                            />
+                            <RowActionButton
+                              variant="delete"
+                              label={fr._count > 0 ? 'Remove members before deleting this role' : 'Delete functional role'}
                               disabled={fr._count > 0}
                               onClick={() => handleDeleteRole(fr)}
-                              className="px-2 py-1 rounded border border-red-300 text-red-600 disabled:opacity-40"
-                            >
-                              Delete
-                            </button>
-                          </>
+                            />
+                          </div>
                         )}
                       </td>
                     </tr>
@@ -740,26 +742,22 @@ export default function MyTeam() {
                 >
                   <div className="font-medium text-gray-900 dark:text-white">{fr.role_label}</div>
                   <div className="text-sm text-gray-500 mt-1">Members using: {fr._count}</div>
-                  <div className="mt-3 flex gap-2 justify-end">
-                  <RowNumberBadge number={getDisplayRowNumber(index)} className="shrink-0" />
+                  <div className="mt-3 flex items-center justify-between gap-2">
+                    <RowNumberBadge number={getDisplayRowNumber(index)} className="shrink-0" />
                     {manageMembersUi(
-                      <>
-                        <button
-                          type="button"
+                      <div className="inline-flex items-center gap-0.5">
+                        <RowActionButton
+                          variant="edit"
+                          label="Edit functional role"
                           onClick={() => setRoleModal({ mode: 'edit', row: fr })}
-                          className="px-3 py-1.5 rounded border text-sm"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          type="button"
+                        />
+                        <RowActionButton
+                          variant="delete"
+                          label={fr._count > 0 ? 'Remove members before deleting this role' : 'Delete functional role'}
                           disabled={fr._count > 0}
                           onClick={() => handleDeleteRole(fr)}
-                          className="px-3 py-1.5 rounded border border-red-300 text-red-600 text-sm disabled:opacity-40"
-                        >
-                          Delete
-                        </button>
-                      </>
+                        />
+                      </div>
                     )}
                   </div>
                 </div>

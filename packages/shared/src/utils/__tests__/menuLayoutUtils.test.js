@@ -9,6 +9,8 @@ import {
   resolveMenuLayoutScope,
   shouldUsePmLayoutShell,
   isPmoOnlyPlatformPath,
+  isSharedPmPlatformPath,
+  isPmLayoutPath,
   PM_LAYOUT_ROLES,
   resolvePrimaryLayoutScopeFromRoles,
 } from '../menuLayoutUtils'
@@ -114,6 +116,24 @@ describe('resolveMenuLayoutScope', () => {
     cacheUserMenuRoles('user-1', ['pmo_admin'])
     expect(resolveMenuLayoutScope(null, '/platform/projects/all')).toBe('pmo')
     expect(shouldUsePmLayoutShell('/platform/projects/ADMSEED-PRJ-01')).toBe(false)
+  })
+})
+
+describe('isSharedPmPlatformPath (v1477 Mandate/Brief Approvals)', () => {
+  it('keeps Project Mandate / Brief list paths as shared PM', () => {
+    expect(isSharedPmPlatformPath('/platform/mandates/list')).toBe(true)
+    expect(isSharedPmPlatformPath('/platform/brief')).toBe(true)
+  })
+
+  it('does not treat /platform/briefs/* as /platform/brief', () => {
+    expect(isSharedPmPlatformPath('/platform/briefs/approvals')).toBe(false)
+    expect(isSharedPmPlatformPath('/platform/briefs/list')).toBe(false)
+  })
+
+  it('excludes Mandate / Brief approval hubs from the PM shell', () => {
+    expect(isSharedPmPlatformPath('/platform/mandates/approvals')).toBe(false)
+    expect(isPmLayoutPath('/platform/mandates/approvals')).toBe(false)
+    expect(isPmLayoutPath('/platform/briefs/approvals')).toBe(false)
   })
 })
 

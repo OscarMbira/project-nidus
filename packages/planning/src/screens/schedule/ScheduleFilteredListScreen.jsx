@@ -8,7 +8,7 @@ import { RowActionButton } from '@nidus/ui'
 import PlanningTable from '../../components/PlanningTable.jsx'
 import ScheduleLayout, { ChooseProject, Loading } from '../../components/ScheduleLayout.jsx'
 import { useSchedule, useScheduleProjectId } from '../../hooks/useSchedule.js'
-import { useTaskModal } from '../../hooks/useTaskModal.js'
+import { useTaskPage } from '../../hooks/useTaskPage.js'
 import { finishVarianceDays } from '../../services/scheduleData.js'
 
 const today = () => new Date().toISOString().slice(0, 10)
@@ -87,7 +87,7 @@ export const PRESETS = {
 
 export default function ScheduleFilteredListScreen({ preset }) {
   const cfg = PRESETS[preset]
-  const { openTask } = useTaskModal()
+  const { openTask } = useTaskPage()
   const { projectId, loading: projectLoading } = useScheduleProjectId()
   const schedule = useSchedule(projectId, { withCalendar: false })
   const [days, setDays] = useState(21)
@@ -105,7 +105,7 @@ export default function ScheduleFilteredListScreen({ preset }) {
           exportName={cfg.title.replace(/\s+/g, '')}
           emptyText={cfg.empty}
           toolbar={cfg.window && (
-            <label className="text-sm text-gray-700 dark:text-gray-200 inline-flex items-center gap-2">
+            <label data-help="exempt" className="text-sm text-gray-700 dark:text-gray-200 inline-flex items-center gap-2">
               Next
               <select
                 value={days}

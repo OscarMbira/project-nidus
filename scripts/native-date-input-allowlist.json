@@ -1,8 +1,1 @@
-[
-  "apps/platform/src/components/benefits/BenefitsReviewPlanForm.jsx",
-  "apps/platform/src/components/businessCase/BusinessCaseForm.jsx",
-  "apps/simulator/src/components/benefits/BenefitsReviewPlanForm.jsx",
-  "apps/simulator/src/components/businessCase/BusinessCaseForm.jsx",
-  "packages/planning/src/screens/schedule/ScheduleGanttScreen.jsx",
-  "packages/planning/src/screens/schedule/TaskFormScreen.jsx"
-]
+[]

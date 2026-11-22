@@ -4,7 +4,7 @@
  * (rule 66 — the lists change rarely), like deliveryMethodologyOptionsService.
  */
 
-const CACHE_KEY = 'nidus:projectAttributeOptions:v1'
+const CACHE_KEY = 'nidus:projectAttributeOptions:v2' // v1493: reimbursable billing type
 const CACHE_TTL_MS = 30 * 60 * 1000
 
 function readCache() {

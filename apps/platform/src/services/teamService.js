@@ -368,7 +368,7 @@ export async function addMember(teamId, userId, memberData = {}) {
         allocation_start_date: memberData.allocation_start_date || null,
         allocation_end_date: memberData.allocation_end_date || null,
         member_comments: memberData.member_comments || null,
-        is_active: true
+        is_active: memberData.is_active !== false
       })
       .select()
       .single();
@@ -603,9 +603,16 @@ export async function getTeamMembers(teamId) {
         user_id,
         member_role,
         allocation_percentage,
+        allocation_start_date,
+        allocation_end_date,
+        member_comments,
         joined_at,
         left_at,
         is_active,
+        created_at,
+        created_by,
+        updated_at,
+        updated_by,
         users:users!user_id ( id, full_name, email, avatar_url )
       `
       )
@@ -664,11 +671,15 @@ export async function getAssignableProjectMembers(projectId, teamId = null) {
   }
 }
 
-export async function addTeamMember(teamId, userId, memberRole, allocationPct, requiredSkills = null) {
+export async function addTeamMember(teamId, userId, memberRole, allocationPct, requiredSkills = null, extra = {}) {
   return addMember(teamId, userId, {
     member_role: memberRole ?? null,
     allocation_percentage: allocationPct ?? 100,
     required_skills: requiredSkills || null,
+    allocation_start_date: extra.allocation_start_date ?? null,
+    allocation_end_date: extra.allocation_end_date ?? null,
+    member_comments: extra.member_comments ?? null,
+    is_active: extra.is_active !== false,
   });
 }
 
@@ -687,6 +698,14 @@ export async function updateTeamMember(teamMemberId, memberRole, allocationPct, 
     }
     if (Object.prototype.hasOwnProperty.call(extra, 'member_comments')) {
       patch.member_comments = extra.member_comments || null;
+    }
+    if (Object.prototype.hasOwnProperty.call(extra, 'is_active')) {
+      patch.is_active = !!extra.is_active;
+      if (!extra.is_active) {
+        patch.left_at = new Date().toISOString();
+      } else {
+        patch.left_at = null;
+      }
     }
 
     const { data, error } = await platformDb
@@ -909,11 +928,22 @@ export async function replaceProjectFunctionalRoles(projectId, rows = []) {
   }
 }
 
-export async function addTeamFunctionalRole(teamId, roleLabel, requiredSkills = null) {
+export async function addTeamFunctionalRole(teamId, roleLabel, requiredSkills = null, sortOrder = null) {
   try {
     const label = (roleLabel || '').trim();
     if (!label) return { success: false, error: 'Role label is required' };
     const skills = (requiredSkills || '').trim() || null;
+    let order = sortOrder
+    if (order == null || Number.isNaN(Number(order))) {
+      const { data: maxRow } = await platformDb
+        .from('team_functional_roles')
+        .select('sort_order')
+        .eq('team_id', teamId)
+        .order('sort_order', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+      order = (maxRow?.sort_order ?? 0) + 10
+    }
 
     const { data, error } = await platformDb
       .from('team_functional_roles')
@@ -922,7 +952,7 @@ export async function addTeamFunctionalRole(teamId, roleLabel, requiredSkills = 
           team_id: teamId,
           role_label: label,
           required_skills: skills,
-          sort_order: 999,
+          sort_order: Number(order) || 999,
           is_active: true,
         },
         { onConflict: 'team_id,role_label' },
@@ -938,7 +968,7 @@ export async function addTeamFunctionalRole(teamId, roleLabel, requiredSkills = 
   }
 }
 
-export async function updateTeamFunctionalRole(roleId, roleLabel, requiredSkills = undefined) {
+export async function updateTeamFunctionalRole(roleId, roleLabel, requiredSkills = undefined, sortOrder = undefined) {
   try {
     const label = (roleLabel || '').trim();
     if (!label) return { success: false, error: 'Role label is required' };
@@ -946,6 +976,9 @@ export async function updateTeamFunctionalRole(roleId, roleLabel, requiredSkills
     const patch = { role_label: label, updated_at: new Date().toISOString() };
     if (requiredSkills !== undefined) {
       patch.required_skills = (requiredSkills || '').trim() || null;
+    }
+    if (sortOrder !== undefined) {
+      patch.sort_order = Number(sortOrder) || 0;
     }
 
     const { data, error } = await platformDb
@@ -959,6 +992,72 @@ export async function updateTeamFunctionalRole(roleId, roleLabel, requiredSkills
     return { success: true, data };
   } catch (error) {
     console.error('updateTeamFunctionalRole:', error);
+    return { success: false, data: null, error: error.message };
+  }
+}
+
+/** Load one team member by id (for My Team edit page). */
+export async function getTeamMemberById(memberId) {
+  try {
+    if (!memberId) return { success: false, data: null, error: 'Member id is required' };
+    const { data, error } = await platformDb
+      .from('team_members')
+      .select(`
+        id,
+        team_id,
+        user_id,
+        member_role,
+        allocation_percentage,
+        allocation_start_date,
+        allocation_end_date,
+        member_comments,
+        joined_at,
+        left_at,
+        is_active,
+        created_at,
+        created_by,
+        updated_at,
+        updated_by,
+        users:users!user_id ( id, full_name, email, avatar_url ),
+        teams:teams!team_id ( id, team_name, project_id, projects ( id, project_name, project_code ) )
+      `)
+      .eq('id', memberId)
+      .eq('is_deleted', false)
+      .maybeSingle();
+    if (error) throw error;
+    if (!data) return { success: false, data: null, error: 'Member not found' };
+    return { success: true, data };
+  } catch (error) {
+    console.error('getTeamMemberById:', error);
+    return { success: false, data: null, error: error.message };
+  }
+}
+
+/** Load one team functional role by id (for My Team edit page). */
+export async function getTeamFunctionalRoleById(roleId) {
+  try {
+    if (!roleId) return { success: false, data: null, error: 'Role id is required' };
+    const { data, error } = await platformDb
+      .from('team_functional_roles')
+      .select(`
+        id,
+        team_id,
+        role_label,
+        required_skills,
+        sort_order,
+        is_active,
+        created_at,
+        created_by,
+        updated_at,
+        teams:teams!team_id ( id, team_name, project_id, projects ( id, project_name, project_code ) )
+      `)
+      .eq('id', roleId)
+      .maybeSingle();
+    if (error) throw error;
+    if (!data) return { success: false, data: null, error: 'Role not found' };
+    return { success: true, data };
+  } catch (error) {
+    console.error('getTeamFunctionalRoleById:', error);
     return { success: false, data: null, error: error.message };
   }
 }

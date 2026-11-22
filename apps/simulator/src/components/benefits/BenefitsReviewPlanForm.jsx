@@ -4,6 +4,8 @@
  */
 
 import { useState, useEffect } from 'react';
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { FileText, Save, Calendar, User, Target, Users, DollarSign, BarChart3, AlertTriangle, CheckCircle } from 'lucide-react';
 import { saveBenefitsReviewPlan } from '../../services/benefitsReviewPlanService';
 import { platformDb, supabase } from '../../services/supabaseClient';
@@ -14,8 +16,10 @@ import AuditField from '@nidus/ui/AuditField';
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
 import MultiLineListInput from '@nidus/ui/MultiLineListInput';
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
+import RecordCustomFields from '../shared-app/RecordCustomFields';
 import MeasurementTimingLinkTable from './MeasurementTimingLinkTable';
 import ScopeItemsWithOwnerTable from './ScopeItemsWithOwnerTable';
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 /** Coerce DB text / legacy JSON-array values into a newline-joined string for MultiLineListInput. */
 function toMultilineText(value) {
@@ -42,7 +46,7 @@ const LIST_FIELD_KEYS = [
   'measurement_approach',
 ];
 
-export default function BenefitsReviewPlanForm({ plan, projectId, onSave, onCancel }) {
+function BenefitsReviewPlanFormBody({ plan, projectId, onSave, onCancel }) {
   const [formData, setFormData] = useState({
     plan_title: '',
     document_ref: '',
@@ -151,7 +155,7 @@ export default function BenefitsReviewPlanForm({ plan, projectId, onSave, onCanc
 
   const listField = (name, label, { viewModeId, itemColumnLabel, placeholder, hint }) => (
     <div>
-      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{label}</label>
+      <FieldLabelWithHelp helpKey={`sim.benefits_review_plans.${name}`} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{label}</FieldLabelWithHelp>
       {hint && (
         <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">{hint}</p>
       )}
@@ -210,9 +214,9 @@ export default function BenefitsReviewPlanForm({ plan, projectId, onSave, onCanc
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.benefits_review_plans.plan_title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Plan Title *
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   name="plan_title"
@@ -225,9 +229,9 @@ export default function BenefitsReviewPlanForm({ plan, projectId, onSave, onCanc
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.benefits_review_plans.document_ref" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Document Reference
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   name="document_ref"
@@ -239,9 +243,9 @@ export default function BenefitsReviewPlanForm({ plan, projectId, onSave, onCanc
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.benefits_review_plans.version_number" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Version Number
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   name="version_number"
@@ -252,9 +256,9 @@ export default function BenefitsReviewPlanForm({ plan, projectId, onSave, onCanc
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.benefits_review_plans.release" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Release
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   name="release"
@@ -265,11 +269,10 @@ export default function BenefitsReviewPlanForm({ plan, projectId, onSave, onCanc
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.benefits_review_plans.plan_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Plan Date *
-                </label>
-                <input
-                  type="date"
+                </FieldLabelWithHelp>
+                <RegionalDateInput eventStyle
                   name="plan_date"
                   value={formData.plan_date}
                   onChange={handleChange}
@@ -279,9 +282,9 @@ export default function BenefitsReviewPlanForm({ plan, projectId, onSave, onCanc
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.benefits_review_plans.author_user_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required listOptions={false}>
                   Author *
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="author_user_id"
                   value={formData.author_user_id}
@@ -299,9 +302,9 @@ export default function BenefitsReviewPlanForm({ plan, projectId, onSave, onCanc
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.benefits_review_plans.owner_user_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                   Owner
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="owner_user_id"
                   value={formData.owner_user_id}
@@ -318,9 +321,9 @@ export default function BenefitsReviewPlanForm({ plan, projectId, onSave, onCanc
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.benefits_review_plans.client" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Client
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   name="client"
@@ -332,9 +335,9 @@ export default function BenefitsReviewPlanForm({ plan, projectId, onSave, onCanc
 
               {!projectId && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="sim.benefits_review_plans.project_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                     Project
-                  </label>
+                  </FieldLabelWithHelp>
                   <select
                     name="project_id"
                     value={formData.project_id || ''}
@@ -352,9 +355,9 @@ export default function BenefitsReviewPlanForm({ plan, projectId, onSave, onCanc
               )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.benefits_review_plans.programme_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                   Programme (Optional)
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="programme_id"
                   value={formData.programme_id || ''}
@@ -371,9 +374,9 @@ export default function BenefitsReviewPlanForm({ plan, projectId, onSave, onCanc
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.benefits_review_plans.status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Status
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="status"
                   value={formData.status}
@@ -411,9 +414,9 @@ export default function BenefitsReviewPlanForm({ plan, projectId, onSave, onCanc
         return (
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.benefits_review_plans.accountability_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 4. Accountability Description
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 name="accountability_description"
                 value={formData.accountability_description}
@@ -456,9 +459,9 @@ export default function BenefitsReviewPlanForm({ plan, projectId, onSave, onCanc
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.benefits_review_plans.estimated_review_effort_hours" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Estimated Effort (Hours)
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="number"
                   name="estimated_review_effort_hours"
@@ -470,9 +473,9 @@ export default function BenefitsReviewPlanForm({ plan, projectId, onSave, onCanc
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.benefits_review_plans.estimated_review_cost" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" isAmount>
                   Estimated Cost
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="number"
                   name="estimated_review_cost"
@@ -484,9 +487,9 @@ export default function BenefitsReviewPlanForm({ plan, projectId, onSave, onCanc
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.benefits_review_plans.review_cost_currency" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Currency
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   name="review_cost_currency"
                   value={formData.review_cost_currency}
@@ -508,9 +511,9 @@ export default function BenefitsReviewPlanForm({ plan, projectId, onSave, onCanc
         return (
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.benefits_review_plans.baseline_measures_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 7. Baseline Measures Description
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 name="baseline_measures_description"
                 value={formData.baseline_measures_description}
@@ -523,11 +526,10 @@ export default function BenefitsReviewPlanForm({ plan, projectId, onSave, onCanc
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.benefits_review_plans.baseline_recording_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Baseline Recording Date
-                </label>
-                <input
-                  type="date"
+                </FieldLabelWithHelp>
+                <RegionalDateInput eventStyle
                   name="baseline_recording_date"
                   value={formData.baseline_recording_date || ''}
                   onChange={handleChange}
@@ -536,9 +538,9 @@ export default function BenefitsReviewPlanForm({ plan, projectId, onSave, onCanc
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.benefits_review_plans.baseline_source" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Baseline Source
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   name="baseline_source"
@@ -556,9 +558,9 @@ export default function BenefitsReviewPlanForm({ plan, projectId, onSave, onCanc
         return (
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.benefits_review_plans.performance_review_approach" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 8. Performance Review Approach
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 name="performance_review_approach"
                 value={formData.performance_review_approach}
@@ -570,9 +572,9 @@ export default function BenefitsReviewPlanForm({ plan, projectId, onSave, onCanc
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="sim.benefits_review_plans.performance_review_frequency" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Review Frequency
-              </label>
+              </FieldLabelWithHelp>
               <select
                 name="performance_review_frequency"
                 value={formData.performance_review_frequency}
@@ -610,9 +612,9 @@ export default function BenefitsReviewPlanForm({ plan, projectId, onSave, onCanc
                 onChange={handleChange}
                 className="w-5 h-5 text-blue-600 rounded border-gray-300"
               />
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              <FieldLabelWithHelp helpKey="sim.benefits_review_plans.dis_benefits_included" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Dis-benefits Considered for Measurement and Review
-              </label>
+              </FieldLabelWithHelp>
             </div>
 
             {formData.dis_benefits_included && (
@@ -642,8 +644,30 @@ export default function BenefitsReviewPlanForm({ plan, projectId, onSave, onCanc
       </div>
 
       <div className="px-6 pt-4">
-        <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+        <DetailAuditTabList
+          activeTab={formTab}
+          onChange={setFormTab}
+          ariaLabel="Benefits review plan sections"
+          tabs={[
+            { value: 'wizard', label: 'Details' },
+            { value: 'custom-fields', label: 'Custom Fields' },
+            { value: 'audit', label: 'Audit details' },
+          ]}
+        />
       </div>
+
+      {formTab === 'custom-fields' && (
+        <div className="p-6">
+          <RecordCustomFields
+            projectId={projectId || formData.project_id}
+            entityType="benefits_review_plan"
+            entityId={plan?.id}
+            screenCode="benefits_review_plan_detail"
+            mode="edit"
+            alwaysShow
+          />
+        </div>
+      )}
 
       {formTab === 'audit' && (
           <div className="p-6">
@@ -725,4 +749,37 @@ export default function BenefitsReviewPlanForm({ plan, projectId, onSave, onCanc
         )}
     </div>
   );
+}
+
+// v1345 slice 4 Simulator parity: field help (sim.* keys aliased to the Platform help).
+const HELP_KEYS = [
+  'sim.benefits_review_plans.plan_title',
+  'sim.benefits_review_plans.document_ref',
+  'sim.benefits_review_plans.version_number',
+  'sim.benefits_review_plans.release',
+  'sim.benefits_review_plans.plan_date',
+  'sim.benefits_review_plans.author_user_id',
+  'sim.benefits_review_plans.owner_user_id',
+  'sim.benefits_review_plans.client',
+  'sim.benefits_review_plans.project_id',
+  'sim.benefits_review_plans.programme_id',
+  'sim.benefits_review_plans.status',
+  'sim.benefits_review_plans.accountability_description',
+  'sim.benefits_review_plans.estimated_review_effort_hours',
+  'sim.benefits_review_plans.estimated_review_cost',
+  'sim.benefits_review_plans.review_cost_currency',
+  'sim.benefits_review_plans.baseline_measures_description',
+  'sim.benefits_review_plans.baseline_recording_date',
+  'sim.benefits_review_plans.baseline_source',
+  'sim.benefits_review_plans.performance_review_approach',
+  'sim.benefits_review_plans.performance_review_frequency',
+  'sim.benefits_review_plans.dis_benefits_included',
+]
+
+export default function BenefitsReviewPlanForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <BenefitsReviewPlanFormBody {...props} />
+    </FieldHelpScope>
+  )
 }

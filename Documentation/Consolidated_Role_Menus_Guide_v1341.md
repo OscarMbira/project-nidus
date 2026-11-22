@@ -49,7 +49,8 @@ With the switch off, the sidebar is exactly as before.
 | `menu_item_placements` | One row per menu item × placement key: section, optional sub-menu parent, optional slot, order, scope (`project` or `organisation`). |
 | `menu_items.default_section_code` | Where an item and its unplaced pages fall back to when a full-menu role has no placement for it. |
 | `menu_placement_version` | Bumped by every placement change; sidebars refresh their cache when it changes. |
-| `account_menu_settings` | The per-organisation switch. |
+| `system_menu_settings` | **System-wide** consolidated sidebar switch (v1528). One flag for all organisations. |
+| `account_menu_settings` | Legacy per-org rows (kept in sync for history; apps no longer read this for the live switch). |
 | `project_disabled_menu_items`, `sim.practice_project_disabled_menu_items`, `project_menu_item_switch_log` | Industry Modules switch-offs and their history. |
 
 Catalogue rows that must not appear in today's sidebar are created with `is_visible = FALSE`. Examples are `plat_pm_project_settings` and `plat_pm_industry_modules`. They appear only where a placement puts them.
@@ -66,9 +67,9 @@ Catalogue rows that must not appear in today's sidebar are created with `is_visi
 
 ## Admin
 
-- **System › Menu Placements:** placements per role, add / edit / remove, and **Turn on for all organisations** / **Turn off for all**. Turning it on for everyone is the go-live step.
+- **System › Menu Placements:** placements per role, add / edit / remove, and **Turn on (system-wide)** / **Turn off (system-wide)**. That single switch is the go-live / rollback for every organisation (v1528).
 - **System › Menu Sections & Slots:** rename and reorder sections and slots, per app.
-- **Organisations list:** the "Single sidebar" column and a per-organisation on / off action. Turning it off for one organisation is the rollback.
+- **Organisations list:** per-organisation sidebar toggles are **retired** (v1528). Use Menu Placements for the system switch only.
 
 Every write asks for a reason and is audited.
 

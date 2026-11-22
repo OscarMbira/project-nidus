@@ -3,6 +3,8 @@
  * PMO oversight, structured escalation + reporting tables, Audit.
  */
 import { useState, useEffect, useCallback } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save, Plus } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -31,11 +33,13 @@ import {
   emptyDecisionEntry,
 } from '../../services/governancePartyOptions'
 import GovernanceChartsGallery from './GovernanceChartsGallery'
+import RecordCustomFields from '../../components/shared-app/RecordCustomFields'
 
 const TABS = [
   { value: 'structure', label: 'Governance Structure' },
   { value: 'pmo_oversight', label: 'PMO Oversight' },
   { value: 'escalation', label: 'Escalation Path' },
+  { value: 'custom-fields', label: 'Custom Fields' },
   { value: 'audit', label: 'Audit details' },
 ]
 
@@ -86,7 +90,7 @@ function PartySelect({ value, onChange, options, disabled, placeholder }) {
   )
 }
 
-export default function GovernanceStructurePage() {
+function GovernanceStructurePageBody() {
   const navigate = useNavigate()
   const { projectId } = usePlatformProjectId()
   const { showSuccess, modal } = useSuccessModal()
@@ -314,7 +318,7 @@ export default function GovernanceStructurePage() {
             {activeTab === 'structure' && (
               <>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Overview (optional)</label>
+                  <FieldLabelWithHelp helpKey="public.project_governance_structure.structure_notes" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Overview (optional)</FieldLabelWithHelp>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
                     Short narrative if needed. Prefer the structured lists and tables below. Add chart images or PDFs in the gallery.
                   </p>
@@ -331,7 +335,7 @@ export default function GovernanceStructurePage() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">Governance bodies</label>
+                  <FieldLabelWithHelp helpKey="public.project_governance_structure.governance_bodies" className="block text-sm font-medium text-gray-700 dark:text-gray-200">Governance bodies</FieldLabelWithHelp>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
                     Which bodies apply. Membership is on Steering Committee / Project Board pages — names here also feed Escalation / Reporting dropdowns.
                   </p>
@@ -349,7 +353,7 @@ export default function GovernanceStructurePage() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between gap-2">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">Reporting lines</label>
+                      <FieldLabelWithHelp helpKey="public.project_governance_structure.reporting_lines" className="block text-sm font-medium text-gray-700 dark:text-gray-200">Reporting lines</FieldLabelWithHelp>
                       <p className="text-xs text-gray-500 dark:text-gray-400">
                         From → To, with cadence. Parties from bodies, governance members, and project roles.
                       </p>
@@ -445,7 +449,7 @@ export default function GovernanceStructurePage() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between gap-2">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">Decision flow</label>
+                      <FieldLabelWithHelp helpKey="public.project_governance_structure.decision_flow" className="block text-sm font-medium text-gray-700 dark:text-gray-200">Decision flow</FieldLabelWithHelp>
                       <p className="text-xs text-gray-500 dark:text-gray-400">
                         What is decided, by whom, and how. Parties from bodies, governance members, and project roles.
                       </p>
@@ -544,7 +548,7 @@ export default function GovernanceStructurePage() {
 
             {activeTab === 'pmo_oversight' && (
               <div className="space-y-1">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">PMO oversight arrangements</label>
+                <FieldLabelWithHelp helpKey="public.project_governance_structure.pmo_oversight_notes" className="block text-sm font-medium text-gray-700 dark:text-gray-200">PMO oversight arrangements</FieldLabelWithHelp>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
                   One arrangement per row (e.g. “Monthly PMO health check”).
                 </p>
@@ -564,7 +568,7 @@ export default function GovernanceStructurePage() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between gap-2">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">Escalation steps</label>
+                    <FieldLabelWithHelp helpKey="public.project_governance_structure.escalation_steps" className="block text-sm font-medium text-gray-700 dark:text-gray-200">Escalation steps</FieldLabelWithHelp>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
                       Level, whom (bodies / members / roles), and timeframe.
                     </p>
@@ -660,6 +664,15 @@ export default function GovernanceStructurePage() {
               </button>
             </div>
           </form>
+        ) : activeTab === 'custom-fields' ? (
+          <RecordCustomFields
+            projectId={projectId}
+            entityType="project_governance_structure"
+            entityId={record?.id}
+            screenCode="governance_structure_detail"
+            mode="edit"
+            alwaysShow
+          />
         ) : (
           <AuditDetailsPanel description="Where this project's governance structure record stands.">
             {!record ? (
@@ -684,5 +697,20 @@ export default function GovernanceStructurePage() {
       </div>
       {modal}
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.project_governance_structure.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'structure_notes', 'governance_bodies', 'reporting_lines', 'decision_flow', 'pmo_oversight_notes',
+  'escalation_steps',
+].map((name) => `public.project_governance_structure.${name}`)
+
+export default function GovernanceStructurePage(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <GovernanceStructurePageBody {...props} />
+    </FieldHelpScope>
   )
 }

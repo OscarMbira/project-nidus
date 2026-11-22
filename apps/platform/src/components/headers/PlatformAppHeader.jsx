@@ -14,7 +14,7 @@ export default function PlatformAppHeader({ onSidebarToggle = null, projectSelec
     { label: 'Projects', path: '/platform/projects' },
     { label: 'Tasks', path: '/platform/tasks' },
     { label: 'Reports', path: '/platform/reports' },
-    { label: 'Documentation', path: '/documentation/platform' },
+    { label: 'Documentation', path: '/documentation/platform', openInNewTab: true },
   ]
 
   return (

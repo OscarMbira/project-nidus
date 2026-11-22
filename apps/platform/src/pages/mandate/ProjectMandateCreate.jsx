@@ -13,6 +13,7 @@ import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId'
 import ExportRecordMenu from '@nidus/ui/ExportRecordMenu'
 import { buildMandateExportSections, buildMandateExportRecord } from '@nidus/shared/utils/mandateExportSections'
+import RecordCustomFields from '../../components/shared-app/RecordCustomFields'
 
 /** Convert JSON-array / legacy text columns ↔ newline-joined MultiLineListInput value. */
 function toMultiline(value) {
@@ -231,7 +232,24 @@ function ProjectMandateCreate() {
         </div>
       )}
 
-      <DetailAuditTabList activeTab={activeTab} onChange={setActiveTab} ariaLabel="Mandate sections" />
+      <DetailAuditTabList
+        activeTab={activeTab}
+        onChange={setActiveTab}
+        ariaLabel="Mandate sections"
+        extraTab={{ value: 'custom-fields', label: 'Custom Fields' }}
+      />
+
+      {activeTab === 'custom-fields' && (
+        <RecordCustomFields
+          projectId={formData.project_id || currentProjectId}
+          entityType="project_mandate"
+          entityId={null}
+          screenCode="mandate_detail"
+          mode="edit"
+          alwaysShow
+          title="Custom Fields"
+        />
+      )}
 
       {activeTab === 'audit' && (
         <p className="text-sm text-gray-500 dark:text-gray-400">

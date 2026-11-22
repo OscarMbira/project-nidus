@@ -29,6 +29,7 @@ import ReferencesSection from './ReferencesSection'
 import BriefCompletionProgress from './BriefCompletionProgress'
 import ProjectMilestonesSummary from '@nidus/ui/ProjectMilestonesSummary'
 import { listMilestones } from '../../services/milestoneService'
+import RecordCustomFields from '../shared-app/RecordCustomFields'
 
 /** Canonical Project Brief sections — matches the approved brief outline. */
 const BRIEF_CONTENT_TABS = [
@@ -57,7 +58,8 @@ export default function ProjectBriefForm({
   onSubmit,
   onHoldComplete,
   saving = false,
-  showHoldButton = true
+  showHoldButton = true,
+  documentMode = 'brief', // 'brief' | 'charter' — selects the custom-fields screen
 }) {
   const [activeTab, setActiveTab] = useState('metadata')
   const [auditUserLabels, setAuditUserLabels] = useState({})
@@ -114,6 +116,18 @@ export default function ProjectBriefForm({
         return <RoleDescriptionsSection briefId={formData.id} readOnly={readOnly} />
       case 'references':
         return <ReferencesSection briefId={formData.id} readOnly={readOnly} />
+      case 'custom-fields':
+        return (
+          <RecordCustomFields
+            projectId={formData.project_id}
+            entityType="project_brief"
+            entityId={formData.id}
+            screenCode={documentMode === 'charter' ? 'charter_detail' : 'brief_detail'}
+            mode={readOnly ? 'view' : 'edit'}
+            alwaysShow
+            title="Custom Fields"
+          />
+        )
       case 'audit':
         return !formData?.id ? (
           <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this brief is saved.</p>
@@ -153,6 +167,7 @@ export default function ProjectBriefForm({
             ariaLabel="Project brief sections"
             tabs={[
               ...BRIEF_CONTENT_TABS.map((tab) => ({ value: tab.id, label: tab.label })),
+              { value: 'custom-fields', label: 'Custom Fields' },
               { value: 'audit', label: 'Audit details' },
             ]}
           />

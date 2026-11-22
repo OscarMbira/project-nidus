@@ -187,7 +187,7 @@ describe('task dates: planned, actual and baseline', () => {
     fake.api = makeApi()
     renderAt('/platform/pm/schedule/tasks/TSK-0001/edit?projectId=PRJ-1', <TaskFormScreen />, 'platform', '/platform/pm/schedule/tasks/:taskKey/edit')
     fireEvent.click(await screen.findByRole('tab', { name: 'Schedule' }))
-    const start = await screen.findByDisplayValue('2026-10-12')
+    const start = await screen.findByDisplayValue('12 Oct 2026') // regional date input, default D MMM YYYY (v1351)
     expect(screen.getByDisplayValue('Automatic')).toBeInTheDocument()
     fireEvent.change(start, { target: { value: '2026-10-19' } })
     expect(screen.getByDisplayValue('Manual')).toBeInTheDocument()
@@ -306,29 +306,47 @@ describe('sub-tasks and full screen (v1265)', () => {
   })
 })
 
-describe('task modal (v1265, rule 65 task-form exception)', () => {
+describe('task form opens as its own page (rule 65)', () => {
   beforeEach(() => vi.clearAllMocks())
 
-  it('View on the Tasks list opens the task in a modal over the list; Edit, then Esc closes it', async () => {
+  const renderSchedule = (url) =>
+    render(
+      <MemoryRouter initialEntries={[url]}>
+        <UnsavedChangesProvider>
+          <PlanningProvider mode="platform" basePath="/x">
+            <Routes>
+              <Route path="/platform/pm/schedule/activities" element={<ScheduleGridScreen />} />
+              <Route path="/platform/pm/schedule/tasks/new" element={<TaskFormScreen />} />
+              <Route path="/platform/pm/schedule/tasks/:taskKey" element={<TaskFormScreen />} />
+              <Route path="/platform/pm/schedule/tasks/:taskKey/edit" element={<TaskFormScreen />} />
+            </Routes>
+          </PlanningProvider>
+        </UnsavedChangesProvider>
+      </MemoryRouter>,
+    )
+
+  it('View on the Tasks list opens the task page, not a dialog; Edit opens the edit page', async () => {
     fake.api = makeApi()
-    renderAt('/platform/pm/schedule/activities?projectId=PRJ-1', <ScheduleGridScreen />)
+    renderSchedule('/platform/pm/schedule/activities?projectId=PRJ-1')
     await screen.findAllByText('Pour slab')
     fireEvent.click(screen.getAllByRole('button', { name: 'View task' })[0])
-    const dialog = await screen.findByRole('dialog', { name: /Pour slab/ })
-    expect(within(dialog).getByText('TSK-0001')).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Tasks' })).toBeInTheDocument() // the list is still behind
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Edit task' }))
-    expect(await within(screen.getByRole('dialog')).findByDisplayValue('Pour slab')).toBeInTheDocument()
-    fireEvent.keyDown(document, { key: 'Escape' })
-    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+    expect(await screen.findByRole('heading', { name: 'Pour slab' })).toBeInTheDocument()
+    expect(screen.getByText('TSK-0001')).toBeInTheDocument()
+    expect(screen.queryByRole('dialog')).toBeNull()
+    expect(screen.queryByRole('heading', { name: 'Tasks' })).toBeNull() // the list is no longer on screen
+    expect(screen.getByRole('button', { name: /Back to schedule/ })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Edit task' }))
+    expect(await screen.findByDisplayValue('Pour slab')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Edit Pour slab' })).toBeInTheDocument()
   })
 
-  it('New task opens an empty form in the modal', async () => {
+  it('New task opens an empty form page', async () => {
     fake.api = makeApi()
-    renderAt('/platform/pm/schedule/activities?projectId=PRJ-1', <ScheduleGridScreen />)
+    renderSchedule('/platform/pm/schedule/activities?projectId=PRJ-1')
     await screen.findAllByText('Pour slab')
     fireEvent.click(screen.getByRole('button', { name: /New task/ }))
-    expect(await screen.findByRole('dialog', { name: 'New task' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'New task' })).toBeInTheDocument()
+    expect(screen.queryByRole('dialog')).toBeNull()
   })
 })
 

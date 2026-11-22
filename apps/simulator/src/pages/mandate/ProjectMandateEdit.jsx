@@ -20,6 +20,9 @@ import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken } from '@nidus/shared/utils/auditDisplayUtils'
 import ExportRecordMenu from '@nidus/ui/ExportRecordMenu'
 import { buildMandateExportSections, buildMandateExportRecord } from '@nidus/shared/utils/mandateExportSections'
+import RecordCustomFields from '../../components/shared-app/RecordCustomFields'
+import { useLdeExportParts } from '../../lib/useLdeExportParts'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 function toMultiline(value) {
   if (!value) return ''
@@ -67,6 +70,14 @@ export default function ProjectMandateEdit() {
   const [mandateRef, setMandateRef] = useState(null)
   const [mandateRecord, setMandateRecord] = useState(null)
   const [activeTab, setActiveTab] = useState('details')
+
+  const lde = useLdeExportParts({
+    entityType: 'project_mandate',
+    entityId: internalMandateId,
+    projectId: mandateRecord?.project_id,
+    screenCode: 'mandate_detail',
+    enabled: !!internalMandateId && !!mandateRecord?.project_id,
+  })
 
   const {
     draftId,
@@ -304,8 +315,8 @@ export default function ProjectMandateEdit() {
           </div>
           <div className="flex flex-wrap items-center gap-2 sm:pt-1">
             <ExportRecordMenu
-              sections={buildMandateExportSections(formData)}
-              record={buildMandateExportRecord(formData)}
+              sections={[...buildMandateExportSections(formData), ...(lde.section ? [lde.section] : [])]}
+              record={{ ...buildMandateExportRecord(formData), ...lde.mergedRecord }}
               baseFilename={`Mandate_${formData.mandate_reference || mandateRef || 'Draft'}`}
             />
           </div>
@@ -322,8 +333,25 @@ export default function ProjectMandateEdit() {
       </div>
 
       <div className="mb-6">
-        <DetailAuditTabList activeTab={activeTab} onChange={setActiveTab} ariaLabel="Mandate sections" />
+        <DetailAuditTabList
+          activeTab={activeTab}
+          onChange={setActiveTab}
+          ariaLabel="Mandate sections"
+          extraTab={{ value: 'custom-fields', label: 'Custom Fields' }}
+        />
       </div>
+
+      {activeTab === 'custom-fields' && (
+        <RecordCustomFields
+          projectId={mandateRecord?.project_id}
+          entityType="project_mandate"
+          entityId={internalMandateId}
+          screenCode="mandate_detail"
+          mode="edit"
+          alwaysShow
+          title="Custom Fields"
+        />
+      )}
 
       {activeTab === 'audit' && mandateRecord && (
         <AuditDetailsPanel description="Who created or changed this mandate, and how it is classified.">
@@ -351,9 +379,9 @@ export default function ProjectMandateEdit() {
             <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Basic Information</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <div>
-                <label htmlFor="mandate_reference" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.project_mandates.mandate_reference" htmlFor="mandate_reference" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Mandate Code
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   id="mandate_reference"
                   type="text"
@@ -369,9 +397,9 @@ export default function ProjectMandateEdit() {
                 </p>
               </div>
               <div>
-                <label htmlFor="mandate_title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.project_mandates.mandate_title" htmlFor="mandate_title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Mandate Title <span className="text-red-500">*</span>
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   id="mandate_title"
                   type="text"
@@ -386,9 +414,9 @@ export default function ProjectMandateEdit() {
                 )}
               </div>
               <div>
-                <label htmlFor="project_code" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.project_mandates.project_code" htmlFor="project_code" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Project Code
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   id="project_code"
                   type="text"
@@ -403,9 +431,9 @@ export default function ProjectMandateEdit() {
                 </p>
               </div>
               <div>
-                <label htmlFor="project_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="sim.project_mandates.project_name" htmlFor="project_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Project Name
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   id="project_name"
                   type="text"
@@ -447,8 +475,8 @@ export default function ProjectMandateEdit() {
               </p>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Executive</label>
-                  <input
+                  <FieldLabelWithHelp helpKey="sim.projects.executive_name" htmlFor="fh-projects-executive-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Executive</FieldLabelWithHelp>
+                  <input id="fh-projects-executive-name"
                     type="text"
                     name="proposed_executive_name"
                     value={formData.proposed_executive_name}
@@ -458,8 +486,8 @@ export default function ProjectMandateEdit() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Project Manager</label>
-                  <input
+                  <FieldLabelWithHelp helpKey="sim.project_mandates.project_manager_name" htmlFor="fh-project-mandates-project-manager-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Project Manager</FieldLabelWithHelp>
+                  <input id="fh-project-mandates-project-manager-name"
                     type="text"
                     name="proposed_pm_name"
                     value={formData.proposed_pm_name}

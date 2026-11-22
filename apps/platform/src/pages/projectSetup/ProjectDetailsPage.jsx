@@ -23,12 +23,15 @@ import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 import ExportRecordMenu from '@nidus/ui/ExportRecordMenu'
 import { getProjectDetails } from '../../services/projectDetailsService'
+import RecordCustomFields from '../../components/shared-app/RecordCustomFields'
+import { useLdeExportParts } from '../../lib/useLdeExportParts'
 
 const TABS = [
   { value: 'overview', label: 'Overview', wizardTab: 'details' },
   { value: 'objectives', label: 'Objectives & Success', wizardTab: 'details' },
   { value: 'classification', label: 'Classification & Delivery', wizardTab: 'details' },
   { value: 'people', label: 'Dates & People', wizardTab: 'governance' },
+  { value: 'custom-fields', label: 'Custom Fields' },
   { value: 'audit', label: 'Audit details' },
 ]
 
@@ -54,8 +57,8 @@ const EXPORT_SECTIONS = [
   {
     title: 'Objectives & Success',
     fields: [
-      { key: 'project_objectives', label: 'Objectives' },
-      { key: 'success_criteria', label: 'Success Criteria' },
+      { key: 'project_objectives', label: 'Objectives', itemColumnLabel: 'Objective' },
+      { key: 'success_criteria', label: 'Success Criteria', itemColumnLabel: 'Criterion' },
     ],
   },
   {
@@ -109,6 +112,13 @@ export default function ProjectDetailsPage() {
   const [options, setOptions] = useState({ priority: [], billing_type: [], classification: [] })
   const [methodologies, setMethodologies] = useState([])
   const [auditUserLabels, setAuditUserLabels] = useState({})
+  const lde = useLdeExportParts({
+    entityType: 'project',
+    entityId: project?.id,
+    projectId,
+    screenCode: 'project_detail',
+    enabled: !!project?.id,
+  })
 
   const load = useCallback(async () => {
     if (projectIdLoading) return
@@ -192,6 +202,7 @@ export default function ProjectDetailsPage() {
         funding_authority: people.fundingAuthority,
         approving_authority: people.approvingAuthority,
         benefit_owner: people.benefitOwner,
+        ...lde.mergedRecord,
       }
     : null
 
@@ -208,7 +219,7 @@ export default function ProjectDetailsPage() {
             <p className="text-sm text-gray-500 dark:text-gray-400">{project?.project_code} — {project?.project_name}</p>
           </div>
           {exportRecord && (
-            <ExportRecordMenu sections={EXPORT_SECTIONS} record={exportRecord} baseFilename={`ProjectDetails_${project.project_code || project.id}`} />
+            <ExportRecordMenu sections={lde.section ? [...EXPORT_SECTIONS, lde.section] : EXPORT_SECTIONS} record={exportRecord} baseFilename={`ProjectDetails_${project.project_code || project.id}`} />
           )}
         </div>
 
@@ -219,6 +230,16 @@ export default function ProjectDetailsPage() {
 
         {!project ? (
           <p className="text-gray-500 dark:text-gray-400">Could not load project details.</p>
+        ) : activeTab === 'custom-fields' ? (
+          <RecordCustomFields
+            projectId={projectId}
+            entityType="project"
+            entityId={project.id}
+            screenCode="project_detail"
+            mode="view"
+            alwaysShow
+            title="Custom Fields"
+          />
         ) : activeTab === 'audit' ? (
           <AuditDetailsPanel description="Where this project's record stands.">
             <AuditCard title="Identity" description="How this project is labelled.">

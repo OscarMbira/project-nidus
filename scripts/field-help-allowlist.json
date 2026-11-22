@@ -1,15 +1,4 @@
 {
   "missing": [],
-  "notAdopted": {
-    "apps/platform/src/components/project/DocumentGovernanceSection.jsx": 4,
-    "apps/platform/src/pages/platform-app/MyTeam.jsx": 1,
-    "apps/platform/src/pages/ProjectsCreate.jsx": 2,
-    "apps/simulator/src/components/project/DocumentGovernanceSection.jsx": 4,
-    "apps/simulator/src/pages/mandate/ProjectMandateEdit.jsx": 6,
-    "apps/simulator/src/pages/platform-app/MyTeam.jsx": 1,
-    "apps/simulator/src/pages/simulator/SimMyTeam.jsx": 1,
-    "packages/planning/src/screens/schedule/ScheduleFilteredListScreen.jsx": 1,
-    "packages/planning/src/screens/schedule/ScheduleGanttScreen.jsx": 1,
-    "packages/planning/src/screens/schedule/TaskFormScreen.jsx": 3
-  }
+  "notAdopted": {}
 }

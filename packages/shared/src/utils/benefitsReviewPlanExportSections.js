@@ -46,7 +46,7 @@ export const BRP_EXPORT_SECTIONS = [
   { title: 'Performance Review', fields: [
     { key: 'performance_review_frequency_label', label: 'Review Frequency', fact: true },
     { key: 'performance_review_approach', label: 'Review Approach' },
-    { key: 'performance_review_criteria', label: 'Review Criteria' },
+    { key: 'performance_review_criteria', label: 'Review Criteria', itemColumnLabel: 'Criterion' },
     { key: 'reviews_summary', label: 'Review Schedule' },
   ]},
   { title: 'Dis-benefits', fields: [

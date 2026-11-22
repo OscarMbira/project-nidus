@@ -787,6 +787,8 @@ import {
   PracticeProjectFunctionalRolesPage,
   PracticeProjectFunctionalRoleFromLibrary,
   SimMyTeam,
+  SimMyTeamMemberPage,
+  SimMyTeamFunctionalRolePage,
   PracticeGovernance,
   SimPortfolioCategories,
   SimPortfolioDashboard,
@@ -5368,6 +5370,58 @@ export function SimulatorRouteElements() {
                         <ProtectedRoute requiredPlatform="simulator">
                           <Layout>
                             <PracticeTeamCreate />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/practice-teams/my-team/members/new" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <SimMyTeamMemberPage />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/practice-teams/my-team/members/:memberId/edit" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <SimMyTeamMemberPage />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/practice-teams/my-team/roles/new" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <SimMyTeamFunctionalRolePage />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/practice-teams/my-team/roles/:roleId/edit" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <SimMyTeamFunctionalRolePage />
                           </Layout>
                         </ProtectedRoute>
                       </ToastProvider>

@@ -4,7 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeSlug from 'rehype-slug';
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
-import { BookOpen, Search, ChevronRight, Home, Zap } from 'lucide-react';
+import { BookOpen, Search, ChevronRight, Home, Zap, ArrowLeft, PanelLeftClose, PanelLeft } from 'lucide-react';
 import Button from '@nidus/ui/Button';
 import ThemeToggle from '../components/ThemeToggle';
 import PlatformFooter from '../components/homepage/PlatformFooter';
@@ -16,6 +16,8 @@ import {
   loadDocumentationFile
 } from '../services/documentationService';
 
+const DOCS_SIDEBAR_KEY = 'nidus:docs-sidebar-visible';
+
 const Documentation = () => {
   const { platform: platformParam = 'platform', guideId: guideIdParam } = useParams();
   const navigate = useNavigate();
@@ -23,6 +25,26 @@ const Documentation = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [error, setError] = useState(null);
+  const [sidebarVisible, setSidebarVisible] = useState(() => {
+    try {
+      const stored = localStorage.getItem(DOCS_SIDEBAR_KEY);
+      return stored === null ? true : stored === 'true';
+    } catch {
+      return true;
+    }
+  });
+
+  const toggleSidebar = () => {
+    setSidebarVisible((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem(DOCS_SIDEBAR_KEY, String(next));
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
+  };
 
   // Normalize platform name - handle both new 'platform' and legacy 'pm'/'pm-platform' identifiers
   const platform = platformParam === 'pm-platform' || platformParam === 'pm' ? 'platform' : platformParam;
@@ -186,7 +208,7 @@ const Documentation = () => {
           : { background: 'linear-gradient(to right, #065f46, #047857, #059669)', borderColor: '#047857' }
         }
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-10 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3">
             <Zap 
               className="h-6 w-6" 
@@ -283,62 +305,100 @@ const Documentation = () => {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8">
+      <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-10 py-8">
+        <div className="flex flex-wrap items-center gap-4 mb-4">
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back
+          </button>
+          <button
+            type="button"
+            onClick={toggleSidebar}
+            title={sidebarVisible ? 'Hide navigation' : 'Show navigation'}
+            aria-label={sidebarVisible ? 'Hide navigation' : 'Show navigation'}
+            className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white flex items-center gap-2"
+          >
+            {sidebarVisible ? (
+              <PanelLeftClose className="h-4 w-4" />
+            ) : (
+              <PanelLeft className="h-4 w-4" />
+            )}
+            {sidebarVisible ? 'Hide guides' : 'Show guides'}
+          </button>
+        </div>
+        <div className={`grid grid-cols-1 gap-8 ${sidebarVisible ? 'lg:grid-cols-[280px_1fr]' : ''}`}>
           {/* Sidebar */}
-          <aside className="lg:sticky lg:top-20 h-fit">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700">
-              {/* Search */}
-              <div className="mb-6">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Search documentation..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+          {sidebarVisible && (
+            <aside className="lg:sticky lg:top-20 h-fit">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-200">Guides</span>
+                  <button
+                    type="button"
+                    onClick={toggleSidebar}
+                    title="Hide navigation"
+                    aria-label="Hide navigation"
+                    className="p-1.5 rounded-md text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    <PanelLeftClose className="h-4 w-4" />
+                  </button>
                 </div>
+                {/* Search */}
+                <div className="mb-6">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="Search documentation..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Navigation */}
+                <nav>
+                  {categories.map((category) => {
+                    const categoryGuides = platformData.guides.filter(
+                      g => g.category === category && 
+                      (filteredGuides.length === 0 || filteredGuides.some(fg => fg.id === g.id))
+                    );
+
+                    if (categoryGuides.length === 0) return null;
+
+                    return (
+                      <div key={category} className="mb-6">
+                        <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
+                          {category}
+                        </h3>
+                        <ul className="space-y-1">
+                          {categoryGuides.map((guide) => (
+                            <li key={guide.id}>
+                              <Link
+                                to={`/documentation/${platform}/${guide.id}`}
+                                className={`block px-3 py-2 rounded-md text-sm transition-colors ${
+                                  guide.id === guideId
+                                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 font-medium'
+                                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                                }`}
+                              >
+                                {guide.title}
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    );
+                  })}
+                </nav>
               </div>
-
-              {/* Navigation */}
-              <nav>
-                {categories.map((category) => {
-                  const categoryGuides = platformData.guides.filter(
-                    g => g.category === category && 
-                    (filteredGuides.length === 0 || filteredGuides.some(fg => fg.id === g.id))
-                  );
-
-                  if (categoryGuides.length === 0) return null;
-
-                  return (
-                    <div key={category} className="mb-6">
-                      <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
-                        {category}
-                      </h3>
-                      <ul className="space-y-1">
-                        {categoryGuides.map((guide) => (
-                          <li key={guide.id}>
-                            <Link
-                              to={`/documentation/${platform}/${guide.id}`}
-                              className={`block px-3 py-2 rounded-md text-sm transition-colors ${
-                                guide.id === guideId
-                                  ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 font-medium'
-                                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
-                              }`}
-                            >
-                              {guide.title}
-                            </Link>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  );
-                })}
-              </nav>
-            </div>
-          </aside>
+            </aside>
+          )}
 
           {/* Main Content */}
           <main className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-8 lg:p-12">
@@ -504,6 +564,17 @@ const Documentation = () => {
                   >
                     {content}
                   </ReactMarkdown>
+                </div>
+
+                <div className="mt-10 pt-6 border-t border-gray-200 dark:border-gray-700">
+                  <button
+                    type="button"
+                    onClick={() => navigate(-1)}
+                    className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white flex items-center gap-2"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                    Back to previous page
+                  </button>
                 </div>
               </article>
             )}

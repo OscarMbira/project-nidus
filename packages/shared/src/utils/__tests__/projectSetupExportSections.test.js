@@ -122,6 +122,17 @@ describe('brief export', () => {
     expect(fieldOf(buildBriefExportSections(brief), 'solution_type_label').fact).toBe(true)
   })
 
+  it('keeps short business-case facts together and lists opted into #|Item tables', () => {
+    const sections = buildBriefExportSections(brief)
+    expect(fieldOf(sections, 'business_option_selected').fact).toBe(true)
+    expect(fieldOf(sections, 'dis_benefits_included_label').fact).toBe(true)
+    expect(fieldOf(sections, 'outline_business_case_summary').fact).toBe(true)
+    expect(fieldOf(sections, 'dis_benefits_description').fact).toBeUndefined()
+    expect(fieldOf(sections, 'background').fact).toBeUndefined()
+    expect(fieldOf(sections, 'project_objectives').itemColumnLabel).toBe('Objective')
+    expect(fieldOf(sections, 'project_objectives').fact).toBeUndefined()
+  })
+
   it('adds the project milestones as a table (v1344)', () => {
     const milestones = [
       { milestone_name: 'Pilot live', target_date: '2027-03-01', status: 'in_progress' },

@@ -121,7 +121,7 @@ export default function BusinessCaseCreate() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header */}
       <div className="mb-6">
         <button
@@ -152,7 +152,7 @@ export default function BusinessCaseCreate() {
 
       {/* Form */}
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-        <BusinessCaseForm data={form} onChange={handleChange} errors={errors} />
+        <BusinessCaseForm data={form} onChange={handleChange} errors={errors} projectId={currentProjectId} />
 
         {/* Actions — inside the card so they don't hang outside */}
         <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700 flex flex-wrap justify-end items-center gap-3">

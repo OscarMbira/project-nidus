@@ -5,7 +5,7 @@
 import { useMemo } from 'react'
 import ScheduleLayout, { ChooseProject, Loading } from '../../components/ScheduleLayout.jsx'
 import { useSchedule, useScheduleProjectId } from '../../hooks/useSchedule.js'
-import { useTaskModal } from '../../hooks/useTaskModal.js'
+import { useTaskPage } from '../../hooks/useTaskPage.js'
 
 /** Column = longest chain of predecessors. Pure; exported for tests. Cycles are ignored (the DB rejects them). */
 export function networkColumns(tasks, dependencies) {
@@ -32,7 +32,7 @@ export function networkColumns(tasks, dependencies) {
 }
 
 export default function ScheduleNetworkScreen() {
-  const { openTask } = useTaskModal()
+  const { openTask } = useTaskPage()
   const { projectId, loading: projectLoading } = useScheduleProjectId()
   const schedule = useSchedule(projectId, { withCalendar: false })
   const columns = useMemo(() => networkColumns(schedule.tasks, schedule.dependencies), [schedule.tasks, schedule.dependencies])

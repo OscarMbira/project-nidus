@@ -136,6 +136,8 @@ export const ProjectFunctionalRolesPage = lazy(() => import('../pages/platform-a
 export const ProjectFunctionalRoleCreate = lazy(() => import('../pages/platform-app/ProjectFunctionalRoleCreate'))
 export const ProjectFunctionalRoleFromLibrary = lazy(() => import('../pages/platform-app/ProjectFunctionalRoleFromLibrary'))
 export const MyTeam = lazy(() => import('../pages/platform-app/MyTeam'))
+export const MyTeamMemberPage = lazy(() => import('../pages/platform-app/MyTeamMemberPage'))
+export const MyTeamFunctionalRolePage = lazy(() => import('../pages/platform-app/MyTeamFunctionalRolePage'))
 export const Governance = lazy(() => import('../pages/platform-app/Governance'))
 export const Portfolio = lazy(() => import('../pages/platform-app/Portfolio'))
 // v982 Phase 3 — Portfolio/Programme-Scoped Roles & Authority Model

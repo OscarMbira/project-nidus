@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useNavigate } from 'react-router-dom'
 import { Shield, Save, ArrowLeft } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -9,6 +11,7 @@ import MultiLineListInput from '@nidus/ui/MultiLineListInput'
 import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
 import AuditCard from '@nidus/ui/AuditCard'
 import AuditField from '@nidus/ui/AuditField'
+import RecordCustomFields from '../../components/shared-app/RecordCustomFields'
 import { getTeamCharter, createTeamCharter, updateTeamCharter } from '../../services/teamCharterService'
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId'
 
@@ -34,6 +37,7 @@ const TABS = [
   { value: 'accountability', label: 'Accountability' },
   { value: 'communication_plan', label: 'Communication Plan' },
   { value: 'raci_notes', label: 'RACI Notes' },
+  { value: 'custom-fields', label: 'Custom Fields' },
   { value: 'audit', label: 'Audit Details' },
 ]
 
@@ -96,7 +100,7 @@ const LIST_FIELDS = [
   },
 ]
 
-export default function TeamCharterEditPage() {
+function TeamCharterEditPageBody() {
   const {
     projectId,
     routeKey,
@@ -263,9 +267,9 @@ export default function TeamCharterEditPage() {
               <section className="space-y-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 sm:p-6">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="sm:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                    <FieldLabelWithHelp helpKey="public.team_charters.title" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                       Charter Title
-                    </label>
+                    </FieldLabelWithHelp>
                     <input
                       type="text"
                       name="title"
@@ -275,9 +279,9 @@ export default function TeamCharterEditPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                    <FieldLabelWithHelp helpKey="public.team_charters.status" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                       Status
-                    </label>
+                    </FieldLabelWithHelp>
                     <select
                       name="status"
                       value={form.status}
@@ -292,9 +296,9 @@ export default function TeamCharterEditPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                  <FieldLabelWithHelp helpKey="public.team_charters.purpose" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                     Purpose
-                  </label>
+                  </FieldLabelWithHelp>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mb-1.5">
                     Why does this team exist? What is the team&apos;s mission? Add one statement per
                     row.
@@ -328,6 +332,17 @@ export default function TeamCharterEditPage() {
                   ariaLabelPrefix={activeListField.label.toLowerCase()}
                 />
               </section>
+            )}
+
+            {activeTab === 'custom-fields' && (
+              <RecordCustomFields
+                projectId={projectId}
+                entityType="team_charter"
+                entityId={charterId}
+                screenCode="team_charter_detail"
+                mode="edit"
+                alwaysShow
+              />
             )}
 
             {activeTab === 'audit' && (
@@ -369,7 +384,7 @@ export default function TeamCharterEditPage() {
               </AuditDetailsPanel>
             )}
 
-            {activeTab !== 'audit' && (
+            {activeTab !== 'audit' && activeTab !== 'custom-fields' && (
               <div className="flex justify-end">
                 <button
                   type="button"
@@ -386,5 +401,19 @@ export default function TeamCharterEditPage() {
         )}
       </div>
     </div>
+  )
+}
+
+// v1345 slice 4: field help for this component (public.team_charters.<column>). It carries its own scope,
+// so every page that renders it shows the help.
+const HELP_KEYS = [
+  'title', 'status', 'purpose',
+].map((name) => `public.team_charters.${name}`)
+
+export default function TeamCharterEditPage(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <TeamCharterEditPageBody {...props} />
+    </FieldHelpScope>
   )
 }

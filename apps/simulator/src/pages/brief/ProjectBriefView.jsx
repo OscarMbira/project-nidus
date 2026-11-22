@@ -12,6 +12,7 @@ import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam.js'
 import { getBriefByProject } from '../../services/projectBriefService'
 import BriefHeader from '../../components/brief/BriefHeader'
 import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
+import { useLdeExportParts } from '../../lib/useLdeExportParts'
 import { buildBriefExportSections, buildBriefExportRecord } from '@nidus/shared/utils/briefExportSections'
 import {
   resolveBriefCharterMode,
@@ -37,6 +38,13 @@ export default function ProjectBriefView() {
   const docPath = (action) => briefCharterDocPath(routeKey || projectId, action, mode)
   const [brief, setBrief] = useState(null)
   const briefExportChildren = useBriefExportChildren(brief?.id, brief?.project_id)
+  const lde = useLdeExportParts({
+    entityType: 'project_brief',
+    entityId: brief?.id,
+    projectId: brief?.project_id,
+    screenCode: mode === 'charter' ? 'charter_detail' : 'brief_detail',
+    enabled: !!brief?.id && !!brief?.project_id,
+  })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -120,8 +128,8 @@ export default function ProjectBriefView() {
         </button>
         <div className="flex flex-wrap gap-2 items-center">
           <ExportRecordButtons
-            sections={buildBriefExportSections(brief, briefExportChildren)}
-            record={buildBriefExportRecord(brief, briefExportChildren)}
+            sections={[...buildBriefExportSections(brief, briefExportChildren), ...(lde.section ? [lde.section] : [])]}
+            record={{ ...buildBriefExportRecord(brief, briefExportChildren), ...lde.mergedRecord }}
             baseFilename={`${labels.singular}_${brief.brief_reference || brief.id}`}
           />
           {canEdit && (
@@ -146,6 +154,7 @@ export default function ProjectBriefView() {
 
       {/* Brief Form (Read-only) */}
       <ProjectBriefForm
+        documentMode={mode}
         formData={brief}
         onChange={() => {}}
         readOnly={true}

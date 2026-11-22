@@ -33,6 +33,8 @@ const {
   fieldGuidanceLines,
   guidedCellValue,
   resolveBranding,
+  listItemsAsTable,
+  resolveLayoutFieldTable,
   BULLET,
 } = await import('../exportUtils.js')
 
@@ -306,6 +308,44 @@ describe('exported field-mapping helpers (v853 — reused by preview components)
     expect(splitMultiItemFieldText('1,234,567.89 ZAR')).toBeNull()
     expect(parseFieldValue('420,000')).toEqual({ isList: false, text: '420,000' })
     expect(parseFieldValue('85,000')).toEqual({ isList: false, text: '85,000' })
+  })
+
+  it('rejoins broken thousand-groups that were split across newlines', () => {
+    expect(
+      splitMultiItemFieldText(
+        'Expected savings of about 380\n000 a year at full rollout\nPayback about 14 months',
+      ),
+    ).toEqual(
+      list([
+        'Expected savings of about 380,000 a year at full rollout',
+        'Payback about 14 months',
+      ]),
+    )
+  })
+
+  it('turns multi-item fields into a # | Item table for layout exports', () => {
+    const parsed = parseFieldValue('Cut fuel cost by 10%\nRaise on-time deliveries to 92%')
+    expect(listItemsAsTable(parsed, 'Objective')).toEqual({
+      headers: ['#', 'Objective'],
+      rows: [
+        ['1', 'Cut fuel cost by 10%'],
+        ['2', 'Raise on-time deliveries to 92%'],
+      ],
+    })
+    expect(
+      resolveLayoutFieldTable(
+        { key: 'project_objectives', label: 'Project Objectives', itemColumnLabel: 'Objective' },
+        'Cut fuel cost by 10%\nRaise on-time deliveries to 92%',
+      ),
+    ).toMatchObject({ headers: ['#', 'Objective'] })
+    // Without itemColumnLabel, multi-line values stay prose/bullets — not forced into a table.
+    expect(
+      resolveLayoutFieldTable(
+        { key: 'background', label: 'Background' },
+        'First paragraph\nSecond paragraph',
+      ),
+    ).toBeNull()
+    expect(resolveLayoutFieldTable({ key: 'background', fact: true }, 'Prose with\nnewlines')).toBeNull()
   })
 
   it('splitMultiItemFieldText formats arrow hierarchy chains one level per line', () => {

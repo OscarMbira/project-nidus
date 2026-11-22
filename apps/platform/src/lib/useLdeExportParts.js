@@ -1,0 +1,41 @@
+/**
+ * Loads Local Data Extensions values for record View/Export (v1348).
+ * Append `section` to ExportRecordMenu sections and spread `mergedRecord` into the export record.
+ */
+import { useEffect, useState } from 'react'
+import { platformDb } from '@nidus/supabase'
+import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
+import { buildCustomFieldExportParts } from '../features/local-data-extensions/utils/exportMerge'
+
+export function useLdeExportParts({ entityType, entityId, projectId, screenCode, enabled = true }) {
+  const [section, setSection] = useState(null)
+  const [mergedRecord, setMergedRecord] = useState({})
+
+  useEffect(() => {
+    let cancelled = false
+    if (!enabled || !entityType || !entityId || !projectId) {
+      setSection(null)
+      setMergedRecord({})
+      return undefined
+    }
+    ;(async () => {
+      const accountId = await getCurrentUserAccountId()
+      if (!accountId || cancelled) return
+      const parts = await buildCustomFieldExportParts(
+        platformDb,
+        accountId,
+        entityType,
+        entityId,
+        projectId,
+        null,
+        screenCode ? { screenCode } : {},
+      )
+      if (cancelled) return
+      setSection(parts.section)
+      setMergedRecord(parts.mergedRecord || {})
+    })()
+    return () => { cancelled = true }
+  }, [entityType, entityId, projectId, screenCode, enabled])
+
+  return { section, mergedRecord }
+}

@@ -12,7 +12,7 @@ import { RefreshCw, Maximize2, Minimize2, ExternalLink } from 'lucide-react'
 import { usePlanning } from '@nidus/planning/context/PlanningContext.jsx'
 import { useScheduleLinks } from '../hooks/useSchedule.js'
 import BackButton from './BackButton.jsx'
-import TaskModal from './TaskModal.jsx'
+import { useLegacyTaskLinkRedirect } from '../hooks/useTaskPage.js'
 import ScheduleViewMenus from './ScheduleViewMenus.jsx'
 
 /**
@@ -77,6 +77,7 @@ export default function ScheduleLayout({ title, description, schedule = null, ac
   const { pathname } = useLocation()
   const [searchParams, setSearchParams] = useSearchParams()
   const [full, setFullState] = useState(() => searchParams.get('view') === 'full')
+  useLegacyTaskLinkRedirect()
   const setFull = (on) => {
     setFullState(on)
     if (!on && searchParams.get('view')) {
@@ -156,8 +157,6 @@ export default function ScheduleLayout({ title, description, schedule = null, ac
       {schedule && <ConflictBanner message={schedule.conflict} onReload={schedule.reload} />}
       {schedule?.error && <p role="alert" className="text-sm text-red-600 dark:text-red-400">{schedule.error}</p>}
       {children}
-      {/* v1265: the task form opens as a modal over every schedule view (?task=…). */}
-      <TaskModal onChanged={schedule?.reload} />
     </div>
   )
 }

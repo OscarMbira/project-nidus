@@ -18,6 +18,7 @@ import { useToastContext } from '@nidus/shared/context/ToastContext'
 import BusinessCaseViewComponent from '../../components/businessCase/BusinessCaseView'
 import BusinessCaseStatusBadge from '../../components/businessCase/BusinessCaseStatusBadge'
 import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
+import { useLdeExportParts } from '../../lib/useLdeExportParts'
 import { resolveInitiationBasePath } from '@nidus/shared/utils/initiationRouteUtils'
 import {
   buildBusinessCaseExportSections,
@@ -40,6 +41,13 @@ export default function BusinessCaseViewPage() {
   const [canEdit, setCanEdit] = useState(false)
   const [isPMOAdmin, setIsPMOAdmin] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const lde = useLdeExportParts({
+    entityType: 'business_case',
+    entityId: businessCase?.id,
+    projectId: businessCase?.project_id,
+    screenCode: 'business_case_detail',
+    enabled: !!businessCase?.id && !!businessCase?.project_id,
+  })
 
   const fetchData = useCallback(async () => {
     try {
@@ -115,7 +123,7 @@ export default function BusinessCaseViewPage() {
 
   if (!businessCase) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-8 text-center">
+      <div className="max-w-7xl mx-auto px-4 py-8 text-center">
         <p className="text-gray-600 dark:text-gray-400">Business case not found.</p>
         <button onClick={() => navigate(basePath)} className="mt-4 text-blue-600 dark:text-blue-400 underline text-sm">
           Back to list
@@ -125,7 +133,7 @@ export default function BusinessCaseViewPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header */}
       <div className="mb-6">
         <button
@@ -149,8 +157,8 @@ export default function BusinessCaseViewPage() {
 
           <div className="flex flex-wrap items-center gap-2">
             <ExportRecordButtons
-              sections={buildBusinessCaseExportSections(businessCase)}
-              record={buildBusinessCaseExportRecord(businessCase)}
+              sections={[...buildBusinessCaseExportSections(businessCase), ...(lde.section ? [lde.section] : [])]}
+              record={{ ...buildBusinessCaseExportRecord(businessCase), ...lde.mergedRecord }}
               baseFilename={businessCaseExportFilename(businessCase)}
             />
 

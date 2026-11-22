@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { ArrowLeft, FileText, FileIcon, Users, CheckCircle, XCircle, Clock } from 'lucide-react'
 import { RowActionButton } from '@nidus/ui'
@@ -19,6 +20,8 @@ import AuditCard from '@nidus/ui/AuditCard'
 import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken } from '@nidus/shared/utils/auditDisplayUtils'
+import RecordCustomFields from '../../components/shared-app/RecordCustomFields'
+import { useLdeExportParts } from '../../lib/useLdeExportParts'
 
 /** Parse JSON array or return raw string for display */
 function parseListOrText(value) {
@@ -57,6 +60,13 @@ export default function ProjectMandateView() {
     () => ({ constraints, documents: associatedDocuments, stakeholders, dependencies }),
     [constraints, associatedDocuments, stakeholders, dependencies],
   )
+  const lde = useLdeExportParts({
+    entityType: 'project_mandate',
+    entityId: mandate?.id,
+    projectId: mandate?.project_id,
+    screenCode: 'mandate_detail',
+    enabled: !!mandate?.id && !!mandate?.project_id,
+  })
 
   const fetchMandate = useCallback(async () => {
     if (!mandateIdentifier) return
@@ -286,8 +296,8 @@ export default function ProjectMandateView() {
           
           <div className="flex flex-wrap gap-3 items-center">
             <ExportRecordMenu
-              sections={buildMandateExportSections(mandate, mandateExportChildren)}
-              record={buildMandateExportRecord(mandate, mandateExportChildren)}
+              sections={[...buildMandateExportSections(mandate, mandateExportChildren), ...(lde.section ? [lde.section] : [])]}
+              record={{ ...buildMandateExportRecord(mandate, mandateExportChildren), ...lde.mergedRecord }}
               baseFilename={`Mandate_${mandate.mandate_reference || mandate.id}`}
             />
             {canConfirmWithoutApproval && (
@@ -334,7 +344,24 @@ export default function ProjectMandateView() {
         </div>
       </div>
 
-      <DetailAuditTabList activeTab={activeTab} onChange={setActiveTab} ariaLabel="Mandate sections" />
+      <DetailAuditTabList
+        activeTab={activeTab}
+        onChange={setActiveTab}
+        ariaLabel="Mandate sections"
+        extraTab={{ value: 'custom-fields', label: 'Custom Fields' }}
+      />
+
+      {activeTab === 'custom-fields' && (
+        <RecordCustomFields
+          projectId={mandate.project_id}
+          entityType="project_mandate"
+          entityId={mandate.id}
+          screenCode="mandate_detail"
+          mode="view"
+          alwaysShow
+          title="Custom Fields"
+        />
+      )}
 
       {activeTab === 'audit' && (
         <AuditDetailsPanel description="Who created or changed this mandate, and how it is classified.">
@@ -377,16 +404,16 @@ export default function ProjectMandateView() {
               <dd className="mt-1 text-sm text-gray-900 dark:text-white">{mandate.mandate_reference}</dd>
             </div>
             <div>
-              <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Version</dt>
+              <FieldLabelWithHelp as="dt" helpKey="sim.project_mandates.version_number" className="text-sm font-medium text-gray-500 dark:text-gray-400">Version</FieldLabelWithHelp>
               <dd className="mt-1 text-sm text-gray-900 dark:text-white">{mandate.version_number}</dd>
             </div>
             <div>
-              <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Created Date</dt>
+              <FieldLabelWithHelp as="dt" helpKey="sim.project_mandates.created_date" className="text-sm font-medium text-gray-500 dark:text-gray-400">Created Date</FieldLabelWithHelp>
               <dd className="mt-1 text-sm text-gray-900 dark:text-white">{mandate.created_date}</dd>
             </div>
             {mandate.project_created_date && (
               <div>
-                <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Project Created</dt>
+                <FieldLabelWithHelp as="dt" helpKey="sim.project_mandates.project_created_at" className="text-sm font-medium text-gray-500 dark:text-gray-400">Project Created</FieldLabelWithHelp>
                 <dd className="mt-1 text-sm text-gray-900 dark:text-white">
                   {new Date(mandate.project_created_date).toLocaleDateString()}
                 </dd>

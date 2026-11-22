@@ -16,6 +16,7 @@ import { useBriefExportChildren } from '../../lib/useBriefExportChildren'
 import BriefCompletionProgress from '../../components/brief/BriefCompletionProgress'
 import QualityCriteriaChecklist from '../../components/brief/QualityCriteriaChecklist'
 import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
+import { useLdeExportParts } from '../../lib/useLdeExportParts'
 import { buildBriefExportSections, buildBriefExportRecord } from '@nidus/shared/utils/briefExportSections'
 import {
   resolveBriefCharterMode,
@@ -34,6 +35,13 @@ export default function ProjectBriefEdit() {
   const docPath = (action) => briefCharterDocPath(routeKey || projectId, action, mode, basePath)
   const [brief, setBrief] = useState(null)
   const briefExportChildren = useBriefExportChildren(brief?.id, brief?.project_id)
+  const lde = useLdeExportParts({
+    entityType: 'project_brief',
+    entityId: brief?.id,
+    projectId: brief?.project_id,
+    screenCode: mode === 'charter' ? 'charter_detail' : 'brief_detail',
+    enabled: !!brief?.id && !!brief?.project_id,
+  })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [errors, setErrors] = useState({})
@@ -181,8 +189,8 @@ export default function ProjectBriefEdit() {
           </div>
           <div className="flex flex-wrap items-center gap-2 sm:pt-1">
             <ExportRecordButtons
-              sections={buildBriefExportSections(brief, briefExportChildren)}
-              record={buildBriefExportRecord(brief, briefExportChildren)}
+              sections={[...buildBriefExportSections(brief, briefExportChildren), ...(lde.section ? [lde.section] : [])]}
+              record={{ ...buildBriefExportRecord(brief, briefExportChildren), ...lde.mergedRecord }}
               baseFilename={`${labels.singular}_${brief.brief_reference || 'Draft'}`}
             />
           </div>
@@ -200,6 +208,7 @@ export default function ProjectBriefEdit() {
       </div>
 
       <ProjectBriefForm
+        documentMode={mode}
         formData={brief}
         onChange={handleChange}
         errors={errors}

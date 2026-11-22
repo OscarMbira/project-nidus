@@ -57,7 +57,8 @@ const PACK_MAP = {
 
 function seed() {
   tables.public = {
-    account_menu_settings: [{ account_id: 'acc-on', consolidated_menu_enabled: true }, { account_id: 'acc-off', consolidated_menu_enabled: false }],
+    system_menu_settings: [{ id: 1, consolidated_menu_enabled: true }],
+    account_menu_settings: [], // legacy; no longer read for the live switch (v1528)
     menu_placement_version: [{ id: 1, version: 7 }],
     menu_sections: [
       { app: 'platform', section_code: 'home', label: 'Home', sort_order: 10, is_active: true },
@@ -94,22 +95,24 @@ beforeEach(() => {
   clearConsolidatedMenuSwitchCache()
 })
 
-describe('isConsolidatedMenuEnabled (D11 / D20)', () => {
-  it('reads the organisation switch; off or missing means today’s sidebar', async () => {
-    expect(await isConsolidatedMenuEnabled('acc-on')).toBe(true)
-    expect(await isConsolidatedMenuEnabled('acc-off')).toBe(false)
-    expect(await isConsolidatedMenuEnabled('acc-none')).toBe(false)
-    expect(await isConsolidatedMenuEnabled(null)).toBe(false)
+describe('isConsolidatedMenuEnabled (system-wide, v1528)', () => {
+  it('reads the system switch; off or missing means today’s sidebar', async () => {
+    expect(await isConsolidatedMenuEnabled('acc-anything')).toBe(true)
+    expect(await isConsolidatedMenuEnabled(null)).toBe(true) // account ignored when system is on
+    tables.public.system_menu_settings[0].consolidated_menu_enabled = false
+    clearConsolidatedMenuSwitchCache()
+    expect(await isConsolidatedMenuEnabled('acc-anything')).toBe(false)
   })
 
   it('is false when the table does not exist yet (SQL not run)', async () => {
-    delete tables.public.account_menu_settings
+    delete tables.public.system_menu_settings
+    clearConsolidatedMenuSwitchCache()
     expect(await isConsolidatedMenuEnabled('acc-on')).toBe(false)
   })
 
   it('caches the answer for a short time, and force re-reads it', async () => {
     expect(await isConsolidatedMenuEnabled('acc-on')).toBe(true)
-    tables.public.account_menu_settings[0].consolidated_menu_enabled = false
+    tables.public.system_menu_settings[0].consolidated_menu_enabled = false
     expect(await isConsolidatedMenuEnabled('acc-on')).toBe(true)
     expect(await isConsolidatedMenuEnabled('acc-on', { force: true })).toBe(false)
   })

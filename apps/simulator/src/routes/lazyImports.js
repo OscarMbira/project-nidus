@@ -518,6 +518,8 @@ export const PracticeProjectFunctionalRoleFromLibrary = lazy(() =>
   import('../pages/simulator/PracticeProjectFunctionalRoleFromLibrary'),
 )
 export const SimMyTeam = lazy(() => import('../pages/simulator/SimMyTeam'))
+export const SimMyTeamMemberPage = lazy(() => import('../pages/simulator/SimMyTeamMemberPage'))
+export const SimMyTeamFunctionalRolePage = lazy(() => import('../pages/simulator/SimMyTeamFunctionalRolePage'))
 export const PracticeGovernance = lazy(() => import('../pages/simulator/PracticeGovernance'))
 export const SimPortfolioCategories = lazy(() => import('../pages/simulator/SimPortfolioCategories'))
 export const SimPortfolioDashboard = lazy(() => import('../pages/simulator/SimPortfolioDashboard'))

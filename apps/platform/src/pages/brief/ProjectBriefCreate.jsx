@@ -291,6 +291,7 @@ export default function ProjectBriefCreate() {
       )}
 
       <ProjectBriefForm
+        documentMode={mode}
         formData={formData}
         onChange={handleChange}
         errors={errors}

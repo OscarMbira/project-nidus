@@ -49,6 +49,13 @@ export default function PIDView() {
   const [editing, setEditing] = useState(false)
   const [auditUserLabels, setAuditUserLabels] = useState({})
   const pidExportChildren = { objectives, interfaces, dependencies, teamMembers, tolerances, reportingArrangements }
+  const lde = useLdeExportParts({
+    entityType: 'pid',
+    entityId: pid?.id,
+    projectId,
+    screenCode: 'pid_detail',
+    enabled: !!pid?.id && !!projectId,
+  })
 
   useEffect(() => {
     if (projectLoading) return
@@ -182,8 +189,8 @@ export default function PIDView() {
           <div className="flex flex-wrap items-center gap-3">
             {pid && (
               <ExportRecordButtons
-                sections={buildPidExportSections(pid, pidExportChildren)}
-                record={buildPidExportRecord(pid, pidExportChildren)}
+                sections={[...buildPidExportSections(pid, pidExportChildren), ...(lde.section ? [lde.section] : [])]}
+                record={{ ...buildPidExportRecord(pid, pidExportChildren), ...lde.mergedRecord }}
                 baseFilename={`PID_${pid.pid_reference || pid.id}`}
               />
             )}
@@ -261,6 +268,7 @@ export default function PIDView() {
                 { value: 'reporting', label: `Reporting (${reportingArrangements.length})` },
                 { value: 'controls', label: 'Controls' },
                 { value: 'plans', label: 'Plans' },
+                { value: 'custom-fields', label: 'Custom Fields' },
                 { value: 'audit', label: 'Audit details' },
               ]}
             />
@@ -268,6 +276,18 @@ export default function PIDView() {
 
           {/* Tab Content */}
           <div className="p-6">
+            {activeTab === 'custom-fields' && (
+              <RecordCustomFields
+                projectId={projectId}
+                entityType="pid"
+                entityId={pid.id}
+                screenCode="pid_detail"
+                mode="view"
+                alwaysShow
+                title="Custom Fields"
+              />
+            )}
+
             {activeTab === 'audit' && (
               <AuditDetailsPanel description="Who created or changed this PID, and how it is classified.">
                 <AuditCard title="Identity" description="How this PID is labelled and tracked.">

@@ -19,6 +19,7 @@ import AuditCard from '@nidus/ui/AuditCard';
 import AuditField from '@nidus/ui/AuditField';
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
 import { humanizeAuditToken } from '@nidus/shared/utils/auditDisplayUtils';
+import RecordCustomFields from '../shared-app/RecordCustomFields';
 
 export default function BenefitsReviewPlanView({ plan, onEdit, onExport, onApprove, onDistribute, onPrint }) {
   // v1344 slice 6 (rule 63.1): Details + Audit details tabs on the view
@@ -113,10 +114,26 @@ export default function BenefitsReviewPlanView({ plan, onEdit, onExport, onAppro
       </div>
 
       <div className="px-6 pt-4 border-b border-gray-200 dark:border-gray-700">
-        <DetailAuditTabList activeTab={activeTab} onChange={setActiveTab} ariaLabel="Benefits review plan sections" />
+        <DetailAuditTabList
+          activeTab={activeTab}
+          onChange={setActiveTab}
+          ariaLabel="Benefits review plan sections"
+          extraTab={{ value: 'custom-fields', label: 'Custom Fields' }}
+        />
       </div>
 
-      {activeTab === 'audit' ? (
+      {activeTab === 'custom-fields' ? (
+        <div className="p-6">
+          <RecordCustomFields
+            projectId={plan.project_id || plan.project?.id || plan.practice_project_id}
+            entityType="benefits_review_plan"
+            entityId={plan.id}
+            screenCode="benefits_review_plan_detail"
+            mode="view"
+            alwaysShow
+          />
+        </div>
+      ) : activeTab === 'audit' ? (
         <div className="p-6">
           <AuditDetailsPanel description="Who created or changed this benefits review plan, and how it is classified.">
             <AuditCard title="Identity" description="How this plan is labelled and tracked.">

@@ -10,6 +10,7 @@ import { createPID, updatePID } from '../../services/projectInitiationDocumentSe
 import { HoldButton } from '../shared-app/HoldButton'
 import { supabase } from '../../services/supabaseClient'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import RecordCustomFields from '../shared-app/RecordCustomFields'
 import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
 import AuditCard from '@nidus/ui/AuditCard'
 import AuditField from '@nidus/ui/AuditField'
@@ -863,8 +864,30 @@ export default function PIDForm({
       </div>
 
       <div className="px-6 pt-4">
-        <DetailAuditTabList activeTab={formTab} onChange={setFormTab} detailsLabel="Edit" auditLabel="Audit details" />
+        <DetailAuditTabList
+          activeTab={formTab}
+          onChange={setFormTab}
+          tabs={[
+            { value: 'wizard', label: 'Edit' },
+            { value: 'custom-fields', label: 'Custom Fields' },
+            { value: 'audit', label: 'Audit details' },
+          ]}
+        />
       </div>
+
+      {formTab === 'custom-fields' && (
+        <div className="p-6">
+          <RecordCustomFields
+            projectId={projectId}
+            entityType="pid"
+            entityId={pid?.id}
+            screenCode="pid_detail"
+            mode="edit"
+            alwaysShow
+            title="Custom Fields"
+          />
+        </div>
+      )}
 
       {formTab === 'audit' && (
         <div className="p-6">

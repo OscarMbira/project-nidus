@@ -1,7 +1,8 @@
 /**
  * WordStylePreview — styled-HTML rendering of a record the way exportRecordToWord would
- * lay it out (section = H1, field = H2 + value), for in-app "View" (v853) rather than download.
- * Reuses exportUtils.js's shared field-mapping helpers so preview and export never diverge.
+ * lay it out (section = H1, Detail | Value tables, # | Item tables for lists), for in-app
+ * "View" (v853) rather than download. Reuses exportUtils.js helpers so preview and export
+ * never diverge (rule 38.1).
  */
 
 import {
@@ -10,7 +11,47 @@ import {
   itemHasOwnListMarker,
   fieldGuidanceLines,
   resolveBranding,
+  sectionRenderSteps,
+  factsTable,
+  resolveLayoutFieldTable,
+  fieldTable,
 } from '@nidus/shared/utils/exportUtils'
+
+function PreviewTable({ table, headerColor }) {
+  if (!table?.headers?.length || !table?.rows?.length) return null
+  return (
+    <div className="overflow-x-auto mb-3">
+      <table className="w-full text-sm border-collapse border border-gray-200 dark:border-gray-700">
+        <thead>
+          <tr style={{ backgroundColor: headerColor }}>
+            {table.headers.map((h) => (
+              <th
+                key={h}
+                className="text-left text-white font-semibold px-2 py-1.5 border border-gray-200 dark:border-gray-700"
+              >
+                {h}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {table.rows.map((row, ri) => (
+            <tr key={ri} className="bg-white dark:bg-gray-900">
+              {table.headers.map((_, ci) => (
+                <td
+                  key={ci}
+                  className="px-2 py-1.5 align-top whitespace-pre-wrap border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200"
+                >
+                  {row[ci] ?? ''}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
 
 export default function WordStylePreview({
   sections = [],
@@ -33,6 +74,8 @@ export default function WordStylePreview({
 
       {sections.map((section, sIdx) => {
         if (!section?.title || !section?.fields?.length) return null
+        const steps = sectionRenderSteps(section.fields, flatIdx)
+        flatIdx += section.fields.length
         return (
           <div key={sIdx} className="mb-6">
             <h2
@@ -41,9 +84,18 @@ export default function WordStylePreview({
             >
               {sectionTitles[sIdx]}
             </h2>
-            {section.fields.map((field) => {
-              const numberedLabel = flatNumberedFields[flatIdx]?.label ?? (field.label || field.key)
-              flatIdx += 1
+            {steps.map((step, stepIdx) => {
+              if (step.facts) {
+                return (
+                  <PreviewTable
+                    key={`facts-${stepIdx}`}
+                    table={factsTable(step.facts, record, flatNumberedFields, blankPlaceholder)}
+                    headerColor={headerColor}
+                  />
+                )
+              }
+              const { field, index } = step
+              const numberedLabel = flatNumberedFields[index]?.label ?? (field.label || field.key)
               const guidance = fieldGuidanceLines(field)
               const fieldAssets = attachmentAssets[field.key]
               if (Array.isArray(fieldAssets)) {
@@ -84,6 +136,8 @@ export default function WordStylePreview({
                   </div>
                 )
               }
+
+              const layoutTable = resolveLayoutFieldTable(field, record[field.key])
               const parsed = parseFieldValue(record[field.key])
               return (
                 <div key={field.key} className="mb-3">
@@ -91,7 +145,16 @@ export default function WordStylePreview({
                   {guidance.map((line, i) => (
                     <p key={i} className="text-xs italic text-gray-500 dark:text-gray-400">{line}</p>
                   ))}
-                  {parsed.isList ? (
+                  {layoutTable ? (
+                    <>
+                      {parsed?.isList && parsed.intro && !fieldTable(field) ? (
+                        <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap mb-2">
+                          {parsed.intro}
+                        </p>
+                      ) : null}
+                      <PreviewTable table={layoutTable} headerColor={headerColor} />
+                    </>
+                  ) : parsed.isList ? (
                     parsed.items.length === 0 && !parsed.intro ? (
                       <p className="text-sm text-gray-700 dark:text-gray-300">{blankPlaceholder}</p>
                     ) : (

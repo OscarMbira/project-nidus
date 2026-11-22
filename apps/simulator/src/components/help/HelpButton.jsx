@@ -1,15 +1,25 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { HelpCircle, X, Search } from 'lucide-react'
-import { getHelpArticles, searchHelpArticles } from '../../services/helpService'
+import { searchHelpArticles } from '../../services/helpService'
 import Input from '@nidus/ui/Input.jsx'
+
+const openHelpInNewTab = (path) => {
+  window.open(path, '_blank', 'noopener,noreferrer')
+}
 
 export default function HelpButton() {
   const [isOpen, setIsOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [articles, setArticles] = useState([])
   const [loading, setLoading] = useState(false)
-  const navigate = useNavigate()
+
+  const docsPath = '/documentation/simulator'
+
+  const closePanel = () => {
+    setIsOpen(false)
+    setSearchQuery('')
+    setArticles([])
+  }
 
   const handleSearch = async (query) => {
     if (!query) {
@@ -31,10 +41,13 @@ export default function HelpButton() {
   }
 
   const handleArticleClick = (slug) => {
-    navigate(`/help/article/${slug}`)
-    setIsOpen(false)
-    setSearchQuery('')
-    setArticles([])
+    openHelpInNewTab(`/help/article/${slug}`)
+    closePanel()
+  }
+
+  const handleHelpLink = (path) => {
+    openHelpInNewTab(path)
+    closePanel()
   }
 
   return (
@@ -120,40 +133,35 @@ export default function HelpButton() {
               ) : (
                 <div className="space-y-3">
                   <button
-                    onClick={() => {
-                      navigate('/help')
-                      setIsOpen(false)
-                    }}
+                    onClick={() => handleHelpLink(docsPath)}
+                    className="w-full p-3 text-left bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                  >
+                    <h3 className="font-medium text-sm text-gray-900 dark:text-white">User Guides</h3>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">Opens documentation in a new tab</p>
+                  </button>
+                  <button
+                    onClick={() => handleHelpLink('/help')}
                     className="w-full p-3 text-left bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
                   >
                     <h3 className="font-medium text-sm text-gray-900 dark:text-white">Help Center</h3>
                     <p className="text-xs text-gray-600 dark:text-gray-400">Browse all articles</p>
                   </button>
                   <button
-                    onClick={() => {
-                      navigate('/help/tutorials')
-                      setIsOpen(false)
-                    }}
+                    onClick={() => handleHelpLink('/help/tutorials')}
                     className="w-full p-3 text-left bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
                   >
                     <h3 className="font-medium text-sm text-gray-900 dark:text-white">Video Tutorials</h3>
                     <p className="text-xs text-gray-600 dark:text-gray-400">Watch video guides</p>
                   </button>
                   <button
-                    onClick={() => {
-                      navigate('/help/faq')
-                      setIsOpen(false)
-                    }}
+                    onClick={() => handleHelpLink('/help/faq')}
                     className="w-full p-3 text-left bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
                   >
                     <h3 className="font-medium text-sm text-gray-900 dark:text-white">FAQ</h3>
                     <p className="text-xs text-gray-600 dark:text-gray-400">Frequently asked questions</p>
                   </button>
                   <button
-                    onClick={() => {
-                      navigate('/help/contact')
-                      setIsOpen(false)
-                    }}
+                    onClick={() => handleHelpLink('/help/contact')}
                     className="w-full p-3 text-left bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
                   >
                     <h3 className="font-medium text-sm text-gray-900 dark:text-white">Contact Support</h3>
@@ -168,4 +176,3 @@ export default function HelpButton() {
     </>
   )
 }
-

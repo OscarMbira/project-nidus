@@ -3,7 +3,7 @@
  * apps/platform/src/pages). Reads tasks via useTaskSource(): Platform/Planner → public,
  * Simulator → sim (practice projects).
  * v1265: `embedded` (the schedule's Due dates tab) — shown inside ScheduleLayout, which gives the
- * title, Back, tabs, full screen and project picker; tasks open in the task modal.
+ * title, Back, tabs, full screen and project picker; tasks open on the schedule's task page.
  */
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -12,7 +12,7 @@ import { format, isSameDay } from 'date-fns'
 import 'react-calendar/dist/Calendar.css'
 import { useTaskSource } from '../../hooks/useTaskSource.js'
 import { useScheduleProjectId } from '../../hooks/useSchedule.js'
-import { useTaskModal } from '../../hooks/useTaskModal.js'
+import { useTaskPage } from '../../hooks/useTaskPage.js'
 
 // sim.tasks cannot embed the public task_statuses lookup: attach it from a second read.
 export async function withStatuses(source, rows) {
@@ -24,7 +24,7 @@ export async function withStatuses(source, rows) {
 
 export default function TasksCalendar({ embedded = false }) {
   const navigate = useNavigate()
-  const taskModal = useTaskModal()
+  const taskPage = useTaskPage()
   const source = useTaskSource()
   const { projectId: contextProjectId, loading: projectContextLoading } = useScheduleProjectId()
   const [tasks, setTasks] = useState([])
@@ -50,14 +50,14 @@ export default function TasksCalendar({ embedded = false }) {
   }, [selectedDate, tasks])
 
   const goToCreateTask = useCallback(() => {
-    if (embedded) { taskModal.newTask(); return }
+    if (embedded) { taskPage.newTask(); return }
     navigate(source.createPath(), {
       state: {
         dueDate: selectedDate,
         ...(filterProject && filterProject !== 'all' ? { projectId: filterProject } : {}),
       },
     })
-  }, [navigate, selectedDate, filterProject, source, embedded, taskModal])
+  }, [navigate, selectedDate, filterProject, source, embedded, taskPage])
 
   const fetchData = async () => {
     try {
@@ -252,7 +252,7 @@ export default function TasksCalendar({ embedded = false }) {
                 {selectedDateTasks.map((task) => (
                   <div
                     key={task.id}
-                    onClick={() => (embedded ? taskModal.openTask(task) : navigate(source.taskPath(task)))}
+                    onClick={() => (embedded ? taskPage.openTask(task) : navigate(source.taskPath(task)))}
                     className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 cursor-pointer hover:shadow-md transition-shadow border-l-4"
                     style={{
                       borderLeftColor: task.task_statuses?.status_color || '#6B7280'

@@ -65,29 +65,30 @@ async function fetchAllPages(build) {
   return rows
 }
 
-const SWITCH_CACHE_PREFIX = 'nidus:menuSwitch:'
+const SWITCH_CACHE_KEY = 'nidus:menuSwitch:system'
 const SWITCH_CACHE_TTL_MS = 2 * 60 * 1000
 
 /**
- * Is the consolidated sidebar switched on for this organisation (D11 / D20)?
- * Cached for two minutes per account so organisations with the switch off keep today's
- * sidebar path with at most one small query per two minutes (rule 66).
+ * Is the consolidated sidebar switched on system-wide (v1528)?
+ * `accountId` is ignored (kept for call-site compatibility). Cached for two minutes
+ * so orgs keep today's sidebar path with at most one small query per two minutes (rule 66).
+ * No row / SQL not applied → false (legacy pack-grouped sidebar).
  */
-export async function isConsolidatedMenuEnabled(accountId, { force = false } = {}) {
-  if (!accountId) return false
-  const cacheKey = `${SWITCH_CACHE_PREFIX}${accountId}`
+export async function isConsolidatedMenuEnabled(_accountId, { force = false } = {}) {
   if (!force) {
-    const cached = readBundleCache(cacheKey)
+    const cached = readBundleCache(SWITCH_CACHE_KEY)
     if (cached && Date.now() - cached.at < SWITCH_CACHE_TTL_MS) return !!cached.enabled
   }
   const { data, error } = await platformDb
-    .from('account_menu_settings')
+    .from('system_menu_settings')
     .select('consolidated_menu_enabled')
-    .eq('account_id', accountId)
+    .eq('id', 1)
     .maybeSingle()
-  const enabled = error ? false : !!data?.consolidated_menu_enabled // no table yet → today's sidebar
+  const enabled = error ? false : !!data?.consolidated_menu_enabled
   try {
-    if (typeof sessionStorage !== 'undefined') sessionStorage.setItem(cacheKey, JSON.stringify({ enabled, at: Date.now() }))
+    if (typeof sessionStorage !== 'undefined') {
+      sessionStorage.setItem(SWITCH_CACHE_KEY, JSON.stringify({ enabled, at: Date.now() }))
+    }
   } catch {
     // ignore
   }
@@ -98,9 +99,11 @@ export async function isConsolidatedMenuEnabled(accountId, { force = false } = {
 export function clearConsolidatedMenuSwitchCache() {
   try {
     if (typeof sessionStorage === 'undefined') return
+    sessionStorage.removeItem(SWITCH_CACHE_KEY)
+    // Drop any legacy per-account switch cache keys from before v1528
     for (let i = sessionStorage.length - 1; i >= 0; i -= 1) {
       const k = sessionStorage.key(i)
-      if (k && k.startsWith(SWITCH_CACHE_PREFIX)) sessionStorage.removeItem(k)
+      if (k && k.startsWith('nidus:menuSwitch:')) sessionStorage.removeItem(k)
     }
   } catch {
     // ignore

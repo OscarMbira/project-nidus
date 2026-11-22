@@ -15,7 +15,31 @@ vi.mock('@nidus/shared/hooks/useRegionalFormatSettings.js', () => ({
 }))
 
 const { FieldHelpScope } = await import('@nidus/shared/context/FieldHelpContext')
-const { default: FieldLabelWithHelp, computeHelpPopoverPlacement } = await import('../FieldLabelWithHelp')
+const {
+  default: FieldLabelWithHelp,
+  computeHelpPopoverPlacement,
+  partitionFieldLabelChildren,
+} = await import('../FieldLabelWithHelp')
+
+describe('partitionFieldLabelChildren — ⓘ stays on the label line', () => {
+  it('keeps leading label text separate from a nested select wrapper', () => {
+    const select = <div className="mt-1"><select /></div>
+    const { mode, labelNodes, fieldNodes } = partitionFieldLabelChildren(['Member role *', select])
+    expect(mode).toBe('stacked')
+    expect(labelNodes).toEqual(['Member role *'])
+    expect(fieldNodes).toHaveLength(1)
+  })
+
+  it('uses inline layout when a checkbox leads the children', () => {
+    const { mode } = partitionFieldLabelChildren([<input type="checkbox" key="c" />, 'Active'])
+    expect(mode).toBe('inline')
+  })
+
+  it('uses inline layout for control=checkbox', () => {
+    const { mode } = partitionFieldLabelChildren(['Active', <input type="checkbox" key="c" />], 'checkbox')
+    expect(mode).toBe('inline')
+  })
+})
 
 describe('help card placement — never cut off', () => {
   const vp = { viewportWidth: 1200, viewportHeight: 800 }
@@ -68,6 +92,13 @@ describe('FieldLabelWithHelp (v1345)', () => {
     loadFieldHelp.mockReset()
     recordFieldHelpOpen.mockReset()
     loadFieldHelp.mockResolvedValue({ 'k.name': NAME_HELP })
+  })
+
+  it('still shows help when the label’s key was left out of the scope’s list (system-wide fix 2026-11-21)', async () => {
+    loadFieldHelp.mockImplementation(async (keys) => Object.fromEntries(keys.map((k) => [k, k === 'k.name' ? NAME_HELP : null])))
+    renderLabel({}, ['k.other'])
+    expect(await screen.findByRole('button', { name: /help/i })).toBeInTheDocument()
+    expect(loadFieldHelp.mock.calls.some(([keys]) => keys.includes('k.name'))).toBe(true)
   })
 
   it('shows a plain label with no affordance when the field has no help (D10)', async () => {
@@ -194,5 +225,26 @@ describe('FieldLabelWithHelp (v1345)', () => {
     const button = await screen.findByRole('button', { name: /help/i })
     fireEvent.focus(document.getElementById('name'))
     expect(button.className).toContain('opacity-100')
+  })
+
+  it('keeps the help button on the label row when a select is nested under the label', async () => {
+    render(
+      <FieldHelpScope helpKeys={['k.name']}>
+        <FieldLabelWithHelp helpKey="k.name" className="block text-xs">
+          Member role *
+          <div className="mt-1">
+            <select aria-label="Member role">
+              <option>Select role…</option>
+            </select>
+          </div>
+        </FieldLabelWithHelp>
+      </FieldHelpScope>,
+    )
+    const help = await screen.findByRole('button', { name: /help/i })
+    const select = screen.getByLabelText('Member role')
+    // ⓘ must appear before the nested select in DOM order (label line, then field).
+    expect(
+      help.compareDocumentPosition(select) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
   })
 })

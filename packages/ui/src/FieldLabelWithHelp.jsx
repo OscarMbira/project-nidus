@@ -13,7 +13,18 @@
  *   Escape or a click elsewhere closes it; it stays open while hovered (WCAG 1.4.13).
  *   Text is rendered as text, never HTML (G-D12).
  */
-import { useCallback, useContext, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import {
+  Children,
+  isValidElement,
+  useCallback,
+  useContext,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { createPortal } from 'react-dom'
 import { Info, X } from 'lucide-react'
 import { useFieldHelpEntry, useFieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
@@ -30,6 +41,54 @@ const NO_DOUBLE_CLICK = new Set(['checkbox', 'radio', 'toggle'])
 const POPOVER_WIDTH = 320
 const EDGE = 16 // keep this far from the screen edges
 const GAP = 6 // space between the ⓘ and the card
+
+/**
+ * Split label text from nested field controls so ⓘ stays on the label line.
+ * Call sites often nest SelectField / input / textarea under FieldLabelWithHelp; putting the
+ * help button after the whole children tree left ⓘ under the control (Team Detail Add member).
+ *
+ * - Leading string/number nodes → label row (with ⓘ).
+ * - Remaining nodes → field body under the label.
+ * - Checkbox-style (control first, or control=checkbox|radio|toggle) → inline: children + ⓘ.
+ */
+export function partitionFieldLabelChildren(children, control = 'text') {
+  const nodes = Children.toArray(children)
+  if (NO_DOUBLE_CLICK.has(control)) {
+    return { mode: 'inline', labelNodes: nodes, fieldNodes: [] }
+  }
+
+  const labelNodes = []
+  let i = 0
+  while (i < nodes.length) {
+    const node = nodes[i]
+    if (typeof node === 'string' || typeof node === 'number') {
+      if (typeof node === 'string' && node.trim() === '' && labelNodes.length === 0) {
+        i += 1
+        continue
+      }
+      labelNodes.push(node)
+      i += 1
+      continue
+    }
+    break
+  }
+
+  const fieldNodes = nodes.slice(i)
+  const first = fieldNodes[0]
+  const leadingControl =
+    labelNodes.length === 0 &&
+    isValidElement(first) &&
+    (first.type === 'input' ||
+      first.type === 'select' ||
+      first.props?.type === 'checkbox' ||
+      first.props?.type === 'radio')
+
+  if (leadingControl) {
+    return { mode: 'inline', labelNodes: nodes, fieldNodes: [] }
+  }
+
+  return { mode: 'stacked', labelNodes, fieldNodes }
+}
 
 /**
  * Where to put the help card so none of it is cut off: below the ⓘ when it fits, otherwise
@@ -249,6 +308,22 @@ export default function FieldLabelWithHelp({
   }
 
   const revealed = open || fieldFocused || fieldHovered
+  const { mode, labelNodes, fieldNodes } = partitionFieldLabelChildren(children, control)
+
+  const helpButton = (
+    <button
+      ref={buttonRef}
+      type="button"
+      onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (open) close(false); else openHelp() }}
+      aria-label={`Help: ${help.title}`}
+      aria-expanded={open}
+      aria-controls={open ? popoverId : undefined}
+      aria-haspopup="dialog"
+      className={`ml-1 inline-flex shrink-0 align-middle rounded-full p-0.5 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:opacity-100 group-hover/fieldhelp:opacity-100 transition-opacity ${revealed ? 'opacity-100' : 'opacity-0 pointer-coarse:opacity-60'}`}
+    >
+      <Info className="h-3.5 w-3.5" aria-hidden="true" />
+    </button>
+  )
 
   return (
     <Tag
@@ -258,21 +333,20 @@ export default function FieldLabelWithHelp({
       onDoubleClick={onDoubleClick}
       data-help-key={helpKey}
     >
-      <span>
-        {children}
-      </span>
-      <button
-        ref={buttonRef}
-        type="button"
-        onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (open) close(false); else openHelp() }}
-        aria-label={`Help: ${help.title}`}
-        aria-expanded={open}
-        aria-controls={open ? popoverId : undefined}
-        aria-haspopup="dialog"
-        className={`ml-1 inline-flex align-middle rounded-full p-0.5 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:opacity-100 group-hover/fieldhelp:opacity-100 transition-opacity ${revealed ? 'opacity-100' : 'opacity-0 pointer-coarse:opacity-60'}`}
-      >
-        <Info className="h-3.5 w-3.5" aria-hidden="true" />
-      </button>
+      {mode === 'inline' ? (
+        <>
+          {labelNodes}
+          {helpButton}
+        </>
+      ) : (
+        <>
+          <span className="inline-flex items-center gap-x-0.5 max-w-full">
+            <span>{labelNodes}</span>
+            {helpButton}
+          </span>
+          {fieldNodes}
+        </>
+      )}
       {open && position && typeof document !== 'undefined' && createPortal(
         <div
           ref={popoverRef}
