@@ -61,6 +61,7 @@ cross-organisation isolation.
 - [ ] Organisation Settings › Integrations & Security (routed pages): service accounts, API keys (create → shown
       once, rotate with overlap, revoke), usage vs limits. Field help, Audit tab, success modal.
 - [ ] Admin: plan switch + limits; usage list; emergency revoke.
+- [ ] Jobs (rule 80): `reminder_record_types` row for API key expiry (recipients: organisation admins).
 - [ ] Menus (rule 75) + taxonomy / placement docs (70); Planner parity.
 - [ ] Exit: builds, tests, commit; owner SQL + check with an HTTP client.
 
@@ -74,8 +75,11 @@ cross-organisation isolation.
 
 - [ ] POST / PATCH / DELETE for D4 write resources through existing RPCs and validations; Idempotency-Key; If-Match.
 - [ ] Outbox triggers on the D4 tables; event catalogue; endpoints page (subscribe, test ping, deliveries, replay).
-- [ ] Delivery job (v1352 queue, or the interim tick sender): HMAC signature + timestamp, back-off for 24 h, disable
-      and alert after repeated failures. Retire v43 tables and `webhookService.js`.
+- [ ] Delivery job `webhooks.deliver` (v1352 queue handler; D7 amended): HMAC signature + timestamp, v1352 per-item
+      back-off for 24 h, endpoint disabled and admin alerted after repeated failures; replay uses v1352 single-item
+      replay.
+- [ ] Jobs (rule 80): `api.purge_idempotency_and_counters` (hourly); `retention_targets` rows for
+      `api_request_log` and `webhook_deliveries`. Retire v43 tables and `webhookService.js`.
 - [ ] Exit as slice 1.
 
 ## Slice 4 — SCIM
@@ -85,6 +89,7 @@ cross-organisation isolation.
       membership, revoke sessions, keep records), group → role mapping.
 - [ ] IdP lock: managed fields read-only in profile / member pages while SCIM is on; block manual invites option.
 - [ ] SCIM settings page (token create / rotate, mappings, welcome email choice). Conformance tests; test IdP tenant.
+- [ ] Jobs (rule 80): `reminder_record_types` row for SCIM token expiry.
 - [ ] Exit as slice 1.
 
 ## Slice 5 — Per-organisation SSO
@@ -92,6 +97,8 @@ cross-organisation isolation.
 - [ ] `sso_connections`; domain verification (DNS TXT); SAML / OIDC through the auth provider’s SSO support.
 - [ ] Login page: route by email domain; “SSO required” blocks password login except the break-glass owner.
 - [ ] Retire v51 tables and `ssoService.js` / `SSOLoginButton` (rule 78).
+- [ ] Jobs (rule 80): `sso.domain_recheck` (weekly; a failed re-check alerts the organisation admins and does not
+      lock anyone out by itself); `reminder_record_types` row for SAML certificate expiry.
 - [ ] Guide `Documentation/Public_API_SCIM_SSO_v1356_Guide.md`; ROADMAP R11 / R12 status; exit.
 
 ## Risks

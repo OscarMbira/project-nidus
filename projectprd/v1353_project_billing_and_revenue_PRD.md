@@ -121,6 +121,10 @@ A **Billing & Revenue** area for each project, driven by the project’s billing
   screen, and Finance sends reminders and creates due recurring invoices with a button. When the background-jobs
   framework (v1352) lands, a daily job sends overdue reminders and drafts due recurring invoices — registered in that
   job catalogue (planned rule 80), not as module-own schedules.
+  **Amended (owner, 2026-11-22):** v1352 is delivered before v1353, so the jobs ship with billing from the start —
+  `billing.overdue_reminders` (daily, organisation time, emails client billing contacts once per reminder step),
+  `billing.recurring_drafts` (daily) and `billing.schedule_due` (daily for dated lines; milestone-based lines queued
+  through `enqueue_background_job` when the milestone completes). The manual buttons stay.
 - **D18 Delivery order (owner, 2026-11-22):** (1) clients, rate cards, tax codes, Finance role; (2) billable time and
   expenses → invoices: draft, approve, issue, pay, credit, export, email; (3) billing schedules — fixed price and
   recurring; (4) revenue, WIP and margin dashboards, accounting export, client portal. Platform, Simulator and
@@ -150,7 +154,7 @@ table toggle and exports (38–44); theme-aware (28.1); performance pass (66); R
 - Full general ledger, tax filing and accrual / % complete revenue (D14) — handled in the accounting system.
 - Live accounting integrations (D11) — later work; this release exports files.
 - An invoice template designer (D15).
-- Automatic reminders and recurring drafts until v1352 exists (D17).
+- (Automatic reminders and recurring drafts are now in scope — D17 amended, v1352 first.)
 
 ## g) Further notes
 

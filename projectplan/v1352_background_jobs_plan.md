@@ -51,7 +51,9 @@ failures / late jobs ──► Admin in-app notification + email, grouped per jo
 Tests first:
 - [ ] SQL test script (`SQL/v{N}_background_jobs_tests.sql`, run in a transaction, rolls back): due-job
       selection for cron text in UTC and organisation time; disabled job skipped; overlap lock; run row written
-      on success and failure; retry policy; late-job detection.
+      on success and failure; retry policy; late-job detection; (A1) per-item back-off and `run_after`, item
+      becomes `dead` after `max_attempts` / `expires_at`, single-item replay, `enqueue_background_job` dedupe,
+      per-organisation batch cap.
 - [ ] Vitest: worker claims queue rows once under concurrency (mocked client), handler errors recorded, adapter
       is the only module importing `@supabase/supabase-js`.
 
@@ -59,6 +61,12 @@ Build:
 - [ ] SQL migration: `background_jobs`, `background_job_runs`, `background_job_queue`,
       `background_job_settings` (retention D11, alert grouping), `run_background_job`,
       `run_due_background_jobs`, `background_jobs_detect_late`; registry rows; Planner wall re-run.
+- [ ] **A1 queue capabilities:** queue columns `run_after`, `attempts`, `max_attempts`, `expires_at`, `dedupe_key`
+      (unique per job), `organisation_id`, status incl. `dead`; per-job `backoff_schedule`, `batch_size`,
+      `per_org_batch_cap`; `enqueue_background_job(code, payload, run_after, dedupe_key, organisation_id)`
+      (`SECURITY DEFINER`, no client grant); worker claim respects `run_after` and the per-organisation cap;
+      `admin_background_job_replay_item(item_id, reason)` (audited) + a replay helper the owning feature can call
+      for its own organisation’s items.
 - [ ] Move existing jobs into the catalogue (behaviour unchanged): trial expiry, auto-archive (public), AI
       retention purge, AI embed (handler, every 2 min), draft expiry (handler, daily), tester moratorium
       (handler, daily); `cron.unschedule` their old entries; one `cron.schedule('nidus_background_tick', '* * * * *', …)`.
@@ -91,6 +99,9 @@ Each job: failing SQL/Vitest test → job → Admin catalogue row → commit-rea
 - [ ] **1.3 Due-date reminders:** one job over registered record types (risk / issue reviews, actions,
       milestones, strategy scheduled activities, document sign-offs, daily logs); in-app per item; marker table
       so each item gets one "before" and one "overdue" reminder only (D6).
+      **(A1)** Record types come from a data table `reminder_record_types` (record type, schema, table, date column,
+      status filter, recipient rule `owner` / `role:<code>` / `org_admins`, default lead time, message key) so
+      v1354 / v1355 / v1356 add rows, not code; seeded with today’s types.
 - [ ] **1.3a Reminder lead times (D7):** `reminder_lead_time_settings` (system defaults + organisation
       overrides, both schemas) + PMO Configuration page in Platform and Simulator (routed page, field help,
       Audit tab, success modal, menu catalogue + placement + taxonomy rows — rules 70, 75).
@@ -116,13 +127,29 @@ Each job: failing SQL/Vitest test → job → Admin catalogue row → commit-rea
 ## Slice 3 — Data health, performance, manual jobs (Wave 3 + M)
 
 - [ ] **3.1 Roll-up refresh** (portfolio / programme / PMO summaries), **3.2 storage clean-up**, **3.3 log
-      retention** (incl. D11 run-history purge), **3.4 data-quality report**, **3.5 Simulator housekeeping**.
+      retention** (incl. D11 run-history purge; **A1:** driven by a `retention_targets` table — table, date
+      column, keep period, optional status filter — so later features add rows), **3.4 data-quality report**, **3.5 Simulator housekeeping**.
 - [ ] **Manual jobs** in Admin with reason + audit: re-run failed (already in slice 0), back-fills (Global
       Template sync), re-index / re-embed, large bulk-import processing (async, with progress), organisation
       data export / deletion.
 - [ ] Exit: owner check; commit; plan review section.
 
 ---
+
+## Jobs later features will register (A1 — rule 80, built in their own plans)
+
+| Feature | Job | Kind |
+|---|---|---|
+| v1353 | `billing.overdue_reminders` — email client billing contacts, once per reminder step | Scheduled daily, organisation time |
+| v1353 | `billing.recurring_drafts` — draft due recurring invoices | Scheduled daily |
+| v1353 | `billing.schedule_due` — date-based billing lines become due; milestone-based queued on milestone complete | Scheduled daily + enqueue |
+| v1354 | Levelling moves awaiting a PM; portfolio scenarios awaiting approval | `reminder_record_types` rows |
+| v1355 | Analysis older than 30 days (optional) | `reminder_record_types` row |
+| v1356 | `webhooks.deliver` — signed delivery with back-off, endpoint disable after repeated failure | Queue handler |
+| v1356 | `api.purge_idempotency_and_counters` | Scheduled hourly |
+| v1356 | API key / SCIM token / SAML certificate expiry | `reminder_record_types` rows |
+| v1356 | `sso.domain_recheck` — re-verify SSO domains | Scheduled weekly |
+| v1356 | API request log, webhook deliveries retention | `retention_targets` rows |
 
 ## Cross-cutting checklist (every slice)
 

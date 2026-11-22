@@ -67,6 +67,7 @@ Tests first: levelling vectors (float only, beyond float, pinned, constraints, c
 - [ ] Engine: external load + project-priority ordering.
 - [ ] Resource manager page: choose projects / programme / portfolio → proposal by project; send to PMs.
 - [ ] PM inbox on the project: accept / reject moves; `decide_levelling_moves`; notifications (existing).
+- [ ] Reminder (rule 80, v1352 A1): `reminder_record_types` row for levelling moves awaiting a PM decision.
 - [ ] Simulator parity (practice programmes / portfolios); Planner: single-account multi-project if present.
 - [ ] Exit as slice 1.
 
@@ -81,6 +82,7 @@ Tests first: levelling vectors (float only, beyond float, pinned, constraints, c
 
 - [ ] Engine `portfolioOptimiser.js` + vectors (brute-force check on small sets).
 - [ ] SQL: scenarios, rules, results; `apply_portfolio_scenario`; approval via record lifecycle (rule 53).
+- [ ] Reminder (rule 80, v1352 A1): `reminder_record_types` row for scenarios awaiting approval.
 - [ ] Pages: scenario create / edit (limits, rules, start shift), run, results with reasons; copy; compare up to four;
       submit for approval; apply. Dashboard cards clickable (rule 64).
 - [ ] Platform + Simulator; field help; guide `Documentation/Resource_Levelling_and_Portfolio_Optimisation_v1354_Guide.md`;

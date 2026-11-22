@@ -84,6 +84,8 @@ repeatability.
 
 - [ ] View `qra_project_latest_run`; programme / portfolio risk analysis cards (EMV, P80 vs budget, on-time chance,
       stale > 30 days) — clickable (rule 64).
+- [ ] Optional reminder (rule 80, v1352 A1): `reminder_record_types` row telling the PM when the latest analysis is
+      older than 30 days.
 - [ ] Guide `Documentation/Quantitative_Risk_Analysis_v1355_Guide.md`; ROADMAP status; parity; exit.
 
 ## Risks

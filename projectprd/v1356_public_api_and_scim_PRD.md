@@ -27,7 +27,7 @@ What exists (codebase, 2026-11-22):
 | SSO | `sso_providers`, `sso_sessions`, `sso_login_logs` (v51); `ssoService.js`, `SSOLoginButton` on the login pages | Configuration scaffolding; not tied per organisation |
 | Integrations | `integration_catalog`, `integration_connections`, `integration_sync_log`, `jira_webhooks` | Connector-specific, not a general API |
 | Users | Invitation flow, organisation membership, roles, custom roles, account owner; Edge Functions (e.g. `accept-invitation`, `send-email`) | No external provisioning; leavers removed by hand |
-| Background jobs | v1352 planned (catalogue, queue, retries) | Webhook delivery could use it |
+| Background jobs | v1352 (built first): catalogue, queue with per-item back-off, replay, retention and reminder lists | Webhook delivery and housekeeping use it |
 
 ## b) Solution (shape)
 
@@ -96,8 +96,10 @@ What exists (codebase, 2026-11-22):
   Events are written to an outbox table in the same transaction as the change; the v1352 queue delivers them with an
   HMAC-SHA256 signature and timestamp, retries with back-off for 24 hours, then disables the endpoint after repeated
   failures and alerts the admin. Payload = event, resource id and changed fields (the full record is fetched via the
-  API). The delivery log is visible and deliveries can be replayed. Until v1352 ships, a minimal sender uses the same
-  tick pattern.
+  API). The delivery log is visible and deliveries can be replayed. **Amended (owner, 2026-11-22):** v1352 is
+  delivered first, so there is no interim sender — events are queued with `enqueue_background_job` (dedupe per
+  event and endpoint) and delivered by the `webhooks.deliver` handler using v1352’s per-item back-off, `dead`
+  status, single-item replay and per-organisation fairness (v1352 A1).
 - **D8 SCIM scope (owner, 2026-11-22): users and groups → roles; deactivate on leave.** SCIM 2.0 `/Users` (create,
   update, PATCH `active=false`, delete) and `/Groups`. IdP groups map to Nidus roles (and optionally project teams)
   on a mapping page. Deactivate / delete = membership suspended, sessions revoked, records kept with the person shown

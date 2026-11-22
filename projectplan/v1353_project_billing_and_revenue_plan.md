@@ -76,6 +76,8 @@ double-billing triggers; issue / pay / credit flows; Overdue.
       issue, record payment, credit note; list with filters (status, client, overdue); dashboard cards (rule 64).
 - [ ] Invoice document (D15): branded layout on the export engine (PDF / Word / Excel); document text settings.
 - [ ] Email send (D16) via the existing send-email function, logged; manual reminder and recurring buttons (D17).
+- [ ] Jobs (D17 amended, rule 80): register `billing.overdue_reminders` (daily, organisation time; marker so each
+      reminder step is sent once) in the v1352 catalogue with its handler and tests.
 - [ ] Simulator + Planner parity; field help; tests.
 - [ ] Exit as slice 1.
 
@@ -83,6 +85,9 @@ double-billing triggers; issue / pay / credit flows; Overdue.
 
 - [ ] SQL: `billing_schedule_lines`; due rules (milestone complete / date / recurring frequency).
 - [ ] Project › Billing schedule page; due lines appear on draft invoices; % of contract value.
+- [ ] Jobs (D17 amended, rule 80): `billing.schedule_due` (daily for dated lines; milestone-complete trigger calls
+      `enqueue_background_job`) and `billing.recurring_drafts` (daily) in the v1352 catalogue, idempotent per line
+      and period.
 - [ ] Parity, field help, tests; exit.
 
 ## Slice 4 — Revenue, WIP, margin, accounting export, client portal
@@ -92,7 +97,7 @@ double-billing triggers; issue / pay / credit flows; Overdue.
 - [ ] Accounting export (D11): invoices, credit notes, payments (CSV / Excel / JSON with legend); internal clients as
       journal entries (D2).
 - [ ] Client portal: client’s invoices and status (D16).
-- [ ] v1352 hook-up note: register overdue-reminder and recurring-draft jobs when v1352 exists (D17).
+- [ ] Check all three billing jobs show run history in Admin › Background Jobs (D17 amended).
 - [ ] Guide `Documentation/Project_Billing_v1353_Guide.md`; ROADMAP R6 status update; parity, tests; exit.
 
 ## Risks
@@ -102,7 +107,7 @@ double-billing triggers; issue / pay / credit flows; Overdue.
 | Money rounding / currency errors | Server-side totals, NUMERIC(18,2), shared rate/tax test vectors, stored exchange rate |
 | Editing billed time breaks invoices | Database lock + credit-note release (D5), tested in SQL |
 | Planner wall / allow-list drift | Re-run v1251 and regenerate the allow-list in each slice (CI `app-planner.yml`) |
-| Scope size | Four slices, each shippable; automation deferred to v1352 |
+| Scope size | Four slices, each shippable; automation uses the v1352 framework (built first) |
 | Confusion with supplier invoices | Distinct `client_*` table names and a separate Finance menu section |
 
 ## Review

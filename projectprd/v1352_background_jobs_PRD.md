@@ -219,6 +219,33 @@ Trigger: **A** = automatic (queue / event), **S** = scheduled, **M** = manual. "
   the log-retention job (3.3); the periods are stored as data and changeable in Admin.
 - **P9 Secrets:** one server-only job configuration row (extends the `ai_job_config` pattern from v1272), never
   readable by clients.
+- **A1 Amendment (owner, 2026-11-22): framework capabilities needed by v1353–v1356.** A review of the later plans
+  (billing, levelling / portfolio, quantitative risk, public API / SCIM) found no new catalogue rows are needed in
+  v1352 itself (each feature registers its own jobs under rule 80), but six framework capabilities must be built
+  now so the queue is not reworked later:
+  1. **Per-item retry timing** — each queue item has `run_after`, `attempts`, `max_attempts`, `expires_at` and a
+     back-off schedule set per job (e.g. 1 min → 5 min → 30 min → 2 h, up to 24 h); items that run out of
+     attempts or time become `dead` (final failure). Needed by v1356 webhooks and the 2.1 outbox.
+  2. **Replay one queue item** — Admin (and, through the owning feature’s page, organisation admins) can re-queue a
+     single dead / failed item with a reason, audited. Needed by v1356 webhook replay.
+  3. **Enqueue from a transaction** — one function `enqueue_background_job(code, payload, run_after, dedupe_key,
+     organisation_id)` callable from triggers and RPCs (`SECURITY DEFINER`, no client access); a duplicate
+     `dedupe_key` is ignored. Needed by the v1356 webhook outbox and v1353 milestone-complete → billing line due.
+  4. **Per-organisation fairness and batch limits** — the worker claims a capped batch per run and at most N items
+     per organisation per batch (both stored as data per job), so one organisation’s event flood cannot starve
+     others.
+  5. **Retention list** — log retention (3.3) reads a table of targets (`table`, date column, keep period, optional
+     status filter) instead of hard-coded tables; later features add rows (v1356 API request log, webhook
+     deliveries, idempotency keys, rate counters).
+  6. **Reminder record-type list** — due-date reminders (1.3) read a table of record types (record type, schema,
+     table, date column, status filter, recipient rule: record owner / role / organisation admins, default lead
+     time, message key) so later features add rows, not code: v1354 levelling moves awaiting a PM and portfolio
+     scenarios awaiting approval; v1355 stale analyses (optional); v1356 API key, SCIM token and SAML certificate
+     expiry.
+
+  Jobs the later features will register (recorded in their own plans, not built here): v1353 overdue invoice
+  reminders, recurring invoice drafts, billing schedule due lines; v1356 webhook delivery, idempotency / rate
+  counter purge, SSO domain re-check. v1354 and v1355 need no jobs of their own.
 
 ## e) Testing decisions
 
