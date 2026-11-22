@@ -296,14 +296,17 @@ Export new UI from `packages/ui/src/index.js`.
 - [x] `@nidus-admin/ui`: field-help label + scope + help service (copies of the monorepo contract, Admin theme), with unit tests.
 - [x] Admin coverage check script (same output shape as `scripts/check-field-help.mjs`).
   - 2026-11-22 (Admin 40f1e39): `SQL/v250_admin_field_help.sql` (run 2026-11-22); `AdminFieldLabelWithHelp`, `AdminFieldHelpScope`, `adminFieldHelp.js` (fixed D MMM YYYY tokens; no votes / usage events / Learn-more in Admin v1; a label outside any scope loads its own key so federated module pages work without a shell scope); `AdminField` takes `helpKey` / `htmlFor`; `scripts/check-field-help.mjs` (Admin). **Scope correction:** the check now also counts `AdminField` uses without `helpKey` (AdminField draws its own label) — **746 fields in 122 files** (214 raw labels + 532 `AdminField` uses), not ~210.
-- [ ] Wire Admin pages module by module (~210 raw labels in 90 files today: content, system, subscriptions, audit, ai, support, …) with seeds per module; owner sample review.
+- [x] Wire Admin pages module by module (~210 raw labels in 90 files today: content, system, subscriptions, audit, ai, support, …) with seeds per module; owner sample review.
+  - 2026-11-22: Admin waves A1 content (200 fields, Admin `600079c`, SQL v251), A2 subscriptions (146, `6b34e1e`, v252), A3 system (122, `1f125af`, v253), A4 all remaining modules, shell and packages (276, SQL v254). Admin coverage 99.62% of 746 fields; the 2 labels left are in `MenuPlacementsPage` (other work open). Helper-built fields use template keys `admin.<table>.${name}` with a row per name; list editors get keys without new ids (`noid`).
 
 ### Slice 5 — Coverage dashboard + failing CI + quality
 
-- [ ] Coverage report as **script + SQL output** in v1 (coverage % by `module_code`; most-opened; least-helpful — G-D13/G-D18). A UI page only if added with its menu catalogue row, placement and taxonomy line in the same change (rules 70 / 75, P15).  
-- [ ] Switch `check-field-help` to **fail** CI on gaps outside shrinking allow-list (G-D14).  
-- [ ] Confirm programme ≥ 99.99% (exclusions); helpful Yes ≥ 80% where votes exist.  
-- [ ] Documentation guide: `Documentation/Field_Level_Contextual_Help_v1345_Guide.md`.
+- [x] Coverage report as **script + SQL output** in v1 (coverage % by `module_code`; most-opened; least-helpful — G-D13/G-D18). A UI page only if added with its menu catalogue row, placement and taxonomy line in the same change (rules 70 / 75, P15).  
+  - 2026-11-22: `SQL/v1557_field_help_coverage_report_query.sql` (read-only) + the coverage line of `check-field-help` (both repos).
+- [x] Switch `check-field-help` to **fail** CI on gaps outside shrinking allow-list (G-D14).  
+  - 2026-11-22: `shared.yml` runs `check-field-help --enforce`; allow-list rewritten to the 24 blocked labels (from 923). Admin: `scripts/check-field-help.mjs` + CI.
+- [ ] Confirm programme ≥ 99.99% (exclusions); helpful Yes ≥ 80% where votes exist. **2026-11-22:** monorepo 99.37%, Admin 99.62%; the remaining 26 labels are all in 11 files other work has open — finish them when those changes land. Helpful-Yes share: run `SQL/v1557` once users have voted.
+- [x] Documentation guide: `Documentation/Field_Level_Contextual_Help_v1345_Guide.md`.
 
 ### Optional later (out of v1 coding unless pulled forward)
 

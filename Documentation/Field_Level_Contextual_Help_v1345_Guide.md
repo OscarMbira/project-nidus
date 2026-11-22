@@ -65,6 +65,32 @@ Every screen where users define their own field now asks for help, and Save stay
 3. Seed the help in a versioned SQL file: `INSERT INTO public.field_help (help_key, title, purpose, examples, format_notes, extra_notes, module_code) … ON CONFLICT (help_key, form_key, locale) DO UPDATE …`. Simulator fields: add `public.field_help_aliases` rows.
 4. Do not write required / length / allowed values in the text; mark amount fields `isAmount`. Use `{date_format}`, `{example_date}`, `{currency}`, `{decimals}` for formats.
 5. Run `node scripts/check-field-help.mjs --module <module>`.
+6. A label that rule 76 excludes (search / filter box, view toggle, option list or option card, upload button,
+   self-describing toggle, export field picker, generic building block whose caller owns the label) gets
+   `data-help="exempt"`. The check skips it — every exclusion is explicit, so 100% is measurable.
+7. Pages scoped by app-wide `FieldHelpScope` (each `App.jsx`) need no key list: a label asks the scope for its key.
+
+## Coverage and enforcement (slice 5)
+
+- **Monorepo:** `node scripts/check-field-help.mjs --enforce` (CI `shared.yml`) fails on any key used without help
+  and on any raw label in a file beyond `scripts/field-help-allowlist.json`. The allow-list may only shrink; on
+  2026-11-22 it holds 24 labels in 10 files that other work had open (DocumentGovernanceSection, ProjectsCreate,
+  MyTeam / SimMyTeam, Simulator ProjectMandateEdit, planning ScheduleGantt / FilteredList / TaskForm). Coverage
+  99.37%.
+- **Usage:** `SQL/v1557_field_help_coverage_report_query.sql` (read-only) — help rows by module, most-opened help,
+  least helpful help (≥ 5 votes) and the programme’s “Yes” share (target ≥ 80%).
+
+## Admin (slice 6)
+
+Admin has its own copy of everything (no cross-repo import, Admin rule 23):
+
+- Store `admin.field_help` (Admin `SQL/v250`), keys `admin.<table>.<column>`; seeds `SQL/v251`–`v254` built by
+  `scripts/field-help-content/build-sql.mjs` (Admin repo) from content modules.
+- `AdminFieldLabelWithHelp` and `AdminFieldHelpScope` (`@nidus-admin/ui`); `AdminField` takes `helpKey` /
+  `htmlFor` / `listOptions`. A label outside any scope loads its own key, so federated module pages work.
+  Fixed formats (D MMM YYYY, 24-hour); no votes, usage events or Learn-more links in Admin v1.
+- `node scripts/check-field-help.mjs` (Admin repo) counts raw labels **and** `AdminField` uses without `helpKey`.
+  On 2026-11-22: 746 fields → 99.62% (2 labels left in MenuPlacementsPage, which other work had open).
 
 ## Writing help text
 
@@ -81,3 +107,6 @@ Every screen where users define their own field now asks for help, and Save stay
 3. Re-run `SQL/v1251_planner_table_wall.sql` (the Planner allow-list was regenerated)
 
 Rollback: `SQL/v1490r_field_help_tables_rollback.sql`.
+
+Later waves: monorepo `SQL/v1497`–`v1556` (all run by 2026-11-22); `SQL/v1557` is a read-only report.
+Admin: `SQL/v250` (run), `v251`–`v254` (wave A1–A4 seeds).

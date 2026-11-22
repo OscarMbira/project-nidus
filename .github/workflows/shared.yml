@@ -62,10 +62,10 @@ jobs:
 
       # v1345: field-level help coverage. Warn-only until phase 5 (G-D16), except that every key of an
       # adopted module must have help (Stakeholders from slice 1).
-      - name: Field help coverage (warn; adopted modules enforced)
+      - name: Field help coverage (enforced — v1345 slice 5)
         run: |
           node --test scripts/__tests__/check-field-help.test.mjs scripts/__tests__/field-help-build-sql.test.mjs scripts/__tests__/field-help-dynamic-keys.test.mjs
-          node scripts/check-field-help.mjs --module stakeholders,project_wizard --registers
+          node scripts/check-field-help.mjs --enforce --module stakeholders,project_wizard --registers
 
       - name: Build and test every dependent of the changed packages
         run: pnpm turbo build test --continue --filter="...[HEAD^1]"
