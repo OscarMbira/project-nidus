@@ -20,7 +20,7 @@ vi.mock('../supabase/supabaseClient', () => ({
 }))
 
 const { getTestEnvironments } = await import('../testEnvironmentService')
-const { getPracticeTestEnvironments } = await import('../sim/practiceTestEnvironmentService')
+// v1349: the practice (Simulator) variant was an unused copy in Platform and was removed; Simulator keeps its own.
 
 const REG = '00000000-0000-4000-9100-000000000002'
 beforeEach(() => {
@@ -44,12 +44,6 @@ describe('environments come from the Environments register (v1342)', () => {
   it('activeOnly leaves out Decommissioned (in the query)', async () => {
     await getTestEnvironments('p1', { activeOnly: true })
     expect(calls).toContainEqual(['neq', 'status', 'decommissioned'])
-  })
-
-  it('practice projects: system register records, practice_project_id shape', async () => {
-    const list = await getPracticeTestEnvironments('p1')
-    expect(calls).toContainEqual(['eq', 'is_system_register', true])
-    expect(list[0].practice_project_id).toBe('p1')
   })
 
   it('no project → empty, no query', async () => {
