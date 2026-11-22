@@ -37,16 +37,31 @@ Batch = unreachable (render) ∩ not compiled (`--bundle`) ∩ no uncommitted ed
 Order: `services` (≈303) · `components/structured` (≈103) · `pages/platform-app` (≈85) · `pages` root (≈70) · `components/cms` · `components/app` · `components/issues` · `services/sim` · `pages/pmo` · `components/brief` · `pages/simulator` · `components/risks` · remaining folders.
 - [ ] One commit per folder batch; re-run the check before each (deleting one batch can make others unreachable).
 
-### Slice n+1… — Platform, folder by folder
-Order: `pages/simulator` (≈178) · `services` (≈99) · `services/sim` (≈53) · `components/cms` · `pages/sim` · `components/sim` · `pages/testingCentre` · `components/mandate` · remaining folders.
+### Slice n+1… — Platform — DONE 2026-11-22
 
-### Final slice — Guard + docs
-- [ ] `.github/workflows/shared.yml`: run the check with `--fail` for platform, simulator, planner.
-- [ ] CLAUDE.md rule: no unreachable files; copy to the other app only when it renders the copy; how to run the check.
-- [ ] Check: no live Simulator file writes `public` through `platformDb` for Simulator data (list any found as findings).
-- [ ] `Documentation/Dead_App_Code_Removal_v1349_Guide.md`: what was removed (counts per folder), how to run the check, the dirty-file skip list.
-- [ ] Owner smoke test of both apps; review section below.
+| Commit | Batch | Files | Failing test files after (baseline 61) |
+|---|---|---|---|
+| `b9171d7c` | 213 unused lazy entries in `lazyImports.js` (only these lines committed) | — | 61 |
+| `a2847cc1` | `pages/**` (mostly `pages/simulator`, `pages/sim`) + 3 tests | 286 | 61 |
+| `2d773abb` | `components/**` (mostly `components/sim`, cms, mandate, app, structured, forms …) + 8 tests | 284 | 54 |
+| `fd1139e1` | services (incl. `services/sim`), configs, federation stubs, `PlatformApp.jsx`, `platform-main.jsx`, shared barrels + 20 tests; `testEnvironmentService.register.test.js` drops the case for the deleted Platform copy of `practiceTestEnvironmentService` | 203 | 54 |
 
-## Review
+**Platform result:** 2,884 → 2,142 source files; unreachable 804 → 0.
 
-(to be completed)
+**Script fixes found on the way (each with a test):** imports resolve case-insensitively (`AppToPlatformRedirect` → `AppToplatformRedirect.jsx` broke one batch, caught by the build); renamed exports count (`export { AppLayout as Layout }` — the main layout was wrongly reported dead; deletion batches were never at risk because they only removed files the bundler did not compile, and the removed lazy entries were checked: none is used under another name or as a value); `.d.ts` files ignored.
+
+### Final slice — Guard + docs — DONE 2026-11-22
+- [x] CI: `.github/workflows/unreachable-code.yml` (own workflow — `shared.yml` only runs on package changes) runs the unit tests and `--fail` for platform, simulator, planner. `--fail` reads `scripts/unreachable-allowlist.json`: 24 Simulator files still holding other sessions' uncommitted edits (do not grow; stale entries are reported).
+- [x] CLAUDE.md rule 78 (only that hunk committed).
+- [x] Check: live Simulator files using `platformDb` — 247 files; 8 of them query core Platform tables (`projects`, `risks`, `issues`, `tasks`, `project_plans`, `stage_plans` …): `components/rfp/RFPList.jsx`, `modules/record-lifecycle/pages/LifecyclePages.jsx`, `pages/comms/DirectMessages.jsx`, `pages/comms/MeetingExtractionReview.jsx`, `pages/ProjectsEdit.jsx` (allow-listed dead), `services/budgetCategoryService.js`, `services/communications/meetingExtractionService.js`, `services/timesheetSettingsService.js`. **Finding for the owner** — some may be legitimate organisation-level reads; each needs a look under the "never write simulation data to public" rule. Not changed here (live code, out of scope).
+- [x] `Documentation/Unreachable_App_Code_v1349_Guide.md`.
+- [ ] Owner smoke test of both apps (click through the main pages of Platform and Simulator).
+- [ ] Later, once the other sessions commit: tidy the now-unused names in `routeCommon.jsx` / `simulatorRoutes.jsx` / `platformRoutes.jsx` import lists (they resolve to `undefined`, harmless) and delete the 24 allow-listed Simulator files.
+
+## Review (2026-11-22)
+
+- **Removed:** Simulator 1,568 files (2,732 → 1,164), Platform 742 files (2,884 → 2,142), plus 549 unused lazy entries. 12 commits, each built and tested on its own; no test file started failing (failing test files fell: Simulator 59 → 20, Platform 61 → 54, because many were tests of the deleted code).
+- **Pre-work:** two other sessions' unfinished edits stopped both apps building; fixed by owner choice (`ProjectBriefView.jsx` literal `\n`; Simulator `routeCommon.jsx` missing `HelpArticlePage`, `PracticePIDEdit`).
+- **Guard:** CI workflow + allow-list + CLAUDE.md rule 78; script with 7 unit tests.
+- **Effect on v1345 field help:** many Simulator "twins" wired on 2026-11-21 were in the deleted set; their `sim.*` alias rows stay in `public.field_help_aliases` (harmless — no screen asks for them). Coverage numbers now reflect only shipped screens.
+- **Risks / follow-ups:** owner smoke test; the 24 allow-listed files; the 8 live Simulator files reading core Platform tables; the leftover unused names in route import lists.

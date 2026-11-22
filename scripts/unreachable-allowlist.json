@@ -1,0 +1,31 @@
+{
+  "_comment": "v1349: known unreachable files left because another session had uncommitted edits in them on 2026-11-22. Do not add entries; remove each once the file is deleted.",
+  "platform": [],
+  "simulator": [
+    "components/benefits/BenefitsReviewPlanForm.jsx",
+    "components/benefits/BenefitsReviewPlanView.jsx",
+    "components/brief/ProjectBriefForm.jsx",
+    "components/businessCase/BusinessCaseForm.jsx",
+    "components/businessCase/BusinessCaseView.jsx",
+    "components/pid/PIDForm.jsx",
+    "components/project/DocumentGovernanceSection.jsx",
+    "components/project/ProjectFormTabs.jsx",
+    "lib/useLdeExportParts.js",
+    "pages/ProjectsCreate.jsx",
+    "pages/ProjectsEdit.jsx",
+    "pages/brief/ProjectBriefCreate.jsx",
+    "pages/brief/ProjectBriefEdit.jsx",
+    "pages/brief/ProjectBriefView.jsx",
+    "pages/businessCase/BusinessCaseCreate.jsx",
+    "pages/businessCase/BusinessCaseEdit.jsx",
+    "pages/businessCase/BusinessCaseViewPage.jsx",
+    "pages/mandate/ProjectMandateCreate.jsx",
+    "pages/mandate/ProjectMandateEdit.jsx",
+    "pages/mandate/ProjectMandateView.jsx",
+    "pages/pid/PIDView.jsx",
+    "pages/platform-app/MyTeam.jsx",
+    "pages/platform-app/TeamCharterEditPage.jsx",
+    "pages/platform-app/TeamCharterPage.jsx"
+  ],
+  "planner": []
+}

@@ -602,6 +602,14 @@ check its data-loading path for the specific classes of waste this rule exists b
    - **Never show live record names as examples:** help for record / people pickers must not list their options (`listOptions={false}`, rule 76).
    - **Adopt when creating or next amending** that content; existing seed data is replaced opportunistically, not in one pass. **Admin parity:** apply the same rule to Admin content.
 
+78) **No unreachable app code (mandatory for every change — Platform + Simulator + Planner, owner decision 2026-11-21, v1349).** Every source file under `apps/*/src` must be reachable from that app's entry point. v1349 removed ~2,400 files that were not: Platform pages copied into Simulator (and Simulator pages into Platform) "for parity" that no route renders, plus lazy page entries nothing renders.
+   - **Before editing a file "for parity", check the other app actually renders it** (`node scripts/find-unreachable-app-files.mjs <app> --under <path>`). Rule 34.1 parity means the *live* page in each app — for Simulator usually the `Practice*` / `Sim*` page, not a same-named copy of the Platform file.
+   - **Copy a file to the other app only when that app renders the copy** (route + lazy entry in the same change). Shared logic belongs in `packages/*` (rule 34.3), not in a second copy.
+   - **A lazy page entry is added together with the route that renders it**, and removed when that route goes: Vite compiles every `lazy(() => import(…))` entry, rendered or not, so an unused entry keeps a dead page and everything it imports in the build.
+   - **Delete, don't orphan:** when a page or component stops being used, delete it (and tests that only test it) in the same change.
+   - **CI:** `.github/workflows/unreachable-code.yml` runs `find-unreachable-app-files.mjs <app> --fail` for Platform, Simulator and Planner and fails on any new unreachable file. `scripts/unreachable-allowlist.json` lists the known leftovers — do not add to it; remove an entry when its file is deleted.
+   - Useful flags: `--list`, `--under <path>`, `--skip-dirty`, `--bundle` (what the bundler compiles), `--unused-lazy`. See `projectplan/v1349_dead_app_code_removal_plan.md` / `Documentation/Unreachable_App_Code_v1349_Guide.md`.
+
 
 ## Simulator Module Architecture Rules
 

@@ -74,3 +74,13 @@ test('imports resolve without regard to case (Windows / macOS)', () => {
   })
   assert.deepEqual(findUnreachable({ src }).dead, [])
 })
+
+test('a lazy component rendered under another name counts as rendered', () => {
+  const src = fixture({
+    'main.jsx': "import { Layout } from './routes/lazyImports.js'\nexport default <Layout />\n",
+    'routes/lazyImports.js': "export { AppLayout as Layout } from '../components/AppLayout'\n",
+    'components/AppLayout.js': "export const AppLayout = lazy(() => import('./Layout'))\n",
+    'components/Layout.jsx': 'export default () => null\n',
+  })
+  assert.deepEqual(findUnreachable({ src }).dead, [])
+})

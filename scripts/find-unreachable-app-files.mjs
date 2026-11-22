@@ -37,7 +37,8 @@ function walk(dir, out = []) {
     if (SKIP_DIRS.has(e.name)) continue
     const p = path.join(dir, e.name)
     if (e.isDirectory()) walk(p, out)
-    else if (EXTS.includes(path.extname(e.name)) && !/\.(test|spec)\./.test(e.name)) out.push(path.normalize(p))
+    // .d.ts files are editor type hints, never imported at runtime.
+    else if (EXTS.includes(path.extname(e.name)) && !/\.(test|spec)\./.test(e.name) && !e.name.endsWith('.d.ts')) out.push(path.normalize(p))
   }
   return out
 }
@@ -86,9 +87,22 @@ export function findUnreachable({ src, packagesDir = null, bundle = false }) {
   }
 
   const rendered = new Set()
+  // Renamed exports / imports (`export { AppLayout as Layout }`): rendering <Layout> renders AppLayout too.
+  const aliasOf = new Map()
+  for (const t of texts.values()) {
+    for (const m of t.matchAll(/\b([A-Z][A-Za-z0-9_]*)\s+as\s+([A-Z][A-Za-z0-9_]*)\b/g)) {
+      if (!aliasOf.has(m[2])) aliasOf.set(m[2], new Set())
+      aliasOf.get(m[2]).add(m[1])
+    }
+  }
+  const markRendered = (name) => {
+    if (rendered.has(name)) return
+    rendered.add(name)
+    for (const a of aliasOf.get(name) || []) markRendered(a)
+  }
   const scanRendered = (s) => {
-    for (const m of s.matchAll(/<([A-Z][A-Za-z0-9_]*)[\s/>]/g)) rendered.add(m[1])
-    for (const m of s.matchAll(/(?:Component|component|element)\s*[:=]\s*\{?\s*([A-Z][A-Za-z0-9_]*)\b/g)) rendered.add(m[1])
+    for (const m of s.matchAll(/<([A-Z][A-Za-z0-9_]*)[\s/>]/g)) markRendered(m[1])
+    for (const m of s.matchAll(/(?:Component|component|element)\s*[:=]\s*\{?\s*([A-Z][A-Za-z0-9_]*)\b/g)) markRendered(m[1])
   }
   let changed = true
   while (changed) {
@@ -162,8 +176,18 @@ if (isCli) {
   }
   if (skipped.length) console.log(`\nSkipped (uncommitted edits): ${skipped.length}\n${skipped.map((f) => '  ' + f).join('\n')}`)
   console.log(`\n${app}: ${all.length} source files, ${reachable.size} reachable from ${entries.join(', ')} (+ ${shellRefs} @shell targets from packages), ${dead.length} unreachable${under ? ` (${shown.length} under ${under})` : ''}.`)
-  if (args.includes('--fail') && dead.length) {
-    console.error(`\n✗ ${dead.length} unreachable file(s) in apps/${app}/src. Delete them, or render them from a route (CLAUDE.md, v1349).`)
-    process.exit(1)
+  if (args.includes('--fail')) {
+    // scripts/unreachable-allowlist.json lists known leftovers (files other sessions were still editing when
+    // v1349 ran). Do not grow it: a new unreachable file fails CI; remove an entry once its file is gone.
+    const allowFile = path.join(ROOT, 'scripts', 'unreachable-allowlist.json')
+    const allow = new Set(fs.existsSync(allowFile) ? (JSON.parse(fs.readFileSync(allowFile, 'utf8'))[app] || []) : [])
+    const fresh = dead.filter((f) => !allow.has(f))
+    const stale = [...allow].filter((f) => !dead.includes(f))
+    if (stale.length) console.log(`\nAllow-list entries no longer unreachable (remove them from scripts/unreachable-allowlist.json):\n${stale.map((f) => '  ' + f).join('\n')}`)
+    if (fresh.length) {
+      console.error(`\n✗ ${fresh.length} new unreachable file(s) in apps/${app}/src:\n${fresh.map((f) => '  ' + f).join('\n')}\nDelete them, or render them from a route (CLAUDE.md rule 78, v1349).`)
+      process.exit(1)
+    }
+    console.log(`\n✓ apps/${app}/src: no new unreachable files (${allow.size} allow-listed).`)
   }
 }

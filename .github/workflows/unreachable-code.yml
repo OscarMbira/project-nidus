@@ -1,0 +1,42 @@
+name: Unreachable App Code Check
+
+# v1349 (CLAUDE.md rule 78): every source file in Platform, Simulator and Planner must be reachable from its
+# app's entry point. Copies made "for parity" that no route renders, and lazy page entries nothing renders,
+# are what grew ~2,400 dead files before v1349 removed them. Fails on any NEW unreachable file;
+# scripts/unreachable-allowlist.json lists the known leftovers (do not grow it).
+
+on:
+  push:
+    branches: [master, main]
+    paths:
+      - 'apps/*/src/**'
+      - 'packages/**/src/**'
+      - 'scripts/find-unreachable-app-files.mjs'
+      - 'scripts/unreachable-allowlist.json'
+      - 'scripts/__tests__/find-unreachable-app-files.test.mjs'
+  pull_request:
+    paths:
+      - 'apps/*/src/**'
+      - 'packages/**/src/**'
+      - 'scripts/find-unreachable-app-files.mjs'
+      - 'scripts/unreachable-allowlist.json'
+      - 'scripts/__tests__/find-unreachable-app-files.test.mjs'
+
+jobs:
+  unreachable:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Check script unit tests
+        run: node --test scripts/__tests__/find-unreachable-app-files.test.mjs
+
+      - name: No new unreachable files (Platform, Simulator, Planner)
+        run: |
+          node scripts/find-unreachable-app-files.mjs platform --fail
+          node scripts/find-unreachable-app-files.mjs simulator --fail
+          node scripts/find-unreachable-app-files.mjs planner --fail
