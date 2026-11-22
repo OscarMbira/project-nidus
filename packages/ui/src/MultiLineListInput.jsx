@@ -169,7 +169,7 @@ export default function MultiLineListInput({
     const active = isPrimary(line)
     const inputId = `primary-${ariaLabelPrefix}-${index}`
     return (
-      <label
+      <label data-help="exempt"
         htmlFor={inputId}
         className={`inline-flex items-center gap-1.5 text-xs font-medium cursor-pointer select-none ${
           disabled ? 'opacity-50 cursor-not-allowed' : 'text-gray-700 dark:text-gray-200'

@@ -29,7 +29,7 @@ export default function DeleteTaskDialog({ task, descendants = [], busy = false,
                 {descendants.slice(0, SHOW).map((d) => <li key={d.id}>{d.task_code ? `${d.task_code} · ` : ''}{d.task_name}</li>)}
                 {count > SHOW && <li>…and {count - SHOW} more</li>}
               </ul>
-              <label className="flex items-center gap-2 font-medium text-gray-900 dark:text-gray-100">
+              <label data-help="exempt" className="flex items-center gap-2 font-medium text-gray-900 dark:text-gray-100">
                 <input type="checkbox" checked={understood} onChange={(e) => setUnderstood(e.target.checked)} />
                 Yes, delete the task and its {count} sub-task{count === 1 ? '' : 's'}
               </label>

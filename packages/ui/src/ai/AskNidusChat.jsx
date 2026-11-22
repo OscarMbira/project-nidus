@@ -25,6 +25,7 @@ import Modal from '../Modal.jsx'
 import AiAccessNotice from './AiAccessNotice.jsx'
 import AiAnswerText from './AiAnswerText.jsx'
 import AiResultTable from './AiResultTable.jsx'
+import FieldLabelWithHelp from '../FieldLabelWithHelp.jsx'
 
 function ResultBlock({ item, basePath, linksEnabled, compact, onSaveReport }) {
   if (item.kind === 'table') {
@@ -287,7 +288,7 @@ export default function AskNidusChat({
 
       <div className={`border-t border-gray-200 dark:border-gray-700 ${compact ? 'px-3 pb-3 pt-2' : 'p-4'}`}>
         <div className="flex items-end gap-2">
-          <label htmlFor={`ask-nidus-${variant}`} className="sr-only">Your question</label>
+          <label data-help="exempt" htmlFor={`ask-nidus-${variant}`} className="sr-only">Your question</label>
           <textarea
             id={`ask-nidus-${variant}`}
             ref={inputRef}
@@ -317,7 +318,7 @@ export default function AskNidusChat({
             <button type="button" onClick={confirmSaveReport} disabled={!saving?.name?.trim()} className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50">Save</button>
           </div>
         )}>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200" htmlFor="ask-nidus-report-name">Report name</label>
+        <FieldLabelWithHelp helpKey="public.ai_saved_reports.name" className="block text-sm font-medium text-gray-700 dark:text-gray-200" htmlFor="ask-nidus-report-name">Report name</FieldLabelWithHelp>
         <input id="ask-nidus-report-name" value={saving?.name || ''} onChange={(e) => setSaving((s) => ({ ...s, name: e.target.value, error: null }))} maxLength={200}
           className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
         <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">{saving?.result?.explanation}</p>

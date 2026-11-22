@@ -993,7 +993,7 @@ function OrganisationalTemplateDetailPageBody() {
                   const spanFull = useList || type === 'array' || type === 'object'
                   return (
                     <div key={key} className={spanFull ? 'md:col-span-2' : undefined}>
-                      <label className={labelClass}>
+                      <label data-help="exempt" className={labelClass}>
                         {humanizeKey(key)}
                         {useList && (
                           <span className="ml-1 text-xs font-normal text-gray-400">

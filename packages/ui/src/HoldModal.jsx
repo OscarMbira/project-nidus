@@ -11,6 +11,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, PauseCircle, Clock, AlertCircle, Loader2 } from 'lucide-react';
 import { getEntityLabel } from '@nidus/config/draftQueueConfig';
+import FieldLabelWithHelp from './FieldLabelWithHelp.jsx'
 
 /**
  * HoldModal Component
@@ -136,12 +137,12 @@ export function HoldModal({
 
           {/* Hold Reason */}
           <div>
-            <label
+            <FieldLabelWithHelp helpKey="public.record_holds.hold_reason"
               htmlFor="holdReason"
               className="block text-sm font-medium text-gray-300 mb-2"
             >
               Why are you putting this on hold? (Optional)
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               ref={textareaRef}
               id="holdReason"

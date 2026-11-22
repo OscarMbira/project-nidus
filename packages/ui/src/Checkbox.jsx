@@ -41,7 +41,7 @@ const Checkbox = forwardRef(({
           />
         </div>
         {label && (
-          <label 
+          <label data-help="exempt" 
             htmlFor={checkboxId}
             className="text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer select-none"
           >

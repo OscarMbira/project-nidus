@@ -6,6 +6,7 @@ import { platformDb } from '@nidus/supabase'
 import * as api from '../../../services/platform/planAIService'
 import * as simApi from '../../../services/sim/simPlanAIService'
 import { usePlanning } from '@nidus/planning/context/PlanningContext.jsx'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 const TEMPLATES = ['software', 'banking', 'infrastructure', 'construction', 'product_launch', 'consulting']
 
@@ -65,8 +66,8 @@ export default function AIPlanGenerator() {
         {projectId && (
           <div className="mt-6 space-y-4">
             <div>
-              <label className="block text-sm text-gray-500 dark:text-gray-400 mb-1">Industry template</label>
-              <select
+              <FieldLabelWithHelp helpKey="public.ai_plan_requests.industry_template" htmlFor="fh-ai-plan-requests-industry-template" className="block text-sm text-gray-500 dark:text-gray-400 mb-1">Industry template</FieldLabelWithHelp>
+              <select id="fh-ai-plan-requests-industry-template"
                 value={industry}
                 onChange={(e) => setIndustry(e.target.value)}
                 className="w-full rounded-lg bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 px-3 py-2"
@@ -79,8 +80,8 @@ export default function AIPlanGenerator() {
               </select>
             </div>
             <div>
-              <label className="block text-sm text-gray-500 dark:text-gray-400 mb-1">Describe the plan you need</label>
-              <textarea
+              <FieldLabelWithHelp helpKey="public.ai_plan_requests.description" htmlFor="fh-ai-plan-requests-description" className="block text-sm text-gray-500 dark:text-gray-400 mb-1">Describe the plan you need</FieldLabelWithHelp>
+              <textarea id="fh-ai-plan-requests-description"
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 rows={6}

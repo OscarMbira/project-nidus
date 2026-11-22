@@ -57,6 +57,7 @@ import {
   partitionSelectedTemplateRows,
   formatBulkActionSummary,
 } from '@nidus/shared/utils/orgTemplateBulkSelection.js'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 /** Project-owned rows: strip stacked "(custom)" / template suffixes for display. */
 function displayRowName(row) {
@@ -967,12 +968,12 @@ export default function OrganisationalTemplatesPage({ listVariant = 'organisatio
             Start from an empty schema. You can add sections and fields in the form builder next.
           </p>
           <div>
-            <label
+            <FieldLabelWithHelp helpKey="public.form_templates.name"
               htmlFor="blank-form-name"
               className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
             >
               Form name
-            </label>
+            </FieldLabelWithHelp>
             <input
               id="blank-form-name"
               type="text"

@@ -7,6 +7,7 @@
 import { useState } from 'react'
 import Modal from './Modal'
 import RegionalDateInput from './RegionalDateInput.jsx'
+import FieldLabelWithHelp from './FieldLabelWithHelp.jsx'
 
 /**
  * @param {{ open: boolean, periodStart: string, periodEnd: string,
@@ -45,16 +46,16 @@ export default function TimesheetReminderDialog({
       )}
     >
       <div className="flex flex-wrap items-end gap-3 mb-4">
-        <label className="text-sm text-gray-700 dark:text-slate-200">
-          From
-          <RegionalDateInput eventStyle value={periodStart} max={periodEnd} className={`block mt-1 ${input}`}
+        <div>
+          <FieldLabelWithHelp helpKey="public.timesheet_reminders.period_start" htmlFor="timesheet-reminder-from" className="text-sm text-gray-700 dark:text-slate-200">From</FieldLabelWithHelp>
+          <RegionalDateInput eventStyle id="timesheet-reminder-from" value={periodStart} max={periodEnd} className={`block mt-1 ${input}`}
             onChange={(e) => onPeriodChange?.({ periodStart: e.target.value, periodEnd })} />
-        </label>
-        <label className="text-sm text-gray-700 dark:text-slate-200">
-          To
-          <RegionalDateInput eventStyle value={periodEnd} min={periodStart} className={`block mt-1 ${input}`}
+        </div>
+        <div>
+          <FieldLabelWithHelp helpKey="public.timesheet_reminders.period_end" htmlFor="timesheet-reminder-to" className="text-sm text-gray-700 dark:text-slate-200">To</FieldLabelWithHelp>
+          <RegionalDateInput eventStyle id="timesheet-reminder-to" value={periodEnd} min={periodStart} className={`block mt-1 ${input}`}
             onChange={(e) => onPeriodChange?.({ periodStart, periodEnd: e.target.value })} />
-        </label>
+        </div>
         <p className="text-xs text-gray-500 dark:text-slate-400 pb-2">In-app notification and email to each person ticked.</p>
       </div>
 

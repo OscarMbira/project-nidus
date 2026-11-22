@@ -22,6 +22,7 @@ import {
   findSimilarFields,
   customFieldSettingsErrors,
 } from '@nidus/shared/utils/registerCustomFields'
+import FieldLabelWithHelp from './FieldLabelWithHelp.jsx'
 
 const INPUT_CLASS =
   'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm'
@@ -195,9 +196,9 @@ function AddRegisterCustomFieldPanelContent({
         ) : (
           <div className="space-y-3">
             <div>
-              <label htmlFor="cf-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Field name *</label>
+              <FieldLabelWithHelp helpKey="public.local_register_custom_fields.field_key" htmlFor="cf-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Field name *</FieldLabelWithHelp>
               <input id="cf-name" type="text" value={name} maxLength={80} onChange={(e) => setName(e.target.value)} className={INPUT_CLASS} />
-              <label htmlFor="cf-label" className="mt-3 block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Field label</label>
+              <FieldLabelWithHelp helpKey="public.local_register_custom_fields.field_label" htmlFor="cf-label" className="mt-3 block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Field label</FieldLabelWithHelp>
               <input id="cf-label" type="text" value={fieldLabel} maxLength={120} placeholder={name.trim() || 'Same as the field name'}
                 onChange={(e) => setFieldLabel(e.target.value)} className={INPUT_CLASS} />
               <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Shown on forms, lists and exports. Leave blank to use the field name.</p>
@@ -234,7 +235,7 @@ function AddRegisterCustomFieldPanelContent({
             </div>
 
             <div>
-              <label htmlFor="cf-type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type *</label>
+              <FieldLabelWithHelp helpKey="public.local_register_custom_fields.field_type" htmlFor="cf-type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type *</FieldLabelWithHelp>
               <select
                 id="cf-type"
                 value={fieldType}
@@ -249,9 +250,9 @@ function AddRegisterCustomFieldPanelContent({
 
             {(needsOptions || canLimitToList) && (
               <div>
-                <label htmlFor="cf-options" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <FieldLabelWithHelp helpKey="public.local_register_custom_fields.dropdown_options" htmlFor="cf-options" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   {needsOptions ? 'Dropdown values *' : 'Dropdown values (optional)'}
-                </label>
+                </FieldLabelWithHelp>
                 <MultiLineListInput
                   viewModeId="register-custom-field-dropdown-values"
                   id="cf-options"
@@ -274,7 +275,7 @@ function AddRegisterCustomFieldPanelContent({
               </div>
             )}
 
-            <label className="flex items-start gap-2">
+            <label data-help="exempt" className="flex items-start gap-2">
               <input type="checkbox" checked={required} onChange={(e) => setRequired(e.target.checked)} className="mt-1" />
               <span className="text-sm text-gray-700 dark:text-gray-300">
                 Required

@@ -194,7 +194,7 @@ export default function ColumnMappingStep({ target, templateLabel, columns, head
                       <div className="mt-2 space-y-1 rounded-md bg-amber-50 p-2 dark:bg-amber-900/20">
                         <p className="text-xs text-amber-800 dark:text-amber-200">These values aren't allowed for {field.label}. Choose what each means:</p>
                         {bad.slice(0, 10).map((v) => (
-                          <label key={v} className="flex items-center gap-2 text-xs text-gray-700 dark:text-gray-300">
+                          <label data-help="exempt" key={v} className="flex items-center gap-2 text-xs text-gray-700 dark:text-gray-300">
                             <span className="w-24 truncate">“{v}”</span>
                             <select className={selectCls} value={conversions[key]?.[v.toLowerCase()] || ''} onChange={(e) => setConversion(key, v, e.target.value)}>
                               <option value="">Leave as is</option>
@@ -222,7 +222,7 @@ export default function ColumnMappingStep({ target, templateLabel, columns, head
       )}
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+        <label data-help="exempt" className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
           <input type="checkbox" checked={save} onChange={(e) => setSave(e.target.checked)} />
           Save this mapping for the next file with these columns
         </label>

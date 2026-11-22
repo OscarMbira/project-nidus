@@ -125,7 +125,7 @@ function SortableSlotRow({
           listMaxHeight={200}
         />
       </div>
-      <label
+      <label data-help="exempt"
         className="inline-flex shrink-0 items-center gap-1.5 rounded border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-200"
         title="When unchecked, this slot is optional — it does not block document lock"
       >
@@ -666,15 +666,15 @@ function SignatoryRequirementsPageBody() {
         )}
         {needsEntity && scopeId && (
           <div className="flex flex-wrap gap-3 pb-1 text-sm text-gray-700 dark:text-gray-200">
-            <label className="inline-flex items-center gap-1.5">
+            <label data-help="exempt" className="inline-flex items-center gap-1.5">
               <input type="radio" name="scopeMode" checked={scopeMode === 'inherit'} onChange={() => applyMode('inherit')} />
               Use parent
             </label>
-            <label className="inline-flex items-center gap-1.5">
+            <label data-help="exempt" className="inline-flex items-center gap-1.5">
               <input type="radio" name="scopeMode" checked={scopeMode === 'none'} onChange={() => applyMode('none')} />
               No signatories
             </label>
-            <label className="inline-flex items-center gap-1.5">
+            <label data-help="exempt" className="inline-flex items-center gap-1.5">
               <input type="radio" name="scopeMode" checked={scopeMode === 'custom'} onChange={() => applyMode('custom')} />
               Custom list
             </label>
@@ -731,7 +731,7 @@ function SignatoryRequirementsPageBody() {
             return (
               <li key={t}>
                 <div className="flex max-w-md items-center gap-2 rounded px-1 py-1 text-sm text-gray-800 hover:bg-gray-50 dark:text-gray-100 dark:hover:bg-gray-800/80">
-                  <label className="flex min-w-0 flex-1 cursor-pointer items-start gap-2">
+                  <label data-help="exempt" className="flex min-w-0 flex-1 cursor-pointer items-start gap-2">
                     <input
                       type="checkbox"
                       checked={checked}

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { fetchActiveCancellationCategories, recordCancellationRequest } from '../../services/cancellationService'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 /**
  * Customer cancellation reason modal — shown before subscription cancel proceeds.
@@ -87,7 +88,7 @@ export default function CancellationReasonModal({
           <form onSubmit={handleSubmit} className="space-y-4">
             <fieldset className="space-y-2">
               {categories.map((cat) => (
-                <label
+                <label data-help="exempt"
                   key={cat.id}
                   className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition ${
                     reasonId === cat.id
@@ -109,9 +110,9 @@ export default function CancellationReasonModal({
             </fieldset>
 
             <div>
-              <label htmlFor="cancellation-notes" className="block text-sm text-gray-400 mb-1">
+              <FieldLabelWithHelp helpKey="public.subscription_cancellations.details" htmlFor="cancellation-notes" className="block text-sm text-gray-400 mb-1">
                 Additional details (optional)
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 id="cancellation-notes"
                 rows={3}

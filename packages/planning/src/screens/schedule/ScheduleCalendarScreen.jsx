@@ -78,7 +78,7 @@ function ScheduleCalendarScreenBody() {
             <h2 className="text-base font-semibold text-gray-900 dark:text-white">Working week</h2>
             <div className="flex flex-wrap gap-2" role="group" aria-label="Working days">
               {WEEKDAYS.map(([key, label]) => (
-                <label key={key} className={`px-3 py-2 rounded-lg border text-sm cursor-pointer ${week[key] ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200'}`}>
+                <label data-help="exempt" key={key} className={`px-3 py-2 rounded-lg border text-sm cursor-pointer ${week[key] ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200'}`}>
                   <input type="checkbox" className="sr-only" checked={!!week[key]} onChange={(e) => setWeek({ ...week, [key]: e.target.checked })} />
                   {label}
                 </label>

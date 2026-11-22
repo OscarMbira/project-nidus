@@ -35,7 +35,7 @@ export function MenuPageSearchView({ pageIndex = [], packNames = [], onOpen }) {
 
   return (
     <div className="relative mb-3">
-      <label htmlFor="sidebar-page-search" className="sr-only">Go to page</label>
+      <label data-help="exempt" htmlFor="sidebar-page-search" className="sr-only">Go to page</label>
       <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 dark:text-gray-500" aria-hidden="true" />
       <input
         id="sidebar-page-search"

@@ -94,7 +94,7 @@ export default function RegisterTemplatesTab({ registerKey, templates = [], load
         </div>
         <div className="flex items-center gap-3">
           {canManage && (
-            <label className="inline-flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-300">
+            <label data-help="exempt" className="inline-flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-300">
               <input type="checkbox" checked={showArchived} onChange={(e) => setShowArchived(e.target.checked)} />
               Show archived
             </label>

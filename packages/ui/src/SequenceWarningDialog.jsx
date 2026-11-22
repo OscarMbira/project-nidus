@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { AlertTriangle } from 'lucide-react'
 import Modal from './Modal'
+import FieldLabelWithHelp from './FieldLabelWithHelp.jsx'
 
 /**
  * Runbook step out of order (v1337, PRD D7: warn, don't block). Lists the earlier steps that are
@@ -55,16 +56,17 @@ export default function SequenceWarningDialog({ isOpen, warnings = [], busy = fa
             </ul>
           </div>
         )}
-        <label className="block">
-          <span className="mb-1 block font-medium text-gray-700 dark:text-gray-300">Reason *</span>
+        <div className="block">
+          <FieldLabelWithHelp helpKey="public.runbook_sequence_overrides.reason" htmlFor="sequence-warning-reason" className="mb-1 block font-medium text-gray-700 dark:text-gray-300">Reason *</FieldLabelWithHelp>
           <textarea
+            id="sequence-warning-reason"
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             rows={3}
             aria-label="Reason"
             className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
           />
-        </label>
+        </div>
       </div>
     </Modal>
   )

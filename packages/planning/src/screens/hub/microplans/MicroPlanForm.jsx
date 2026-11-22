@@ -38,7 +38,7 @@ const EMPTY = {
 function Field({ label, children, required }) {
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+      <label data-help="exempt" className="text-sm font-medium text-gray-700 dark:text-gray-300">
         {label}{required && <span className="text-red-400 ml-0.5">*</span>}
       </label>
       {children}

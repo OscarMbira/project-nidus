@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { FileText, LayoutTemplate, Eye } from 'lucide-react'
 import Modal from './Modal'
+import FieldLabelWithHelp from './FieldLabelWithHelp.jsx'
 
 /**
  * New → Blank or From template (v1336). Using a template asks for the new record's title, then
@@ -55,9 +56,10 @@ export default function RegisterTemplatePicker({ inline = false, isOpen = false,
         The new {registerLabel.toLowerCase()} copies every tab of the template
         {chosen.child_count ? `, ${chosen.child_count} linked product records` : ''} and its annexures. Replace the [placeholders] afterwards.
       </p>
-      <label className="block">
-        <span className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Title *</span>
+      <div className="block">
+        <FieldLabelWithHelp helpKey="public.local_register_records.title" htmlFor="register-template-record-title" className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Title *</FieldLabelWithHelp>
         <input
+          id="register-template-record-title"
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
@@ -65,7 +67,7 @@ export default function RegisterTemplatePicker({ inline = false, isOpen = false,
           aria-label="Title"
           autoFocus
         />
-      </label>
+      </div>
     </div>
   ) : (
     <div className="space-y-4">

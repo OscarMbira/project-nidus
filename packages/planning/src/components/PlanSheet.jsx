@@ -296,7 +296,7 @@ export default function PlanSheet({ tasks, dependencies = [], team = [], calenda
         <button type="button" onClick={() => setShowColumns((v) => !v)} aria-expanded={showColumns} className="inline-flex items-center gap-1 px-2 py-1 rounded border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700">
           <Columns3 className="h-4 w-4" aria-hidden="true" /> Columns
         </button>
-        <label className="hidden sm:inline-flex items-center gap-2" title="This column and every column to its left stay in place when you scroll right.">
+        <label data-help="exempt" className="hidden sm:inline-flex items-center gap-2" title="This column and every column to its left stay in place when you scroll right.">
           Freeze up to
           <select value={columns.some((c) => c.key === freezeUntil) ? freezeUntil : ''} onChange={(e) => setFreeze(e.target.value)}
             className="rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-2 py-1 text-sm text-gray-900 dark:text-gray-100">
@@ -304,9 +304,9 @@ export default function PlanSheet({ tasks, dependencies = [], team = [], calenda
             {columns.map((c) => <option key={c.key} value={c.key}>{c.srLabel || c.label}</option>)}
           </select>
         </label>
-        <label className="inline-flex items-center gap-2"><input type="checkbox" checked={prefs.showOutline} onChange={(e) => setPref('showOutline', e.target.checked)} /> Outline number</label>
+        <label data-help="exempt" className="inline-flex items-center gap-2"><input type="checkbox" checked={prefs.showOutline} onChange={(e) => setPref('showOutline', e.target.checked)} /> Outline number</label>
         <label className="inline-flex items-center gap-2"><input type="checkbox" checked={prefs.showProjectSummary} onChange={(e) => setPref('showProjectSummary', e.target.checked)} /> Project summary</label>
-        <label className="inline-flex items-center gap-2"><input type="checkbox" checked={prefs.showBars} onChange={(e) => setPref('showBars', e.target.checked)} /> Gantt bars</label>
+        <label data-help="exempt" className="inline-flex items-center gap-2"><input type="checkbox" checked={prefs.showBars} onChange={(e) => setPref('showBars', e.target.checked)} /> Gantt bars</label>
         {prefs.showBars && (
           <>
             <div role="group" aria-label="Zoom" className="inline-flex rounded-lg border border-gray-300 dark:border-gray-600 overflow-hidden">
@@ -317,9 +317,9 @@ export default function PlanSheet({ tasks, dependencies = [], team = [], calenda
                 </button>
               ))}
             </div>
-            <label className="inline-flex items-center gap-2"><input type="checkbox" checked={prefs.showBaseline} onChange={(e) => setPref('showBaseline', e.target.checked)} /> Active baseline</label>
+            <label data-help="exempt" className="inline-flex items-center gap-2"><input type="checkbox" checked={prefs.showBaseline} onChange={(e) => setPref('showBaseline', e.target.checked)} /> Active baseline</label>
             {baselines.length > 1 && (
-              <label className="inline-flex items-center gap-2">Compare with
+              <label data-help="exempt" className="inline-flex items-center gap-2">Compare with
                 <select value={compareId} onChange={(e) => setCompareId(e.target.value)} className="rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-2 py-1 text-sm text-gray-900 dark:text-gray-100">
                   <option value="">No second baseline</option>
                   {baselines.filter((b) => !b.is_active_baseline).map((b) => <option key={b.id} value={b.id}>{b.baseline_number !== null && b.baseline_number !== undefined ? `B${b.baseline_number} · ` : ''}{b.baseline_name}</option>)}
@@ -353,7 +353,7 @@ export default function PlanSheet({ tasks, dependencies = [], team = [], calenda
           <ul className="grid grid-cols-1 gap-1 sm:grid-cols-2 lg:grid-cols-3">
             {allColumns.map((c, i) => (
               <li key={c.key} className="flex items-center justify-between gap-2 rounded border border-gray-200 px-2 py-1 text-sm text-gray-800 dark:border-gray-700 dark:text-gray-100">
-                <label className="inline-flex items-center gap-2">
+                <label data-help="exempt" className="inline-flex items-center gap-2">
                   <input type="checkbox" checked={!c.hidden} disabled={c.required} onChange={() => toggleColumn(c.key)} />
                   {c.srLabel || c.label}
                 </label>

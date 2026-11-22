@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import Modal from './Modal'
 import Button from './Button'
 import ApprovalChainDisplay from './ApprovalChainDisplay'
+import FieldLabelWithHelp from './FieldLabelWithHelp.jsx'
 
 export default function AuthorisationRequestModal({
   open,
@@ -42,9 +43,9 @@ export default function AuthorisationRequestModal({
         </p>
         <ApprovalChainDisplay chain={chain} progress={progress} />
         <div>
-          <label htmlFor="authorisation-notes" className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">
+          <FieldLabelWithHelp helpKey="public.record_authorisation_requests.notes" htmlFor="authorisation-notes" className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">
             {justificationRequired ? 'Justification (required)' : 'Notes (optional)'}
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             id="authorisation-notes"
             className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 p-3 text-sm"

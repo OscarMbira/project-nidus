@@ -238,7 +238,7 @@ function AttachmentThumbnail({ attachment, db, disabled, onOpenPreview, onReplac
         </div>
         {!disabled && (
           <div className="flex items-center gap-2">
-            <label className="cursor-pointer text-gray-400 hover:text-blue-500" title="Replace">
+            <label data-help="exempt" className="cursor-pointer text-gray-400 hover:text-blue-500" title="Replace">
               <RefreshCw className="h-3.5 w-3.5" />
               <input
                 type="file"
@@ -437,7 +437,7 @@ function AttachmentsPanelBody({
               dragOver ? 'bg-blue-50 dark:bg-blue-950/30' : ''
             }`}
           >
-            <label className={`inline-flex cursor-pointer items-center gap-1.5 rounded border border-gray-300 px-2.5 py-1.5 text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800 ${atMax || uploading ? 'pointer-events-none opacity-50' : ''}`}>
+            <label data-help="exempt" className={`inline-flex cursor-pointer items-center gap-1.5 rounded border border-gray-300 px-2.5 py-1.5 text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800 ${atMax || uploading ? 'pointer-events-none opacity-50' : ''}`}>
               <Paperclip className="h-3.5 w-3.5" />
               {uploading ? 'Uploading…' : 'Add file'}
               <input
@@ -452,7 +452,7 @@ function AttachmentsPanelBody({
                 }}
               />
             </label>
-            <label className={`inline-flex cursor-pointer items-center gap-1.5 rounded border border-gray-300 px-2.5 py-1.5 text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800 ${atMax || uploading ? 'pointer-events-none opacity-50' : ''}`}>
+            <label data-help="exempt" className={`inline-flex cursor-pointer items-center gap-1.5 rounded border border-gray-300 px-2.5 py-1.5 text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800 ${atMax || uploading ? 'pointer-events-none opacity-50' : ''}`}>
               <Camera className="h-3.5 w-3.5" />
               Camera
               <input

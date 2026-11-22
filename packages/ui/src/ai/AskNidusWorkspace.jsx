@@ -162,7 +162,7 @@ export default function AskNidusWorkspace({ settingsPath = null, showBack = fals
         )}
         {!followsHeader && (app !== 'planner' || projects.length > 1) ? (
           <div className="ml-auto flex items-center gap-2">
-            <label htmlFor="ask-nidus-project" className="text-sm text-gray-600 dark:text-gray-300">Scope</label>
+            <label data-help="exempt" htmlFor="ask-nidus-project" className="text-sm text-gray-600 dark:text-gray-300">Scope</label>
             <select
               id="ask-nidus-project"
               value={pickedProjectId || ''}

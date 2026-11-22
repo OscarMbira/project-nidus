@@ -1,5 +1,6 @@
 import SelectField from './SelectField'
 import { NFR_CATEGORY, VERIFICATION_METHODS } from '@nidus/shared/services/requirementExtrasService'
+import FieldLabelWithHelp from './FieldLabelWithHelp.jsx'
 
 const LABEL_CLS = 'mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400'
 const INPUT_CLS =
@@ -17,7 +18,7 @@ export default function RequirementExtraFields({ section, form, onChange, disabl
   if (section === 'acceptance') {
     return (
       <div>
-        <label htmlFor="req-verification-method" className={LABEL_CLS}>Verification method</label>
+        <FieldLabelWithHelp helpKey="public.requirements.verification_method" htmlFor="req-verification-method" className={LABEL_CLS}>Verification method</FieldLabelWithHelp>
         <SelectField
           id="req-verification-method"
           options={VERIFICATION_METHODS}
@@ -35,7 +36,7 @@ export default function RequirementExtraFields({ section, form, onChange, disabl
     <>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-          <label htmlFor="req-owner" className={LABEL_CLS}>Owner</label>
+          <FieldLabelWithHelp helpKey="public.requirements.owner" htmlFor="req-owner" className={LABEL_CLS}>Owner</FieldLabelWithHelp>
           <input
             id="req-owner"
             value={form.owner_name || ''}
@@ -47,7 +48,7 @@ export default function RequirementExtraFields({ section, form, onChange, disabl
         </div>
         {showArea && (
           <div>
-            <label htmlFor="req-nfr-area" className={LABEL_CLS}>Non-functional area</label>
+            <FieldLabelWithHelp helpKey="public.requirements.nfr_area" htmlFor="req-nfr-area" className={LABEL_CLS}>Non-functional area</FieldLabelWithHelp>
             <SelectField
               id="req-nfr-area"
               options={areas}
@@ -60,7 +61,7 @@ export default function RequirementExtraFields({ section, form, onChange, disabl
         )}
       </div>
       <div>
-        <label htmlFor="req-rationale" className={LABEL_CLS}>Rationale</label>
+        <FieldLabelWithHelp helpKey="public.requirements.rationale" htmlFor="req-rationale" className={LABEL_CLS}>Rationale</FieldLabelWithHelp>
         <textarea
           id="req-rationale"
           value={form.rationale || ''}

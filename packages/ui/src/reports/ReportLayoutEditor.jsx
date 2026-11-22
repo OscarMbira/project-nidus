@@ -16,6 +16,7 @@ import DetailAuditTabList from '../DetailAuditTabList.jsx'
 import AuditDetailsPanel from '../AuditDetailsPanel.jsx'
 import AuditCard from '../AuditCard.jsx'
 import AuditField from '../AuditField.jsx'
+import FieldLabelWithHelp from '../FieldLabelWithHelp.jsx'
 
 const inputCls = 'w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100'
 
@@ -153,18 +154,18 @@ export default function ReportLayoutEditor({ basePath }) {
           {readOnly && <p className="text-sm text-gray-600 dark:text-gray-400">You can view this layout. Only the PMO (or the project, when allowed) can change it.</p>}
           <div className="grid grid-cols-1 gap-4 rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900 sm:grid-cols-2">
             <div>
-              <label htmlFor="rl-name" className="block text-sm font-medium text-gray-700 dark:text-gray-200">Name</label>
+              <FieldLabelWithHelp helpKey="public.report_layouts.name" htmlFor="rl-name" className="block text-sm font-medium text-gray-700 dark:text-gray-200">Name</FieldLabelWithHelp>
               <input id="rl-name" value={form.name} maxLength={200} onChange={(e) => setForm({ ...form, name: e.target.value })} className={`mt-1 ${inputCls}`} />
             </div>
             <div>
-              <label htmlFor="rl-status" className="block text-sm font-medium text-gray-700 dark:text-gray-200">Status</label>
+              <FieldLabelWithHelp helpKey="public.report_layouts.status" htmlFor="rl-status" className="block text-sm font-medium text-gray-700 dark:text-gray-200">Status</FieldLabelWithHelp>
               <select id="rl-status" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })} className={`mt-1 ${inputCls}`}>
                 <option value="draft">Draft (not used yet)</option>
                 <option value="published">Published (used for reports)</option>
               </select>
             </div>
             <div>
-              <label htmlFor="rl-tier" className="block text-sm font-medium text-gray-700 dark:text-gray-200">Applies to</label>
+              <FieldLabelWithHelp helpKey="public.report_layouts.tier" htmlFor="rl-tier" className="block text-sm font-medium text-gray-700 dark:text-gray-200">Applies to</FieldLabelWithHelp>
               <select id="rl-tier" value={form.tier} disabled={!isNew} onChange={(e) => setForm({ ...form, tier: e.target.value })} className={`mt-1 ${inputCls}`}>
                 <option value="pmo">The whole organisation</option>
                 <option value="project">One project</option>
@@ -172,7 +173,7 @@ export default function ReportLayoutEditor({ basePath }) {
             </div>
             {form.tier === 'project' && (
               <div>
-                <label htmlFor="rl-project" className="block text-sm font-medium text-gray-700 dark:text-gray-200">Project</label>
+                <FieldLabelWithHelp helpKey="public.report_layouts.project_id" htmlFor="rl-project" className="block text-sm font-medium text-gray-700 dark:text-gray-200" listOptions={false}>Project</FieldLabelWithHelp>
                 <select id="rl-project" value={form.projectId} disabled={!isNew} onChange={(e) => setForm({ ...form, projectId: e.target.value })} className={`mt-1 ${inputCls}`}>
                   <option value="">Choose a project…</option>
                   {projects.map((p) => <option key={p.id} value={p.id}>{p.project_name}</option>)}
@@ -180,11 +181,11 @@ export default function ReportLayoutEditor({ basePath }) {
               </div>
             )}
             <div className="sm:col-span-2">
-              <label htmlFor="rl-desc" className="block text-sm font-medium text-gray-700 dark:text-gray-200">Description</label>
+              <FieldLabelWithHelp helpKey="public.report_layouts.description" htmlFor="rl-desc" className="block text-sm font-medium text-gray-700 dark:text-gray-200">Description</FieldLabelWithHelp>
               <input id="rl-desc" value={form.description} maxLength={500} onChange={(e) => setForm({ ...form, description: e.target.value })} className={`mt-1 ${inputCls}`} />
             </div>
             {form.tier === 'pmo' && (
-              <label className="flex items-center gap-2 text-sm text-gray-800 dark:text-gray-200 sm:col-span-2">
+              <label data-help="exempt" className="flex items-center gap-2 text-sm text-gray-800 dark:text-gray-200 sm:col-span-2">
                 <input type="checkbox" checked={form.allowProjectAdjust} onChange={(e) => setForm({ ...form, allowProjectAdjust: e.target.checked })} className="h-4 w-4 rounded border-gray-300 dark:border-gray-600" />
                 Project managers may make their own version of this layout for their project
               </label>
@@ -197,10 +198,10 @@ export default function ReportLayoutEditor({ basePath }) {
                 <div className="flex flex-wrap items-center gap-2">
                   <input aria-label="Section title" value={s.title} onChange={(e) => setSection(i, { title: e.target.value })} className={`${inputCls} flex-1 font-medium`} />
                   <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-700 dark:bg-gray-800 dark:text-gray-300">{s.kind === 'custom' ? 'Custom' : 'Standard'}</span>
-                  <label className="flex items-center gap-1 text-xs text-gray-700 dark:text-gray-300">
+                  <label data-help="exempt" className="flex items-center gap-1 text-xs text-gray-700 dark:text-gray-300">
                     <input type="checkbox" checked={s.enabled !== false} onChange={(e) => setSection(i, { enabled: e.target.checked })} className="h-4 w-4 rounded border-gray-300 dark:border-gray-600" /> Included
                   </label>
-                  <label className="flex items-center gap-1 text-xs text-gray-700 dark:text-gray-300">
+                  <label data-help="exempt" className="flex items-center gap-1 text-xs text-gray-700 dark:text-gray-300">
                     <input type="checkbox" checked={Boolean(s.optional)} onChange={(e) => setSection(i, { optional: e.target.checked })} className="h-4 w-4 rounded border-gray-300 dark:border-gray-600" /> Optional
                   </label>
                   <button type="button" onClick={() => move(i, -1)} disabled={i === 0} className="rounded p-1 text-gray-500 hover:text-gray-800 disabled:opacity-30 dark:text-gray-400 dark:hover:text-white" aria-label="Move up" title="Move up"><ArrowUp className="h-4 w-4" /></button>
@@ -209,7 +210,7 @@ export default function ReportLayoutEditor({ basePath }) {
                     <button type="button" onClick={() => removeCustom(i)} className="rounded p-1 text-red-600 hover:text-red-700" aria-label="Remove section" title="Remove section"><Trash2 className="h-4 w-4" /></button>
                   )}
                 </div>
-                <label className="mt-2 block text-xs font-medium text-gray-600 dark:text-gray-400" htmlFor={`rl-instr-${i}`}>AI drafting instruction</label>
+                <FieldLabelWithHelp helpKey="public.report_layouts.section_instruction" className="mt-2 block text-xs font-medium text-gray-600 dark:text-gray-400" htmlFor={`rl-instr-${i}`}>AI drafting instruction</FieldLabelWithHelp>
                 <input id={`rl-instr-${i}`} value={s.instruction || ''} maxLength={500} placeholder="e.g. Summarise supplier performance in 3 bullet points"
                   onChange={(e) => setSection(i, { instruction: e.target.value })} className={`mt-1 ${inputCls}`} />
               </div>

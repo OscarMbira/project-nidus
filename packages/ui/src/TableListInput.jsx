@@ -286,7 +286,7 @@ export default function TableListInput({
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
           <div className="grid flex-1 grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
             {columns.map((col, c) => (
-              <label key={col.key} className="block">
+              <label data-help="exempt" key={col.key} className="block">
                 <span className="mb-1 block text-xs text-gray-500 dark:text-gray-400">{col.label}</span>
                 {cellInput(col, draft[c] ?? '', (v) => setDraft((d) => d.map((x, i) => (i === c ? v : x))), `New ${ariaLabelPrefix} — ${col.label}`)}
               </label>

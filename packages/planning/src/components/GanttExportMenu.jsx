@@ -62,7 +62,7 @@ export default function GanttExportMenu({ getRows, options, name }) {
             <button type="button" role="menuitem" className={item} onClick={() => run(() => exportGanttPptx(getRows(onlyExpanded), options, name))}><Presentation className="h-4 w-4" /> PowerPoint</button>
             <button type="button" role="menuitem" className={item} onClick={() => run(() => exportGanttSvg(chart(), name))}><Code className="h-4 w-4" /> SVG (editable drawing)</button>
             <button type="button" role="menuitem" className={item} onClick={() => run(() => printGantt(chart(), options.title))}><Printer className="h-4 w-4" /> Print</button>
-            <label className="mt-1 flex items-center gap-2 border-t border-gray-200 px-3 pt-2 pb-1 text-xs text-gray-700 dark:border-gray-700 dark:text-gray-300">
+            <label data-help="exempt" className="mt-1 flex items-center gap-2 border-t border-gray-200 px-3 pt-2 pb-1 text-xs text-gray-700 dark:border-gray-700 dark:text-gray-300">
               <input type="checkbox" checked={onlyExpanded} onChange={(e) => setOnlyExpanded(e.target.checked)} />
               Only expanded rows (as shown)
             </label>

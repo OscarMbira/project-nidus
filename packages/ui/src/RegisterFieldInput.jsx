@@ -69,7 +69,7 @@ export default function RegisterFieldInput({ field, value, onChange, settings = 
 
   if (type === 'boolean') {
     return (
-      <label className="inline-flex items-center gap-2">
+      <label data-help="exempt" className="inline-flex items-center gap-2">
         <input type="checkbox" checked={!!value} onChange={(e) => onChange(e.target.checked)} aria-label={field.field_label} />
         <span className="text-sm text-gray-700 dark:text-gray-300">Yes</span>
       </label>

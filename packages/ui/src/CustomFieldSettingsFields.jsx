@@ -9,6 +9,7 @@ import {
   customFieldSettingsFor,
 } from '@nidus/shared/utils/registerCustomFields'
 import RegionalDateInput from './RegionalDateInput.jsx'
+import FieldLabelWithHelp from './FieldLabelWithHelp.jsx'
 
 const INPUT_CLASS =
   'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm'
@@ -19,12 +20,12 @@ function Pair({ idPrefix, label, minKey, maxKey, settings, set, type = 'number',
     <fieldset className="md:col-span-2">
       <legend className={LABEL_CLASS}>{label}</legend>
       <div className="grid grid-cols-2 gap-3">
-        <label className="text-xs text-gray-500 dark:text-gray-400">
+        <label data-help="exempt" className="text-xs text-gray-500 dark:text-gray-400">
           {minLabel}
           <input id={`${idPrefix}-min`} type={type} min={type === 'number' ? 0 : undefined} value={settings[minKey] ?? ''}
             onChange={(e) => set({ [minKey]: e.target.value })} className={`${INPUT_CLASS} mt-1`} aria-label={`${label} — ${minLabel}`} />
         </label>
-        <label className="text-xs text-gray-500 dark:text-gray-400">
+        <label data-help="exempt" className="text-xs text-gray-500 dark:text-gray-400">
           {maxLabel}
           <input id={`${idPrefix}-max`} type={type} min={type === 'number' ? 0 : undefined} value={settings[maxKey] ?? ''}
             onChange={(e) => set({ [maxKey]: e.target.value })} className={`${INPUT_CLASS} mt-1`} aria-label={`${label} — ${maxLabel}`} />
@@ -38,7 +39,7 @@ function Pair({ idPrefix, label, minKey, maxKey, settings, set, type = 'number',
 function DefaultValueInput({ fieldType, options, settings, set }) {
   const value = settings.defaultValue
   const id = 'cf-default'
-  const label = <label htmlFor={id} className={LABEL_CLASS}>Default value</label>
+  const label = <FieldLabelWithHelp helpKey="public.custom_field_settings.default_value" htmlFor={id} className={LABEL_CLASS}>Default value</FieldLabelWithHelp>
 
   if (fieldType === 'boolean') {
     return (
@@ -79,7 +80,7 @@ function DefaultValueInput({ fieldType, options, settings, set }) {
         ) : (
           <div className="flex flex-wrap gap-3">
             {options.map((o) => (
-              <label key={o} className="inline-flex items-center gap-1.5 text-sm text-gray-700 dark:text-gray-300">
+              <label data-help="exempt" key={o} className="inline-flex items-center gap-1.5 text-sm text-gray-700 dark:text-gray-300">
                 <input type="checkbox" checked={selected.includes(o)} onChange={() => toggle(o)} />
                 {o}
               </label>
@@ -96,7 +97,7 @@ function DefaultValueInput({ fieldType, options, settings, set }) {
         {label}
         <RegionalDateInput eventStyle id={id} className={INPUT_CLASS} value={isToday ? '' : value ?? ''} disabled={isToday}
           onChange={(e) => set({ defaultValue: e.target.value || undefined })} />
-        <label className="mt-1 inline-flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-400">
+        <label data-help="exempt" className="mt-1 inline-flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-400">
           <input type="checkbox" checked={isToday} onChange={(e) => set({ defaultValue: e.target.checked ? 'today' : undefined })} />
           Use the date the record is created
         </label>
@@ -106,7 +107,7 @@ function DefaultValueInput({ fieldType, options, settings, set }) {
   if (fieldType === 'long_text' || fieldType === 'multi_line') {
     return (
       <div className="md:col-span-2">
-        <label htmlFor={id} className={LABEL_CLASS}>{fieldType === 'multi_line' ? 'Default items (one per line)' : 'Default value'}</label>
+        <FieldLabelWithHelp helpKey="public.custom_field_settings.default_value" htmlFor={id} className={LABEL_CLASS}>{fieldType === 'multi_line' ? 'Default items (one per line)' : 'Default value'}</FieldLabelWithHelp>
         <textarea id={id} rows={3} className={INPUT_CLASS} value={value ?? ''} onChange={(e) => set({ defaultValue: e.target.value })} />
       </div>
     )
@@ -152,7 +153,7 @@ export default function CustomFieldSettingsFields({ fieldType, options = [], set
       {apply.characters && (
         <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
-            <label htmlFor="cf-chars" className={LABEL_CLASS}>Allowed characters</label>
+            <FieldLabelWithHelp helpKey="public.custom_field_settings.allowed_characters" htmlFor="cf-chars" className={LABEL_CLASS}>Allowed characters</FieldLabelWithHelp>
             <select id="cf-chars" className={INPUT_CLASS} value={settings.allowedCharacters || 'any'}
               onChange={(e) => set({ allowedCharacters: e.target.value })}>
               {ALLOWED_CHARACTER_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
@@ -160,7 +161,7 @@ export default function CustomFieldSettingsFields({ fieldType, options = [], set
           </div>
           {settings.allowedCharacters === 'custom' && (
             <div>
-              <label htmlFor="cf-chars-custom" className={LABEL_CLASS}>Characters allowed *</label>
+              <FieldLabelWithHelp helpKey="public.custom_field_settings.allowed_characters_custom" htmlFor="cf-chars-custom" className={LABEL_CLASS}>Characters allowed *</FieldLabelWithHelp>
               <input id="cf-chars-custom" type="text" maxLength={100} placeholder="e.g. ABCDEF0123456789-"
                 className={`${INPUT_CLASS} font-mono`} value={settings.allowedCharactersCustom || ''}
                 onChange={(e) => set({ allowedCharactersCustom: e.target.value })} />

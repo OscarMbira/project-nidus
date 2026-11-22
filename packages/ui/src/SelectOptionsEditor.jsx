@@ -42,7 +42,7 @@ export default function SelectOptionsEditor({ value = [], onChange }) {
           >
             <div className="flex flex-wrap items-start gap-2">
               <div className="min-w-[10rem] flex-1">
-                <label className="mb-1 block text-xs text-gray-500 dark:text-gray-400">
+                <label data-help="exempt" className="mb-1 block text-xs text-gray-500 dark:text-gray-400">
                   Display label
                 </label>
                 <input
@@ -82,7 +82,7 @@ export default function SelectOptionsEditor({ value = [], onChange }) {
               </button>
             ) : (
               <div>
-                <label className="mb-1 block text-xs text-gray-500 dark:text-gray-400">
+                <label data-help="exempt" className="mb-1 block text-xs text-gray-500 dark:text-gray-400">
                   Custom stored value
                 </label>
                 <div className="flex flex-wrap items-center gap-2">

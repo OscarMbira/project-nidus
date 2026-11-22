@@ -28,7 +28,7 @@ export default function MethodologySwitcher({ onChange, className = '' }) {
 
   return (
     <div className={`px-3 py-2 border-b border-gray-200 dark:border-gray-700 ${className}`}>
-      <label
+      <label data-help="exempt"
         htmlFor="methodology-switcher"
         className="block text-[10px] uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1"
       >

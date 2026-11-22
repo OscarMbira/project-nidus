@@ -78,7 +78,7 @@ export default function IndustryProjectsFilter({ accountId, projectHref = null, 
           <Factory className="h-4 w-4 text-blue-600 dark:text-blue-400" aria-hidden="true" /> {title}
         </h2>
         <div className="flex flex-col sm:flex-row gap-2 sm:ml-auto">
-          <label htmlFor="dashboard-industry-filter" className="sr-only">Industry</label>
+          <label data-help="exempt" htmlFor="dashboard-industry-filter" className="sr-only">Industry</label>
           <select
             id="dashboard-industry-filter"
             value={industryId}

@@ -10,6 +10,7 @@ import {
 } from '@nidus/shared/services/pmTemplateNodeService.js'
 import { createInstanceLocalField } from '@nidus/shared/services/pmTemplateCreateInheritance.js'
 import { canManagePmTemplateNode } from '@nidus/shared/services/pmTemplateAuthService.js'
+import FieldLabelWithHelp from './FieldLabelWithHelp.jsx'
 
 /**
  * Shared "view inherited fields + customise for this tier" panel for
@@ -383,8 +384,8 @@ export default function TierFieldCustomisationPanel({
         </p>
         <form onSubmit={createLocalField} className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
           <div>
-            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Code</label>
-            <input
+            <FieldLabelWithHelp helpKey="public.tier_field_customisations.field_code" htmlFor="fh-tier-field-customisations-field-code" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Code</FieldLabelWithHelp>
+            <input id="fh-tier-field-customisations-field-code"
               type="text"
               value={localCode}
               onChange={(e) => setLocalCode(e.target.value)}
@@ -394,8 +395,8 @@ export default function TierFieldCustomisationPanel({
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Label</label>
-            <input
+            <FieldLabelWithHelp helpKey="public.tier_field_customisations.field_label" htmlFor="fh-tier-field-customisations-field-label" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Label</FieldLabelWithHelp>
+            <input id="fh-tier-field-customisations-field-label"
               type="text"
               value={localLabel}
               onChange={(e) => setLocalLabel(e.target.value)}
@@ -405,8 +406,8 @@ export default function TierFieldCustomisationPanel({
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Type</label>
-            <select
+            <FieldLabelWithHelp helpKey="public.tier_field_customisations.field_type" htmlFor="fh-tier-field-customisations-field-type" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Type</FieldLabelWithHelp>
+            <select id="fh-tier-field-customisations-field-type"
               value={localType}
               onChange={(e) => setLocalType(e.target.value)}
               disabled={busy || !canEdit}

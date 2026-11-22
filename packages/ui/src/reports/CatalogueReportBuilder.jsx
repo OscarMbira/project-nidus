@@ -21,6 +21,7 @@ import AuditDetailsPanel from '../AuditDetailsPanel.jsx'
 import AuditCard from '../AuditCard.jsx'
 import AuditField from '../AuditField.jsx'
 import AiResultTable from '../ai/AiResultTable.jsx'
+import FieldLabelWithHelp from '../FieldLabelWithHelp.jsx'
 
 const TABS = [
   { value: 'source', label: 'Data source' },
@@ -178,7 +179,7 @@ export default function CatalogueReportBuilder() {
           <p className="text-sm text-gray-600 dark:text-gray-400">Pick a register, choose fields and filters, add totals, then run or save.</p>
         </div>
         <div className="flex items-center gap-2">
-          <label htmlFor="rb-open" className="text-sm text-gray-600 dark:text-gray-300">Open saved</label>
+          <label data-help="exempt" htmlFor="rb-open" className="text-sm text-gray-600 dark:text-gray-300">Open saved</label>
           <select id="rb-open" value={templateId || ''} onChange={(e) => setParams(e.target.value ? { template: e.target.value } : {})} className={inputCls}>
             <option value="">New report</option>
             {templates.map((t) => <option key={t.id} value={t.id}>{t.template_name}</option>)}
@@ -188,11 +189,11 @@ export default function CatalogueReportBuilder() {
 
       <div className="grid grid-cols-1 gap-3 rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900 sm:grid-cols-2">
         <div>
-          <label htmlFor="rb-name" className="block text-sm font-medium text-gray-700 dark:text-gray-200">Report name</label>
+          <FieldLabelWithHelp helpKey="public.report_templates.name" htmlFor="rb-name" className="block text-sm font-medium text-gray-700 dark:text-gray-200">Report name</FieldLabelWithHelp>
           <input id="rb-name" value={name} maxLength={200} onChange={(e) => setName(e.target.value)} className={`mt-1 w-full ${inputCls}`} />
         </div>
         <div>
-          <label htmlFor="rb-desc" className="block text-sm font-medium text-gray-700 dark:text-gray-200">Description</label>
+          <FieldLabelWithHelp helpKey="public.report_templates.description" htmlFor="rb-desc" className="block text-sm font-medium text-gray-700 dark:text-gray-200">Description</FieldLabelWithHelp>
           <input id="rb-desc" value={description} maxLength={500} onChange={(e) => setDescription(e.target.value)} className={`mt-1 w-full ${inputCls}`} />
         </div>
       </div>
@@ -209,7 +210,7 @@ export default function CatalogueReportBuilder() {
         {tab === 'source' && (
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {catalogue.map((e) => (
-              <label key={e.entity} className={`cursor-pointer rounded-lg border p-3 ${q.entity === e.entity ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30' : 'border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800'}`}>
+              <label data-help="exempt" key={e.entity} className={`cursor-pointer rounded-lg border p-3 ${q.entity === e.entity ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30' : 'border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800'}`}>
                 <input type="radio" name="rb-entity" className="sr-only" checked={q.entity === e.entity} onChange={() => setQ({ ...EMPTY, entity: e.entity })} />
                 <span className="block text-sm font-medium text-gray-900 dark:text-gray-100">{e.label}</span>
                 <span className="mt-0.5 block text-xs text-gray-600 dark:text-gray-400">{e.description}</span>
@@ -224,7 +225,7 @@ export default function CatalogueReportBuilder() {
               <p className="mb-2 text-sm text-gray-600 dark:text-gray-400">Leave all unticked to use the standard columns. Fields are ignored when totals are used.</p>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
                 {fields.filter((f) => f.type !== 'uuid').map((f) => (
-                  <label key={f.field} className="flex items-center gap-2 text-sm text-gray-800 dark:text-gray-200">
+                  <label data-help="exempt" key={f.field} className="flex items-center gap-2 text-sm text-gray-800 dark:text-gray-200">
                     <input type="checkbox" checked={q.fields.includes(f.field)}
                       onChange={(e) => update({ fields: e.target.checked ? [...q.fields, f.field] : q.fields.filter((x) => x !== f.field) })}
                       className="h-4 w-4 rounded border-gray-300 dark:border-gray-600" />
@@ -270,7 +271,7 @@ export default function CatalogueReportBuilder() {
                 <p className="mb-1 text-sm font-medium text-gray-700 dark:text-gray-200">Group by</p>
                 <div className="flex flex-wrap gap-3">
                   {fields.filter((x) => x.group).map((x) => (
-                    <label key={x.field} className="flex items-center gap-2 text-sm text-gray-800 dark:text-gray-200">
+                    <label data-help="exempt" key={x.field} className="flex items-center gap-2 text-sm text-gray-800 dark:text-gray-200">
                       <input type="checkbox" checked={q.group_by.includes(x.field)}
                         onChange={(e) => update({ group_by: e.target.checked ? [...q.group_by, x.field] : q.group_by.filter((g) => g !== x.field) })}
                         className="h-4 w-4 rounded border-gray-300 dark:border-gray-600" />

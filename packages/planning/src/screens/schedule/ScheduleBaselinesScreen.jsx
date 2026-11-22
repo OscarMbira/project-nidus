@@ -31,9 +31,8 @@ function ApproveDialog({ baseline, onCancel, onApprove, busy }) {
       <div className="w-full max-w-lg rounded-lg border border-gray-200 bg-white p-5 shadow-xl dark:border-gray-700 dark:bg-gray-800">
         <h2 id="approve-baseline-title" className="text-lg font-semibold text-gray-900 dark:text-white">Approve {label(baseline)} · {baseline.baseline_name}</h2>
         {baseline.reason && <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">Reason: {baseline.reason}</p>}
-        <label className="mt-4 block text-xs text-gray-600 dark:text-gray-400">Why are you approving it? *
-          <textarea className={field} rows={3} maxLength={1000} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="e.g. Steering committee approved CR-0012 on 10 Oct" />
-        </label>
+        <FieldLabelWithHelp helpKey="public.schedule_baselines.approval_notes" htmlFor="baseline-approval-notes" className="mt-4 block text-xs text-gray-600 dark:text-gray-400">Why are you approving it? *</FieldLabelWithHelp>
+        <textarea id="baseline-approval-notes" className={field} rows={3} maxLength={1000} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="e.g. Steering committee approved CR-0012 on 10 Oct" />
         <div className="mt-4 flex justify-end gap-2">
           <button type="button" onClick={onCancel} className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-800 dark:text-gray-100 bg-white dark:bg-gray-800">Cancel</button>
           <button type="button" disabled={busy || !notes.trim()} onClick={() => onApprove(notes)} className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm disabled:opacity-50">

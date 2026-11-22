@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import Modal from './Modal'
+import FieldLabelWithHelp from './FieldLabelWithHelp.jsx'
 
 /**
  * Save as template (v1336) — name, description, and optionally replace one of the organisation's
@@ -47,24 +48,24 @@ export default function SaveAsTemplateDialog({ isOpen, onClose, defaultName = ''
           Saves every tab, the linked product records and the annexures as an organisation template that everyone in your organisation can use. Sign-off and history are not included.
         </p>
         {organisationTemplates.length > 0 && (
-          <label className="block">
-            <span className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Save as</span>
-            <select value={replaceId} onChange={(e) => chooseReplace(e.target.value)} className={inputClass} aria-label="Save as">
+          <div className="block">
+            <FieldLabelWithHelp helpKey="public.local_register_templates.replace_template_id" htmlFor="save-template-replace" className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300" listOptions={false}>Save as</FieldLabelWithHelp>
+            <select id="save-template-replace" value={replaceId} onChange={(e) => chooseReplace(e.target.value)} className={inputClass} aria-label="Save as">
               <option value="">A new template</option>
               {organisationTemplates.map((t) => (
                 <option key={t.id} value={t.id}>Replace “{t.name}” (v{t.version})</option>
               ))}
             </select>
-          </label>
+          </div>
         )}
-        <label className="block">
-          <span className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Template name *</span>
-          <input type="text" value={name} onChange={(e) => setName(e.target.value)} className={inputClass} aria-label="Template name" />
-        </label>
-        <label className="block">
-          <span className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Description</span>
-          <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className={inputClass} aria-label="Description" />
-        </label>
+        <div className="block">
+          <FieldLabelWithHelp helpKey="public.local_register_templates.template_name" htmlFor="save-template-name" className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Template name *</FieldLabelWithHelp>
+          <input id="save-template-name" type="text" value={name} onChange={(e) => setName(e.target.value)} className={inputClass} aria-label="Template name" />
+        </div>
+        <div className="block">
+          <FieldLabelWithHelp helpKey="public.local_register_templates.template_description" htmlFor="save-template-description" className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Description</FieldLabelWithHelp>
+          <textarea id="save-template-description" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className={inputClass} aria-label="Description" />
+        </div>
       </div>
     </Modal>
   )

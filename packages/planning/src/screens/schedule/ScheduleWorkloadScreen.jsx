@@ -82,7 +82,7 @@ export default function ScheduleWorkloadScreen() {
             searchPlaceholder="Search people…"
             emptyText="No one has hours assigned yet. On a task page, set Estimated hours and assign a person."
             toolbar={(
-              <label className="text-sm text-gray-700 dark:text-gray-200 inline-flex items-center gap-2">
+              <label data-help="exempt" className="text-sm text-gray-700 dark:text-gray-200 inline-flex items-center gap-2">
                 Show
                 <select value={count} onChange={(e) => setCount(Number(e.target.value))}
                   className="px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">

@@ -155,7 +155,7 @@ export default function ScheduleExchangeScreen() {
             {step === 0 && !mappingInput && (
               <div className="space-y-3">
                 <p className="text-sm text-gray-700 dark:text-gray-300">Choose a schedule file: XML from a desktop planning tool, or a spreadsheet (XLSX / CSV) laid out like the template.</p>
-                <label className={`${btn} cursor-pointer w-fit`}>
+                <label data-help="exempt" className={`${btn} cursor-pointer w-fit`}>
                   <Upload className="h-4 w-4" /> {busy ? 'Reading…' : 'Choose file'}
                   <input type="file" accept=".xml,.xlsx,.xls,.csv" className="sr-only" onChange={choose} disabled={busy} />
                 </label>

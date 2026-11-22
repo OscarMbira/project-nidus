@@ -36,7 +36,7 @@ function cloneRow(row) {
 
 function Field({ label, children, className = '' }) {
   return (
-    <label className={`block space-y-1 ${className}`}>
+    <label data-help="exempt" className={`block space-y-1 ${className}`}>
       <span className="text-[11px] font-medium text-gray-600 dark:text-gray-400">{label}</span>
       {children}
     </label>
@@ -103,7 +103,7 @@ function WbsOutlineToolbar({ outlineLevel, maxLevel, onOutlineLevel }) {
       <button type="button" className={btn} onClick={() => onOutlineLevel(maxLevel)} title="Expand all outline levels">
         Expand all
       </button>
-      <label className="ml-1 inline-flex items-center gap-1 text-[11px] text-gray-600 dark:text-gray-300">
+      <label data-help="exempt" className="ml-1 inline-flex items-center gap-1 text-[11px] text-gray-600 dark:text-gray-300">
         <span className="whitespace-nowrap">Outline level</span>
         <select
           className="rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-1.5 py-1 text-[11px] text-gray-800 dark:text-gray-100"
@@ -201,7 +201,7 @@ function PlanningDefaultsFields({ draft, setDraft, offsetLabel }) {
         />
       </Field>
       <Field label="Locked">
-        <label className="flex items-center gap-2 pt-2 text-sm text-gray-700 dark:text-gray-300">
+        <label data-help="exempt" className="flex items-center gap-2 pt-2 text-sm text-gray-700 dark:text-gray-300">
           <input
             type="checkbox"
             checked={Boolean(draft.is_locked)}
@@ -236,7 +236,7 @@ function CustomFieldsSection({ draft, setDraft, customDefs }) {
           if (def.type === 'yes_no') {
             return (
               <Field key={def.id} label={def.label}>
-                <label className="flex items-center gap-2 pt-2 text-sm text-gray-700 dark:text-gray-300">
+                <label data-help="exempt" className="flex items-center gap-2 pt-2 text-sm text-gray-700 dark:text-gray-300">
                   <input
                     type="checkbox"
                     checked={Boolean(value)}
@@ -459,7 +459,7 @@ function RowEditForm({ kind, draft, setDraft, phases, customDefs }) {
             </select>
           </Field>
           <Field label="Mandatory">
-            <label className="flex items-center gap-2 pt-2 text-sm text-gray-700 dark:text-gray-300">
+            <label data-help="exempt" className="flex items-center gap-2 pt-2 text-sm text-gray-700 dark:text-gray-300">
               <input
                 type="checkbox"
                 checked={Boolean(draft.is_mandatory)}

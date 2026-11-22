@@ -7,6 +7,7 @@
  * value: { help_purpose, help_example, help_format } · onChange(nextValue)
  */
 import { isFieldHelpComplete } from '@nidus/shared/utils/fieldHelp'
+import FieldLabelWithHelp from './FieldLabelWithHelp.jsx'
 
 const inputClass = 'w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 disabled:opacity-60'
 const labelClass = 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1'
@@ -22,7 +23,7 @@ export default function FieldHelpInputs({ value = {}, onChange, disabled = false
       <legend className="px-1 text-sm font-semibold text-sky-800 dark:text-sky-300">Help for users</legend>
       <p className="text-xs text-gray-600 dark:text-gray-400">Shown in the ⓘ help next to this field, so people know what to enter.</p>
       <div>
-        <label htmlFor={`${idPrefix}-purpose`} className={labelClass}>What is this field for? *</label>
+        <FieldLabelWithHelp helpKey="public.field_help_definitions.purpose" htmlFor={`${idPrefix}-purpose`} className={labelClass}>What is this field for? *</FieldLabelWithHelp>
         <textarea
           id={`${idPrefix}-purpose`}
           rows={2}
@@ -36,7 +37,7 @@ export default function FieldHelpInputs({ value = {}, onChange, disabled = false
         {purposeMissing && <p className="mt-1 text-xs text-red-600 dark:text-red-400">Say what this field is for.</p>}
       </div>
       <div>
-        <label htmlFor={`${idPrefix}-example`} className={labelClass}>Example of a good value *</label>
+        <FieldLabelWithHelp helpKey="public.field_help_definitions.example" htmlFor={`${idPrefix}-example`} className={labelClass}>Example of a good value *</FieldLabelWithHelp>
         <input
           id={`${idPrefix}-example`}
           type="text"
@@ -50,7 +51,7 @@ export default function FieldHelpInputs({ value = {}, onChange, disabled = false
         {exampleMissing && <p className="mt-1 text-xs text-red-600 dark:text-red-400">Give one example value.</p>}
       </div>
       <div>
-        <label htmlFor={`${idPrefix}-format`} className={labelClass}>Format (optional)</label>
+        <FieldLabelWithHelp helpKey="public.field_help_definitions.format" htmlFor={`${idPrefix}-format`} className={labelClass}>Format (optional)</FieldLabelWithHelp>
         <input
           id={`${idPrefix}-format`}
           type="text"

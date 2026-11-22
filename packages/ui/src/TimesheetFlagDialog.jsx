@@ -5,6 +5,7 @@
  */
 import { useState } from 'react'
 import Modal from './Modal'
+import FieldLabelWithHelp from './FieldLabelWithHelp.jsx'
 
 /**
  * @param {{ open: boolean, entryLabel?: string, reasons: Array<{id: string, name: string, description?: string}>,
@@ -46,7 +47,7 @@ export default function TimesheetFlagDialog({ open, entryLabel = '', reasons = [
         ) : (
           <div className="space-y-1.5 max-h-60 overflow-y-auto">
             {reasons.map((r) => (
-              <label key={r.id} className="flex items-start gap-2 text-sm text-gray-800 dark:text-slate-200 cursor-pointer">
+              <label data-help="exempt" key={r.id} className="flex items-start gap-2 text-sm text-gray-800 dark:text-slate-200 cursor-pointer">
                 <input type="checkbox" className="mt-0.5" checked={picked.includes(r.id)} onChange={() => toggle(r.id)} />
                 <span>
                   {r.name}
@@ -57,11 +58,11 @@ export default function TimesheetFlagDialog({ open, entryLabel = '', reasons = [
           </div>
         )}
       </fieldset>
-      <label className="block mt-4 text-sm font-medium text-gray-700 dark:text-slate-200">
+      <FieldLabelWithHelp helpKey="public.timesheet_entry_flags.note" htmlFor="timesheet-flag-note" className="block mt-4 text-sm font-medium text-gray-700 dark:text-slate-200">
         Note <span className="font-normal text-gray-500 dark:text-slate-400">(optional)</span>
-        <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={3}
-          className="mt-1 w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-gray-900 dark:text-slate-100 focus:border-blue-500 focus:outline-none" />
-      </label>
+      </FieldLabelWithHelp>
+      <textarea id="timesheet-flag-note" value={note} onChange={(e) => setNote(e.target.value)} rows={3}
+        className="mt-1 w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-gray-900 dark:text-slate-100 focus:border-blue-500 focus:outline-none" />
     </Modal>
   )
 }
