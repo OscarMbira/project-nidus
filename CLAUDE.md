@@ -610,6 +610,14 @@ check its data-loading path for the specific classes of waste this rule exists b
    - **CI:** `.github/workflows/unreachable-code.yml` runs `find-unreachable-app-files.mjs <app> --fail` for Platform, Simulator and Planner and fails on any new unreachable file. `scripts/unreachable-allowlist.json` lists the known leftovers — do not add to it; remove an entry when its file is deleted.
    - Useful flags: `--list`, `--under <path>`, `--skip-dirty`, `--bundle` (what the bundler compiles), `--unused-lazy`. See `projectplan/v1349_dead_app_code_removal_plan.md` / `Documentation/Unreachable_App_Code_v1349_Guide.md`.
 
+79) **Regional date input for every date and date-time field (mandatory for every NEW field, and for every date field you touch when amending a form — Platform + Simulator + Planner + Admin, owner decision 2026-11-22, v1351).** Browser date pickers (`<input type="date">`, `<input type="datetime-local">`) show dates in the computer's own language and region and ignore the organisation's Regional & Format Settings (rule 68), so the same date looked different on one screen.
+   - **Use the shared control:** `RegionalDateInput` from `@nidus/ui` (Platform, Simulator, Planner, shared packages) — add `withTime` for a date and time. Admin uses `AdminDateInput` from `@nidus-admin/ui` (fixed D MMM YYYY / 24-hour; Admin rule 24). Never add a new `type="date"` or `type="datetime-local"` input.
+   - **What it does:** shows the value in the organisation's date format (project override in project scope) and, with `withTime`, its time format and time zone; people type the date or pick it from a calendar that starts the week on the organisation's First day of week.
+   - **Same value as before:** `YYYY-MM-DD` for a date, the existing ISO value for a date and time — no service, SQL or export change. Pass the same props the native input had (`value`, `onChange`, `required`, `min`, `max`, `disabled`, `id`, `aria-*`); label it with `FieldLabelWithHelp` (rule 76) as usual.
+   - **Register engine fields** of type `date` / `datetime` get it through `RegisterFieldInput` — nothing to add per register.
+   - **Out of scope:** read-only date display (use `formatRegionalDate` / `formatRegionalDateTime`), month / week pickers, time-only inputs.
+   - **Check:** `scripts/check-native-date-inputs.mjs` fails CI on a browser date picker once v1351 has replaced the existing ones. Until the control ships (v1351, in progress), do not add new date fields with a browser picker — build the field on `RegionalDateInput` as part of v1351 or wait for it. See `projectprd/v1351_regional_date_input_PRD.md` / `projectplan/v1351_regional_date_input_plan.md`.
+
 
 ## Simulator Module Architecture Rules
 
