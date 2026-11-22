@@ -37,7 +37,7 @@ export default function SimAIWorkspaceDebrief({
       {/* Run selector */}
       {pastDebriefs.length > 1 && (
         <div className="p-3 border-b border-gray-700 flex items-center gap-2">
-          <label className="text-xs text-gray-400">Run:</label>
+          <label data-help="exempt" className="text-xs text-gray-400">Run:</label>
           <select
             value={runId || ''}
             onChange={(e) => onRunSelect?.(e.target.value)}

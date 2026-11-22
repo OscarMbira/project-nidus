@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { getSystemAssignmentLimit, updateSystemAssignmentLimit } from '../../../services/managerAssignmentService'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 export default function SimManagerAssignmentSettings() {
   const [loading, setLoading] = useState(true)
@@ -68,9 +69,9 @@ export default function SimManagerAssignmentSettings() {
           ) : (
             <>
               <div>
-                <label htmlFor="sim-max-assign" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <FieldLabelWithHelp helpKey="sim.system_settings.max_manager_assignments" htmlFor="sim-max-assign" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Maximum concurrent assignments per manager
-                </label>
+                </FieldLabelWithHelp>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
                   Current value: <strong className="text-gray-900 dark:text-white">{value}</strong>
                 </p>

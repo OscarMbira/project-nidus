@@ -24,6 +24,11 @@ test('counts raw labels only in files that render fields', () => {
   assert.equal(countNotAdopted('<label>A</label>'), 0)
 })
 
+test('labels marked data-help="exempt" (rule 76 exclusions) are not counted', () => {
+  const src = '<label data-help="exempt" className="sr-only">Search</label><input />\n<label\n  htmlFor="x"\n  data-help=\'exempt\'\n>Show archived</label><input type="checkbox" />\n<label>Name</label><input />'
+  assert.equal(countNotAdopted(src), 1)
+})
+
 test('reports keys used without help, resolving Simulator aliases', () => {
   const files = [{ file: 'a.jsx', source: '<FieldLabelWithHelp helpKey="sim.reg.name" /><FieldLabelWithHelp helpKey="public.x.missing" />' }]
   const sql = `INSERT INTO public.field_help (help_key) VALUES ('public.stakeholders.name', 'x') ON CONFLICT DO NOTHING;

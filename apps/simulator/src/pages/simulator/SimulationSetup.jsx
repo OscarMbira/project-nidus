@@ -81,7 +81,7 @@ export default function SimulationSetup() {
       {step === 1 && (
         <div className="space-y-3">
           {METHODOLOGY.map((m) => (
-            <label key={m.id} className="flex gap-3 rounded-lg border border-gray-200 dark:border-gray-700 p-3 cursor-pointer">
+            <label data-help="exempt" key={m.id} className="flex gap-3 rounded-lg border border-gray-200 dark:border-gray-700 p-3 cursor-pointer">
               <input type="radio" name="meth" checked={methodology === m.id} onChange={() => setMethodology(m.id)} />
               <div>
                 <div className="font-medium">{m.label}</div>

@@ -175,7 +175,7 @@ export default function PrivacyCenter() {
                 Receive marketing and promotional emails
               </p>
             </div>
-            <label className="relative inline-flex items-center cursor-pointer">
+            <label data-help="exempt" className="relative inline-flex items-center cursor-pointer">
               <input
                 type="checkbox"
                 checked={privacyPrefs.allow_marketing_emails}
@@ -198,7 +198,7 @@ export default function PrivacyCenter() {
                 Allow analytics and usage tracking
               </p>
             </div>
-            <label className="relative inline-flex items-center cursor-pointer">
+            <label data-help="exempt" className="relative inline-flex items-center cursor-pointer">
               <input
                 type="checkbox"
                 checked={privacyPrefs.allow_analytics_tracking}
@@ -221,7 +221,7 @@ export default function PrivacyCenter() {
                 Allow sharing data with third-party services
               </p>
             </div>
-            <label className="relative inline-flex items-center cursor-pointer">
+            <label data-help="exempt" className="relative inline-flex items-center cursor-pointer">
               <input
                 type="checkbox"
                 checked={privacyPrefs.allow_third_party_sharing}

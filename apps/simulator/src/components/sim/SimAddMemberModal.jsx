@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { X, Loader, Search } from 'lucide-react'
 import { searchUsersForSimInvite } from '../../services/sim/simProjectMembershipService'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 export default function SimAddMemberModal({ isOpen, onClose, assignableRoles, onAdd }) {
   const [q, setQ] = useState('')
@@ -100,8 +101,8 @@ export default function SimAddMemberModal({ isOpen, onClose, assignableRoles, on
             )}
           </ul>
 
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Role</label>
-          <select
+          <FieldLabelWithHelp helpKey="sim.practice_project_members.role_name" htmlFor="fh-practice-project-members-role-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Role</FieldLabelWithHelp>
+          <select id="fh-practice-project-members-role-name"
             value={roleName}
             onChange={(e) => setRoleName(e.target.value)}
             className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 mb-4"

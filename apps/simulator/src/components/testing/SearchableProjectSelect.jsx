@@ -62,7 +62,7 @@ export default function SearchableProjectSelect({
 
   return (
     <div ref={rootRef} className={`relative ${className}`}>
-      <label htmlFor={id} className="text-xs text-gray-500">
+      <label data-help="exempt" htmlFor={id} className="text-xs text-gray-500">
         {label}
       </label>
       <button

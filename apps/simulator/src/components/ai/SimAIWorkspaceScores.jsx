@@ -97,7 +97,7 @@ export default function SimAIWorkspaceScores({ runId, runSummary }) {
         ))}
         {otherRuns.length > 0 && (
           <div className="pt-3 border-t border-gray-700">
-            <label className="text-xs text-gray-400 block mb-1">Compare with another run</label>
+            <label data-help="exempt" className="text-xs text-gray-400 block mb-1">Compare with another run</label>
             <select
               value={compareRunId || ''}
               onChange={(e) => setCompareRunId(e.target.value || null)}

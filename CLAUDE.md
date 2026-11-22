@@ -591,7 +591,7 @@ check its data-loading path for the specific classes of waste this rule exists b
    - **Examples follow rule 77:** no real-looking names (role titles, "Example … Ltd"), globally familiar places.
    - **Record / people pickers never list their options in help:** pass `listOptions={false}` on the label of any field whose choices are other records or people (e.g. Reports To, owner, assignee), so live names are never copied into the popover.
    - **Plain text only:** line breaks and `- ` bullets; no HTML. Help text is database content (rule 25.1), never hard-coded in React.
-   - **Exclusions:** chrome (Cancel / Close, tab and view toggles, export menus), `#` / pagination, Audit-only technical IDs, transient search / filter boxes, bulk-action confirmations, table column headers.
+   - **Exclusions:** chrome (Cancel / Close, tab and view toggles, export menus), `#` / pagination, Audit-only technical IDs, transient search / filter boxes, bulk-action confirmations, table column headers. Mark such a label `data-help="exempt"` so `check-field-help` does not count it — an exclusion is always explicit.
    - **Check:** `node scripts/check-field-help.mjs` (scans Platform, Simulator, Planner and every shared package including `packages/modules`; warns now; an adopted module must stay at 100% — `--module <name>`; enforcement for all gaps from v1345 phase 5). Do not grow `scripts/field-help-allowlist.json`. Admin has its own equivalent check in the Admin repo.
    - See `projectprd/v1345_field_level_contextual_help_PRD.md` / `projectplan/v1345_field_level_contextual_help_plan.md`.
 

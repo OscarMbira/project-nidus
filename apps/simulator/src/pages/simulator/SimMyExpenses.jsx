@@ -300,23 +300,23 @@ function SimMyExpensesBody() {
           />
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
             <div>
-              <label htmlFor="sim-expenses-date-from" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">From date</label>
+              <label data-help="exempt" htmlFor="sim-expenses-date-from" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">From date</label>
               <RegionalDateInput eventStyle id="sim-expenses-date-from" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-950 px-2 py-1.5 text-sm" />
             </div>
             <div>
-              <label htmlFor="sim-expenses-date-to" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">To date</label>
+              <label data-help="exempt" htmlFor="sim-expenses-date-to" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">To date</label>
               <RegionalDateInput eventStyle id="sim-expenses-date-to" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-950 px-2 py-1.5 text-sm" />
             </div>
             <div>
-              <label htmlFor="sim-expenses-amount-min" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Min amount</label>
+              <label data-help="exempt" htmlFor="sim-expenses-amount-min" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Min amount</label>
               <input id="sim-expenses-amount-min" type="number" placeholder="0" value={amountMin} onChange={(e) => setAmountMin(e.target.value)} className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-950 px-2 py-1.5 text-sm" />
             </div>
             <div>
-              <label htmlFor="sim-expenses-amount-max" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Max amount</label>
+              <label data-help="exempt" htmlFor="sim-expenses-amount-max" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Max amount</label>
               <input id="sim-expenses-amount-max" type="number" placeholder="Any" value={amountMax} onChange={(e) => setAmountMax(e.target.value)} className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-950 px-2 py-1.5 text-sm" />
             </div>
             <div>
-              <label htmlFor="sim-expenses-status-filter" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Status</label>
+              <label data-help="exempt" htmlFor="sim-expenses-status-filter" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Status</label>
               <select id="sim-expenses-status-filter" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-950 px-2 py-1.5 text-sm">
                 <option value="">All</option>
                 {Object.keys(STATUS_STYLES).map((s) => (

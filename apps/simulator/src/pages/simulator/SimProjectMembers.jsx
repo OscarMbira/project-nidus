@@ -193,7 +193,7 @@ export default function SimProjectMembers() {
       )}
 
       <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-end">
-        <label className="flex-1 block">
+        <label data-help="exempt" className="flex-1 block">
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Practice project</span>
           <select
             value={projectId}

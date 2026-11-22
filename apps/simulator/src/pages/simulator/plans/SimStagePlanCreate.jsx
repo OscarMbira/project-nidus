@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react'
 import { getPracticePlan } from '../../../services/sim/practicePlanService'
 import { createPracticeStagePlan } from '../../../services/sim/practiceStageplanService'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 export default function SimStagePlanCreate() {
   const { projectId } = useParams()
@@ -79,8 +80,8 @@ export default function SimStagePlanCreate() {
       <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium mb-1">Stage number *</label>
-            <input
+            <FieldLabelWithHelp helpKey="sim.practice_stage_plans.stage_number" htmlFor="fh-practice-stage-plans-stage-number" className="block text-sm font-medium mb-1">Stage number *</FieldLabelWithHelp>
+            <input id="fh-practice-stage-plans-stage-number"
               type="number"
               min={1}
               required
@@ -90,8 +91,8 @@ export default function SimStagePlanCreate() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Stage title *</label>
-            <input
+            <FieldLabelWithHelp helpKey="sim.practice_stage_plans.stage_title" htmlFor="fh-practice-stage-plans-stage-title" className="block text-sm font-medium mb-1">Stage title *</FieldLabelWithHelp>
+            <input id="fh-practice-stage-plans-stage-title"
               required
               value={formData.stage_title}
               onChange={(e) => setFormData({ ...formData, stage_title: e.target.value })}
@@ -100,8 +101,8 @@ export default function SimStagePlanCreate() {
           </div>
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">Objectives</label>
-          <textarea
+          <FieldLabelWithHelp helpKey="sim.practice_stage_plans.stage_objectives" htmlFor="fh-practice-stage-plans-stage-objectives" className="block text-sm font-medium mb-1">Objectives</FieldLabelWithHelp>
+          <textarea id="fh-practice-stage-plans-stage-objectives"
             rows={3}
             value={formData.stage_objectives}
             onChange={(e) => setFormData({ ...formData, stage_objectives: e.target.value })}

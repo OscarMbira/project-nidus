@@ -10,6 +10,7 @@ import {
 import ExportListMenu from '@nidus/ui/ExportListMenu'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 function statusBadge(s) {
   const map = {
@@ -203,16 +204,16 @@ export default function SimPortfolioProjects() {
             {addError && <p className="text-red-400 text-sm">{addError}</p>}
             <div className="space-y-3">
               <div>
-                <label className="block text-gray-400 text-sm mb-1">Portfolio *</label>
-                <select value={addForm.portfolio_id} onChange={e => setAddForm(f => ({ ...f, portfolio_id: e.target.value }))}
+                <FieldLabelWithHelp helpKey="sim.portfolio_projects.portfolio_id" htmlFor="fh-portfolio-projects-portfolio-id" className="block text-gray-400 text-sm mb-1" listOptions={false}>Portfolio *</FieldLabelWithHelp>
+                <select id="fh-portfolio-projects-portfolio-id" value={addForm.portfolio_id} onChange={e => setAddForm(f => ({ ...f, portfolio_id: e.target.value }))}
                   className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
                   <option value="">Select portfolio…</option>
                   {portfolios.map(p => <option key={p.id} value={p.id}>{p.portfolio_code} — {p.portfolio_name}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-gray-400 text-sm mb-1">Practice Project *</label>
-                <select value={addForm.project_id} onChange={e => setAddForm(f => ({ ...f, project_id: e.target.value }))}
+                <FieldLabelWithHelp helpKey="sim.portfolio_projects.project_id" htmlFor="fh-portfolio-projects-project-id" className="block text-gray-400 text-sm mb-1" listOptions={false}>Practice Project *</FieldLabelWithHelp>
+                <select id="fh-portfolio-projects-project-id" value={addForm.project_id} onChange={e => setAddForm(f => ({ ...f, project_id: e.target.value }))}
                   className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
                   <option value="">Select project…</option>
                   {allProjects.map(p => <option key={p.id} value={p.id}>{p.project_code} — {p.project_name}</option>)}

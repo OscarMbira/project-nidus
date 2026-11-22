@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { createPracticePlan } from '../../../services/sim/practicePlanService'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 export default function SimProjectPlanCreate() {
   const { projectId } = useParams()
@@ -49,8 +50,8 @@ export default function SimProjectPlanCreate() {
       ) : (
       <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 space-y-4">
         <div>
-          <label className="block text-sm font-medium mb-1">Title *</label>
-          <input
+          <FieldLabelWithHelp helpKey="sim.practice_project_plans.plan_title" htmlFor="fh-practice-project-plans-plan-title" className="block text-sm font-medium mb-1">Title *</FieldLabelWithHelp>
+          <input id="fh-practice-project-plans-plan-title"
             required
             value={formData.plan_title}
             onChange={(e) => setFormData({ ...formData, plan_title: e.target.value })}
@@ -58,8 +59,8 @@ export default function SimProjectPlanCreate() {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">Purpose *</label>
-          <textarea
+          <FieldLabelWithHelp helpKey="sim.practice_project_plans.plan_purpose" htmlFor="fh-practice-project-plans-plan-purpose" className="block text-sm font-medium mb-1">Purpose *</FieldLabelWithHelp>
+          <textarea id="fh-practice-project-plans-plan-purpose"
             required
             rows={4}
             value={formData.plan_purpose}

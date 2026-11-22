@@ -17,6 +17,7 @@ import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { resolveAuditUserLabels, humanizeAuditToken } from '@nidus/shared/utils/auditDisplayUtils'
 import { createDataBreachRecord, updateDataBreachRecord } from '../../../services/sim/simGdprService'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 const SEVERITIES = ['low', 'medium', 'high', 'critical']
 const STATUSES = ['detected', 'investigating', 'contained', 'remediated', 'closed']
@@ -168,8 +169,8 @@ export default function DataBreachRecordForm() {
       ) : (
         <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 space-y-5">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Breach type *</label>
-            <input
+            <FieldLabelWithHelp helpKey="sim.data_breach_records.breach_type" htmlFor="fh-data-breach-records-breach-type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Breach type *</FieldLabelWithHelp>
+            <input id="fh-data-breach-records-breach-type"
               type="text"
               required
               disabled={isEdit}
@@ -182,8 +183,8 @@ export default function DataBreachRecordForm() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Severity</label>
-              <select
+              <FieldLabelWithHelp helpKey="sim.data_breach_records.severity" htmlFor="fh-data-breach-records-severity" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Severity</FieldLabelWithHelp>
+              <select id="fh-data-breach-records-severity"
                 disabled={isEdit}
                 value={severity}
                 onChange={(e) => setSeverity(e.target.value)}
@@ -194,8 +195,8 @@ export default function DataBreachRecordForm() {
             </div>
             {isEdit && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
-                <select
+                <FieldLabelWithHelp helpKey="sim.data_breach_records.status" htmlFor="fh-data-breach-records-status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</FieldLabelWithHelp>
+                <select id="fh-data-breach-records-status"
                   value={status}
                   onChange={(e) => setStatus(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white capitalize"
@@ -207,8 +208,8 @@ export default function DataBreachRecordForm() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Data types affected</label>
-            <input
+            <FieldLabelWithHelp helpKey="sim.data_breach_records.data_types_affected" htmlFor="fh-data-breach-records-data-types-affected" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Data types affected</FieldLabelWithHelp>
+            <input id="fh-data-breach-records-data-types-affected"
               type="text"
               disabled={isEdit}
               value={dataTypesAffected}
@@ -219,8 +220,8 @@ export default function DataBreachRecordForm() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Mitigation steps</label>
-            <textarea
+            <FieldLabelWithHelp helpKey="sim.data_breach_records.mitigation_steps" htmlFor="fh-data-breach-records-mitigation-steps" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Mitigation steps</FieldLabelWithHelp>
+            <textarea id="fh-data-breach-records-mitigation-steps"
               rows={4}
               value={mitigationSteps}
               onChange={(e) => setMitigationSteps(e.target.value)}

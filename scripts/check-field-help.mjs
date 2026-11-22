@@ -112,10 +112,14 @@ export function registerCoverageByKey(fieldsByRegister, helpKeys, registerKeys, 
   return { total, covered: total - uncovered.length, uncovered, strayRegisters }
 }
 
-/** Raw <label> elements in a file that renders form fields (not yet using FieldLabelWithHelp). */
+/**
+ * Raw <label> elements in a file that renders form fields (not yet using FieldLabelWithHelp).
+ * A label excluded by rule 76 (filter / search box, view toggle, bulk-action checkbox, option card, …) carries
+ * `data-help="exempt"` and is not counted — so 100% coverage is measurable and each exclusion is deliberate.
+ */
 export function countNotAdopted(source) {
   if (!/<(input|select|textarea)\b/.test(source)) return 0
-  return (source.match(/<label\b/g) || []).length
+  return (source.match(/<label\b[^>]*>/g) || []).filter((tag) => !/\bdata-help=["']exempt["']/.test(tag)).length
 }
 
 function walk(dir, out = []) {
