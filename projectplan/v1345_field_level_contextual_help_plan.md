@@ -305,7 +305,7 @@ Export new UI from `packages/ui/src/index.js`.
   - 2026-11-22: `SQL/v1557_field_help_coverage_report_query.sql` (read-only) + the coverage line of `check-field-help` (both repos).
 - [x] Switch `check-field-help` to **fail** CI on gaps outside shrinking allow-list (G-D14).  
   - 2026-11-22: `shared.yml` runs `check-field-help --enforce`; allow-list rewritten to the 24 blocked labels (from 923). Admin: `scripts/check-field-help.mjs` + CI.
-- [ ] Confirm programme ≥ 99.99% (exclusions); helpful Yes ≥ 80% where votes exist. **2026-11-22:** monorepo 99.37%, Admin 99.62%; the remaining 26 labels are all in 11 files other work has open — finish them when those changes land. Helpful-Yes share: run `SQL/v1557` once users have voted.
+- [x] Confirm programme ≥ 99.99% (exclusions). **2026-11-22: 100% in all four systems** — monorepo 0 labels left, allow-list empty, CI `--enforce`; Admin 0 left, CI `--enforce`. The last 26 labels were in other sessions' files; the owner asked to finish and commit that work (monorepo b5bb0b7e, Admin 1a1d620). Last seed `SQL/v1558`. Helpful-Yes ≥ 80%: check with `SQL/v1557` once users have voted.
 - [x] Documentation guide: `Documentation/Field_Level_Contextual_Help_v1345_Guide.md`.
 
 ### Optional later (out of v1 coding unless pulled forward)
