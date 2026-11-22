@@ -16,6 +16,7 @@ import MilestoneQuickCaptureSection from './MilestoneQuickCaptureSection'
 import { Briefcase, Network } from 'lucide-react'
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 /** v1345 slice 3: help keys for every wizard field (public.projects.<column>; list steps use their heading). */
 const PROJECT_WIZARD_HELP_KEYS = [
   'project_code', 'project_name', 'project_description', 'project_type_id', 'project_status_id', 'industries',
@@ -368,8 +369,7 @@ function ProjectWizardPanels({
                 <FieldLabelWithHelp helpKey="public.projects.start_date" htmlFor="start_date" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Start Date
                 </FieldLabelWithHelp>
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   id="start_date"
                   name="start_date"
                   value={formData.start_date}
@@ -382,8 +382,7 @@ function ProjectWizardPanels({
                 <FieldLabelWithHelp helpKey="public.projects.end_date" htmlFor="end_date" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                   End Date
                 </FieldLabelWithHelp>
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   id="end_date"
                   name="end_date"
                   value={formData.end_date}

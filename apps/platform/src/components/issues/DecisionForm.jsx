@@ -8,6 +8,7 @@ import { recordDecision } from '../../services/issueDecisionService'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 function DecisionFormBody({ issueId, issue, onSave, onCancel }) {
   const [formData, setFormData] = useState({
     decision_type: 'approve',
@@ -190,8 +191,7 @@ function DecisionFormBody({ issueId, issue, onSave, onCancel }) {
                 <Calendar className="h-4 w-4 inline mr-1" />
                 Review Date
               </FieldLabelWithHelp>
-              <input
-                type="date"
+              <RegionalDateInput eventStyle
                 name="review_date"
                 value={formData.review_date}
                 onChange={handleChange}

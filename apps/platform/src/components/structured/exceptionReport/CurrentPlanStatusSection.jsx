@@ -3,6 +3,7 @@ import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { TrendingUp, TrendingDown, Calendar, DollarSign } from 'lucide-react'
 import { getCurrentPlanStatus } from '../../../services/exceptionReportService'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 function CurrentPlanStatusSectionBody({ formData, onChange, errors, mode, projectId }) {
   useEffect(() => {
@@ -56,8 +57,7 @@ function CurrentPlanStatusSectionBody({ formData, onChange, errors, mode, projec
             <FieldLabelWithHelp helpKey="public.exception_reports.time_baseline_end_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Baseline End Date
             </FieldLabelWithHelp>
-            <input
-              type="date"
+            <RegionalDateInput eventStyle
               value={formData.time_baseline_end_date || ''}
               onChange={(e) => onChange('time_baseline_end_date', e.target.value || null)}
               disabled={mode === 'view'}
@@ -68,8 +68,7 @@ function CurrentPlanStatusSectionBody({ formData, onChange, errors, mode, projec
             <FieldLabelWithHelp helpKey="public.exception_reports.time_current_forecast_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Current Forecast Date
             </FieldLabelWithHelp>
-            <input
-              type="date"
+            <RegionalDateInput eventStyle
               value={formData.time_current_forecast_date || ''}
               onChange={(e) => onChange('time_current_forecast_date', e.target.value || null)}
               disabled={mode === 'view'}

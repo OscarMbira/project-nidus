@@ -4,6 +4,7 @@ import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { AlertCircle, CheckCircle, X, Plus } from 'lucide-react'
 import { getFollowUps, addFollowUp, updateFollowUp, markFollowUpComplete } from '../../services/checkpointReportFollowUpService'
 import { carryForwardFromPrevious } from '../../services/checkpointReportService'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 function FollowUpsSectionBody({ reportId, followUps, onFollowUpsChange, previousReportId, mode }) {
   const [showAddForm, setShowAddForm] = useState(false)
@@ -195,8 +196,7 @@ function FollowUpsSectionBody({ reportId, followUps, onFollowUpsChange, previous
                     <FieldLabelWithHelp helpKey="public.checkpoint_report_follow_ups.due_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Due Date
                     </FieldLabelWithHelp>
-                    <input
-                      type="date"
+                    <RegionalDateInput eventStyle
                       value={newFollowUp.due_date || ''}
                       onChange={(e) => setNewFollowUp({ ...newFollowUp, due_date: e.target.value || null })}
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"

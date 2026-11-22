@@ -12,6 +12,7 @@ import { platformDb } from '../../services/supabaseClient'
 import StakeholderAvatar from '@nidus/ui/StakeholderAvatar'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 function StarRating({ value, max = 5, size = 'sm' }) {
   const v = value == null ? 0 : Math.min(max, Math.max(0, Number(value)))
@@ -240,8 +241,7 @@ function CommunicationLogBody({ projectId }) {
               {editForm.response_required && (
                 <div>
                   <FieldLabelWithHelp helpKey="public.stakeholder_communication_log.response_due_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Response due by</FieldLabelWithHelp>
-                  <input
-                    type="date"
+                  <RegionalDateInput eventStyle
                     value={editForm.response_due_date}
                     onChange={(e) => setEditForm(f => ({ ...f, response_due_date: e.target.value }))}
                     className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
@@ -298,8 +298,7 @@ function CommunicationLogBody({ projectId }) {
               </div>
               <div>
                 <FieldLabelWithHelp helpKey="public.stakeholder_communication_log.next_action_due_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Next action due date</FieldLabelWithHelp>
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   value={editForm.next_action_due_date}
                   onChange={(e) => setEditForm(f => ({ ...f, next_action_due_date: e.target.value }))}
                   className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
@@ -307,8 +306,7 @@ function CommunicationLogBody({ projectId }) {
               </div>
               <div>
                 <FieldLabelWithHelp helpKey="public.stakeholder_communication_log.follow_up_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Follow-up date</FieldLabelWithHelp>
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   value={editForm.follow_up_date}
                   onChange={(e) => setEditForm(f => ({ ...f, follow_up_date: e.target.value }))}
                   className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"

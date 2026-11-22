@@ -17,6 +17,7 @@ import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/
 import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesContext'
 import SelectField from '@nidus/ui/SelectField'
 import MultiLineListInput from '@nidus/ui/MultiLineListInput'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const ENGAGEMENT_LEVELS = [
   ['unaware', 'Unaware'],
@@ -514,11 +515,11 @@ function EngagementPlanFormBody({ plan, stakeholderId, projectId, stakeholders =
               </div>
               <div>
                 <FieldLabelWithHelp helpKey="public.stakeholder_engagement_plans.engagement_period_start" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="engagement-plan-engagement_period_start">Engagement starts</FieldLabelWithHelp>
-                <input id="engagement-plan-engagement_period_start" type="date" value={formData.engagement_period_start || ''} onChange={(e) => setOptional('engagement_period_start', e.target.value)} className={fieldClass} />
+                <RegionalDateInput eventStyle id="engagement-plan-engagement_period_start" value={formData.engagement_period_start || ''} onChange={(e) => setOptional('engagement_period_start', e.target.value)} className={fieldClass} />
               </div>
               <div>
                 <FieldLabelWithHelp helpKey="public.stakeholder_engagement_plans.engagement_period_end" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="engagement-plan-engagement_period_end">Engagement ends</FieldLabelWithHelp>
-                <input id="engagement-plan-engagement_period_end" type="date" value={formData.engagement_period_end || ''} onChange={(e) => setOptional('engagement_period_end', e.target.value)} className={fieldClass} />
+                <RegionalDateInput eventStyle id="engagement-plan-engagement_period_end" value={formData.engagement_period_end || ''} onChange={(e) => setOptional('engagement_period_end', e.target.value)} className={fieldClass} />
               </div>
             </div>
             <div>

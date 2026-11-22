@@ -11,6 +11,7 @@ import FlowEfficiencyPanel from '../../components/kanban/FlowEfficiencyPanel'
 import { calculateFlowMetrics, calculatePercentiles } from '@nidus/shared/utils/flowMetricsCalculator'
 import { formatISO, subDays, format, startOfDay, endOfDay } from 'date-fns'
 import { Download, AlertTriangle, TrendingUp, TrendingDown, Minus, Calendar } from 'lucide-react'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 export default function MetricsDashboard() {
   const { projectId, routeKey } = usePlatformProjectId()
@@ -386,15 +387,13 @@ export default function MetricsDashboard() {
           </div>
           {dateRange === 'custom' && (
             <div className="flex items-center gap-2">
-              <input
-                type="date"
+              <RegionalDateInput eventStyle
                 value={customStartDate}
                 onChange={(e) => setCustomStartDate(e.target.value)}
                 className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 text-sm"
               />
               <span className="text-gray-500 dark:text-gray-400">to</span>
-              <input
-                type="date"
+              <RegionalDateInput eventStyle
                 value={customEndDate}
                 onChange={(e) => setCustomEndDate(e.target.value)}
                 className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 text-sm"

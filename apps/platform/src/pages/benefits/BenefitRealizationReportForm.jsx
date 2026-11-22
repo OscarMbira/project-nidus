@@ -15,6 +15,7 @@ import {
   getBenefitRealizationReport,
   saveBenefitRealizationReport,
 } from '../../services/benefitsService';
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const REPORT_TYPES = [
   { value: 'benefits_realization', label: 'Benefits Realization' },
@@ -222,8 +223,7 @@ function BenefitRealizationReportFormBody({ forceEdit = false }) {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <FieldLabelWithHelp helpKey="public.benefit_realization_reports.report_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Report date</FieldLabelWithHelp>
-                  <input
-                    type="date"
+                  <RegionalDateInput eventStyle
                     value={reportDate}
                     onChange={(e) => setReportDate(e.target.value)}
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
@@ -231,8 +231,7 @@ function BenefitRealizationReportFormBody({ forceEdit = false }) {
                 </div>
                 <div>
                   <FieldLabelWithHelp helpKey="public.benefit_realization_reports.report_start_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Period start</FieldLabelWithHelp>
-                  <input
-                    type="date"
+                  <RegionalDateInput eventStyle
                     value={reportStartDate}
                     onChange={(e) => setReportStartDate(e.target.value)}
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
@@ -240,8 +239,7 @@ function BenefitRealizationReportFormBody({ forceEdit = false }) {
                 </div>
                 <div>
                   <FieldLabelWithHelp helpKey="public.benefit_realization_reports.report_end_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Period end</FieldLabelWithHelp>
-                  <input
-                    type="date"
+                  <RegionalDateInput eventStyle
                     value={reportEndDate}
                     onChange={(e) => setReportEndDate(e.target.value)}
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"

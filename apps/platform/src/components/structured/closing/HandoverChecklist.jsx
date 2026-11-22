@@ -16,6 +16,7 @@ import SelectField from '@nidus/ui/SelectField';
 import MultiLineListInput from '@nidus/ui/MultiLineListInput';
 import ExportRecordMenu from '@nidus/ui/ExportRecordMenu';
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const HANDOVER_EXPORT_SECTIONS = [
   {
@@ -467,8 +468,7 @@ function HandoverChecklistBody({ projectId, onClose, onSuccess }) {
                 <Calendar className="h-4 w-4" />
                 Handover Date *
               </FieldLabelWithHelp>
-              <input
-                type="date"
+              <RegionalDateInput eventStyle
                 value={formData.handover_date}
                 onChange={(e) => setFormData({ ...formData, handover_date: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
@@ -527,8 +527,7 @@ function HandoverChecklistBody({ projectId, onClose, onSuccess }) {
               <Calendar className="h-4 w-4" />
               Acceptance Signature Date
             </FieldLabelWithHelp>
-            <input
-              type="date"
+            <RegionalDateInput eventStyle
               value={formData.acceptance_signature_date}
               onChange={(e) => setFormData({ ...formData, acceptance_signature_date: e.target.value })}
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"

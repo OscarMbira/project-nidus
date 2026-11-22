@@ -11,6 +11,7 @@ import MultiSelectDropdown from './MultiSelectDropdown'
 import { SmartAmountInput } from './SmartAmountInput'
 import SelectField, { SEARCHABLE_SELECT_MIN_OPTIONS } from './SelectField'
 import DateTimeInput from './DateTimeInput'
+import RegionalDateInput from './RegionalDateInput'
 import RecordRefInput from './RecordRefInput'
 import { isCalculatedField } from '@nidus/shared/utils/registerCalculations'
 import { registerFieldExportValue } from '@nidus/shared/utils/registerCustomFields'
@@ -146,7 +147,7 @@ export default function RegisterFieldInput({ field, value, onChange, settings = 
     )
   }
   if (type === 'date') {
-    return <input type="date" value={value ?? ''} onChange={(e) => onChange(e.target.value)} className={INPUT_CLASS} aria-label={field.field_label} />
+    return <RegionalDateInput value={value ?? ''} onChange={onChange} settings={settings} aria-label={field.field_label} />
   }
   // Numbers (rule 36): thousands separators (814,817) and shorthand like 815k / 1.2m. Whole numbers
   // show no decimals; a value with decimals keeps them (display only — the stored value is not rounded).

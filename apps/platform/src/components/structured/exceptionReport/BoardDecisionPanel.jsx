@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { CheckCircle, Calendar, FileText } from 'lucide-react'
 import { recordBoardDecision } from '../../../services/exceptionReportApprovalService'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 export default function BoardDecisionPanel({ reportId, onDecisionRecorded, mode = 'view' }) {
   const [formData, setFormData] = useState({
@@ -74,8 +75,7 @@ export default function BoardDecisionPanel({ reportId, onDecisionRecorded, mode 
             </label>
             <div className="relative">
               <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
-                type="date"
+              <RegionalDateInput eventStyle
                 value={formData.board_decision_date}
                 onChange={(e) => setFormData(prev => ({ ...prev, board_decision_date: e.target.value }))}
                 required

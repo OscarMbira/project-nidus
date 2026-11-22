@@ -15,6 +15,7 @@ import AuditCard from '@nidus/ui/AuditCard'
 import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 function WPProductFormBody({ wpId, product = null, mode = 'create', onSave, onCancel }) {
   const [formData, setFormData] = useState({
@@ -338,8 +339,7 @@ function WPProductFormBody({ wpId, product = null, mode = 'create', onSave, onCa
             <FieldLabelWithHelp helpKey="public.wp_products.delivery_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Delivery Date
             </FieldLabelWithHelp>
-            <input
-              type="date"
+            <RegionalDateInput eventStyle
               name="delivery_date"
               value={formData.delivery_date}
               onChange={handleChange}
@@ -351,8 +351,7 @@ function WPProductFormBody({ wpId, product = null, mode = 'create', onSave, onCa
             <FieldLabelWithHelp helpKey="public.wp_products.acceptance_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Acceptance Date
             </FieldLabelWithHelp>
-            <input
-              type="date"
+            <RegionalDateInput eventStyle
               name="acceptance_date"
               value={formData.acceptance_date}
               onChange={handleChange}

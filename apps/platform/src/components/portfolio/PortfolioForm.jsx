@@ -15,6 +15,7 @@ import AuditCard from '@nidus/ui/AuditCard';
 import AuditField from '@nidus/ui/AuditField';
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
 import { humanizeAuditToken } from '@nidus/shared/utils/auditDisplayUtils';
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 function PortfolioFormBody({ portfolio, onSave, onCancel, useModalLayout = true, readOnly = false }) {
   const [formData, setFormData] = useState({
@@ -787,8 +788,7 @@ function PortfolioFormBody({ portfolio, onSave, onCancel, useModalLayout = true,
                 <FieldLabelWithHelp helpKey="public.portfolios.portfolio_start_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Start Date
                 </FieldLabelWithHelp>
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   name="portfolio_start_date"
                   value={formData.portfolio_start_date}
                   onChange={handleChange}
@@ -800,8 +800,7 @@ function PortfolioFormBody({ portfolio, onSave, onCancel, useModalLayout = true,
                 <FieldLabelWithHelp helpKey="public.portfolios.portfolio_end_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   End Date
                 </FieldLabelWithHelp>
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   name="portfolio_end_date"
                   value={formData.portfolio_end_date}
                   onChange={handleChange}

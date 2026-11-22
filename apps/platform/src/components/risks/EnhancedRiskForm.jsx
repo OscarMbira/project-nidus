@@ -23,6 +23,7 @@ import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/
 import SimilarRiskPanel from './SimilarRiskPanel'
 import { addRiskCategory, addRiskSubcategory, findSimilarRisks, getRiskCatalogueAccess, listRiskCatalogue } from '../../services/riskCategoryCatalogService'
 import { similarCatalogueNames } from '@nidus/shared/utils/riskCategoryMatch'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 function EnhancedRiskFormBody({ risk, projectId, riskRegisterId, onSave, onCancel, variant: variantProp, accountId: accountIdProp = null }) {
   const location = useLocation()
@@ -873,8 +874,7 @@ function EnhancedRiskFormBody({ risk, projectId, riskRegisterId, onSave, onCance
                 <FieldLabelWithHelp helpKey="public.risks.proximity_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Proximity Date
                 </FieldLabelWithHelp>
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   value={formData.proximity_date}
                   onChange={(e) => handleChange('proximity_date', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
@@ -976,8 +976,7 @@ function EnhancedRiskFormBody({ risk, projectId, riskRegisterId, onSave, onCance
                 <FieldLabelWithHelp helpKey="public.risks.date_registered" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Date Registered *
                 </FieldLabelWithHelp>
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   value={formData.date_registered}
                   onChange={(e) => handleChange('date_registered', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"

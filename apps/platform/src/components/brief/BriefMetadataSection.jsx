@@ -6,6 +6,7 @@
 import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useState, useEffect } from 'react'
 import { supabase } from '../../services/supabaseClient'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 export default function BriefMetadataSection({ formData, onChange, errors = {}, readOnly = false }) {
   const [users, setUsers] = useState([])
@@ -159,8 +160,7 @@ export default function BriefMetadataSection({ formData, onChange, errors = {}, 
           {readOnly ? (
             <p className="text-gray-900 dark:text-white">{formData.created_date || 'N/A'}</p>
           ) : (
-            <input
-              type="date"
+            <RegionalDateInput eventStyle
               name="created_date"
               value={formData.created_date || ''}
               onChange={handleChange}

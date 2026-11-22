@@ -16,6 +16,7 @@ import BackButton from '@nidus/planning/components/BackButton.jsx'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 import { useWorkspace } from '../../lib/workspace.jsx'
 import { createProject } from '../../lib/plannerApi.js'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 export function ProjectsListPage() {
   const navigate = useNavigate()
@@ -103,7 +104,7 @@ function ProjectCreatePageBody() {
       ) : (
       <form onSubmit={submit} className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 space-y-4">
         <FieldLabelWithHelp helpKey="public.projects.project_name" className="block text-sm">Project name *<input className={input} maxLength={200} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></FieldLabelWithHelp>
-        <FieldLabelWithHelp helpKey="public.projects.start_date" className="block text-sm">Start date<input type="date" className={input} value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.target.value })} /></FieldLabelWithHelp>
+        <FieldLabelWithHelp helpKey="public.projects.start_date" className="block text-sm">Start date<RegionalDateInput eventStyle className={input} value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.target.value })} /></FieldLabelWithHelp>
         <FieldLabelWithHelp helpKey="public.projects.project_description" className="block text-sm">Description<textarea rows={3} className={input} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></FieldLabelWithHelp>
         {error && <p role="alert" className="text-sm text-red-600 dark:text-red-400">{error}</p>}
         <div className="flex gap-2">

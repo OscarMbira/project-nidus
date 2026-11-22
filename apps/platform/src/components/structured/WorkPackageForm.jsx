@@ -13,6 +13,7 @@ import AuditCard from '@nidus/ui/AuditCard'
 import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 function WorkPackageFormBody({
   workPackage,
@@ -412,8 +413,7 @@ function WorkPackageFormBody({
                 <Calendar className="h-4 w-4 inline mr-1" />
                 Planned Start Date
               </FieldLabelWithHelp>
-              <input
-                type="date"
+              <RegionalDateInput eventStyle
                 name="planned_start_date"
                 value={formData.planned_start_date}
                 onChange={handleChange}
@@ -425,8 +425,7 @@ function WorkPackageFormBody({
                 <Calendar className="h-4 w-4 inline mr-1" />
                 Planned End Date
               </FieldLabelWithHelp>
-              <input
-                type="date"
+              <RegionalDateInput eventStyle
                 name="planned_end_date"
                 value={formData.planned_end_date}
                 onChange={handleChange}

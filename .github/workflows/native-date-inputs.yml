@@ -1,0 +1,42 @@
+name: Regional Date Input Check
+
+# v1351 (CLAUDE.md rule 79): browser date pickers (<input type="date">, type="datetime-local") show dates in the
+# computer's own language and region. Every date field uses RegionalDateInput from @nidus/ui instead, so dates
+# follow the organisation's Regional & Format Settings. Fails on any browser date picker in Platform, Simulator,
+# Planner or the shared packages; scripts/native-date-input-allowlist.json lists files still to convert (do not
+# grow it). Admin has its own check in the Admin repo.
+
+on:
+  push:
+    branches: [master, main]
+    paths:
+      - 'apps/*/src/**'
+      - 'packages/**'
+      - 'scripts/check-native-date-inputs.mjs'
+      - 'scripts/replace-native-date-inputs.mjs'
+      - 'scripts/native-date-input-allowlist.json'
+      - 'scripts/__tests__/native-date-inputs.test.mjs'
+  pull_request:
+    paths:
+      - 'apps/*/src/**'
+      - 'packages/**'
+      - 'scripts/check-native-date-inputs.mjs'
+      - 'scripts/replace-native-date-inputs.mjs'
+      - 'scripts/native-date-input-allowlist.json'
+      - 'scripts/__tests__/native-date-inputs.test.mjs'
+
+jobs:
+  native-date-inputs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Script unit tests
+        run: node --test scripts/__tests__/native-date-inputs.test.mjs
+
+      - name: No browser date pickers (Platform, Simulator, Planner, packages)
+        run: node scripts/check-native-date-inputs.mjs

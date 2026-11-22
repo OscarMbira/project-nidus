@@ -18,6 +18,7 @@ import {
   createRecurringTaskTemplate,
   updateRecurringTaskTemplate,
 } from '../services/recurringTaskService'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const ENTITY_TYPES = ['task', 'risk_review', 'status_report', 'meeting', 'other']
 const RECURRENCE_PATTERNS = ['daily', 'weekly', 'biweekly', 'monthly', 'quarterly']
@@ -157,7 +158,7 @@ function RecurringTaskFormBody() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <FieldLabelWithHelp helpKey="sim.recurring_task_templates.next_run_at" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Next run</FieldLabelWithHelp>
-            <input type="datetime-local" value={form.next_run_at} onChange={(e) => handleChange('next_run_at', e.target.value)} className={inputClass} />
+            <RegionalDateInput eventStyle withTime value={form.next_run_at} onChange={(e) => handleChange('next_run_at', e.target.value)} className={inputClass} />
           </div>
           <div>
             <FieldLabelWithHelp helpKey="sim.recurring_task_templates.timezone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Timezone</FieldLabelWithHelp>
@@ -183,7 +184,7 @@ function RecurringTaskFormBody() {
         {form.end_condition === 'until_date' && (
           <div>
             <FieldLabelWithHelp helpKey="sim.recurring_task_templates.end_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">End date</FieldLabelWithHelp>
-            <input type="date" value={form.end_date} onChange={(e) => handleChange('end_date', e.target.value)} className={inputClass} />
+            <RegionalDateInput eventStyle value={form.end_date} onChange={(e) => handleChange('end_date', e.target.value)} className={inputClass} />
           </div>
         )}
 

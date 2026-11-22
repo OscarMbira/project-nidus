@@ -616,7 +616,7 @@ check its data-loading path for the specific classes of waste this rule exists b
    - **Same value as before:** `YYYY-MM-DD` for a date, the existing ISO value for a date and time — no service, SQL or export change. Pass the same props the native input had (`value`, `onChange`, `required`, `min`, `max`, `disabled`, `id`, `aria-*`); label it with `FieldLabelWithHelp` (rule 76) as usual.
    - **Register engine fields** of type `date` / `datetime` get it through `RegisterFieldInput` — nothing to add per register.
    - **Out of scope:** read-only date display (use `formatRegionalDate` / `formatRegionalDateTime`), month / week pickers, time-only inputs.
-   - **Check:** `scripts/check-native-date-inputs.mjs` fails CI on a browser date picker once v1351 has replaced the existing ones. Until the control ships (v1351, in progress), do not add new date fields with a browser picker — build the field on `RegionalDateInput` as part of v1351 or wait for it. See `projectprd/v1351_regional_date_input_PRD.md` / `projectplan/v1351_regional_date_input_plan.md`.
+   - **Check:** `node scripts/check-native-date-inputs.mjs` (CI `native-date-inputs.yml`) fails on any browser date picker in Platform, Simulator, Planner or `packages/`. `scripts/native-date-input-allowlist.json` lists files still to convert — do not add to it; remove an entry when its file is converted. Codemod for a stray picker: `node scripts/replace-native-date-inputs.mjs --write <file>`. See `Documentation/Regional_Date_Input_v1351_Guide.md`, `projectprd/v1351_regional_date_input_PRD.md` / `projectplan/v1351_regional_date_input_plan.md`.
 
 
 ## Simulator Module Architecture Rules

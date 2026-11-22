@@ -13,6 +13,7 @@ import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 function ActionFormBody({ issueId, action, onSave, onCancel }) {
   const [formData, setFormData] = useState({
     action_description: '',
@@ -256,8 +257,7 @@ function ActionFormBody({ issueId, action, onSave, onCancel }) {
                 <Calendar className="h-4 w-4 inline mr-1" />
                 Target Date *
               </FieldLabelWithHelp>
-              <input
-                type="date"
+              <RegionalDateInput eventStyle
                 name="target_date"
                 value={formData.target_date}
                 onChange={handleChange}

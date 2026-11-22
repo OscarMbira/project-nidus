@@ -10,6 +10,7 @@ import { createPracticeBusinessCase } from '../../services/sim/practiceBusinessC
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const SECTIONS = [
   { id: 'summary', label: 'Executive Summary' },
@@ -300,8 +301,7 @@ export default function PracticeBusinessCaseCreate() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <FieldLabelWithHelp helpKey="sim.practice_business_cases.target_start_date" className={labelCls}>Target Start Date</FieldLabelWithHelp>
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   value={formData.target_start_date}
                   onChange={e => set('target_start_date', e.target.value)}
                   className={inputCls}
@@ -309,8 +309,7 @@ export default function PracticeBusinessCaseCreate() {
               </div>
               <div>
                 <FieldLabelWithHelp helpKey="sim.practice_business_cases.target_end_date" className={labelCls}>Target End Date</FieldLabelWithHelp>
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   value={formData.target_end_date}
                   onChange={e => set('target_end_date', e.target.value)}
                   className={inputCls}

@@ -11,6 +11,7 @@ import AuditCard from '@nidus/ui/AuditCard';
 import AuditField from '@nidus/ui/AuditField';
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 function EndStageReportFormBody({ projectId, boardId, report, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
@@ -286,8 +287,7 @@ function EndStageReportFormBody({ projectId, boardId, report, onClose, onSuccess
                     <Calendar className="h-4 w-4" />
                     Report Date *
                   </FieldLabelWithHelp>
-                  <input
-                    type="date"
+                  <RegionalDateInput eventStyle
                     value={formData.report_date}
                     onChange={(e) => setFormData({ ...formData, report_date: e.target.value })}
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
@@ -399,8 +399,7 @@ function EndStageReportFormBody({ projectId, boardId, report, onClose, onSuccess
                     <FieldLabelWithHelp helpKey="public.end_stage_reports.planned_start_date" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                       Planned Start Date
                     </FieldLabelWithHelp>
-                    <input
-                      type="date"
+                    <RegionalDateInput eventStyle
                       value={formData.planned_start_date}
                       onChange={(e) => setFormData({ ...formData, planned_start_date: e.target.value })}
                       className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
@@ -410,8 +409,7 @@ function EndStageReportFormBody({ projectId, boardId, report, onClose, onSuccess
                     <FieldLabelWithHelp helpKey="public.end_stage_reports.actual_start_date" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                       Actual Start Date
                     </FieldLabelWithHelp>
-                    <input
-                      type="date"
+                    <RegionalDateInput eventStyle
                       value={formData.actual_start_date}
                       onChange={(e) => setFormData({ ...formData, actual_start_date: e.target.value })}
                       className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
@@ -421,8 +419,7 @@ function EndStageReportFormBody({ projectId, boardId, report, onClose, onSuccess
                     <FieldLabelWithHelp helpKey="public.end_stage_reports.planned_end_date" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                       Planned End Date
                     </FieldLabelWithHelp>
-                    <input
-                      type="date"
+                    <RegionalDateInput eventStyle
                       value={formData.planned_end_date}
                       onChange={(e) => setFormData({ ...formData, planned_end_date: e.target.value })}
                       className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
@@ -432,8 +429,7 @@ function EndStageReportFormBody({ projectId, boardId, report, onClose, onSuccess
                     <FieldLabelWithHelp helpKey="public.end_stage_reports.actual_end_date" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                       Actual End Date
                     </FieldLabelWithHelp>
-                    <input
-                      type="date"
+                    <RegionalDateInput eventStyle
                       value={formData.actual_end_date}
                       onChange={(e) => setFormData({ ...formData, actual_end_date: e.target.value })}
                       className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"

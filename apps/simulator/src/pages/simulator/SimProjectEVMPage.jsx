@@ -8,6 +8,7 @@ import { platformDb, simDb } from '../../services/supabase/supabaseClient'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const EXPORT_COLS = [
   { key: 'period_date', label: 'Period' },
@@ -70,7 +71,7 @@ export default function SimProjectEVMPage() {
           <p className="text-sm text-gray-400 rounded-xl border border-gray-800 p-4">Audit details appear after a snapshot is saved.</p>
         ) : (
         <form onSubmit={save} className="flex flex-wrap gap-2 rounded-xl border border-gray-800 p-4">
-          <input type="date" value={form.period_date} onChange={(e) => setForm({ ...form, period_date: e.target.value })} className="rounded border border-gray-700 bg-gray-900 px-2 py-1 text-sm" />
+          <RegionalDateInput eventStyle value={form.period_date} onChange={(e) => setForm({ ...form, period_date: e.target.value })} className="rounded border border-gray-700 bg-gray-900 px-2 py-1 text-sm" />
           <input placeholder="PV" value={form.planned_value} onChange={(e) => setForm({ ...form, planned_value: e.target.value })} className="rounded border border-gray-700 bg-gray-900 px-2 py-1 text-sm" />
           <input placeholder="EV" value={form.earned_value} onChange={(e) => setForm({ ...form, earned_value: e.target.value })} className="rounded border border-gray-700 bg-gray-900 px-2 py-1 text-sm" />
           <input placeholder="AC" value={form.actual_cost} onChange={(e) => setForm({ ...form, actual_cost: e.target.value })} className="rounded border border-gray-700 bg-gray-900 px-2 py-1 text-sm" />

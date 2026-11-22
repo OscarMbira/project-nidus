@@ -13,6 +13,7 @@ import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 function EndProjectReportFormBody({ projectId, report, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [activeSection, setActiveSection] = useState('basic');
@@ -174,8 +175,7 @@ function EndProjectReportFormBody({ projectId, report, onClose, onSuccess }) {
                 <FieldLabelWithHelp helpKey="public.end_project_reports.report_date" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>
                   Report Date *
                 </FieldLabelWithHelp>
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   value={formData.report_date}
                   onChange={(e) => setFormData({ ...formData, report_date: e.target.value })}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
@@ -504,8 +504,7 @@ function EndProjectReportFormBody({ projectId, report, onClose, onSuccess }) {
               <FieldLabelWithHelp helpKey="public.end_project_reports.approval_date" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                 Approval Date
               </FieldLabelWithHelp>
-              <input
-                type="date"
+              <RegionalDateInput eventStyle
                 value={formData.approval_date}
                 onChange={(e) => setFormData({ ...formData, approval_date: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"

@@ -6,6 +6,7 @@
  */
 import { useState } from 'react'
 import Modal from './Modal'
+import RegionalDateInput from './RegionalDateInput.jsx'
 
 /**
  * @param {{ open: boolean, periodStart: string, periodEnd: string,
@@ -46,12 +47,12 @@ export default function TimesheetReminderDialog({
       <div className="flex flex-wrap items-end gap-3 mb-4">
         <label className="text-sm text-gray-700 dark:text-slate-200">
           From
-          <input type="date" value={periodStart} max={periodEnd} className={`block mt-1 ${input}`}
+          <RegionalDateInput eventStyle value={periodStart} max={periodEnd} className={`block mt-1 ${input}`}
             onChange={(e) => onPeriodChange?.({ periodStart: e.target.value, periodEnd })} />
         </label>
         <label className="text-sm text-gray-700 dark:text-slate-200">
           To
-          <input type="date" value={periodEnd} min={periodStart} className={`block mt-1 ${input}`}
+          <RegionalDateInput eventStyle value={periodEnd} min={periodStart} className={`block mt-1 ${input}`}
             onChange={(e) => onPeriodChange?.({ periodStart, periodEnd: e.target.value })} />
         </label>
         <p className="text-xs text-gray-500 dark:text-slate-400 pb-2">In-app notification and email to each person ticked.</p>

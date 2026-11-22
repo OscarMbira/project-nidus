@@ -22,6 +22,7 @@ import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/
 import MultiLineListInput, { joinMultiLineValue, parseMultiLineValue } from '@nidus/ui/MultiLineListInput';
 import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp';
 import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext';
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 /** v1345: field-level help keys for every field on this form (help text in public.field_help, SQL v1491). */
 const STAKEHOLDER_HELP_KEYS = [
@@ -987,8 +988,7 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
                 <FieldLabelWithHelp helpKey="public.stakeholders.identification_date" htmlFor="stk-identification_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Identification date
                 </FieldLabelWithHelp>
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   id="stk-identification_date"
                   name="identification_date"
                   value={formData.identification_date}

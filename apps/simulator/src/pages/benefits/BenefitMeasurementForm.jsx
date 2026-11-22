@@ -14,6 +14,7 @@ import {
   getBenefitMeasurement,
   saveBenefitMeasurement,
 } from '../../services/benefitsService'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const TYPES = [
   { value: 'actual', label: 'Actual' },
@@ -212,7 +213,7 @@ function BenefitMeasurementFormBody() {
             )}
             <div>
               <FieldLabelWithHelp helpKey="sim.benefit_measurements.measurement_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" htmlFor="measurement-date" required>Measurement Date *</FieldLabelWithHelp>
-              <input id="measurement-date" type="date" required value={measurementDate} onChange={(e) => setMeasurementDate(e.target.value)} className={inputClass} />
+              <RegionalDateInput eventStyle id="measurement-date" required value={measurementDate} onChange={(e) => setMeasurementDate(e.target.value)} className={inputClass} />
             </div>
             <div>
               <FieldLabelWithHelp helpKey="sim.benefit_measurements.measurement_value" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" htmlFor="measurement-value" required>Measurement Value *</FieldLabelWithHelp>

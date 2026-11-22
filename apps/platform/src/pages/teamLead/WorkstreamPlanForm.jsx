@@ -14,6 +14,7 @@ import AuditCard from '@nidus/ui/AuditCard';
 import AuditField from '@nidus/ui/AuditField';
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const inp='w-full rounded-lg border border-gray-600 bg-gray-700 text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
 const lbl='block text-sm font-medium text-gray-300 mb-1';
@@ -92,8 +93,8 @@ function WorkstreamPlanFormBody() {
           <div><FieldLabelWithHelp helpKey="public.workstream_plans.status" className={lbl}>Status</FieldLabelWithHelp><select className={inp} value={form.status} onChange={set('status')}>{['draft','active','on_hold','completed'].map(s=><option key={s} value={s}>{s}</option>)}</select></div>
         </div>
         <div className="grid grid-cols-2 gap-4">
-          <div><FieldLabelWithHelp helpKey="public.workstream_plans.start_date" className={lbl}>Start Date</FieldLabelWithHelp><input type="date" className={inp} value={form.start_date} onChange={set('start_date')}/></div>
-          <div><FieldLabelWithHelp helpKey="public.workstream_plans.end_date" className={lbl}>End Date</FieldLabelWithHelp><input type="date" className={inp} value={form.end_date} onChange={set('end_date')}/></div>
+          <div><FieldLabelWithHelp helpKey="public.workstream_plans.start_date" className={lbl}>Start Date</FieldLabelWithHelp><RegionalDateInput eventStyle className={inp} value={form.start_date} onChange={set('start_date')}/></div>
+          <div><FieldLabelWithHelp helpKey="public.workstream_plans.end_date" className={lbl}>End Date</FieldLabelWithHelp><RegionalDateInput eventStyle className={inp} value={form.end_date} onChange={set('end_date')}/></div>
         </div>
         <div><FieldLabelWithHelp helpKey="public.workstream_plans.objectives" className={lbl}>Objectives</FieldLabelWithHelp><textarea className={`${inp} h-20 resize-none`} value={form.objectives} onChange={set('objectives')} placeholder="Key objectives for this workstream…"/></div>
         <div><FieldLabelWithHelp helpKey="public.workstream_plans.tasks_summary" className={lbl}>Tasks Summary</FieldLabelWithHelp><textarea className={`${inp} h-16 resize-none`} value={form.tasks_summary} onChange={set('tasks_summary')} placeholder="High-level task overview…"/></div>

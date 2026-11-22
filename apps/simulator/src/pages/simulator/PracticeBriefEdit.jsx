@@ -23,6 +23,7 @@ import { resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesContext'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import { useToastContext } from '@nidus/shared/context/ToastContext'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const TABS = [
   { value: 'definition', label: 'Definition' },
@@ -212,11 +213,11 @@ export default function PracticeBriefEdit() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <FieldLabelWithHelp helpKey="sim.practice_project_briefs.target_start_date" htmlFor="target_start_date" className={labelCls}>Target start</FieldLabelWithHelp>
-                  <input id="target_start_date" type="date" className={input} value={formData.target_start_date || ''} onChange={set('target_start_date')} />
+                  <RegionalDateInput eventStyle id="target_start_date" className={input} value={formData.target_start_date || ''} onChange={set('target_start_date')} />
                 </div>
                 <div>
                   <FieldLabelWithHelp helpKey="sim.practice_project_briefs.target_end_date" htmlFor="target_end_date" className={labelCls}>Target end</FieldLabelWithHelp>
-                  <input id="target_end_date" type="date" className={input} value={formData.target_end_date || ''} onChange={set('target_end_date')} />
+                  <RegionalDateInput eventStyle id="target_end_date" className={input} value={formData.target_end_date || ''} onChange={set('target_end_date')} />
                 </div>
               </div>
               <ProjectMilestonesSummary

@@ -13,6 +13,7 @@ import AuditCard from '@nidus/ui/AuditCard';
 import AuditField from '@nidus/ui/AuditField';
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 // project_roles.role_level hierarchy (v91): team_manager=8, project_manager=9,
 // programme_manager=10, project_sponsor=11, project_board_member=12. Programme tier
@@ -320,8 +321,7 @@ function ResourceForecastFormBody({ forecast, onSave, onCancel, variant = 'modal
                 <FieldLabelWithHelp helpKey="public.resource_forecasts.forecast_start_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Start Date *
                 </FieldLabelWithHelp>
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   name="forecast_start_date"
                   value={formData.forecast_start_date}
                   onChange={handleChange}
@@ -334,8 +334,7 @@ function ResourceForecastFormBody({ forecast, onSave, onCancel, variant = 'modal
                 <FieldLabelWithHelp helpKey="public.resource_forecasts.forecast_end_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   End Date *
                 </FieldLabelWithHelp>
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   name="forecast_end_date"
                   value={formData.forecast_end_date}
                   onChange={handleChange}

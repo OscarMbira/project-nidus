@@ -12,6 +12,7 @@ import { Save, CheckCircle2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { platformDb } from '@nidus/supabase'
 import { fetchChangeImplementation, createChangeImplementation, updateChangeImplementation } from '../../services/changeManagementService'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const STATUS_OPTIONS = ['planned', 'in-progress', 'completed', 'on-hold', 'cancelled']
 
@@ -129,12 +130,12 @@ function ChangeImplementationBody({ changeRequestId, projectId }) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
           <FieldLabelWithHelp helpKey="public.change_implementations.planned_start_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Planned start</FieldLabelWithHelp>
-          <input type="date" value={form.planned_start_date} onChange={(e) => setForm({ ...form, planned_start_date: e.target.value })}
+          <RegionalDateInput eventStyle value={form.planned_start_date} onChange={(e) => setForm({ ...form, planned_start_date: e.target.value })}
             className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-sm" />
         </div>
         <div>
           <FieldLabelWithHelp helpKey="public.change_implementations.planned_end_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Planned end</FieldLabelWithHelp>
-          <input type="date" value={form.planned_end_date} onChange={(e) => setForm({ ...form, planned_end_date: e.target.value })}
+          <RegionalDateInput eventStyle value={form.planned_end_date} onChange={(e) => setForm({ ...form, planned_end_date: e.target.value })}
             className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-sm" />
         </div>
         <div>

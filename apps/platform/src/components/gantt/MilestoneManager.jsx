@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import * as ganttService from '../../services/ganttService';
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 /**
  * Milestone Types with Icons and Colors
@@ -526,8 +527,7 @@ const MilestoneForm = ({ milestone, tasks, onSave, onCancel }) => {
             <FieldLabelWithHelp helpKey="public.project_milestones.milestone_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
               Date *
             </FieldLabelWithHelp>
-            <input
-              type="date"
+            <RegionalDateInput eventStyle
               name="milestone_date"
               value={formData.milestone_date}
               onChange={handleChange}

@@ -12,6 +12,7 @@ import { getBenefits } from '../../services/benefitsService';
 import { XCircle } from 'lucide-react';
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 export default function BenefitsReviewSchedule({ planId, projectId, onUpdate }) {
   const [reviews, setReviews] = useState([]);
@@ -333,8 +334,7 @@ export default function BenefitsReviewSchedule({ planId, projectId, onUpdate }) 
                 <FieldLabelWithHelp helpKey="public.benefits_review_schedule.planned_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Planned Date *
                 </FieldLabelWithHelp>
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   value={reviewData.planned_date}
                   onChange={(e) => setReviewData({ ...reviewData, planned_date: e.target.value })}
                   required
@@ -346,8 +346,7 @@ export default function BenefitsReviewSchedule({ planId, projectId, onUpdate }) 
                 <FieldLabelWithHelp helpKey="public.benefits_review_schedule.forecast_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Forecast Date
                 </FieldLabelWithHelp>
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   value={reviewData.forecast_date}
                   onChange={(e) => setReviewData({ ...reviewData, forecast_date: e.target.value })}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"

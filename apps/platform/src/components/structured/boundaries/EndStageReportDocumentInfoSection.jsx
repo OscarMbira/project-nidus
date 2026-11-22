@@ -4,6 +4,7 @@ import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { FileText, User, Calendar, Users } from 'lucide-react'
 import { supabase } from '../../../services/supabaseClient'
 import { generateReportReference } from '../../../services/endStageReportService'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 function EndStageReportDocumentInfoSectionBody({ formData, onChange, errors, mode, projectId, stageNumber }) {
   const [users, setUsers] = useState([])
@@ -75,8 +76,7 @@ function EndStageReportDocumentInfoSectionBody({ formData, onChange, errors, mod
             <Calendar className="h-4 w-4 inline mr-1" />
             Report Date *
           </FieldLabelWithHelp>
-          <input
-            type="date"
+          <RegionalDateInput eventStyle
             value={formData.report_date || ''}
             onChange={(e) => onChange('report_date', e.target.value)}
             required
@@ -99,8 +99,7 @@ function EndStageReportDocumentInfoSectionBody({ formData, onChange, errors, mod
           <FieldLabelWithHelp helpKey="public.end_stage_reports.reporting_period_start" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Reporting Period Start
           </FieldLabelWithHelp>
-          <input
-            type="date"
+          <RegionalDateInput eventStyle
             value={formData.reporting_period_start || ''}
             onChange={(e) => onChange('reporting_period_start', e.target.value || null)}
             disabled={mode === 'view'}
@@ -114,8 +113,7 @@ function EndStageReportDocumentInfoSectionBody({ formData, onChange, errors, mod
           <FieldLabelWithHelp helpKey="public.end_stage_reports.reporting_period_end" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Reporting Period End
           </FieldLabelWithHelp>
-          <input
-            type="date"
+          <RegionalDateInput eventStyle
             value={formData.reporting_period_end || ''}
             onChange={(e) => onChange('reporting_period_end', e.target.value || null)}
             disabled={mode === 'view'}

@@ -16,6 +16,7 @@ import RowActionButton from './RowActionButton'
 import Modal from './Modal'
 import SelectField from './SelectField'
 import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from './Table'
+import RegionalDateInput from './RegionalDateInput.jsx'
 
 // Unsorted keeps the saved row order. These rows are document lines (a glossary, a version
 // history) and have no created date of their own, so A→Z is a click away rather than the default.
@@ -23,6 +24,11 @@ const DOCUMENT_ORDER = { column: null, direction: null }
 
 const INPUT_CLASS =
   'w-full px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm'
+
+/** A table cell: a date column gets the regional date input (v1351, rule 79), anything else a text box. */
+function CellTextOrDate({ isDate, ...props }) {
+  return isDate ? <RegionalDateInput eventStyle {...props} /> : <input type="text" {...props} />
+}
 
 /**
  * @param {object} props
@@ -101,8 +107,8 @@ export default function TableListInput({
       disabled={disabled}
     />
   ) : (
-    <input
-      type={col.type === 'date' ? 'date' : 'text'}
+    <CellTextOrDate
+      isDate={col.type === 'date'}
       value={cell}
       onChange={(e) => onCell(e.target.value)}
       onKeyDown={(e) => {

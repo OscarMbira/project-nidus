@@ -15,6 +15,7 @@ import AuditCard from '@nidus/ui/AuditCard';
 import AuditField from '@nidus/ui/AuditField';
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 function QualityInspectionFormBody({
   inspection,
@@ -401,8 +402,7 @@ function QualityInspectionFormBody({
                 <FieldLabelWithHelp helpKey="public.quality_inspections.inspection_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Inspection Date *
                 </FieldLabelWithHelp>
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   name="inspection_date"
                   value={formData.inspection_date}
                   onChange={handleChange}
@@ -415,8 +415,7 @@ function QualityInspectionFormBody({
                 <FieldLabelWithHelp helpKey="public.quality_inspections.forecast_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Forecast Date
                 </FieldLabelWithHelp>
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   name="forecast_date"
                   value={formData.forecast_date}
                   onChange={handleChange}
@@ -428,8 +427,7 @@ function QualityInspectionFormBody({
                 <FieldLabelWithHelp helpKey="public.quality_inspections.sign_off_planned_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Sign-Off Planned Date
                 </FieldLabelWithHelp>
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   name="sign_off_planned_date"
                   value={formData.sign_off_planned_date}
                   onChange={handleChange}
@@ -441,8 +439,7 @@ function QualityInspectionFormBody({
                 <FieldLabelWithHelp helpKey="public.quality_inspections.sign_off_forecast_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Sign-Off Forecast Date
                 </FieldLabelWithHelp>
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   name="sign_off_forecast_date"
                   value={formData.sign_off_forecast_date}
                   onChange={handleChange}
@@ -695,8 +692,7 @@ function QualityInspectionFormBody({
                   <FieldLabelWithHelp helpKey="public.quality_inspections.follow_up_inspection_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Follow-up Inspection Date
                   </FieldLabelWithHelp>
-                  <input
-                    type="date"
+                  <RegionalDateInput eventStyle
                     name="follow_up_inspection_date"
                     value={formData.follow_up_inspection_date}
                     onChange={handleChange}

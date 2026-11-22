@@ -3,6 +3,7 @@ import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { FileText, User, Calendar } from 'lucide-react'
 import { supabase } from '../../services/supabaseClient'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 function CheckpointReportHeaderBody({ formData, onChange, errors, mode }) {
   const [users, setUsers] = useState([])
@@ -41,8 +42,7 @@ function CheckpointReportHeaderBody({ formData, onChange, errors, mode }) {
             <Calendar className="h-4 w-4 inline mr-1" />
             Checkpoint Date *
           </FieldLabelWithHelp>
-          <input
-            type="date"
+          <RegionalDateInput eventStyle
             value={formData.checkpoint_date || ''}
             onChange={(e) => onChange('checkpoint_date', e.target.value)}
             required

@@ -17,6 +17,7 @@ import AuditCard from '@nidus/ui/AuditCard'
 import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 function ProductStatusAccountFormBody({
   projectId,
@@ -301,8 +302,7 @@ function ProductStatusAccountFormBody({
               <FieldLabelWithHelp helpKey="public.product_status_accounts.report_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
                 Report Date <span className="text-red-500">*</span>
               </FieldLabelWithHelp>
-              <input
-                type="date"
+              <RegionalDateInput eventStyle
                 name="report_date"
                 value={formData.report_date}
                 onChange={handleChange}
@@ -492,8 +492,7 @@ function ProductStatusAccountFormBody({
               <FieldLabelWithHelp helpKey="public.product_status_accounts.planned_start_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Planned Start Date
               </FieldLabelWithHelp>
-              <input
-                type="date"
+              <RegionalDateInput eventStyle
                 name="planned_start_date"
                 value={formData.planned_start_date}
                 onChange={handleChange}
@@ -505,8 +504,7 @@ function ProductStatusAccountFormBody({
               <FieldLabelWithHelp helpKey="public.product_status_accounts.actual_start_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Actual Start Date
               </FieldLabelWithHelp>
-              <input
-                type="date"
+              <RegionalDateInput eventStyle
                 name="actual_start_date"
                 value={formData.actual_start_date}
                 onChange={handleChange}
@@ -518,8 +516,7 @@ function ProductStatusAccountFormBody({
               <FieldLabelWithHelp helpKey="public.product_status_accounts.planned_completion_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Planned Completion Date
               </FieldLabelWithHelp>
-              <input
-                type="date"
+              <RegionalDateInput eventStyle
                 name="planned_completion_date"
                 value={formData.planned_completion_date}
                 onChange={handleChange}
@@ -531,8 +528,7 @@ function ProductStatusAccountFormBody({
               <FieldLabelWithHelp helpKey="public.product_status_accounts.forecast_completion_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Forecast Completion Date
               </FieldLabelWithHelp>
-              <input
-                type="date"
+              <RegionalDateInput eventStyle
                 name="forecast_completion_date"
                 value={formData.forecast_completion_date}
                 onChange={handleChange}
@@ -544,8 +540,7 @@ function ProductStatusAccountFormBody({
               <FieldLabelWithHelp helpKey="public.product_status_accounts.actual_completion_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Actual Completion Date
               </FieldLabelWithHelp>
-              <input
-                type="date"
+              <RegionalDateInput eventStyle
                 name="actual_completion_date"
                 value={formData.actual_completion_date}
                 onChange={handleChange}

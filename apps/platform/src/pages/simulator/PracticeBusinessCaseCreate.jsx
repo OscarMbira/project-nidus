@@ -8,6 +8,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, ChevronLeft } from 'lucide-react'
 import { createPracticeBusinessCase } from '../../services/sim/practiceBusinessCaseService'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const SECTIONS = [
   { id: 'summary', label: 'Executive Summary' },
@@ -292,8 +293,7 @@ export default function PracticeBusinessCaseCreate() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className={labelCls}>Target Start Date</label>
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   value={formData.target_start_date}
                   onChange={e => set('target_start_date', e.target.value)}
                   className={inputCls}
@@ -301,8 +301,7 @@ export default function PracticeBusinessCaseCreate() {
               </div>
               <div>
                 <label className={labelCls}>Target End Date</label>
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   value={formData.target_end_date}
                   onChange={e => set('target_end_date', e.target.value)}
                   className={inputCls}

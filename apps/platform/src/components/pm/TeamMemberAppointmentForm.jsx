@@ -3,6 +3,7 @@ import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { TIME_COMMITMENT_OPTIONS, WORKING_ARRANGEMENT_OPTIONS } from '@nidus/shared/utils/appointmentRoleUtils'
 import MultiLineListInput from '../project/MultiLineListInput'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const EMPTY = {
   roleTitle: '',
@@ -105,8 +106,7 @@ function TeamMemberAppointmentFormBody({
           </div>
           <div>
             <FieldLabelWithHelp helpKey="public.team_member_appointment_records.assignment_start_date" className={LABEL_CLASS}>Start date</FieldLabelWithHelp>
-            <input
-              type="date"
+            <RegionalDateInput eventStyle
               value={form.assignmentStartDate}
               onChange={(e) => patch({ assignmentStartDate: e.target.value })}
               className={INPUT_CLASS}
@@ -114,8 +114,7 @@ function TeamMemberAppointmentFormBody({
           </div>
           <div>
             <FieldLabelWithHelp helpKey="public.team_member_appointment_records.assignment_end_date" className={LABEL_CLASS}>End date</FieldLabelWithHelp>
-            <input
-              type="date"
+            <RegionalDateInput eventStyle
               value={form.assignmentEndDate}
               onChange={(e) => patch({ assignmentEndDate: e.target.value })}
               className={INPUT_CLASS}

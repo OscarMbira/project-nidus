@@ -6,6 +6,7 @@ import { Phone, Plus, Search, Calendar, Clock, Pencil, Trash2, X, Save } from 'l
 import { simDb } from '../../../../services/supabase/supabaseClient'
 import { getCalls, createCall, updateCall, deleteCall } from '../../../../services/sim/simCommunicationsService'
 import PlanningProjectBar, { usePlanningProjectId } from '../../../../components/planning/PlanningProjectBar'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const STATUS_COLORS = {
   scheduled:   'bg-blue-900/40 text-blue-300 border-blue-700',
@@ -37,7 +38,7 @@ function CallForm({ initial, onSave, onCancel, saving }) {
         </div>
         <div>
           <FieldLabelWithHelp helpKey="public.team_calls.scheduled_at" className="block text-sm font-medium text-slate-300 mb-1">Scheduled Date & Time</FieldLabelWithHelp>
-          <input type="datetime-local" name="scheduled_at" value={form.scheduled_at} onChange={handleChange}
+          <RegionalDateInput eventStyle withTime name="scheduled_at" value={form.scheduled_at} onChange={handleChange}
             className="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2.5 text-sm text-slate-100 focus:border-blue-500 focus:outline-none" />
         </div>
         <div>

@@ -27,6 +27,7 @@ import {
 } from '../../services/changeRequestorCatalogueService';
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 function ChangeRequestFormBody({
   projectId,
   request,
@@ -470,8 +471,7 @@ function ChangeRequestFormBody({
                 <FieldLabelWithHelp helpKey="public.change_requests.submission_date" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>
                   Submission Date *
                 </FieldLabelWithHelp>
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   value={formData.submission_date}
                   onChange={(e) => setFormData({ ...formData, submission_date: e.target.value })}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
@@ -483,8 +483,7 @@ function ChangeRequestFormBody({
                 <FieldLabelWithHelp helpKey="public.change_requests.approval_required_by_date" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                   Decision Needed By
                 </FieldLabelWithHelp>
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   value={formData.approval_required_by_date}
                   min={formData.submission_date || undefined}
                   onChange={(e) => setFormData({ ...formData, approval_required_by_date: e.target.value })}

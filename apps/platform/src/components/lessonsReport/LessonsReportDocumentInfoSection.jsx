@@ -8,6 +8,7 @@ import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { FileText, Calendar, User } from 'lucide-react'
 import { generateReportReference } from '../../services/lessonsReportService'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 function LessonsReportDocumentInfoSectionBody({
   formData,
@@ -123,8 +124,7 @@ function LessonsReportDocumentInfoSectionBody({
             {formData.report_date ? new Date(formData.report_date).toLocaleDateString() : 'N/A'}
           </p>
         ) : (
-          <input
-            type="date"
+          <RegionalDateInput eventStyle
             value={formData.report_date || ''}
             onChange={(e) => onChange('report_date', e.target.value)}
             className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${
@@ -170,8 +170,7 @@ function LessonsReportDocumentInfoSectionBody({
                 {formData.reporting_period_start ? new Date(formData.reporting_period_start).toLocaleDateString() : 'N/A'}
               </p>
             ) : (
-              <input
-                type="date"
+              <RegionalDateInput eventStyle
                 value={formData.reporting_period_start || ''}
                 onChange={(e) => onChange('reporting_period_start', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
@@ -187,8 +186,7 @@ function LessonsReportDocumentInfoSectionBody({
                 {formData.reporting_period_end ? new Date(formData.reporting_period_end).toLocaleDateString() : 'N/A'}
               </p>
             ) : (
-              <input
-                type="date"
+              <RegionalDateInput eventStyle
                 value={formData.reporting_period_end || ''}
                 onChange={(e) => onChange('reporting_period_end', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"

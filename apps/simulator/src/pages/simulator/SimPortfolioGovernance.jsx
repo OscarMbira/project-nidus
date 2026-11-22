@@ -10,6 +10,7 @@ import {
 import ExportListMenu from '@nidus/ui/ExportListMenu'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const GOVERNANCE_MODELS = ['Centralised', 'Decentralised', 'Federated', 'Hybrid', 'Matrix']
 
@@ -382,8 +383,7 @@ function SimPortfolioGovernanceBody() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <FieldLabelWithHelp helpKey="sim.practice_portfolio_governance.last_review_date" className="block text-gray-400 text-sm mb-1">Last Review</FieldLabelWithHelp>
-                  <input
-                    type="date"
+                  <RegionalDateInput eventStyle
                     value={form.last_review_date}
                     onChange={(e) =>
                       setForm((f) => ({ ...f, last_review_date: e.target.value }))
@@ -393,8 +393,7 @@ function SimPortfolioGovernanceBody() {
                 </div>
                 <div>
                   <FieldLabelWithHelp helpKey="sim.practice_portfolio_governance.next_review_date" className="block text-gray-400 text-sm mb-1">Next Review</FieldLabelWithHelp>
-                  <input
-                    type="date"
+                  <RegionalDateInput eventStyle
                     value={form.next_review_date}
                     onChange={(e) =>
                       setForm((f) => ({ ...f, next_review_date: e.target.value }))

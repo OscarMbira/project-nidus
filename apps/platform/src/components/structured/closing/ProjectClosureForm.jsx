@@ -19,6 +19,7 @@ import SelectField from '@nidus/ui/SelectField'
 import { SmartAmountInput } from '@nidus/ui/SmartAmountInput'
 import ExportRecordMenu from '@nidus/ui/ExportRecordMenu'
 import { RowActionButton } from '@nidus/ui'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 function approverLines(closure) {
   const list = String(closure?.approved_by_list || '').trim()
@@ -483,8 +484,7 @@ function ProjectClosureFormBody({ projectId, closure, onClose, onSuccess, initia
                   <Calendar className="h-4 w-4" />
                   Planned Closure Date
                 </FieldLabelWithHelp>
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   value={formData.planned_closure_date}
                   onChange={(e) => setFormData({ ...formData, planned_closure_date: e.target.value })}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
@@ -496,8 +496,7 @@ function ProjectClosureFormBody({ projectId, closure, onClose, onSuccess, initia
                   <Calendar className="h-4 w-4" />
                   Actual Closure Date
                 </FieldLabelWithHelp>
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   value={formData.actual_closure_date}
                   onChange={(e) => setFormData({ ...formData, actual_closure_date: e.target.value })}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
@@ -670,8 +669,7 @@ function ProjectClosureFormBody({ projectId, closure, onClose, onSuccess, initia
             </FieldLabelWithHelp>
               <div>
                 <FieldLabelWithHelp helpKey="public.project_closures.financial_closure_date" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Financial Closure Date</FieldLabelWithHelp>
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   value={formData.financial_closure_date}
                   onChange={(e) => setFormData({ ...formData, financial_closure_date: e.target.value })}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
@@ -753,8 +751,7 @@ function ProjectClosureFormBody({ projectId, closure, onClose, onSuccess, initia
             </FieldLabelWithHelp>
               <div>
                 <FieldLabelWithHelp helpKey="public.project_closures.resources_release_date" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Resources Release Date</FieldLabelWithHelp>
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   value={formData.resources_release_date}
                   onChange={(e) => setFormData({ ...formData, resources_release_date: e.target.value })}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
@@ -866,8 +863,7 @@ function ProjectClosureFormBody({ projectId, closure, onClose, onSuccess, initia
                 <Calendar className="h-4 w-4" />
                 Final Approval Date
               </FieldLabelWithHelp>
-              <input
-                type="date"
+              <RegionalDateInput eventStyle
                 value={formData.final_approval_date}
                 onChange={(e) => setFormData({ ...formData, final_approval_date: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
@@ -952,8 +948,7 @@ function ProjectClosureFormBody({ projectId, closure, onClose, onSuccess, initia
                   <Calendar className="h-4 w-4" />
                   Board Approval Date
                 </FieldLabelWithHelp>
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   value={formData.board_approval_date}
                   onChange={(e) => setFormData({ ...formData, board_approval_date: e.target.value })}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"

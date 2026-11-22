@@ -10,6 +10,7 @@ import { ArrowLeft } from 'lucide-react'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesContext'
 import { getMilestone, createMilestone, updateMilestone, MILESTONE_STATUSES } from '../../services/milestoneService'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const inputClass =
   'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm'
@@ -141,15 +142,15 @@ function MilestoneFormBody() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
             <FieldLabelWithHelp helpKey="sim.milestones.target_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>Target Date *</FieldLabelWithHelp>
-            <input type="date" value={targetDate} onChange={(e) => setTargetDate(e.target.value)} className={inputClass} />
+            <RegionalDateInput eventStyle value={targetDate} onChange={(e) => setTargetDate(e.target.value)} className={inputClass} />
           </div>
           <div>
             <FieldLabelWithHelp helpKey="sim.milestones.forecast_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Forecast Date</FieldLabelWithHelp>
-            <input type="date" value={forecastDate} onChange={(e) => setForecastDate(e.target.value)} className={inputClass} />
+            <RegionalDateInput eventStyle value={forecastDate} onChange={(e) => setForecastDate(e.target.value)} className={inputClass} />
           </div>
           <div>
             <FieldLabelWithHelp helpKey="sim.milestones.actual_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Actual Date</FieldLabelWithHelp>
-            <input type="date" value={actualDate} onChange={(e) => setActualDate(e.target.value)} className={inputClass} />
+            <RegionalDateInput eventStyle value={actualDate} onChange={(e) => setActualDate(e.target.value)} className={inputClass} />
           </div>
         </div>
 

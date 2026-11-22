@@ -12,6 +12,7 @@ import Button from '@nidus/ui/Button';
 import Card from '@nidus/ui/Card';
 import SimulatorHeader from '../components/homepage/SimulatorHeader';
 import SimulatorFooter from '../components/homepage/SimulatorFooter';
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const SimulatorRequestDemoPage = () => {
   const [formData, setFormData] = useState({
@@ -198,8 +199,7 @@ const SimulatorRequestDemoPage = () => {
                     <FieldLabelWithHelp helpKey="public.demo_requests.preferred_date" htmlFor="preferredDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Preferred Date
                     </FieldLabelWithHelp>
-                    <input
-                      type="date"
+                    <RegionalDateInput eventStyle
                       id="preferredDate"
                       name="preferredDate"
                       value={formData.preferredDate}

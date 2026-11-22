@@ -4,6 +4,7 @@ import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { supabase } from '../../services/supabaseClient'
 import { format } from 'date-fns'
 import { FileText, Save, X, Calendar, User } from 'lucide-react'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 function CheckpointReportBody({ projectId, stageBoundaryId, workPackageId, onSave, onCancel }) {
   const [formData, setFormData] = useState({
@@ -84,8 +85,7 @@ function CheckpointReportBody({ projectId, stageBoundaryId, workPackageId, onSav
                 <Calendar className="h-4 w-4 inline mr-1" />
                 Checkpoint Date *
               </FieldLabelWithHelp>
-              <input
-                type="date"
+              <RegionalDateInput eventStyle
                 name="checkpoint_date"
                 value={formData.checkpoint_date}
                 onChange={handleChange}

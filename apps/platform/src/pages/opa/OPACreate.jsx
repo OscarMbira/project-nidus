@@ -8,6 +8,7 @@ import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 const OPA_TYPES = ['template', 'guideline', 'standard', 'procedure', 'policy', 'historical_info', 'lessons_learned', 'other']
 
 const initial = {
@@ -237,8 +238,7 @@ function OPACreateBody() {
           <div className="grid sm:grid-cols-2 gap-4">
             <FieldLabelWithHelp helpKey="public.organisational_process_assets.effective_date" className="block">
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Effective date</span>
-              <input
-                type="date"
+              <RegionalDateInput eventStyle
                 className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 min-h-[44px]"
                 value={form.effective_date}
                 onChange={(e) => set('effective_date', e.target.value)}
@@ -246,8 +246,7 @@ function OPACreateBody() {
             </FieldLabelWithHelp>
             <FieldLabelWithHelp helpKey="public.organisational_process_assets.expiry_date" className="block">
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Expiry date</span>
-              <input
-                type="date"
+              <RegionalDateInput eventStyle
                 className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 min-h-[44px]"
                 value={form.expiry_date}
                 onChange={(e) => set('expiry_date', e.target.value)}

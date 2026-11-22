@@ -16,6 +16,7 @@ import ActionDescriptionItemsField, { descriptionItemsFromAction, joinDescriptio
 import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesContext';
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal';
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const CATEGORIES = [
   { value: 'operational-handover', label: 'Operational Handover' },
@@ -324,8 +325,7 @@ function FollowOnActionsFormBody({ projectId, action, onClose, onSuccess, readOn
                     <Calendar className="h-4 w-4" />
                     Target Completion Date
                   </FieldLabelWithHelp>
-                  <input
-                    type="date"
+                  <RegionalDateInput eventStyle
                     value={formData.recommended_completion_date}
                     onChange={(e) => setFormData({ ...formData, recommended_completion_date: e.target.value })}
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
@@ -345,8 +345,7 @@ function FollowOnActionsFormBody({ projectId, action, onClose, onSuccess, readOn
                 </div>
                 <div>
                   <FieldLabelWithHelp helpKey="public.follow_on_actions.recommended_start_date" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Recommended Start Date</FieldLabelWithHelp>
-                  <input
-                    type="date"
+                  <RegionalDateInput eventStyle
                     value={formData.recommended_start_date}
                     onChange={(e) => setFormData({ ...formData, recommended_start_date: e.target.value })}
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"

@@ -29,6 +29,7 @@ import {
   loadStagedItems,
   runMeetingRegisterAgent,
 } from '../../services/communications/meetingFilingService'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const CHOICE_LABEL = { create: 'Create draft', update: 'Add to existing record', reject: 'Set aside', later: 'Decide later' }
 const STATUS_LABEL = { created: 'Draft created', merged: 'Added to existing record', rejected: 'Set aside', dismissed: 'Set aside', converted_to_task: 'Converted to task', completed: 'Completed' }
@@ -250,7 +251,7 @@ export default function MeetingExtractionReview() {
                       {showDue && choice === 'create' && (
                         <label className="text-xs text-gray-600 dark:text-gray-400">
                           Due date
-                          <input type="date" className={inputCls} value={edit.dueDate ?? row.suggested_due_date ?? row.due_date ?? ''}
+                          <RegionalDateInput eventStyle className={inputCls} value={edit.dueDate ?? row.suggested_due_date ?? row.due_date ?? ''}
                             onChange={(e) => setEdit(row.id, { dueDate: e.target.value || null })} />
                         </label>
                       )}

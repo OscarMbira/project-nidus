@@ -14,6 +14,7 @@ import AuditCard from '@nidus/ui/AuditCard';
 import AuditField from '@nidus/ui/AuditField';
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const inp = 'w-full rounded-lg border border-gray-600 bg-gray-700 text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
 const lbl = 'block text-sm font-medium text-gray-300 mb-1';
@@ -99,7 +100,7 @@ function PoliciesComplianceFormBody() {
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div><FieldLabelWithHelp helpKey="public.policies_compliance.compliance_owner" className={lbl} listOptions={false}>Compliance Owner</FieldLabelWithHelp><input className={inp} value={form.compliance_owner} onChange={set('compliance_owner')}/></div>
-          <div><FieldLabelWithHelp helpKey="public.policies_compliance.review_date" className={lbl}>Review Date</FieldLabelWithHelp><input type="date" className={inp} value={form.review_date} onChange={set('review_date')}/></div>
+          <div><FieldLabelWithHelp helpKey="public.policies_compliance.review_date" className={lbl}>Review Date</FieldLabelWithHelp><RegionalDateInput eventStyle className={inp} value={form.review_date} onChange={set('review_date')}/></div>
         </div>
         <div><FieldLabelWithHelp helpKey="public.policies_compliance.description" className={lbl}>Description</FieldLabelWithHelp><textarea className={`${inp} h-20 resize-none`} value={form.description} onChange={set('description')}/></div>
         <div><FieldLabelWithHelp helpKey="public.policies_compliance.requirements" className={lbl}>Requirements</FieldLabelWithHelp><textarea className={`${inp} h-24 resize-none`} value={form.requirements} onChange={set('requirements')} placeholder="List compliance requirements…"/></div>

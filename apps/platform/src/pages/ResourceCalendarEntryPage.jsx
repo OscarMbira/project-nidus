@@ -14,6 +14,7 @@ import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
 import AuditCard from '@nidus/ui/AuditCard'
 import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const EMPTY_FORM = {
   calendar_date: '',
@@ -178,8 +179,7 @@ function ResourceCalendarEntryPageBody() {
         <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6">
           <div>
             <FieldLabelWithHelp helpKey="public.resource_calendar.calendar_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>Date *</FieldLabelWithHelp>
-            <input
-              type="date"
+            <RegionalDateInput eventStyle
               name="calendar_date"
               value={formData.calendar_date}
               onChange={handleChange}
@@ -279,8 +279,7 @@ function ResourceCalendarEntryPageBody() {
               </div>
               <div>
                 <FieldLabelWithHelp helpKey="public.resource_calendar.recurrence_end_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">End Date</FieldLabelWithHelp>
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   name="recurrence_end_date"
                   value={formData.recurrence_end_date}
                   onChange={handleChange}

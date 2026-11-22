@@ -3,6 +3,7 @@ import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { FileText, User, Calendar } from 'lucide-react'
 import { supabase } from '../../../services/supabaseClient'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 function EPRDocumentHeaderBody({ formData, onChange, errors, mode }) {
   const [users, setUsers] = useState([])
@@ -63,8 +64,7 @@ function EPRDocumentHeaderBody({ formData, onChange, errors, mode }) {
             <Calendar className="h-4 w-4 inline mr-1" />
             Report Date *
           </FieldLabelWithHelp>
-          <input
-            type="date"
+          <RegionalDateInput eventStyle
             value={formData.report_date || ''}
             onChange={(e) => onChange('report_date', e.target.value)}
             required
@@ -153,8 +153,7 @@ function EPRDocumentHeaderBody({ formData, onChange, errors, mode }) {
           <FieldLabelWithHelp helpKey="public.end_project_reports.date_of_this_revision" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Date of This Revision
           </FieldLabelWithHelp>
-          <input
-            type="date"
+          <RegionalDateInput eventStyle
             value={formData.date_of_this_revision || ''}
             onChange={(e) => onChange('date_of_this_revision', e.target.value || null)}
             disabled={mode === 'view'}

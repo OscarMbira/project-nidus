@@ -15,6 +15,7 @@ import {
   updateMemberTrainingRecord,
   listCertifications,
 } from '../services/trainingService'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const inputClass = 'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm'
 
@@ -168,11 +169,11 @@ function TrainingRecordFormBody() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <FieldLabelWithHelp helpKey="public.training_records.issue_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Issue date</FieldLabelWithHelp>
-            <input type="date" value={form.issue_date} onChange={(e) => handleChange('issue_date', e.target.value)} className={inputClass} />
+            <RegionalDateInput eventStyle value={form.issue_date} onChange={(e) => handleChange('issue_date', e.target.value)} className={inputClass} />
           </div>
           <div>
             <FieldLabelWithHelp helpKey="public.training_records.expiry_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Expiry date</FieldLabelWithHelp>
-            <input type="date" value={form.expiry_date} onChange={(e) => handleChange('expiry_date', e.target.value)} className={inputClass} />
+            <RegionalDateInput eventStyle value={form.expiry_date} onChange={(e) => handleChange('expiry_date', e.target.value)} className={inputClass} />
           </div>
         </div>
         <div>

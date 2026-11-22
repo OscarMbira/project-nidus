@@ -23,6 +23,7 @@ import {
   TrendingUp,
   Shield
 } from 'lucide-react';
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const PaidProjectSetup = () => {
   const navigate = useNavigate();
@@ -335,8 +336,7 @@ const PaidProjectSetup = () => {
                 </FieldLabelWithHelp>
                 <div className="relative">
                   <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    type="date"
+                  <RegionalDateInput eventStyle
                     value={formData.startDate}
                     onChange={(e) => handleChange('startDate', e.target.value)}
                     className="w-full pl-12 pr-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-blue-500 focus:outline-none"

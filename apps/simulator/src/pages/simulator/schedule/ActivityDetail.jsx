@@ -23,6 +23,7 @@ import AuditCard from '@nidus/ui/AuditCard'
 import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken } from '@nidus/shared/utils/auditDisplayUtils'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const SECTIONS = [
   {
@@ -277,8 +278,7 @@ function ActivityDetailBody() {
           ].map(([k, lab]) => (
             <div key={k}>
               <FieldLabelWithHelp helpKey={`sim.activity_list.${k}`} className="mb-1 block text-xs text-gray-600 dark:text-gray-400">{lab}</FieldLabelWithHelp>
-              <input
-                type="date"
+              <RegionalDateInput eventStyle
                 value={form[k]}
                 onChange={(e) => setForm((f) => ({ ...f, [k]: e.target.value }))}
                 disabled={!canEdit}

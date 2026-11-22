@@ -4,6 +4,7 @@ import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { supabase } from '../../services/supabaseClient'
 import { format } from 'date-fns'
 import { Plus, CheckCircle, Clock, XCircle, Circle, User, Calendar, Save, X } from 'lucide-react'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 function ActionItemTrackerBody({ actionItems, sprintId, projectId, onUpdate, currentUserId }) {
   const [showAddForm, setShowAddForm] = useState(false)
@@ -162,8 +163,7 @@ function ActionItemTrackerBody({ actionItems, sprintId, projectId, onUpdate, cur
               <FieldLabelWithHelp helpKey="public.retrospective_action_items.target_completion_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Target Completion Date
               </FieldLabelWithHelp>
-              <input
-                type="date"
+              <RegionalDateInput eventStyle
                 value={newActionItem.target_completion_date}
                 onChange={(e) => setNewActionItem({ ...newActionItem, target_completion_date: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"

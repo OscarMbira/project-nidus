@@ -13,6 +13,7 @@ import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 function BoardMeetingFormBody({ boardId, meeting, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [boardMembers, setBoardMembers] = useState([]);
@@ -235,8 +236,7 @@ function BoardMeetingFormBody({ boardId, meeting, onClose, onSuccess }) {
                 <Calendar className="h-4 w-4" />
                 Meeting Date *
               </FieldLabelWithHelp>
-              <input
-                type="date"
+              <RegionalDateInput eventStyle
                 value={formData.meeting_date}
                 onChange={(e) => setFormData({ ...formData, meeting_date: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"

@@ -33,6 +33,7 @@ import {
   setTeamChangeReason,
   clearTeamChangeReason,
 } from '../../services/teamService'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const TABS = [
   { value: 'details', label: 'Details' },
@@ -747,8 +748,7 @@ function TeamDetailBody({ mode: modeProp }) {
                 </FieldLabelWithHelp>
                 <FieldLabelWithHelp helpKey="public.teams.allocation_start_date" className="block text-xs text-gray-700 dark:text-gray-200">
                   Start date
-                  <input
-                    type="date"
+                  <RegionalDateInput eventStyle
                     value={memberDraft.allocation_start_date}
                     onChange={(e) =>
                       setMemberDraft((d) => ({ ...d, allocation_start_date: e.target.value }))
@@ -758,8 +758,7 @@ function TeamDetailBody({ mode: modeProp }) {
                 </FieldLabelWithHelp>
                 <FieldLabelWithHelp helpKey="public.teams.allocation_end_date" className="block text-xs text-gray-700 dark:text-gray-200">
                   End date
-                  <input
-                    type="date"
+                  <RegionalDateInput eventStyle
                     value={memberDraft.allocation_end_date}
                     min={memberDraft.allocation_start_date || undefined}
                     onChange={(e) =>
@@ -880,8 +879,7 @@ function TeamDetailBody({ mode: modeProp }) {
                         </td>
                         <td className="px-3 py-2 text-gray-700 dark:text-gray-200">
                           {isEdit ? (
-                            <input
-                              type="date"
+                            <RegionalDateInput eventStyle
                               value={m.allocation_start_date || ''}
                               onChange={(e) =>
                                 updateMemberRow(m.key, { allocation_start_date: e.target.value })
@@ -894,8 +892,7 @@ function TeamDetailBody({ mode: modeProp }) {
                         </td>
                         <td className="px-3 py-2 text-gray-700 dark:text-gray-200">
                           {isEdit ? (
-                            <input
-                              type="date"
+                            <RegionalDateInput eventStyle
                               value={m.allocation_end_date || ''}
                               min={m.allocation_start_date || undefined}
                               onChange={(e) =>

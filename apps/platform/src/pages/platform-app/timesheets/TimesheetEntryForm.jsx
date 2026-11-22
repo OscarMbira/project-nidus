@@ -18,6 +18,7 @@ import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken } from '@nidus/shared/utils/auditDisplayUtils'
 import { looksLikeProjectUuid } from '@nidus/shared/utils/projectRouteParam'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const EMPTY = {
   entry_date: new Date().toISOString().slice(0, 10),
@@ -404,7 +405,7 @@ function TimesheetEntryFormBody() {
             <div>
               <FieldLabelWithHelp helpKey="public.timesheet_entries.entry_date" className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1" required>Date *</FieldLabelWithHelp>
               <p aria-hidden="true" className="text-xs mb-1 invisible">&nbsp;</p>
-              <input type="date" name="entry_date" value={form.entry_date} onChange={handleChange}
+              <RegionalDateInput eventStyle name="entry_date" value={form.entry_date} onChange={handleChange}
                 className="w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2.5 text-sm text-gray-900 dark:text-slate-100 focus:border-blue-500 focus:outline-none" />
             </div>
             <div>

@@ -15,6 +15,7 @@ import AuditCard from '@nidus/ui/AuditCard'
 import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 function WPResourceFormBody({ wpId, resource = null, mode = 'create', onSave, onCancel }) {
   const [formData, setFormData] = useState({
@@ -293,8 +294,7 @@ function WPResourceFormBody({ wpId, resource = null, mode = 'create', onSave, on
               <FieldLabelWithHelp helpKey="public.wp_resources.allocation_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Allocation Date
               </FieldLabelWithHelp>
-              <input
-                type="date"
+              <RegionalDateInput eventStyle
                 name="allocation_date"
                 value={formData.allocation_date}
                 onChange={handleChange}

@@ -24,6 +24,7 @@ import {
   periodSelectOptions,
   resolveAnalysisPeriodAccountId,
 } from '../../services/stakeholderAnalysisPeriodService'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 function quadrantFromPowerInterest(power, interest) {
   const high = (v) => v >= 4
@@ -456,7 +457,7 @@ function StakeholderAnalysisFormBody({ analysis, stakeholderId, projectId, stake
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <FieldLabelWithHelp helpKey="public.stakeholder_analysis.analysis_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Analysis date</FieldLabelWithHelp>
-                <input type="date" name="analysis_date" value={formData.analysis_date} onChange={handleChange} className={fieldClass} />
+                <RegionalDateInput eventStyle name="analysis_date" value={formData.analysis_date} onChange={handleChange} className={fieldClass} />
               </div>
               <div>
                 <FieldLabelWithHelp helpKey="public.stakeholder_analysis.analysis_period" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Period</FieldLabelWithHelp>

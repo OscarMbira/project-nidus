@@ -23,6 +23,7 @@ import {
   ensureTeamType,
   listProjectFunctionalRoles,
 } from '../../services/teamService'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 function skillsForRole(rows, roleLabel) {
   const wanted = String(roleLabel || '').trim().toLowerCase()
@@ -649,8 +650,7 @@ function TeamCreateBody() {
 
               <FieldLabelWithHelp helpKey="public.teams.allocation_start_date" className="block text-xs text-gray-700 dark:text-gray-200">
                 Start date
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   value={memberDraft.allocation_start_date}
                   onChange={(e) => setDraftField('allocation_start_date', e.target.value)}
                   className="mt-1 w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2"
@@ -659,8 +659,7 @@ function TeamCreateBody() {
 
               <FieldLabelWithHelp helpKey="public.teams.allocation_end_date" className="block text-xs text-gray-700 dark:text-gray-200">
                 End date
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   value={memberDraft.allocation_end_date}
                   min={memberDraft.allocation_start_date || undefined}
                   onChange={(e) => setDraftField('allocation_end_date', e.target.value)}
@@ -743,16 +742,14 @@ function TeamCreateBody() {
                           />
                         </td>
                         <td className="px-3 py-2">
-                          <input
-                            type="date"
+                          <RegionalDateInput eventStyle
                             value={m.allocation_start_date || ''}
                             onChange={(e) => updateMember(m.key, { allocation_start_date: e.target.value })}
                             className="rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-2 py-1"
                           />
                         </td>
                         <td className="px-3 py-2">
-                          <input
-                            type="date"
+                          <RegionalDateInput eventStyle
                             value={m.allocation_end_date || ''}
                             min={m.allocation_start_date || undefined}
                             onChange={(e) => updateMember(m.key, { allocation_end_date: e.target.value })}

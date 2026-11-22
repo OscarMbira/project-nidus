@@ -16,6 +16,7 @@ import { getBudgetCategories } from '../../services/budgetCategoryService'
 import { getFundingSources } from '../../services/fundingSourceService'
 import SearchableSelect from '@nidus/ui/SearchableSelect'
 import { SmartAmountInput } from '@nidus/ui/SmartAmountInput'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const EMPTY_FORM = {
   programme_code: '',
@@ -410,10 +411,10 @@ function ProgrammeCreatePageBody() {
           <SectionHeading icon={Calendar} title="Timeline" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Field label="Start Date" helpKey="public.programmes.programme_start_date">
-              <input type="date" name="programme_start_date" value={formData.programme_start_date} onChange={handleChange} className={INPUT_CLS} />
+              <RegionalDateInput eventStyle name="programme_start_date" value={formData.programme_start_date} onChange={handleChange} className={INPUT_CLS} />
             </Field>
             <Field label="End Date" helpKey="public.programmes.programme_end_date">
-              <input type="date" name="programme_end_date" value={formData.programme_end_date} onChange={handleChange} className={INPUT_CLS} />
+              <RegionalDateInput eventStyle name="programme_end_date" value={formData.programme_end_date} onChange={handleChange} className={INPUT_CLS} />
             </Field>
           </div>
         </div>

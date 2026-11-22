@@ -4,6 +4,7 @@ import toast from 'react-hot-toast'
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
 import { listReleases, saveRelease } from '../../services/agileReleaseService'
 import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 export default function AgileReleases() {
   const { projectId, routeKey, loading: pidLoading, error: pidErr } = usePlatformProjectId()
@@ -68,8 +69,7 @@ export default function AgileReleases() {
           onChange={(e) => setForm({ ...form, release_name: e.target.value })}
           className="rounded border border-gray-700 bg-gray-900 px-2 py-1 text-sm flex-1 min-w-[160px]"
         />
-        <input
-          type="date"
+        <RegionalDateInput eventStyle
           value={form.target_date}
           onChange={(e) => setForm({ ...form, target_date: e.target.value })}
           className="rounded border border-gray-700 bg-gray-900 px-2 py-1 text-sm"

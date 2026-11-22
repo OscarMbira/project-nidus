@@ -28,6 +28,7 @@ import { calculateFlowMetrics } from '@nidus/shared/utils/flowMetricsCalculator'
 import { listClassesForBoard, saveClassOfService } from '../../services/kanbanClassOfServiceService'
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 // Sortable Card Component
 function SortableCard({ card, onClick }) {
   const {
@@ -836,8 +837,7 @@ function CardForm({ columnId, onSave, onClose }) {
               <FieldLabelWithHelp helpKey="public.kanban_cards.due_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Due Date
               </FieldLabelWithHelp>
-              <input
-                type="date"
+              <RegionalDateInput eventStyle
                 name="due_date"
                 value={formData.due_date}
                 onChange={handleChange}

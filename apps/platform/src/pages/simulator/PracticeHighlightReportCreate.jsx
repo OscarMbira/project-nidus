@@ -7,6 +7,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { createPracticeHighlightReport } from '../../services/sim/practiceHighlightReportService'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 export default function PracticeHighlightReportCreate() {
   const navigate = useNavigate()
@@ -57,7 +58,7 @@ export default function PracticeHighlightReportCreate() {
         </div>
         <div>
           <label className="block text-sm font-medium mb-2">Report Date *</label>
-          <input type="date" required value={formData.report_date} onChange={(e) => setFormData({ ...formData, report_date: e.target.value })} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
+          <RegionalDateInput eventStyle required value={formData.report_date} onChange={(e) => setFormData({ ...formData, report_date: e.target.value })} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
         </div>
         <div>
           <label className="block text-sm font-medium mb-2">Executive Summary</label>

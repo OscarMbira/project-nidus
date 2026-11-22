@@ -16,6 +16,7 @@ import AuditCard from '@nidus/ui/AuditCard'
 import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const SECTIONS = [
   { id: 'summary', label: 'Executive Summary' },
@@ -319,11 +320,11 @@ export default function PracticeBusinessCaseEdit() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <FieldLabelWithHelp helpKey="sim.practice_business_cases.target_start_date" className={labelCls}>Target Start Date</FieldLabelWithHelp>
-                <input type="date" value={formData.target_start_date} onChange={e => set('target_start_date', e.target.value)} className={inputCls} />
+                <RegionalDateInput eventStyle value={formData.target_start_date} onChange={e => set('target_start_date', e.target.value)} className={inputCls} />
               </div>
               <div>
                 <FieldLabelWithHelp helpKey="sim.practice_business_cases.target_end_date" className={labelCls}>Target End Date</FieldLabelWithHelp>
-                <input type="date" value={formData.target_end_date} onChange={e => set('target_end_date', e.target.value)} className={inputCls} />
+                <RegionalDateInput eventStyle value={formData.target_end_date} onChange={e => set('target_end_date', e.target.value)} className={inputCls} />
               </div>
             </div>
           </div>

@@ -8,6 +8,7 @@ import { listCostEntries } from '../../services/projectCostService'
 import { useFinancialPermissions } from '@nidus/shared/hooks/useFinancialPermissions'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 export default function ProjectProfitability() {
   const { projectId } = useParams()
@@ -87,7 +88,7 @@ export default function ProjectProfitability() {
         </div>
         {canManage && !readOnlyExecutive && (
           <form onSubmit={addRev} className="flex flex-wrap gap-2 items-end rounded-xl border border-gray-200 dark:border-gray-800 p-4">
-            <input type="date" value={form.revenue_date} onChange={(e) => setForm({ ...form, revenue_date: e.target.value })} className="rounded border border-gray-600 bg-gray-950 px-2 py-1 text-sm" />
+            <RegionalDateInput eventStyle value={form.revenue_date} onChange={(e) => setForm({ ...form, revenue_date: e.target.value })} className="rounded border border-gray-600 bg-gray-950 px-2 py-1 text-sm" />
             <input placeholder="Amount" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} className="rounded border border-gray-600 bg-gray-950 px-2 py-1 text-sm" />
             <select value={form.revenue_type} onChange={(e) => setForm({ ...form, revenue_type: e.target.value })} className="rounded border border-gray-600 bg-gray-950 px-2 py-1 text-sm">
               <option value="contract_payment">Contract payment</option>

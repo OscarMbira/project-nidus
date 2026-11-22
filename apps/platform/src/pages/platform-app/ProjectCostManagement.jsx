@@ -9,6 +9,7 @@ import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.j
 import { useFinancialPermissions } from '@nidus/shared/hooks/useFinancialPermissions'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const VIEW_KEY = 'proj-cost-view'
 
@@ -107,7 +108,7 @@ export default function ProjectCostManagement() {
 
         {canManage && !readOnlyExecutive && (
           <form onSubmit={addRow} className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 grid grid-cols-1 md:grid-cols-4 gap-3">
-            <input type="date" value={form.entry_date} onChange={(e) => setForm({ ...form, entry_date: e.target.value })} className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-950 px-3 py-2 text-sm" />
+            <RegionalDateInput eventStyle value={form.entry_date} onChange={(e) => setForm({ ...form, entry_date: e.target.value })} className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-950 px-3 py-2 text-sm" />
             <input
               type="text"
               inputMode="decimal"

@@ -16,6 +16,7 @@ import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const EMPTY_RISK_FORM = {
   risk_title: '',
@@ -532,8 +533,7 @@ function RiskFormBody({ risk, projectId, onSave, onCancel, onHoldComplete, linke
                 <Calendar className="h-4 w-4 inline mr-1" />
                 Target Mitigation Date
               </FieldLabelWithHelp>
-              <input
-                type="date"
+              <RegionalDateInput eventStyle
                 name="target_mitigation_date"
                 value={formData.target_mitigation_date}
                 onChange={handleChange}
@@ -545,8 +545,7 @@ function RiskFormBody({ risk, projectId, onSave, onCancel, onHoldComplete, linke
                 <Calendar className="h-4 w-4 inline mr-1" />
                 Next Review Date
               </FieldLabelWithHelp>
-              <input
-                type="date"
+              <RegionalDateInput eventStyle
                 name="next_review_date"
                 value={formData.next_review_date}
                 onChange={handleChange}

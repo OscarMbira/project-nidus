@@ -14,6 +14,7 @@ import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesCont
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
 import { getCostActual, createCostActual, updateCostActual } from '../../services/costActualsService'
 import { getByProjectId } from '../../services/projectBudgetCategoryService'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const inputClass =
   'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm'
@@ -155,7 +156,7 @@ function CostActualFormBody() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <FieldLabelWithHelp helpKey="public.cost_actuals.transaction_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>Transaction Date *</FieldLabelWithHelp>
-            <input type="date" value={transactionDate} onChange={(e) => setTransactionDate(e.target.value)} className={inputClass} />
+            <RegionalDateInput eventStyle value={transactionDate} onChange={(e) => setTransactionDate(e.target.value)} className={inputClass} />
           </div>
           <div>
             <FieldLabelWithHelp helpKey="public.cost_actuals.category" htmlFor="cost-category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</FieldLabelWithHelp>

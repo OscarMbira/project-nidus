@@ -18,6 +18,7 @@ import AuditCard from '@nidus/ui/AuditCard'
 import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const PRACTICE_TASK_VIEW_SECTIONS = [
   { title: 'Task', fields: [
@@ -207,8 +208,7 @@ function PracticeTaskDetailBody() {
         <div className="grid grid-cols-3 gap-4">
           <div>
             <FieldLabelWithHelp helpKey="sim.practice_tasks.planned_start_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Start Date</FieldLabelWithHelp>
-            <input
-              type="date"
+            <RegionalDateInput eventStyle
               value={formData.planned_start_date}
               onChange={(e) => setFormData({ ...formData, planned_start_date: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
@@ -217,8 +217,7 @@ function PracticeTaskDetailBody() {
 
           <div>
             <FieldLabelWithHelp helpKey="sim.practice_tasks.planned_end_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">End Date</FieldLabelWithHelp>
-            <input
-              type="date"
+            <RegionalDateInput eventStyle
               value={formData.planned_end_date}
               onChange={(e) => setFormData({ ...formData, planned_end_date: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
@@ -227,8 +226,7 @@ function PracticeTaskDetailBody() {
 
           <div>
             <FieldLabelWithHelp helpKey="sim.practice_tasks.due_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Due Date</FieldLabelWithHelp>
-            <input
-              type="date"
+            <RegionalDateInput eventStyle
               value={formData.due_date}
               onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"

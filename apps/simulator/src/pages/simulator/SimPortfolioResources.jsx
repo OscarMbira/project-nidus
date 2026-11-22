@@ -12,6 +12,7 @@ import {
 import ExportListMenu from '@nidus/ui/ExportListMenu'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const ROLE_OPTS = ['Portfolio Manager', 'Portfolio Owner', 'Analyst', 'Sponsor', 'Stakeholder', 'Contributor']
 
@@ -201,13 +202,13 @@ function SimPortfolioResourcesBody() {
                       <td className="px-4 py-3">{statusBadge(r.assignment_status)}</td>
                       <td className="px-4 py-3">
                         {isEditing
-                          ? <input type="date" value={editForm.start_date} onChange={e => setEditForm(f => ({ ...f, start_date: e.target.value }))}
+                          ? <RegionalDateInput eventStyle value={editForm.start_date} onChange={e => setEditForm(f => ({ ...f, start_date: e.target.value }))}
                               className="px-2 py-1 bg-gray-700 border border-gray-600 rounded text-white text-xs focus:outline-none" />
                           : <span className="text-gray-300">{r.start_date || '—'}</span>}
                       </td>
                       <td className="px-4 py-3">
                         {isEditing
-                          ? <input type="date" value={editForm.end_date} onChange={e => setEditForm(f => ({ ...f, end_date: e.target.value }))}
+                          ? <RegionalDateInput eventStyle value={editForm.end_date} onChange={e => setEditForm(f => ({ ...f, end_date: e.target.value }))}
                               className="px-2 py-1 bg-gray-700 border border-gray-600 rounded text-white text-xs focus:outline-none" />
                           : <span className="text-gray-300">{r.end_date || '—'}</span>}
                       </td>
@@ -274,12 +275,12 @@ function SimPortfolioResourcesBody() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <FieldLabelWithHelp helpKey="sim.practice_portfolio_members.start_date" className="block text-gray-400 text-sm mb-1">Start Date</FieldLabelWithHelp>
-                  <input type="date" value={addForm.start_date} onChange={e => setAddForm(f => ({ ...f, start_date: e.target.value }))}
+                  <RegionalDateInput eventStyle value={addForm.start_date} onChange={e => setAddForm(f => ({ ...f, start_date: e.target.value }))}
                     className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:outline-none" />
                 </div>
                 <div>
                   <FieldLabelWithHelp helpKey="sim.practice_portfolio_members.end_date" className="block text-gray-400 text-sm mb-1">End Date</FieldLabelWithHelp>
-                  <input type="date" value={addForm.end_date} onChange={e => setAddForm(f => ({ ...f, end_date: e.target.value }))}
+                  <RegionalDateInput eventStyle value={addForm.end_date} onChange={e => setAddForm(f => ({ ...f, end_date: e.target.value }))}
                     className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:outline-none" />
                 </div>
               </div>

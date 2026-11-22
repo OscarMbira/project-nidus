@@ -6,6 +6,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
 import { supabase } from '../../services/supabaseClient'
 import { normalizeProjectDeliveryTrack } from '@nidus/config/methodologyMenuUtils'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 function StartingUpProjectBody() {
   const { projectId, routeKey } = usePlatformProjectId()
@@ -355,8 +356,7 @@ function MandateTab({ projectId, mandate, onSave }) {
             <FieldLabelWithHelp helpKey="public.project_mandates.mandate_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Mandate Date
             </FieldLabelWithHelp>
-            <input
-              type="date"
+            <RegionalDateInput eventStyle
               name="mandate_date"
               value={formData.mandate_date}
               onChange={handleChange}

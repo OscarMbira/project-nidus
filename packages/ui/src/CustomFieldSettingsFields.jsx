@@ -8,6 +8,7 @@ import {
   ALLOWED_CHARACTER_OPTIONS,
   customFieldSettingsFor,
 } from '@nidus/shared/utils/registerCustomFields'
+import RegionalDateInput from './RegionalDateInput.jsx'
 
 const INPUT_CLASS =
   'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm'
@@ -93,7 +94,7 @@ function DefaultValueInput({ fieldType, options, settings, set }) {
     return (
       <div>
         {label}
-        <input id={id} type="date" className={INPUT_CLASS} value={isToday ? '' : value ?? ''} disabled={isToday}
+        <RegionalDateInput eventStyle id={id} className={INPUT_CLASS} value={isToday ? '' : value ?? ''} disabled={isToday}
           onChange={(e) => set({ defaultValue: e.target.value || undefined })} />
         <label className="mt-1 inline-flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-400">
           <input type="checkbox" checked={isToday} onChange={(e) => set({ defaultValue: e.target.checked ? 'today' : undefined })} />

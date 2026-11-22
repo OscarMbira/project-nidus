@@ -12,6 +12,7 @@ import AuditCard from '@nidus/ui/AuditCard';
 import AuditField from '@nidus/ui/AuditField';
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 function ChangeAssessmentFormBody({
   projectId,
@@ -158,8 +159,7 @@ function ChangeAssessmentFormBody({
               <FieldLabelWithHelp helpKey="sim.change_requests.assessment_date" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>
                 Assessment Date *
               </FieldLabelWithHelp>
-              <input
-                type="date"
+              <RegionalDateInput eventStyle
                 value={formData.assessment_date}
                 onChange={(e) => setFormData({ ...formData, assessment_date: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
@@ -260,8 +260,7 @@ function ChangeAssessmentFormBody({
                   <FieldLabelWithHelp helpKey="sim.change_requests.new_completion_date" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                     New Completion Date
                   </FieldLabelWithHelp>
-                  <input
-                    type="date"
+                  <RegionalDateInput eventStyle
                     value={formData.new_completion_date}
                     onChange={(e) => setFormData({ ...formData, new_completion_date: e.target.value })}
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"

@@ -8,6 +8,7 @@ import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Mail, User, Plus, Send } from 'lucide-react'
 import { supabase } from '../../services/supabaseClient'
 import { getProductDescriptionById } from '../../services/productDescriptionService'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 function ProductDescriptionDistributionBody({ pdId }) {
   const [distributions, setDistributions] = useState([])
@@ -200,8 +201,7 @@ function ProductDescriptionDistributionBody({ pdId }) {
                 <FieldLabelWithHelp helpKey="public.pd_distribution.date_of_issue" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Date of Issue
                 </FieldLabelWithHelp>
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   value={formData.date_of_issue}
                   onChange={(e) => setFormData({ ...formData, date_of_issue: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"

@@ -6,6 +6,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { SmartAmountInput } from '@nidus/ui/SmartAmountInput';
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 export default function ConstraintValueInput({
   category,
@@ -163,8 +164,7 @@ export default function ConstraintValueInput({
   // Handle date input
   const renderDateInput = () => {
     return (
-      <input
-        type="date"
+      <RegionalDateInput eventStyle
         value={value || ''}
         onChange={(e) => onChange({ value_date: e.target.value })}
         disabled={disabled}

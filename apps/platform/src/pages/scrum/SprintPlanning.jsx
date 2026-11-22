@@ -8,6 +8,7 @@ import { supabase } from '../../services/supabaseClient'
 import { normalizeProjectDeliveryTrack } from '@nidus/config/methodologyMenuUtils'
 import { format, addDays, differenceInDays } from 'date-fns'
 import { RowActionButton } from '@nidus/ui'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 function SprintPlanningBody() {
   const { projectId, routeKey } = usePlatformProjectId()
@@ -965,8 +966,7 @@ function SprintForm({ sprint, projectId, backlogId, onSave, onClose }) {
               <FieldLabelWithHelp helpKey="public.sprints.sprint_start_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Start Date *
               </FieldLabelWithHelp>
-              <input
-                type="date"
+              <RegionalDateInput eventStyle
                 name="sprint_start_date"
                 value={formData.sprint_start_date}
                 onChange={handleChange}
@@ -979,8 +979,7 @@ function SprintForm({ sprint, projectId, backlogId, onSave, onClose }) {
               <FieldLabelWithHelp helpKey="public.sprints.sprint_end_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 End Date *
               </FieldLabelWithHelp>
-              <input
-                type="date"
+              <RegionalDateInput eventStyle
                 name="sprint_end_date"
                 value={formData.sprint_end_date}
                 onChange={handleChange}

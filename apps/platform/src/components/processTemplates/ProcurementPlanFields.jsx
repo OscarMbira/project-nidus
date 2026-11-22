@@ -3,6 +3,7 @@
  * Stored on procurement_management_plans.document_data (no extra tables).
  */
 import MultiLineListInput from '@nidus/ui/MultiLineListInput'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 export const PROCUREMENT_PLAN_TABS = [
   { value: 'details', label: 'Details' },
@@ -180,7 +181,7 @@ export default function ProcurementPlanFields({ value, onChange, readOnly = fals
           {readOnly ? (
             <p className="text-sm text-gray-900 dark:text-gray-100">{plan.planDate || '—'}</p>
           ) : (
-            <input type="date" value={plan.planDate} onChange={(e) => patch({ planDate: e.target.value })} className={inputClass} />
+            <RegionalDateInput eventStyle value={plan.planDate} onChange={(e) => patch({ planDate: e.target.value })} className={inputClass} />
           )}
         </label>
       </div>

@@ -21,6 +21,7 @@ import { audienceStakeholders, linesToArray, stakeholderTypeBadgeClass } from '.
 import SelectField from '@nidus/ui/SelectField'
 import { getActiveLanguages } from '@nidus/shared/utils/languages'
 import { getCommunicationInformationOptions } from '../../services/stakeholderService'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const STATUSES = ['draft', 'active', 'completed', 'cancelled']
 
@@ -246,11 +247,11 @@ function CommunicationPlanFormBody({ plan, projectId, stakeholders = [], focusSt
               </div>
               <div>
                 <FieldLabelWithHelp helpKey="public.stakeholder_communications.plan_start_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="communication-plan-start">Start date</FieldLabelWithHelp>
-                <input id="communication-plan-start" type="date" name="plan_start_date" value={formData.plan_start_date} onChange={handleChange} required className={fieldClass} />
+                <RegionalDateInput eventStyle id="communication-plan-start" name="plan_start_date" value={formData.plan_start_date} onChange={handleChange} required className={fieldClass} />
               </div>
               <div>
                 <FieldLabelWithHelp helpKey="public.stakeholder_communications.plan_end_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="communication-plan-end">End date</FieldLabelWithHelp>
-                <input id="communication-plan-end" type="date" name="plan_end_date" value={formData.plan_end_date} onChange={handleChange} className={fieldClass} />
+                <RegionalDateInput eventStyle id="communication-plan-end" name="plan_end_date" value={formData.plan_end_date} onChange={handleChange} className={fieldClass} />
               </div>
             </div>
             <div>

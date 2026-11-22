@@ -1,6 +1,7 @@
 import { DECLINE_REASON_OPTIONS } from '@nidus/shared/utils/appointmentRoleUtils'
 import AppointmentTermsCard from './AppointmentTermsCard'
 import TeamMemberTermsCard from './TeamMemberTermsCard'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 /**
  * Acceptance / decline fields for formal appointment invitations.
@@ -42,8 +43,7 @@ export default function AppointmentAcceptPanel({
             <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
               Actual start date (if different)
             </label>
-            <input
-              type="date"
+            <RegionalDateInput eventStyle
               value={acceptance.actualStartDate || ''}
               onChange={(e) => patch({ actualStartDate: e.target.value })}
               className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-white"

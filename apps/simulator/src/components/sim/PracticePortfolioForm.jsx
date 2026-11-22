@@ -9,6 +9,7 @@ import { getBudgetCategories } from '../../services/budgetCategoryService'
 import { getFundingSources } from '../../services/fundingSourceService'
 import { SmartAmountInput } from '@nidus/ui/SmartAmountInput'
 import SearchableSelect from '@nidus/ui/SearchableSelect'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 function PracticePortfolioFormBody({ onSaved, onCancel, useModalLayout = true }) {
   const [formData, setFormData] = useState({
@@ -439,8 +440,7 @@ function PracticePortfolioFormBody({ onSaved, onCancel, useModalLayout = true })
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <FieldLabelWithHelp helpKey="sim.practice_portfolios.portfolio_start_date" className="block text-xs font-medium text-gray-400 mb-1">Start Date</FieldLabelWithHelp>
-              <input
-                type="date"
+              <RegionalDateInput eventStyle
                 name="portfolio_start_date"
                 value={formData.portfolio_start_date}
                 onChange={handleChange}
@@ -449,8 +449,7 @@ function PracticePortfolioFormBody({ onSaved, onCancel, useModalLayout = true })
             </div>
             <div>
               <FieldLabelWithHelp helpKey="sim.practice_portfolios.portfolio_end_date" className="block text-xs font-medium text-gray-400 mb-1">End Date</FieldLabelWithHelp>
-              <input
-                type="date"
+              <RegionalDateInput eventStyle
                 name="portfolio_end_date"
                 value={formData.portfolio_end_date}
                 onChange={handleChange}

@@ -1,6 +1,7 @@
 import { Calendar } from 'lucide-react'
 import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 function ReportingPeriodSectionBody({ formData, onChange, errors, mode }) {
   return (
@@ -18,8 +19,7 @@ function ReportingPeriodSectionBody({ formData, onChange, errors, mode }) {
             <Calendar className="h-4 w-4 inline mr-1" />
             Period Start Date *
           </FieldLabelWithHelp>
-          <input
-            type="date"
+          <RegionalDateInput eventStyle
             value={formData.period_start_date || ''}
             onChange={(e) => onChange('period_start_date', e.target.value || null)}
             required
@@ -39,8 +39,7 @@ function ReportingPeriodSectionBody({ formData, onChange, errors, mode }) {
           <FieldLabelWithHelp helpKey="public.checkpoint_reports.period_end_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Period End Date *
           </FieldLabelWithHelp>
-          <input
-            type="date"
+          <RegionalDateInput eventStyle
             value={formData.period_end_date || ''}
             onChange={(e) => onChange('period_end_date', e.target.value || null)}
             required
@@ -61,8 +60,7 @@ function ReportingPeriodSectionBody({ formData, onChange, errors, mode }) {
           <FieldLabelWithHelp helpKey="public.checkpoint_reports.date_of_next_revision" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Date of Next Revision
           </FieldLabelWithHelp>
-          <input
-            type="date"
+          <RegionalDateInput eventStyle
             value={formData.date_of_next_revision || ''}
             onChange={(e) => onChange('date_of_next_revision', e.target.value || null)}
             disabled={mode === 'view'}

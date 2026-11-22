@@ -15,6 +15,7 @@ import AuditCard from '@nidus/ui/AuditCard'
 import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 function WPQualityCriterionFormBody({ wpId, criterion = null, mode = 'create', onSave, onCancel }) {
   const [formData, setFormData] = useState({
@@ -273,8 +274,7 @@ function WPQualityCriterionFormBody({ wpId, criterion = null, mode = 'create', o
             <FieldLabelWithHelp helpKey="public.wp_quality_criteria.quality_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Quality Date
             </FieldLabelWithHelp>
-            <input
-              type="date"
+            <RegionalDateInput eventStyle
               name="quality_date"
               value={formData.quality_date}
               onChange={handleChange}

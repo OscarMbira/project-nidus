@@ -9,6 +9,7 @@ import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { Plus, Trash2, Target } from 'lucide-react'
 import { addBenefit, deleteBenefit } from '../../services/businessCaseService'
 import { useToastContext } from '@nidus/shared/context/ToastContext'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const BENEFIT_TYPES = [
   { value: 'financial', label: 'Financial' },
@@ -158,7 +159,7 @@ function BusinessCaseBenefitsBody({ caseId, benefits = [], readOnly = false, onR
               </div>
               <div>
                 <FieldLabelWithHelp helpKey="public.business_case_benefits.target_date" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Target Date</FieldLabelWithHelp>
-                <input type="date" {...field('target_date')}
+                <RegionalDateInput eventStyle {...field('target_date')}
                   className="w-full px-2 py-1.5 text-sm rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
               </div>
               <div>

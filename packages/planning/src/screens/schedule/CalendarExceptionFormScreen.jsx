@@ -19,6 +19,7 @@ import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesCont
 import BackButton from '../../components/BackButton.jsx'
 import { ChooseProject, Loading } from '../../components/ScheduleLayout.jsx'
 import { useScheduleData, useScheduleLinks, useScheduleProjectId } from '../../hooks/useSchedule.js'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const EMPTY = { exception_date: '', exception_type: 'holiday', is_working_day: false, description: '' }
 const input = 'mt-1 w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white'
@@ -126,7 +127,7 @@ function CalendarExceptionFormScreenBody() {
         ) : (
           <fieldset disabled={!isEdit || saving} className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
             <FieldLabelWithHelp helpKey="public.project_calendar_exceptions.exception_date" className="text-xs text-gray-600 dark:text-gray-400">Date *
-              <input type="date" className={input} value={form.exception_date} onChange={(e) => setForm({ ...form, exception_date: e.target.value })} />
+              <RegionalDateInput eventStyle className={input} value={form.exception_date} onChange={(e) => setForm({ ...form, exception_date: e.target.value })} />
             </FieldLabelWithHelp>
             <FieldLabelWithHelp helpKey="public.project_calendar_exceptions.exception_type" className="text-xs text-gray-600 dark:text-gray-400">Type
               <select className={input} value={form.exception_type} onChange={(e) => setForm({ ...form, exception_type: e.target.value, is_working_day: e.target.value === 'holiday' ? false : form.is_working_day })}>

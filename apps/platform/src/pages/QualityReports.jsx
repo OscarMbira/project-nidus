@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, FileText } from 'lucide-react';
 import QualityReportBuilder from '../components/quality/QualityReportBuilder';
 import { supabase } from '../services/supabaseClient';
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 export default function QualityReports() {
   const navigate = useNavigate();
@@ -77,8 +78,7 @@ export default function QualityReports() {
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Start Date
             </label>
-            <input
-              type="date"
+            <RegionalDateInput eventStyle
               value={dateRange.start}
               onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -88,8 +88,7 @@ export default function QualityReports() {
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               End Date
             </label>
-            <input
-              type="date"
+            <RegionalDateInput eventStyle
               value={dateRange.end}
               onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"

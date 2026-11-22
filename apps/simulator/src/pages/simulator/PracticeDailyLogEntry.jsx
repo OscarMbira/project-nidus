@@ -8,6 +8,7 @@ import { ArrowLeft } from 'lucide-react'
 import { createPracticeDailyLogEntry, updatePracticeDailyLogEntry } from '../../services/sim/practiceDailyLogService'
 import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
 import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '@nidus/shared/utils/exportUtils'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const PRACTICE_DAILY_LOG_ENTRY_SECTIONS = [
   { title: 'Daily Log Entry', fields: [
@@ -74,7 +75,7 @@ export default function PracticeDailyLogEntry() {
       <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 space-y-6">
         <div>
           <label className="block text-sm font-medium mb-2">Entry Date *</label>
-          <input type="date" required value={formData.entry_date} onChange={(e) => setFormData({ ...formData, entry_date: e.target.value })} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
+          <RegionalDateInput eventStyle required value={formData.entry_date} onChange={(e) => setFormData({ ...formData, entry_date: e.target.value })} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
         </div>
         <div>
           <label className="block text-sm font-medium mb-2">Entry Type *</label>

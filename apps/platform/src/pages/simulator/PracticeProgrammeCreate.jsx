@@ -11,6 +11,7 @@ import { simDb } from '../../services/supabase/supabaseClient'
 import { createPracticeProgramme } from '../../services/sim/practicePortfolioService'
 import { getPortfolioCategories } from '../../services/portfolioCategoryService'
 import SearchableSelect from '@nidus/ui/SearchableSelect'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const EMPTY_FORM = {
   programme_code: '',
@@ -301,8 +302,7 @@ export default function PracticeProgrammeCreate() {
           <SectionHeading icon={Calendar} title="Timeline" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Field label="Start Date">
-              <input
-                type="date"
+              <RegionalDateInput eventStyle
                 name="programme_start_date"
                 value={formData.programme_start_date}
                 onChange={handleChange}
@@ -310,8 +310,7 @@ export default function PracticeProgrammeCreate() {
               />
             </Field>
             <Field label="End Date">
-              <input
-                type="date"
+              <RegionalDateInput eventStyle
                 name="programme_end_date"
                 value={formData.programme_end_date}
                 onChange={handleChange}

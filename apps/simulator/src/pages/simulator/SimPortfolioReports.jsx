@@ -11,6 +11,7 @@ import {
 import ExportListMenu from '@nidus/ui/ExportListMenu'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const REPORT_TYPES = [
   'Portfolio Status Report',
@@ -263,15 +264,13 @@ function SimPortfolioReportsBody() {
             </option>
           ))}
         </select>
-        <input
-          type="date"
+        <RegionalDateInput eventStyle
           value={filterFrom}
           onChange={(e) => setFilterFrom(e.target.value)}
           title="From date"
           className="px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:outline-none"
         />
-        <input
-          type="date"
+        <RegionalDateInput eventStyle
           value={filterTo}
           onChange={(e) => setFilterTo(e.target.value)}
           title="To date"
@@ -435,8 +434,7 @@ function SimPortfolioReportsBody() {
                 </div>
                 <div>
                   <FieldLabelWithHelp helpKey="sim.practice_portfolio_reports.report_date" className="block text-gray-400 text-sm mb-1">Report Date</FieldLabelWithHelp>
-                  <input
-                    type="date"
+                  <RegionalDateInput eventStyle
                     value={form.report_date}
                     onChange={(e) => setForm((f) => ({ ...f, report_date: e.target.value }))}
                     className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:outline-none"

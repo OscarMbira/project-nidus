@@ -6,6 +6,7 @@
 import { useState, useEffect } from 'react';
 import { CheckCircle, Clock, XCircle, Plus, Edit2, Trash2 } from 'lucide-react';
 import { getActionsByLesson, createAction, updateAction, deleteAction } from '../../services/lessonActionService';
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 export default function LessonActionsPanel({ lessonId }) {
   const [actions, setActions] = useState([]);
@@ -127,8 +128,7 @@ export default function LessonActionsPanel({ lessonId }) {
             placeholder="Assigned to (name)"
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
           />
-          <input
-            type="date"
+          <RegionalDateInput eventStyle
             value={formData.target_date}
             onChange={(e) => setFormData({ ...formData, target_date: e.target.value })}
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"

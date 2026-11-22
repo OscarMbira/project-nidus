@@ -10,6 +10,7 @@ import { getPlanBenefits, addBenefitToPlan, updateBenefitCoverage, removeBenefit
 import { platformDb } from '../../services/supabaseClient';
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 export default function BenefitsCoverageSection({ planId, projectId, onUpdate }) {
   const [coverage, setCoverage] = useState([]);
@@ -284,8 +285,7 @@ export default function BenefitsCoverageSection({ planId, projectId, onUpdate })
                 <FieldLabelWithHelp helpKey="public.benefits_review_plan_benefits.next_review_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Next Review Date
                 </FieldLabelWithHelp>
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   value={coverageData.next_review_date}
                   onChange={(e) => setCoverageData({ ...coverageData, next_review_date: e.target.value })}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
@@ -391,8 +391,7 @@ export default function BenefitsCoverageSection({ planId, projectId, onUpdate })
                 <FieldLabelWithHelp helpKey="public.benefits_review_plan_benefits.next_review_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Next Review Date
                 </FieldLabelWithHelp>
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   value={coverageData.next_review_date}
                   onChange={(e) => setCoverageData({ ...coverageData, next_review_date: e.target.value })}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"

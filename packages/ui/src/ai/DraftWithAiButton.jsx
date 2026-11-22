@@ -9,6 +9,7 @@ import { Loader2, Sparkles } from 'lucide-react'
 import { useAppConfig } from '@nidus/shared/context/AppConfigContext'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import { callAiFunction } from '@nidus/shared/services/askNidusService'
+import RegionalDateInput from '../RegionalDateInput.jsx'
 
 export default function DraftWithAiButton({ projectId, className = '' }) {
   const { app, db } = useAppConfig()
@@ -66,10 +67,10 @@ export default function DraftWithAiButton({ projectId, className = '' }) {
       {open && (
         <div className="mt-2 flex flex-wrap items-end gap-3">
           <label className="text-xs text-gray-700 dark:text-gray-300">From
-            <input type="date" value={start} onChange={(e) => setStart(e.target.value)} className="ml-1 rounded-md border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
+            <RegionalDateInput eventStyle value={start} onChange={(e) => setStart(e.target.value)} className="ml-1 rounded-md border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
           </label>
           <label className="text-xs text-gray-700 dark:text-gray-300">To
-            <input type="date" value={end} onChange={(e) => setEnd(e.target.value)} className="ml-1 rounded-md border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
+            <RegionalDateInput eventStyle value={end} onChange={(e) => setEnd(e.target.value)} className="ml-1 rounded-md border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
           </label>
           <p className="text-xs text-gray-600 dark:text-gray-400">Leave blank to cover the time since the last report.</p>
         </div>

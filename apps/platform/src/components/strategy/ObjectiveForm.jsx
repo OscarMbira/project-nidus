@@ -4,6 +4,7 @@ import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { X, Save, Target, Calendar, TrendingUp } from 'lucide-react';
 import { saveStrategicObjective } from '../../services/strategicService';
 import { supabase } from '../../services/supabaseClient';
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 function ObjectiveFormBody({ objective, onSave, onCancel }) {
   const [formData, setFormData] = useState({
@@ -518,8 +519,7 @@ function ObjectiveFormBody({ objective, onSave, onCancel }) {
                 <FieldLabelWithHelp helpKey="public.strategic_objectives.objective_start_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Start Date
                 </FieldLabelWithHelp>
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   name="objective_start_date"
                   value={formData.objective_start_date}
                   onChange={handleChange}
@@ -531,8 +531,7 @@ function ObjectiveFormBody({ objective, onSave, onCancel }) {
                 <FieldLabelWithHelp helpKey="public.strategic_objectives.objective_target_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Target Date *
                 </FieldLabelWithHelp>
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   name="objective_target_date"
                   value={formData.objective_target_date}
                   onChange={handleChange}
@@ -545,8 +544,7 @@ function ObjectiveFormBody({ objective, onSave, onCancel }) {
                 <FieldLabelWithHelp helpKey="public.strategic_objectives.objective_completion_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Completion Date
                 </FieldLabelWithHelp>
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   name="objective_completion_date"
                   value={formData.objective_completion_date}
                   onChange={handleChange}

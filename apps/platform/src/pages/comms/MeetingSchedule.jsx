@@ -16,6 +16,7 @@ import AuditCard from '@nidus/ui/AuditCard'
 import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { useCommsApi } from './useCommsApi'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 function statusLabel(status) {
   return String(status || 'scheduled').replace('_', ' ')
@@ -248,8 +249,7 @@ function MeetingScheduleBody() {
         )}
         <FieldLabelWithHelp helpKey="public.comm_meetings.scheduled_start" className="block text-sm text-gray-700 dark:text-gray-300">
           Start
-          <input
-            type="datetime-local"
+          <RegionalDateInput eventStyle withTime
             value={start}
             onChange={(e) => setStart(e.target.value)}
             className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2"

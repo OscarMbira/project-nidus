@@ -9,6 +9,7 @@ import ProductStatusAccountCard from './ProductStatusAccountCard'
 import ExportListMenu from '@nidus/ui/ExportListMenu'
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 const PSA_COLUMNS = [
   { key: 'psa_reference', label: 'Reference' },
   { key: 'product_name', label: 'Product Name' },
@@ -90,8 +91,7 @@ export default function ProductStatusAccountList({ projectId, routeKey, onCreate
       {/* Report Date Selector */}
       <div className="flex items-center gap-2">
         <Calendar className="w-4 h-4 text-gray-400" />
-        <input
-          type="date"
+        <RegionalDateInput eventStyle
           value={currentReportDate}
           onChange={(e) => setCurrentReportDate(e.target.value)}
           className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"

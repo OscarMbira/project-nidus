@@ -1,3 +1,4 @@
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 /**
  * Validation rules editor for an LDE field definition. v1314 adds Default value, Min length,
  * earliest/latest date and min/max number of items (keys used by Local Register custom fields);
@@ -46,7 +47,7 @@ function DefaultValueInput({ fieldType, options, value, onChange }) {
     const isToday = value === 'today'
     return (
       <div className="mt-1 flex flex-wrap items-center gap-3">
-        <input type="date" className={INPUT} value={isToday ? '' : value ?? ''} disabled={isToday}
+        <RegionalDateInput eventStyle className={INPUT} value={isToday ? '' : value ?? ''} disabled={isToday}
           onChange={(e) => onChange(e.target.value || undefined)} />
         <label className="inline-flex items-center gap-1">
           <input type="checkbox" checked={isToday} onChange={(e) => onChange(e.target.checked ? 'today' : undefined)} />
@@ -120,8 +121,8 @@ export default function ValidationRuleBuilder({ rules = {}, onChange, fieldType 
         <label className="md:col-span-2">
           Earliest / Latest date
           <div className="flex gap-2 mt-1">
-            <input type="date" className={`flex-1 ${INPUT}`} value={r.minDate ?? ''} onChange={(e) => set({ minDate: e.target.value || undefined })} />
-            <input type="date" className={`flex-1 ${INPUT}`} value={r.maxDate ?? ''} onChange={(e) => set({ maxDate: e.target.value || undefined })} />
+            <RegionalDateInput eventStyle className={`flex-1 ${INPUT}`} value={r.minDate ?? ''} onChange={(e) => set({ minDate: e.target.value || undefined })} />
+            <RegionalDateInput eventStyle className={`flex-1 ${INPUT}`} value={r.maxDate ?? ''} onChange={(e) => set({ maxDate: e.target.value || undefined })} />
           </div>
         </label>
       )}

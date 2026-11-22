@@ -14,6 +14,7 @@ import ExportListMenu from '@nidus/ui/ExportListMenu'
 import ChangeLogAttachments from './ChangeLogAttachments'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 // ─── constants ───────────────────────────────────────────────────────────────
 
@@ -319,8 +320,7 @@ function EntryModal({ mode, entry, projects, currentUserId, onSave, onClose, emb
 
             {/* Log Date */}
             <Field label="Log Date">
-              <input
-                type="datetime-local"
+              <RegionalDateInput eventStyle withTime
                 value={form.log_date}
                 onChange={e => set('log_date', e.target.value)}
                 className={inputCls}
@@ -872,9 +872,9 @@ export default function ChangeLog({ projectId: propProjectId = null, changeReque
               <option value="">All Actions</option>
               {ACTION_OPTIONS.map(a => <option key={a} value={a}>{a.replace(/-/g, ' ')}</option>)}
             </select>
-            <input type="date" value={filters.date_from} onChange={e => setFilter('date_from', e.target.value)}
+            <RegionalDateInput eventStyle value={filters.date_from} onChange={e => setFilter('date_from', e.target.value)}
               className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
-            <input type="date" value={filters.date_to} onChange={e => setFilter('date_to', e.target.value)}
+            <RegionalDateInput eventStyle value={filters.date_to} onChange={e => setFilter('date_to', e.target.value)}
               className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
             <button onClick={clearFilters}
               className="px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">

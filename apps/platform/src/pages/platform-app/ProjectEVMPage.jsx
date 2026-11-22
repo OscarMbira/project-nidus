@@ -11,6 +11,7 @@ import { useFinancialPermissions } from '@nidus/shared/hooks/useFinancialPermiss
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 import SmartAmountInput from '@nidus/ui/SmartAmountInput'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 function formatNumber(n) {
   return Number(n || 0).toLocaleString()
@@ -94,7 +95,7 @@ function ProjectEVMPageBody() {
 
         {canManage && !readOnlyExecutive && (
           <form onSubmit={save} className="rounded-xl border border-gray-200 dark:border-gray-800 p-4 grid md:grid-cols-5 gap-2">
-            <input type="date" value={form.period_date} onChange={(e) => setForm({ ...form, period_date: e.target.value })} className="rounded border border-gray-600 bg-gray-950 px-2 py-1 text-sm" />
+            <RegionalDateInput eventStyle value={form.period_date} onChange={(e) => setForm({ ...form, period_date: e.target.value })} className="rounded border border-gray-600 bg-gray-950 px-2 py-1 text-sm" />
             <input placeholder="PV" value={form.planned_value} onChange={(e) => setForm({ ...form, planned_value: e.target.value })} className="rounded border border-gray-600 bg-gray-950 px-2 py-1 text-sm" />
             <input placeholder="EV" value={form.earned_value} onChange={(e) => setForm({ ...form, earned_value: e.target.value })} className="rounded border border-gray-600 bg-gray-950 px-2 py-1 text-sm" />
             <input placeholder="AC" value={form.actual_cost} onChange={(e) => setForm({ ...form, actual_cost: e.target.value })} className="rounded border border-gray-600 bg-gray-950 px-2 py-1 text-sm" />

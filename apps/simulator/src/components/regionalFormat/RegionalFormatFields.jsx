@@ -31,6 +31,7 @@ import {
   formatRegionalDate,
   formatRegionalNumber,
 } from '@nidus/shared/utils/formatRegionalSettings.js'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const FIELD_DEFS_BASE = [
   { key: 'country_code', type: 'select', optionsKey: 'countries' },
@@ -123,9 +124,8 @@ function LocalValueControl({ def, id, value, onChange, disabled, hideLabel = fal
         {!hideLabel && (
           <FieldLabelWithHelp helpKey={`local:${def.id}`} help={inlineHelpFromDefinition(def)} htmlFor={id} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{label}</FieldLabelWithHelp>
         )}
-        <input
+        <RegionalDateInput eventStyle
           id={id}
-          type="date"
           value={value ?? ''}
           onChange={(e) => onChange(e.target.value)}
           disabled={disabled}
@@ -703,8 +703,7 @@ export default function RegionalFormatFields({
                       forceNative
                     />
                   ) : newType === 'date' ? (
-                    <input
-                      type="date"
+                    <RegionalDateInput eventStyle
                       value={newDefault}
                       onChange={(e) => setNewDefault(e.target.value)}
                       className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-white"

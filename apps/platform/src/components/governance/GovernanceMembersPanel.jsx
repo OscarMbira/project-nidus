@@ -21,6 +21,7 @@ import {
   updateGovernanceMember,
   deleteGovernanceMember,
 } from '../../services/projectGovernanceMembersService'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const EMPTY_FORM = {
   member_name: '',
@@ -243,8 +244,7 @@ function GovernanceMembersPanelBody({ bodyType, title, description, backTo }) {
             </div>
             <div>
               <FieldLabelWithHelp helpKey="public.project_governance_members.appointed_date" className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Appointed date</FieldLabelWithHelp>
-              <input
-                type="date"
+              <RegionalDateInput eventStyle
                 value={form.appointed_date}
                 onChange={(e) => setForm({ ...form, appointed_date: e.target.value })}
                 className={inputClass}
@@ -252,8 +252,7 @@ function GovernanceMembersPanelBody({ bodyType, title, description, backTo }) {
             </div>
             <div>
               <FieldLabelWithHelp helpKey="public.project_governance_members.end_date" className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">End date</FieldLabelWithHelp>
-              <input
-                type="date"
+              <RegionalDateInput eventStyle
                 value={form.end_date}
                 onChange={(e) => setForm({ ...form, end_date: e.target.value })}
                 className={inputClass}

@@ -3,6 +3,7 @@ import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { FileText, User, Calendar, RefreshCw } from 'lucide-react'
 import { useThemeContext } from '@nidus/shared/context/ThemeContext'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 function IssueReportDocumentInfoSectionBody({
   formData,
@@ -110,8 +111,7 @@ function IssueReportDocumentInfoSectionBody({
             <Calendar className="w-4 h-4 inline mr-1" />
             Report Date <span className="text-red-500">*</span>
           </FieldLabelWithHelp>
-          <input
-            type="date"
+          <RegionalDateInput eventStyle
             value={formData.report_date || ''}
             onChange={(e) => onChange('report_date', e.target.value)}
             readOnly={readOnly}

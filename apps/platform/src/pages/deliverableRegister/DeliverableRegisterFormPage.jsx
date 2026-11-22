@@ -28,6 +28,7 @@ const STATUS_LABELS = {
 }
 
 import RecordCustomFields from '../../components/shared-app/RecordCustomFields'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 export default function DeliverableRegisterFormPage({ mode: modeProp }) {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -171,7 +172,7 @@ export default function DeliverableRegisterFormPage({ mode: modeProp }) {
               </select>
             </label>
             <label className="block text-xs text-gray-700 dark:text-gray-200">Due date
-              <input type="date" value={form.due_date || ''} onChange={(e) => setForm((f) => ({ ...f, due_date: e.target.value }))}
+              <RegionalDateInput eventStyle value={form.due_date || ''} onChange={(e) => setForm((f) => ({ ...f, due_date: e.target.value }))}
                 className="mt-1 w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2" />
             </label>
             <label className="block text-xs text-gray-700 dark:text-gray-200">Notes

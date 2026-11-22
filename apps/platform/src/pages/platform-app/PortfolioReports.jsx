@@ -12,6 +12,7 @@ import {
 import ExportListMenu from '@nidus/ui/ExportListMenu'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const REPORT_TYPES = [
   'Portfolio Status Report', 'Portfolio Health Report', 'Executive Summary',
@@ -189,10 +190,10 @@ function PortfolioReportsBody() {
           <option value="">All Statuses</option>
           {STATUSES.map(s => <option key={s} value={s}>{s.replace(/_/g, ' ')}</option>)}
         </select>
-        <input type="date" value={filterFrom} onChange={e => setFilterFrom(e.target.value)}
+        <RegionalDateInput eventStyle value={filterFrom} onChange={e => setFilterFrom(e.target.value)}
           title="From date"
           className="px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:outline-none" />
-        <input type="date" value={filterTo} onChange={e => setFilterTo(e.target.value)}
+        <RegionalDateInput eventStyle value={filterTo} onChange={e => setFilterTo(e.target.value)}
           title="To date"
           className="px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:outline-none" />
         <button onClick={load} className="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm">

@@ -16,6 +16,7 @@ import AuditField from '@nidus/ui/AuditField';
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
 import MultiLineListInput from '@nidus/ui/MultiLineListInput';
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const QUALITY_REVIEW_FORM_TABS = [
   { value: 'details', label: 'Details' },
@@ -405,8 +406,7 @@ function QualityReviewFormBody({
                 <FieldLabelWithHelp helpKey="public.quality_reviews.planned_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Planned Date
                 </FieldLabelWithHelp>
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   name="planned_date"
                   value={formData.planned_date}
                   onChange={handleChange}
@@ -418,8 +418,7 @@ function QualityReviewFormBody({
                 <FieldLabelWithHelp helpKey="public.quality_reviews.forecast_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Forecast Date
                 </FieldLabelWithHelp>
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   name="forecast_date"
                   value={formData.forecast_date}
                   onChange={handleChange}
@@ -431,8 +430,7 @@ function QualityReviewFormBody({
                 <FieldLabelWithHelp helpKey="public.quality_reviews.sign_off_planned_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Sign-Off Planned Date
                 </FieldLabelWithHelp>
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   name="sign_off_planned_date"
                   value={formData.sign_off_planned_date}
                   onChange={handleChange}
@@ -444,8 +442,7 @@ function QualityReviewFormBody({
                 <FieldLabelWithHelp helpKey="public.quality_reviews.sign_off_forecast_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Sign-Off Forecast Date
                 </FieldLabelWithHelp>
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   name="sign_off_forecast_date"
                   value={formData.sign_off_forecast_date}
                   onChange={handleChange}
@@ -652,8 +649,7 @@ function QualityReviewFormBody({
                 <FieldLabelWithHelp helpKey="public.quality_reviews.materials_distribution_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Materials Distribution Date
                 </FieldLabelWithHelp>
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   name="materials_distribution_date"
                   value={formData.materials_distribution_date}
                   onChange={handleChange}

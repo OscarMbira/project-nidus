@@ -4,6 +4,7 @@ import { ArrowLeft, TrendingUp, Calendar, Users, Activity, Search, Download } fr
 import DashboardStatCard from '@nidus/ui/DashboardStatCard';
 import { getCrossProjectUtilization, getResourceUtilizationSummary } from '../services/crossResourceService';
 import ResourceUtilizationList from '../components/resources/ResourceUtilizationList';
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 export default function ResourceUtilization() {
   const navigate = useNavigate();
@@ -101,8 +102,7 @@ export default function ResourceUtilization() {
           <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4 text-gray-400" />
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Start Date:</label>
-            <input
-              type="date"
+            <RegionalDateInput eventStyle
               value={selectedPeriod.start}
               onChange={(e) => setSelectedPeriod({ ...selectedPeriod, start: e.target.value })}
               className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
@@ -110,8 +110,7 @@ export default function ResourceUtilization() {
           </div>
           <div className="flex items-center gap-2">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">End Date:</label>
-            <input
-              type="date"
+            <RegionalDateInput eventStyle
               value={selectedPeriod.end}
               onChange={(e) => setSelectedPeriod({ ...selectedPeriod, end: e.target.value })}
               className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"

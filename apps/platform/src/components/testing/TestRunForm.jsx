@@ -10,6 +10,7 @@ import AuditCard from '@nidus/ui/AuditCard'
 import AuditField from '@nidus/ui/AuditField'
 import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesContext'
 import { getTestEnvironments } from '../../services/testEnvironmentService'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const STATUSES = ['planned', 'in_progress', 'completed', 'cancelled', 'aborted', 'on_hold']
 
@@ -201,8 +202,7 @@ function TestRunFormBody({
         </div>
         <div>
           <FieldLabelWithHelp helpKey="public.test_runs.run_date" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Run date</FieldLabelWithHelp>
-          <input
-            type="date"
+          <RegionalDateInput eventStyle
             value={form.run_date}
             onChange={(e) => setForm((f) => ({ ...f, run_date: e.target.value }))}
             className={inputClass}

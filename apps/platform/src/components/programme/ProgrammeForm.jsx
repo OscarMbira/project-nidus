@@ -15,6 +15,7 @@ import AuditCard from '@nidus/ui/AuditCard';
 import AuditField from '@nidus/ui/AuditField';
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
 import { humanizeAuditToken } from '@nidus/shared/utils/auditDisplayUtils';
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 function ProgrammeFormBody({ programme, onSave, onCancel, embedded = true }) {
   const [formData, setFormData] = useState({
@@ -464,8 +465,7 @@ function ProgrammeFormBody({ programme, onSave, onCancel, embedded = true }) {
                 <FieldLabelWithHelp helpKey="public.programmes.programme_start_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Start Date
                 </FieldLabelWithHelp>
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   name="programme_start_date"
                   value={formData.programme_start_date}
                   onChange={handleChange}
@@ -477,8 +477,7 @@ function ProgrammeFormBody({ programme, onSave, onCancel, embedded = true }) {
                 <FieldLabelWithHelp helpKey="public.programmes.programme_end_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   End Date
                 </FieldLabelWithHelp>
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   name="programme_end_date"
                   value={formData.programme_end_date}
                   onChange={handleChange}

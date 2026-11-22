@@ -2,6 +2,7 @@ import { Settings, Calendar, User } from 'lucide-react'
 import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useState, useEffect } from 'react'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 function IssueReportDecisionSectionBody({
   formData,
@@ -85,8 +86,7 @@ function IssueReportDecisionSectionBody({
                   <Calendar className="w-4 h-4 inline mr-1" />
                   Decision Date
                 </FieldLabelWithHelp>
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   value={formData.decision_date || ''}
                   onChange={(e) => onChange('decision_date', e.target.value)}
                   readOnly={readOnly}

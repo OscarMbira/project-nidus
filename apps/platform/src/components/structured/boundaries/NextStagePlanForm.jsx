@@ -11,6 +11,7 @@ import AuditCard from '@nidus/ui/AuditCard';
 import AuditField from '@nidus/ui/AuditField';
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 function NextStagePlanFormBody({ projectId, plan, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
@@ -195,8 +196,7 @@ function NextStagePlanFormBody({ projectId, plan, onClose, onSuccess }) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <FieldLabelWithHelp helpKey="public.next_stage_plans.plan_date" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block" required>Plan Date *</FieldLabelWithHelp>
-                  <input
-                    type="date"
+                  <RegionalDateInput eventStyle
                     value={formData.plan_date}
                     onChange={(e) => setFormData({ ...formData, plan_date: e.target.value })}
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
@@ -275,8 +275,7 @@ function NextStagePlanFormBody({ projectId, plan, onClose, onSuccess }) {
                     <Calendar className="h-4 w-4" />
                     Planned Start Date
                   </FieldLabelWithHelp>
-                  <input
-                    type="date"
+                  <RegionalDateInput eventStyle
                     value={formData.planned_start_date}
                     onChange={(e) => setFormData({ ...formData, planned_start_date: e.target.value })}
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
@@ -288,8 +287,7 @@ function NextStagePlanFormBody({ projectId, plan, onClose, onSuccess }) {
                     <Calendar className="h-4 w-4" />
                     Planned End Date
                   </FieldLabelWithHelp>
-                  <input
-                    type="date"
+                  <RegionalDateInput eventStyle
                     value={formData.planned_end_date}
                     onChange={(e) => setFormData({ ...formData, planned_end_date: e.target.value })}
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"

@@ -16,6 +16,7 @@ import AuditCard from '@nidus/ui/AuditCard'
 import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 function ResponseFormBody({ riskId, response, onSave, onCancel }) {
   const [formData, setFormData] = useState({
@@ -270,8 +271,7 @@ function ResponseFormBody({ riskId, response, onSave, onCancel }) {
               <FieldLabelWithHelp helpKey="public.risk_responses.target_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Target Date
               </FieldLabelWithHelp>
-              <input
-                type="date"
+              <RegionalDateInput eventStyle
                 value={formData.target_date}
                 onChange={(e) => handleChange('target_date', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"

@@ -21,6 +21,7 @@ import AuditCard from '@nidus/ui/AuditCard';
 import AuditField from '@nidus/ui/AuditField';
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const CATEGORIES = [
   'process', 'technical', 'resource', 'communication', 
@@ -516,8 +517,7 @@ function LessonFormBody({ lesson, onSave, onCancel, projectId }) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <FieldLabelWithHelp helpKey="public.lessons_learned.follow_up_due_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Follow-up Due Date</FieldLabelWithHelp>
-              <input
-                type="date"
+              <RegionalDateInput eventStyle
                 value={formData.follow_up_due_date}
                 onChange={(e) => setFormData({ ...formData, follow_up_due_date: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
@@ -549,8 +549,7 @@ function LessonFormBody({ lesson, onSave, onCancel, projectId }) {
             </FieldLabelWithHelp>
             <div>
               <FieldLabelWithHelp helpKey="public.lessons_learned.sharing_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date Shared</FieldLabelWithHelp>
-              <input
-                type="date"
+              <RegionalDateInput eventStyle
                 value={formData.sharing_date}
                 onChange={(e) => setFormData({ ...formData, sharing_date: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
@@ -608,8 +607,7 @@ function LessonFormBody({ lesson, onSave, onCancel, projectId }) {
         <FieldLabelWithHelp helpKey="public.lessons_learned.lesson_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Lesson Date
         </FieldLabelWithHelp>
-        <input
-          type="date"
+        <RegionalDateInput eventStyle
           value={formData.lesson_date}
           onChange={(e) => setFormData({ ...formData, lesson_date: e.target.value })}
           className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"

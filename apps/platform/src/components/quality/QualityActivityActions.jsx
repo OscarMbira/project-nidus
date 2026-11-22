@@ -9,6 +9,7 @@ import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { AlertCircle, Plus, CheckCircle, XCircle, Clock, Flag } from 'lucide-react';
 import { getActions, addAction, completeAction, verifyAction, deleteAction } from '../../services/qualityActivityActionsService';
 import { supabase } from '../../services/supabaseClient';
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 function QualityActivityActionsBody({ activityType, activityId, onUpdate }) {
   const [actions, setActions] = useState([]);
@@ -257,8 +258,7 @@ function QualityActivityActionsBody({ activityType, activityId, onUpdate }) {
               <FieldLabelWithHelp helpKey="public.quality_activity_actions.due_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Due Date
               </FieldLabelWithHelp>
-              <input
-                type="date"
+              <RegionalDateInput eventStyle
                 value={newAction.due_date}
                 onChange={(e) => setNewAction({ ...newAction, due_date: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"

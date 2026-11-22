@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Plus, Trash2, Flag } from 'lucide-react'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 /**
  * Quick-capture list of main milestones identified during project setup, before roles are
@@ -72,8 +73,7 @@ export default function MilestoneQuickCaptureSection({ rows = [], onAdd, onRemov
               aria-label="New milestone name"
               className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm"
             />
-            <input
-              type="date"
+            <RegionalDateInput eventStyle
               value={draft.target_date}
               onChange={(e) => patchDraft('target_date', e.target.value)}
               aria-label="New milestone target date"

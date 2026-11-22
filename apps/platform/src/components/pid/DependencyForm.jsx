@@ -15,6 +15,7 @@ import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 const TYPES = ['external', 'internal', 'organizational', 'technical', 'resource', 'regulatory', 'other']
 const STATUSES = ['satisfied', 'pending', 'at_risk', 'not_met']
 
@@ -200,8 +201,7 @@ export default function DependencyForm({ pidId, dependency, mode = 'create', onS
           </FieldLabelWithHelp>
           <FieldLabelWithHelp helpKey="public.pid_dependencies.expected_date" className="block">
             <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Expected date</span>
-            <input
-              type="date"
+            <RegionalDateInput eventStyle
               value={form.expected_date}
               onChange={(e) => set('expected_date', e.target.value)}
               className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm"

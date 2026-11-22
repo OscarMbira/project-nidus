@@ -22,6 +22,7 @@ import { CheckCircle, Briefcase, Users, Settings, ArrowRight, ArrowLeft, Loader 
 import { useToast } from '@nidus/shared/hooks/useToast'
 import MainHeader from '../../components/homepage/MainHeader'
 import Footer from '../../components/homepage/Footer'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 function PlatformAccountSetupBody() {
   const navigate = useNavigate()
@@ -481,8 +482,7 @@ function PlatformAccountSetupBody() {
                 <FieldLabelWithHelp helpKey="public.accounts.first_project_start_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Start Date
                 </FieldLabelWithHelp>
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
@@ -492,8 +492,7 @@ function PlatformAccountSetupBody() {
                 <FieldLabelWithHelp helpKey="public.accounts.first_project_end_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   End Date
                 </FieldLabelWithHelp>
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"

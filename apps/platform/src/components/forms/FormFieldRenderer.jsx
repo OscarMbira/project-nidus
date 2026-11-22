@@ -2,6 +2,7 @@ import { parseShorthandNumber } from '../../services/formCalculations'
 import { formatWithSeparators } from '@nidus/shared/utils/amountShorthand'
 import { formatLocaleNumber } from '@nidus/shared/utils/localeFormat'
 import AttachmentField from './AttachmentField'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 export default function FormFieldRenderer({
   field, value, onChange, resolveOptionLabel, languageCode, formInstanceId = null, disabled = false, mode = 'platform',
@@ -33,7 +34,7 @@ export default function FormFieldRenderer({
       />
     )
   }
-  if (field.type === 'date') return <input {...common} type="date" />
+  if (field.type === 'date') return <RegionalDateInput {...common} eventStyle />
 
   if (field.type === 'number') {
     const preview = formatLocaleNumber(value, languageCode)

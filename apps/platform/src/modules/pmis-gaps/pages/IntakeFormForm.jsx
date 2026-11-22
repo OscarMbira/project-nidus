@@ -12,6 +12,7 @@ import { ArrowLeft } from 'lucide-react'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesContext'
 import { getForm, createForm, updateForm, listProjectOptions } from '../../../services/intakeFormService'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const TARGET_ENTITY_TYPES = ['issue', 'risk', 'task', 'change', 'feedback', 'other']
 const inputClass = 'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm'
@@ -149,11 +150,11 @@ function IntakeFormFormBody({ sim = false }) {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <FieldLabelWithHelp helpKey="public.intake_forms.is_active" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Active from</FieldLabelWithHelp>
-            <input type="date" value={form.active_from} onChange={(e) => handleChange('active_from', e.target.value)} className={inputClass} />
+            <RegionalDateInput eventStyle value={form.active_from} onChange={(e) => handleChange('active_from', e.target.value)} className={inputClass} />
           </div>
           <div>
             <FieldLabelWithHelp helpKey="public.intake_forms.is_active" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Active to</FieldLabelWithHelp>
-            <input type="date" value={form.active_to} onChange={(e) => handleChange('active_to', e.target.value)} className={inputClass} />
+            <RegionalDateInput eventStyle value={form.active_to} onChange={(e) => handleChange('active_to', e.target.value)} className={inputClass} />
           </div>
         </div>
 

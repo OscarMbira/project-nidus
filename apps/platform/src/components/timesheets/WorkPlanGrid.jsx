@@ -18,6 +18,7 @@ import {
 import { getWorkCategories } from '../../services/timesheetWorkCategoryService'
 import { getProjectMembers } from '../../services/projectMembershipService'
 import SelectField from '@nidus/ui/SelectField'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const PRIORITY_OPTIONS = [
   { value: 'low', label: 'Low' },
@@ -457,14 +458,14 @@ function WorkPlanGridBody({ projectId, userId, periodType, periodStartDate, peri
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                         <div>
                           <FieldLabelWithHelp helpKey="public.project_work_plan_items.start_date" className="block text-xs text-gray-500 dark:text-slate-400 mb-1">Start</FieldLabelWithHelp>
-                          <input type="date" value={draft.startDate} disabled={!editable || rowBusy}
+                          <RegionalDateInput eventStyle value={draft.startDate} disabled={!editable || rowBusy}
                             onChange={(e) => updateDraft(rowKey, 'startDate', e.target.value)}
                             onBlur={() => handleBlur(rowKey)}
                             className="w-full rounded border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 py-1.5 text-sm text-gray-700 dark:text-slate-300 focus:border-blue-500 focus:outline-none disabled:opacity-70 disabled:cursor-not-allowed" />
                         </div>
                         <div>
                           <FieldLabelWithHelp helpKey="public.project_work_plan_items.end_date" className="block text-xs text-gray-500 dark:text-slate-400 mb-1">End</FieldLabelWithHelp>
-                          <input type="date" value={draft.endDate} disabled={!editable || rowBusy}
+                          <RegionalDateInput eventStyle value={draft.endDate} disabled={!editable || rowBusy}
                             onChange={(e) => updateDraft(rowKey, 'endDate', e.target.value)}
                             onBlur={() => handleBlur(rowKey)}
                             className="w-full rounded border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 py-1.5 text-sm text-gray-700 dark:text-slate-300 focus:border-blue-500 focus:outline-none disabled:opacity-70 disabled:cursor-not-allowed" />

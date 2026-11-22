@@ -9,6 +9,7 @@ import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Plus, X, Edit2, CheckCircle, Clock, User } from 'lucide-react'
 import { getRecommendations, addRecommendation, updateRecommendation, deleteRecommendation, syncRecommendationsFromLessons } from '../../services/lessonsReportRecommendationService'
 import { platformDb } from '@nidus/supabase'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 function LessonsReportRecommendationsSectionBody({
   reportId,
@@ -375,8 +376,7 @@ function LessonsReportRecommendationsSectionBody({
                 <FieldLabelWithHelp helpKey="public.lessons_report_recommendations.target_implementation_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Target Implementation Date
                 </FieldLabelWithHelp>
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   value={formData.target_implementation_date || ''}
                   onChange={(e) => setFormData({ ...formData, target_implementation_date: e.target.value || null })}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"

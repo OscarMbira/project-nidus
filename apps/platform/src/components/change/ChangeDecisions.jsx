@@ -8,6 +8,7 @@ import { Plus, Gavel } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { platformDb } from '@nidus/supabase'
 import { fetchChangeApprovals, createChangeApproval, updateChangeApproval } from '../../services/changeManagementService'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const DECISION_OPTIONS = ['pending', 'approved', 'approved-with-conditions', 'rejected', 'deferred', 'escalated']
 
@@ -118,7 +119,7 @@ export default function ChangeDecisions({ changeRequestId, projectId }) {
               <option key={v} value={v}>{v}</option>
             ))}
           </select>
-          <input type="date" value={form.requested_date} onChange={(e) => setForm({ ...form, requested_date: e.target.value })}
+          <RegionalDateInput eventStyle value={form.requested_date} onChange={(e) => setForm({ ...form, requested_date: e.target.value })}
             className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-sm" />
           <div className="md:col-span-2 flex justify-end gap-2">
             <button type="button" onClick={() => setFormOpen(false)} className="px-4 py-2 rounded-lg text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">Cancel</button>

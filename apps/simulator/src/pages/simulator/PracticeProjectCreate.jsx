@@ -20,6 +20,7 @@ const PRACTICE_PROJECT_HELP_KEYS = [
 ].map((name) => `sim.practice_projects.${name}`)
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 export default function PracticeProjectCreate() {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
@@ -181,8 +182,7 @@ export default function PracticeProjectCreate() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <FieldLabelWithHelp helpKey="sim.practice_projects.planned_start_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Start Date</FieldLabelWithHelp>
-              <input
-                type="date"
+              <RegionalDateInput eventStyle
                 value={formData.planned_start_date}
                 onChange={(e) => setFormData({ ...formData, planned_start_date: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
@@ -191,8 +191,7 @@ export default function PracticeProjectCreate() {
 
             <div>
               <FieldLabelWithHelp helpKey="sim.practice_projects.planned_end_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">End Date</FieldLabelWithHelp>
-              <input
-                type="date"
+              <RegionalDateInput eventStyle
                 value={formData.planned_end_date}
                 onChange={(e) => setFormData({ ...formData, planned_end_date: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"

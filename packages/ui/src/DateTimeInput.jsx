@@ -5,9 +5,7 @@
  */
 import { Clock, X } from 'lucide-react'
 import { fromDateTimeInputValue, nowDateTimeValue, toDateTimeInputValue } from '@nidus/shared/utils/registerDateTime'
-
-const INPUT_CLASS =
-  'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm'
+import RegionalDateInput from './RegionalDateInput.jsx'
 
 /**
  * @param {object} props
@@ -20,11 +18,12 @@ const INPUT_CLASS =
 export default function DateTimeInput({ value, onChange, settings = null, ariaLabel = 'Date and time', disabled = false }) {
   return (
     <div className="flex items-center gap-2">
-      <input
-        type="datetime-local"
+      <RegionalDateInput
+        withTime
+        settings={settings}
         value={toDateTimeInputValue(value, settings)}
-        onChange={(e) => onChange(fromDateTimeInputValue(e.target.value, settings))}
-        className={INPUT_CLASS}
+        onChange={(next) => onChange(next ? fromDateTimeInputValue(next, settings) : '')}
+        className="flex-1"
         aria-label={ariaLabel}
         disabled={disabled}
       />

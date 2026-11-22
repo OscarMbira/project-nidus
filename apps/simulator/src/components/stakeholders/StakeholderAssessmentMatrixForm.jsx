@@ -13,6 +13,7 @@ import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import SelectField from '@nidus/ui/SelectField'
 import { resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesContext'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 function formSnapshot(data) {
   return JSON.stringify({
@@ -208,8 +209,7 @@ function StakeholderAssessmentMatrixFormBody({
           </div>
           <div>
             <FieldLabelWithHelp helpKey="sim.stakeholder_assessment_matrix.assessment_date" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1" required>Assessment date *</FieldLabelWithHelp>
-            <input
-              type="date"
+            <RegionalDateInput eventStyle
               name="assessment_date"
               value={formData.assessment_date}
               onChange={handleChange}

@@ -74,3 +74,4 @@ export {
   IndustryPlanWbsGrid,
   IndustryPlanFlatEntityGrid,
 } from './industryPlan/IndustryPlanWizardGrids.jsx'
+export { default as RegionalDateInput } from './RegionalDateInput.jsx'

@@ -21,6 +21,7 @@ import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import { HoldButton } from './shared-app/HoldButton'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 import toast from 'react-hot-toast'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 function idsFromLink(many, single) {
   const list = Array.isArray(many) ? many.map((id) => String(id || '')).filter(Boolean) : []
@@ -852,8 +853,7 @@ function IssueFormBody({
                     <Calendar className="h-4 w-4 inline mr-1" />
                     Date Raised *
                   </FieldLabelWithHelp>
-                  <input
-                    type="date"
+                  <RegionalDateInput eventStyle
                     name="date_raised"
                     value={formData.date_raised}
                     onChange={handleChange}
@@ -866,8 +866,7 @@ function IssueFormBody({
                     <Calendar className="h-4 w-4 inline mr-1" />
                     Due Date
                   </FieldLabelWithHelp>
-                  <input
-                    type="date"
+                  <RegionalDateInput eventStyle
                     name="due_date"
                     value={formData.due_date}
                     onChange={handleChange}
@@ -879,8 +878,7 @@ function IssueFormBody({
                     <Calendar className="h-4 w-4 inline mr-1" />
                     Estimated Resolution Date
                   </FieldLabelWithHelp>
-                  <input
-                    type="date"
+                  <RegionalDateInput eventStyle
                     name="estimated_resolution_date"
                     value={formData.estimated_resolution_date}
                     onChange={handleChange}

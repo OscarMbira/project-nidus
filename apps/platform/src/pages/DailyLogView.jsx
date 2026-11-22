@@ -22,6 +22,7 @@ import PersonResponsibleSelector from '../components/dailyLog/PersonResponsibleS
 import { validateEntry, getEntryCompleteness, needsImmediateAttention, isEntryOverdue } from '@nidus/shared/utils/dailyLogValidation';
 import ExportListMenu from '@nidus/ui/ExportListMenu';
 import { RowActionButton } from '@nidus/ui';
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const DAILY_LOG_COLUMNS = [
   { key: 'entry_number', label: 'Entry #' },
@@ -349,8 +350,7 @@ export default function DailyLogView() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date</label>
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   value={formData.entry_date}
                   onChange={(e) => setFormData({ ...formData, entry_date: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
@@ -422,8 +422,7 @@ export default function DailyLogView() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Target Date</label>
-                  <input
-                    type="date"
+                  <RegionalDateInput eventStyle
                     value={formData.target_date}
                     onChange={(e) => {
                       setFormData({ ...formData, target_date: e.target.value });

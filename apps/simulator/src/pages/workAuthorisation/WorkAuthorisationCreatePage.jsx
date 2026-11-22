@@ -12,6 +12,7 @@ import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 const ACTION_TYPES = [
   { value: 'stage_gate', label: 'Stage gate' },
   { value: 'closure', label: 'Closure' },
@@ -269,8 +270,7 @@ export default function WorkAuthorisationCreatePage() {
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="block text-sm font-medium mb-1">Planned start</label>
-            <input
-              type="date"
+            <RegionalDateInput eventStyle
               value={start}
               onChange={(e) => setStart(e.target.value)}
               className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 p-2 text-sm"
@@ -278,8 +278,7 @@ export default function WorkAuthorisationCreatePage() {
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Planned end</label>
-            <input
-              type="date"
+            <RegionalDateInput eventStyle
               value={end}
               onChange={(e) => setEnd(e.target.value)}
               className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 p-2 text-sm"

@@ -9,6 +9,7 @@ import { History, Plus, Clock, User, FileText } from 'lucide-react';
 import { getRevisionHistory, addRevision } from '../../services/benefitsReviewPlanService';
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 export default function BenefitsReviewPlanHistory({ planId, onUpdate }) {
   const [revisions, setRevisions] = useState([]);
@@ -104,8 +105,7 @@ export default function BenefitsReviewPlanHistory({ planId, onUpdate }) {
                 <FieldLabelWithHelp helpKey="public.benefits_review_plan_revisions.revision_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Revision Date *
                 </FieldLabelWithHelp>
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   value={newRevision.revision_date}
                   onChange={(e) => setNewRevision({ ...newRevision, revision_date: e.target.value })}
                   required

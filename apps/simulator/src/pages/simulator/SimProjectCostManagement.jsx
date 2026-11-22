@@ -5,6 +5,7 @@ import toast from 'react-hot-toast'
 import ExportListMenu from '@nidus/ui/ExportListMenu'
 import { listSimCostEntries, createSimCostEntry } from '../../services/simProjectCostService'
 import { simDb, platformDb } from '../../services/supabase/supabaseClient'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const EXPORT_COLS = [
   { key: 'entry_date', label: 'Date' },
@@ -62,7 +63,7 @@ export default function SimProjectCostManagement() {
         </div>
         <h1 className="text-xl font-bold">Practice cost management</h1>
         <form onSubmit={submit} className="grid md:grid-cols-4 gap-2 rounded-xl border border-gray-800 p-4">
-          <input type="date" value={form.entry_date} onChange={(e) => setForm({ ...form, entry_date: e.target.value })} className="rounded border border-gray-700 bg-gray-900 px-2 py-1 text-sm" />
+          <RegionalDateInput eventStyle value={form.entry_date} onChange={(e) => setForm({ ...form, entry_date: e.target.value })} className="rounded border border-gray-700 bg-gray-900 px-2 py-1 text-sm" />
           <input placeholder="Amount" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} className="rounded border border-gray-700 bg-gray-900 px-2 py-1 text-sm" />
           <input placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="md:col-span-2 rounded border border-gray-700 bg-gray-900 px-2 py-1 text-sm" />
           <button type="submit" className="md:col-span-4 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm w-fit">Add</button>

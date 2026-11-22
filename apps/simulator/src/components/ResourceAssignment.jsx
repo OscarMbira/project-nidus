@@ -7,6 +7,7 @@ import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import SelectField from '@nidus/ui/SelectField'
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 function ResourceAssignmentBody({ assignment, resourceId, onSave, onCancel }) {
   const { showSuccess, modal: successModal } = useSuccessModal()
   const [formData, setFormData] = useState({
@@ -259,8 +260,7 @@ function ResourceAssignmentBody({ assignment, resourceId, onSave, onCancel }) {
                 <Calendar className="h-4 w-4 inline mr-1" />
                 Start Date *
               </FieldLabelWithHelp>
-              <input
-                type="date"
+              <RegionalDateInput eventStyle
                 name="assignment_start_date"
                 value={formData.assignment_start_date}
                 onChange={handleChange}
@@ -273,8 +273,7 @@ function ResourceAssignmentBody({ assignment, resourceId, onSave, onCancel }) {
                 <Calendar className="h-4 w-4 inline mr-1" />
                 End Date
               </FieldLabelWithHelp>
-              <input
-                type="date"
+              <RegionalDateInput eventStyle
                 name="assignment_end_date"
                 value={formData.assignment_end_date}
                 onChange={handleChange}

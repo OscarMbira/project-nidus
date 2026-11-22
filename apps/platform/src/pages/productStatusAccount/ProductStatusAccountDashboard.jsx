@@ -14,6 +14,7 @@ import ProductStatusAccountCard from '../../components/productStatusAccount/Prod
 import PSAStatusIndicator from '../../components/productStatusAccount/PSAStatusIndicator'
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 export default function ProductStatusAccountDashboard() {
   const { projectId, routeKey } = usePlatformProjectId()
   const [psas, setPsas] = useState([])
@@ -100,8 +101,7 @@ export default function ProductStatusAccountDashboard() {
 
       {/* Filters */}
       <div className="mb-6 flex items-center gap-4">
-        <input
-          type="date"
+        <RegionalDateInput eventStyle
           value={reportDate}
           onChange={(e) => setReportDate(e.target.value)}
           className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"

@@ -16,8 +16,8 @@ describe('DateTimeInput', () => {
   it('shows the stored moment in the organisation time zone and stores UTC', () => {
     const onChange = vi.fn()
     render(<DateTimeInput value="2027-04-10T15:05:00.000Z" onChange={onChange} settings={NAIROBI} ariaLabel="Start" />)
-    expect(screen.getByLabelText('Start')).toHaveValue('2027-04-10T18:05')
-    fireEvent.change(screen.getByLabelText('Start'), { target: { value: '2027-04-10T20:12' } })
+    expect(screen.getByLabelText('Start')).toHaveValue('10 Apr 2027 18:05') // default D MMM YYYY, 24h (v1351)
+    fireEvent.change(screen.getByLabelText('Start'), { target: { value: '10 Apr 2027 20:12' } })
     expect(onChange).toHaveBeenLastCalledWith('2027-04-10T17:12:00.000Z')
   })
 

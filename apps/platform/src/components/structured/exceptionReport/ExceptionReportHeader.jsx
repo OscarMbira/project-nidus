@@ -4,6 +4,7 @@ import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { supabase } from '../../../services/supabaseClient'
 import { generateDocumentRef } from '../../../services/exceptionReportService'
 import { User, Calendar, FileText } from 'lucide-react'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 function ExceptionReportHeaderBody({ formData, onChange, errors, mode, projectId }) {
   const [users, setUsers] = useState([])
@@ -85,8 +86,7 @@ function ExceptionReportHeaderBody({ formData, onChange, errors, mode, projectId
           </FieldLabelWithHelp>
           <div className="relative">
             <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <input
-              type="date"
+            <RegionalDateInput eventStyle
               value={formData.report_date || ''}
               onChange={(e) => onChange('report_date', e.target.value)}
               required
@@ -233,8 +233,7 @@ function ExceptionReportHeaderBody({ formData, onChange, errors, mode, projectId
           <FieldLabelWithHelp helpKey="public.exception_reports.date_of_this_revision" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Date of This Revision
           </FieldLabelWithHelp>
-          <input
-            type="date"
+          <RegionalDateInput eventStyle
             value={formData.date_of_this_revision || ''}
             onChange={(e) => onChange('date_of_this_revision', e.target.value)}
             disabled={mode === 'view'}
@@ -246,8 +245,7 @@ function ExceptionReportHeaderBody({ formData, onChange, errors, mode, projectId
           <FieldLabelWithHelp helpKey="public.exception_reports.date_of_next_revision" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Date of Next Revision
           </FieldLabelWithHelp>
-          <input
-            type="date"
+          <RegionalDateInput eventStyle
             value={formData.date_of_next_revision || ''}
             onChange={(e) => onChange('date_of_next_revision', e.target.value || null)}
             disabled={mode === 'view'}

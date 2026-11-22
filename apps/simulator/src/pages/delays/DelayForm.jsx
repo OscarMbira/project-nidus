@@ -18,6 +18,7 @@ import { hydrateDelayForm, isCostAmount, isDelayRecordId, isWholeDayCount, LINK_
 const STEPS = ['Basic', 'Impact', 'Resolution', 'Links']
 
 import RecordCustomFields from '../../components/shared-app/RecordCustomFields'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 function DelayFormBody({
   open,
@@ -213,8 +214,7 @@ function DelayFormBody({
               </FieldLabelWithHelp>
               <FieldLabelWithHelp helpKey="sim.project_delays.identified_date" className="block text-sm">
                 Identified date
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   className={fieldClass}
                   value={form.identified_date || ''}
                   disabled={!write}
@@ -293,8 +293,7 @@ function DelayFormBody({
               </div>
               <FieldLabelWithHelp helpKey="sim.project_delays.original_baseline_date" className="block text-sm">
                 Original baseline date
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   className={fieldClass}
                   value={form.original_baseline_date || ''}
                   disabled={!write}
@@ -303,8 +302,7 @@ function DelayFormBody({
               </FieldLabelWithHelp>
               <FieldLabelWithHelp helpKey="sim.project_delays.revised_forecast_date" className="block text-sm">
                 Revised forecast date
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   className={fieldClass}
                   value={form.revised_forecast_date || ''}
                   disabled={!write}
@@ -337,8 +335,7 @@ function DelayFormBody({
               </FieldLabelWithHelp>
               <FieldLabelWithHelp helpKey="sim.project_delays.resolution_target_date" className="block text-sm">
                 Resolution target date
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   className={fieldClass}
                   value={form.resolution_target_date || ''}
                   disabled={!write}

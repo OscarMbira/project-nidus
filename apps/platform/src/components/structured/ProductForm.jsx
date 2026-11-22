@@ -13,6 +13,7 @@ import AuditCard from '@nidus/ui/AuditCard'
 import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 function ProductFormBody({ product, projectId, workPackages, onSave, onCancel }) {
   const [formData, setFormData] = useState({
@@ -343,8 +344,7 @@ function ProductFormBody({ product, projectId, workPackages, onSave, onCancel })
                 <Calendar className="h-4 w-4 inline mr-1" />
                 Planned Completion Date
               </FieldLabelWithHelp>
-              <input
-                type="date"
+              <RegionalDateInput eventStyle
                 name="planned_completion_date"
                 value={formData.planned_completion_date}
                 onChange={handleChange}

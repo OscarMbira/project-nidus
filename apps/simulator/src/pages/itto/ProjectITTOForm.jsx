@@ -11,6 +11,7 @@ import AuditCard from '@nidus/ui/AuditCard'
 import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const emptyInput = () => ({
   id: crypto.randomUUID(),
@@ -305,8 +306,7 @@ function ProjectITTOFormBody({
               {isDraft && (
                 <FieldLabelWithHelp helpKey="sim.project_ittos.draft_expires_at" className="block">
                   <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Draft expiry (optional)</span>
-                  <input
-                    type="datetime-local"
+                  <RegionalDateInput eventStyle withTime
                     value={draftExpiresAt}
                     onChange={(e) => setDraftExpiresAt(e.target.value)}
                     className="mt-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-gray-900 dark:text-white"

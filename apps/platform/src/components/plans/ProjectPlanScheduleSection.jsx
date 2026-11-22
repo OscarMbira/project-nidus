@@ -9,6 +9,7 @@ import { Calendar, Plus, X } from 'lucide-react'
 import { addMilestone, deleteMilestone } from '../../services/planMilestoneService'
 import MilestoneForm from './MilestoneForm'
 import MilestoneCard from './MilestoneCard'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 function ProjectPlanScheduleSectionBody({ 
   formData, 
@@ -67,8 +68,7 @@ function ProjectPlanScheduleSectionBody({
           <FieldLabelWithHelp helpKey="public.plan_milestones.planned_start_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Planned Start Date <span className="text-red-500">*</span>
           </FieldLabelWithHelp>
-          <input
-            type="date"
+          <RegionalDateInput eventStyle
             value={formData.planned_start_date || ''}
             onChange={(e) => onChange('planned_start_date', e.target.value)}
             disabled={mode === 'view'}
@@ -85,8 +85,7 @@ function ProjectPlanScheduleSectionBody({
           <FieldLabelWithHelp helpKey="public.plan_milestones.planned_end_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Planned End Date <span className="text-red-500">*</span>
           </FieldLabelWithHelp>
-          <input
-            type="date"
+          <RegionalDateInput eventStyle
             value={formData.planned_end_date || ''}
             onChange={(e) => onChange('planned_end_date', e.target.value)}
             disabled={mode === 'view'}

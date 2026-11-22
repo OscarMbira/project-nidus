@@ -2,6 +2,7 @@ import { CheckCircle, Calendar, User, FileText } from 'lucide-react'
 import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useState, useEffect } from 'react'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 function IssueReportClosureSectionBody({
   formData,
@@ -50,8 +51,7 @@ function IssueReportClosureSectionBody({
             <Calendar className="w-4 h-4 inline mr-1" />
             Closure Date <span className="text-red-500">*</span>
           </FieldLabelWithHelp>
-          <input
-            type="date"
+          <RegionalDateInput eventStyle
             value={formData.closure_date || ''}
             onChange={(e) => onChange('closure_date', e.target.value)}
             readOnly={readOnly}

@@ -15,6 +15,7 @@ import { getCurrentUserInternalUserId } from '@nidus/shared/utils/accountResolut
 import { fillOwnerRolesFromInvitations } from '@nidus/shared/utils/taskOwnerInvitationRoles'
 import { parseSkillsLines } from '@nidus/shared/utils/roleSkillsUtils.js'
 import SelectField from '@nidus/ui/SelectField'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 function TasksCreateBody() {
   useOfflineQueue()
@@ -467,8 +468,7 @@ function TasksCreateBody() {
                 <FieldLabelWithHelp helpKey="public.tasks.planned_start_date" htmlFor="planned_start_date" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                   Planned start
                 </FieldLabelWithHelp>
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   id="planned_start_date"
                   name="planned_start_date"
                   value={formData.planned_start_date}
@@ -483,8 +483,7 @@ function TasksCreateBody() {
                 <FieldLabelWithHelp helpKey="public.tasks.due_date" htmlFor="due_date" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                   Due / finish
                 </FieldLabelWithHelp>
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   id="due_date"
                   name="due_date"
                   value={formData.due_date}

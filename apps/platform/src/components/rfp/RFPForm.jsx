@@ -19,6 +19,7 @@ import AuditCard from '@nidus/ui/AuditCard'
 import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 /**
  * Resolve organisation account ID for the current user.
@@ -441,7 +442,7 @@ export default function RFPForm({ mode = 'create', basePath = '/pmo', rfpService
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Original Issue Date</label>
-                <input name="original_issue_date" type="date" value={form.original_issue_date} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600" />
+                <RegionalDateInput eventStyle name="original_issue_date" value={form.original_issue_date} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600" />
               </div>
             </div>
           </div>

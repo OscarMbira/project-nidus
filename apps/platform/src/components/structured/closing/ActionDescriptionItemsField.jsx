@@ -7,6 +7,7 @@ import { RowActionButton } from '@nidus/ui';
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table';
 import Modal from '@nidus/ui/Modal';
 import RowNumberBadge from '@nidus/ui/RowNumberBadge';
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const inputClass = 'w-full px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white';
 
@@ -109,8 +110,7 @@ export default function ActionDescriptionItemsField({ items = [], onChange, disa
                     )}
                   </td>
                   <td className="px-3 py-3">
-                    <input
-                      type="date"
+                    <RegionalDateInput eventStyle
                       value={editingIndex === index ? editDate : (item.target_date || '')}
                       onChange={(event) => {
                         const target_date = event.target.value;
@@ -172,8 +172,7 @@ export default function ActionDescriptionItemsField({ items = [], onChange, disa
                 <RowActionButton variant="delete" label={`Remove action description ${index + 1}`} onClick={() => setPendingDelete(index)} />
                 )}
               </div>
-              <input
-                type="date"
+              <RegionalDateInput eventStyle
                 value={item.target_date || ''}
                 onChange={(event) => {
                   const next = [...items];
@@ -211,8 +210,7 @@ export default function ActionDescriptionItemsField({ items = [], onChange, disa
           className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
           aria-label="New action description"
         />
-        <input
-          type="date"
+        <RegionalDateInput eventStyle
           value={draftDate}
           onChange={(event) => setDraftDate(event.target.value)}
           className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"

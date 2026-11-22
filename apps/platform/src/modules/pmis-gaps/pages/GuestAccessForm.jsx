@@ -14,6 +14,7 @@ import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesContext'
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId'
 import { getGuestCollaborator, inviteGuest, updateGuestPermissions } from '../services/guestAccessService'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const inputClass = 'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm'
 
@@ -135,7 +136,7 @@ function GuestAccessFormBody() {
           </div>
           <div>
             <FieldLabelWithHelp helpKey="public.guest_access.expires_at" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Expires</FieldLabelWithHelp>
-            <input type="date" value={form.expires_at} onChange={(e) => handleChange('expires_at', e.target.value)} className={inputClass} />
+            <RegionalDateInput eventStyle value={form.expires_at} onChange={(e) => handleChange('expires_at', e.target.value)} className={inputClass} />
           </div>
         </div>
         {isEdit && (

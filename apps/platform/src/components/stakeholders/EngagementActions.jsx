@@ -11,6 +11,7 @@ import { getEngagementActions, saveEngagementAction, deleteEngagementAction, get
 import { platformDb } from '../../services/supabaseClient'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const STATUS_OPTIONS = [
   { value: 'open', label: 'Open' },
@@ -254,8 +255,7 @@ function EngagementActionsBody({ projectId, stakeholderId = null }) {
             </div>
             <div>
               <FieldLabelWithHelp helpKey="public.stakeholder_engagement_actions.due_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Due date</FieldLabelWithHelp>
-              <input
-                type="date"
+              <RegionalDateInput eventStyle
                 value={form.due_date}
                 onChange={(e) => setForm((f) => ({ ...f, due_date: e.target.value }))}
                 className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"

@@ -18,6 +18,7 @@ import { parseSkillsLines } from '@nidus/shared/utils/roleSkillsUtils.js'
 import { getCurrentUserInternalUserId } from '@nidus/shared/utils/accountResolution'
 import { fillOwnerRolesFromInvitations } from '@nidus/shared/utils/taskOwnerInvitationRoles'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const TASK_VIEW_SECTIONS = [
   { title: 'Task', fields: [
@@ -690,8 +691,7 @@ function TasksDetailBody() {
               <FieldLabelWithHelp helpKey="public.tasks.due_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Due Date
               </FieldLabelWithHelp>
-              <input
-                type="date"
+              <RegionalDateInput eventStyle
                 name="due_date"
                 value={formData.due_date}
                 onChange={handleChange}

@@ -17,6 +17,7 @@ import AuditCard from '@nidus/ui/AuditCard';
 import AuditField from '@nidus/ui/AuditField';
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const input  = 'w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
 const label  = 'block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1';
@@ -195,7 +196,7 @@ function StageGateFormBody() {
           </div>
           <div>
             <FieldLabelWithHelp helpKey="public.stage_gate_reviews.decision_date" className={label}>Decision Date</FieldLabelWithHelp>
-            <input type="date" className={input} value={form.decision_date} onChange={set('decision_date')} />
+            <RegionalDateInput eventStyle className={input} value={form.decision_date} onChange={set('decision_date')} />
           </div>
           <div>
             <FieldLabelWithHelp helpKey="public.stage_gate_reviews.outcome" className={label}>Outcome</FieldLabelWithHelp>

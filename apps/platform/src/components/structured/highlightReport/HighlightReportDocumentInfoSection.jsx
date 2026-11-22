@@ -5,6 +5,7 @@ import { generateReportReference } from '../../../services/controllingStageServi
 import { useEffect } from 'react'
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 const FREQUENCY_OPTIONS = [
   { value: '', label: 'Select frequency' },
   { value: 'weekly', label: 'Weekly' },
@@ -58,8 +59,7 @@ function HighlightReportDocumentInfoSectionBody({ formData, onChange, errors, mo
             <Calendar className="h-4 w-4 inline mr-1" />
             Report Date *
           </FieldLabelWithHelp>
-          <input
-            type="date"
+          <RegionalDateInput eventStyle
             value={formData.report_date || formData.reporting_period_end || ''}
             onChange={(e) => onChange('report_date', e.target.value)}
             disabled={disabled}
@@ -108,8 +108,7 @@ function HighlightReportDocumentInfoSectionBody({ formData, onChange, errors, mo
         </div>
         <div>
           <FieldLabelWithHelp helpKey="public.highlight_reports.next_report_due_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Next Report Due</FieldLabelWithHelp>
-          <input
-            type="date"
+          <RegionalDateInput eventStyle
             value={formData.next_report_due_date || ''}
             onChange={(e) => onChange('next_report_due_date', e.target.value)}
             disabled={disabled}
@@ -121,8 +120,7 @@ function HighlightReportDocumentInfoSectionBody({ formData, onChange, errors, mo
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <FieldLabelWithHelp helpKey="public.highlight_reports.reporting_period_start" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>Reporting Period Start *</FieldLabelWithHelp>
-          <input
-            type="date"
+          <RegionalDateInput eventStyle
             value={formData.reporting_period_start || ''}
             onChange={(e) => onChange('reporting_period_start', e.target.value)}
             disabled={disabled}
@@ -132,8 +130,7 @@ function HighlightReportDocumentInfoSectionBody({ formData, onChange, errors, mo
         </div>
         <div>
           <FieldLabelWithHelp helpKey="public.highlight_reports.reporting_period_end" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>Reporting Period End *</FieldLabelWithHelp>
-          <input
-            type="date"
+          <RegionalDateInput eventStyle
             value={formData.reporting_period_end || ''}
             onChange={(e) => onChange('reporting_period_end', e.target.value)}
             disabled={disabled}

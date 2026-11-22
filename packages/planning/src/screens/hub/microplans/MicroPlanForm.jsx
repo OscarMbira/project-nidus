@@ -15,6 +15,7 @@ import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 import { usePlanning } from '@nidus/planning/context/PlanningContext.jsx'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 const RAG_OPTIONS = ['green', 'amber', 'red']
 const FREQUENCY_OPTIONS = ['daily', 'weekly', 'fortnightly', 'monthly']
 const STATUS_OPTIONS = ['draft', 'active', 'on_hold', 'completed', 'cancelled']
@@ -309,8 +310,7 @@ export default function MicroPlanForm() {
               </select>
             </Field>
             <Field label="Next Review Date">
-              <input
-                type="date"
+              <RegionalDateInput eventStyle
                 className={inputCls}
                 value={form.next_review_date}
                 onChange={set('next_review_date')}

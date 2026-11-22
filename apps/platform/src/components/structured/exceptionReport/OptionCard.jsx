@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { CheckCircle, X, Edit2, Trash2, Star, AlertTriangle, TrendingUp, DollarSign } from 'lucide-react'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 function OptionCardBody({ option, onEdit, onDelete, onSetRecommended, isEditing, onSave, onCancel, mode }) {
   const [formData, setFormData] = useState(option || {
@@ -100,8 +101,7 @@ function OptionCardBody({ option, onEdit, onDelete, onSetRecommended, isEditing,
               <FieldLabelWithHelp helpKey="public.exception_report_options.revised_end_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Revised End Date
               </FieldLabelWithHelp>
-              <input
-                type="date"
+              <RegionalDateInput eventStyle
                 value={formData.revised_end_date || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, revised_end_date: e.target.value || null }))}
                 className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"

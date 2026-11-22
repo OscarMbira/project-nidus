@@ -13,6 +13,7 @@ import AuditField from '@nidus/ui/AuditField';
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
 import { humanizeAuditToken } from '@nidus/shared/utils/auditDisplayUtils';
 import SelectField from '@nidus/ui/SelectField';
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 function byLabel(rows, labelKey) {
   return [...rows].sort((a, b) =>
@@ -665,8 +666,7 @@ function BenefitFormBody({ benefit, onSave, onCancel, onHoldComplete, usePageLay
                 <FieldLabelWithHelp helpKey="public.benefits.expected_realization_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Expected Realization Date
                 </FieldLabelWithHelp>
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   name="expected_realization_date"
                   value={formData.expected_realization_date}
                   onChange={handleChange}
@@ -678,8 +678,7 @@ function BenefitFormBody({ benefit, onSave, onCancel, onHoldComplete, usePageLay
                 <FieldLabelWithHelp helpKey="public.benefits.actual_realization_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Actual Realization Date
                 </FieldLabelWithHelp>
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   name="actual_realization_date"
                   value={formData.actual_realization_date}
                   onChange={handleChange}

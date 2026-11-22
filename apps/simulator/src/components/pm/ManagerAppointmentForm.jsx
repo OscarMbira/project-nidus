@@ -8,6 +8,7 @@ import {
   REPORTING_FREQUENCY_OPTIONS,
   TIME_COMMITMENT_OPTIONS,
 } from '@nidus/shared/utils/appointmentRoleUtils'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const EMPTY = {
   assignmentStartDate: '',
@@ -105,8 +106,7 @@ function ManagerAppointmentFormBody({
           <FieldLabelWithHelp helpKey="sim.manager_appointment_records.assignment_start_date" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
             Assignment start date
           </FieldLabelWithHelp>
-          <input
-            type="date"
+          <RegionalDateInput eventStyle
             value={form.assignmentStartDate}
             onChange={(e) => patch({ assignmentStartDate: e.target.value })}
             className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm"
@@ -116,8 +116,7 @@ function ManagerAppointmentFormBody({
           <FieldLabelWithHelp helpKey="sim.manager_appointment_records.assignment_end_date" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
             Assignment end date
           </FieldLabelWithHelp>
-          <input
-            type="date"
+          <RegionalDateInput eventStyle
             value={form.assignmentEndDate}
             onChange={(e) => patch({ assignmentEndDate: e.target.value })}
             className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm"

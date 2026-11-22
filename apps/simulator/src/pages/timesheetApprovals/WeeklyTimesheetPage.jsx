@@ -14,6 +14,7 @@ import {
   submitWeeklyTimesheet,
 } from '../../services/timesheetPeriodService'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const STATUS_COLORS = {
   draft: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
@@ -99,8 +100,7 @@ export default function WeeklyTimesheetPage() {
         <div className="flex flex-wrap items-end gap-4 mb-6">
           <label className="block">
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Week starting (Monday)</span>
-            <input
-              type="date"
+            <RegionalDateInput eventStyle
               value={weekStart}
               onChange={(e) => setWeekStart(mondayOf(e.target.value))}
               className="mt-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-gray-900 dark:text-gray-100 min-h-[44px]"

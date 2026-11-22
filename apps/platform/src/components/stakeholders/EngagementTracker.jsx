@@ -5,6 +5,7 @@ import { MessageSquare, Calendar, TrendingUp, TrendingDown, Minus, CheckCircle, 
 import { getStakeholderEngagement, saveStakeholderEngagement } from '../../services/stakeholderService';
 import { platformDb } from '../../services/supabaseClient';
 import StakeholderAvatar from '@nidus/ui/StakeholderAvatar';
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 function EngagementTrackerBody({ projectId, stakeholders = [] }) {
   const [engagement, setEngagement] = useState([]);
@@ -232,8 +233,7 @@ function EngagementTrackerBody({ projectId, stakeholders = [] }) {
                         <FieldLabelWithHelp helpKey="public.stakeholder_engagement.engagement_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                           Engagement Date *
                         </FieldLabelWithHelp>
-                        <input
-                          type="date"
+                        <RegionalDateInput eventStyle
                           value={formData.engagement_date || latestEngagement?.engagement_date?.split('T')[0] || ''}
                           onChange={(e) => setFormData({ ...formData, engagement_date: e.target.value })}
                           required

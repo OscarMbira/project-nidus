@@ -16,6 +16,7 @@ import AuditField from '@nidus/ui/AuditField';
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
 import MultiLineListInput from '@nidus/ui/MultiLineListInput';
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const QUALITY_FORM_TABS = [
   { value: 'details', label: 'Details' },
@@ -445,8 +446,7 @@ function QualityRegisterFormBody({
                 <FieldLabelWithHelp helpKey="public.quality_register.quality_review_planned_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Planned Review Date
                 </FieldLabelWithHelp>
-                <input
-                  type="date"
+                <RegionalDateInput eventStyle
                   name="quality_review_planned_date"
                   value={formData.quality_review_planned_date}
                   onChange={handleChange}

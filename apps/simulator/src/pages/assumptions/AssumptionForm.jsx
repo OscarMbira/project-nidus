@@ -12,6 +12,7 @@ import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesCont
 import SelectField from '@nidus/ui/SelectField'
 import { getAssumption, createAssumption, updateAssumption } from '../../services/assumptionService'
 import { getSimProjectMembers } from '../../services/sim/simProjectMembershipService'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const inputClass =
   'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm'
@@ -213,8 +214,7 @@ function AssumptionFormBody() {
           </div>
           <div>
             <FieldLabelWithHelp helpKey="sim.assumptions.next_review_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Next review date</FieldLabelWithHelp>
-            <input
-              type="date"
+            <RegionalDateInput eventStyle
               value={nextReviewDate}
               onChange={(e) => setNextReviewDate(e.target.value)}
               className={inputClass}

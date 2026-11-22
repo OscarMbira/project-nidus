@@ -20,6 +20,7 @@ import { listPracticeProjectLeave, addLeaveEntry, updateLeaveEntry, deleteLeaveE
 import RowActionButton from '@nidus/ui/RowActionButton'
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 function RecordPeek({ title, fields, onClose }) {
   return (
@@ -504,8 +505,8 @@ function PracticeTeamsBody() {
               <select value={newLeaveType} onChange={(e) => setNewLeaveType(e.target.value)} className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm capitalize">
                 {LEAVE_TYPES.map((t) => <option key={t} value={t}>{t.replace('_', ' ')}</option>)}
               </select>
-              <input type="date" value={newLeaveStart} onChange={(e) => setNewLeaveStart(e.target.value)} className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm" />
-              <input type="date" value={newLeaveEnd} onChange={(e) => setNewLeaveEnd(e.target.value)} className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm" />
+              <RegionalDateInput eventStyle value={newLeaveStart} onChange={(e) => setNewLeaveStart(e.target.value)} className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm" />
+              <RegionalDateInput eventStyle value={newLeaveEnd} onChange={(e) => setNewLeaveEnd(e.target.value)} className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm" />
               <button type="button" onClick={handleAddMyLeave} className="px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium min-h-[40px]">{editingLeave ? 'Update' : 'Save'}</button>
               <button type="button" onClick={() => { setAddingLeave(false); setEditingLeave(null) }} className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 text-sm min-h-[40px]">Cancel</button>
             </div>

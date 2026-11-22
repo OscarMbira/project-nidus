@@ -14,6 +14,7 @@ import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 import { getMyExpenses, saveDraft, submitExpense, deleteDraft, getExpenseClaimItems } from '../../services/expenseClaimService'
 import { getExpenseCategories } from '../../services/expenseCategoryService'
 import { useCurrentProject } from '../../lib/CurrentProjectContext'
+import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const EMPTY_FORM = {
   id: null,
@@ -228,7 +229,7 @@ function MyExpensesBody() {
             ))}
           </select>
           <FieldLabelWithHelp helpKey="public.project_expense_claims.expense_date" htmlFor="expense-date" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Expense date</FieldLabelWithHelp>
-          <input id="expense-date" type="date" value={form.expense_date} onChange={(e) => setForm({ ...form, expense_date: e.target.value })} className="w-full rounded border border-gray-600 bg-gray-950 px-3 py-2 text-sm" />
+          <RegionalDateInput eventStyle id="expense-date" value={form.expense_date} onChange={(e) => setForm({ ...form, expense_date: e.target.value })} className="w-full rounded border border-gray-600 bg-gray-950 px-3 py-2 text-sm" />
           <div className="flex items-center gap-2">
             <input
               type="checkbox"
@@ -287,11 +288,11 @@ function MyExpensesBody() {
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
             <div>
               <label htmlFor="expenses-date-from" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">From date</label>
-              <input id="expenses-date-from" type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-950 px-2 py-1.5 text-sm" />
+              <RegionalDateInput eventStyle id="expenses-date-from" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-950 px-2 py-1.5 text-sm" />
             </div>
             <div>
               <label htmlFor="expenses-date-to" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">To date</label>
-              <input id="expenses-date-to" type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-950 px-2 py-1.5 text-sm" />
+              <RegionalDateInput eventStyle id="expenses-date-to" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-950 px-2 py-1.5 text-sm" />
             </div>
             <div>
               <label htmlFor="expenses-amount-min" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Min amount</label>
