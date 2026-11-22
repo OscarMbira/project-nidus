@@ -7,6 +7,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { createPracticeWorkPackage } from '../../services/sim/practiceWorkPackageService'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 export default function PracticeWorkPackageCreate() {
   const navigate = useNavigate()
@@ -57,16 +58,16 @@ export default function PracticeWorkPackageCreate() {
       ) : (
       <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 space-y-6">
         <div>
-          <label className="block text-sm font-medium mb-2">Work Package Name *</label>
-          <input type="text" required value={formData.work_package_name} onChange={(e) => setFormData({ ...formData, work_package_name: e.target.value })} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
+          <FieldLabelWithHelp helpKey="sim.practice_work_packages.work_package_name" htmlFor="fh-practice-work-packages-work-package-name" className="block text-sm font-medium mb-2">Work Package Name *</FieldLabelWithHelp>
+          <input id="fh-practice-work-packages-work-package-name" type="text" required value={formData.work_package_name} onChange={(e) => setFormData({ ...formData, work_package_name: e.target.value })} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-2">Description</label>
-          <textarea value={formData.work_package_description} onChange={(e) => setFormData({ ...formData, work_package_description: e.target.value })} rows={4} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
+          <FieldLabelWithHelp helpKey="sim.practice_work_packages.work_package_description" htmlFor="fh-practice-work-packages-work-package-description" className="block text-sm font-medium mb-2">Description</FieldLabelWithHelp>
+          <textarea id="fh-practice-work-packages-work-package-description" value={formData.work_package_description} onChange={(e) => setFormData({ ...formData, work_package_description: e.target.value })} rows={4} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-2">Objectives</label>
-          <textarea value={formData.objectives} onChange={(e) => setFormData({ ...formData, objectives: e.target.value })} rows={3} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
+          <FieldLabelWithHelp helpKey="sim.practice_work_packages.objectives" htmlFor="fh-practice-work-packages-objectives" className="block text-sm font-medium mb-2">Objectives</FieldLabelWithHelp>
+          <textarea id="fh-practice-work-packages-objectives" value={formData.objectives} onChange={(e) => setFormData({ ...formData, objectives: e.target.value })} rows={3} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
         </div>
         <div className="flex justify-end gap-4">
           <button type="button" onClick={() => navigate(-1)} className="px-4 py-2 border rounded-lg">Cancel</button>

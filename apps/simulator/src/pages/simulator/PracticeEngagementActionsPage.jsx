@@ -57,7 +57,7 @@ export default function PracticeEngagementActionsPage() {
       </div>
 
       <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Practice Project</label>
+        <label data-help="exempt" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Practice Project</label>
         <select
           value={selectedProjectId}
           onChange={(e) => setSelectedProjectId(e.target.value)}

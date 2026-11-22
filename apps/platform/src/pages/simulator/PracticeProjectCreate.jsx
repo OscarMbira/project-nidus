@@ -10,6 +10,7 @@ import { createPracticeProject } from '../../services/sim/practiceProjectService
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 import RegionalDateInput from '@nidus/ui/RegionalDateInput'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 export default function PracticeProjectCreate() {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
@@ -70,8 +71,8 @@ export default function PracticeProjectCreate() {
       <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
         <div className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Project Name *</label>
-            <input
+            <FieldLabelWithHelp helpKey="sim.practice_projects.project_name" htmlFor="fh-practice-projects-project-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Project Name *</FieldLabelWithHelp>
+            <input id="fh-practice-projects-project-name"
               type="text"
               required
               value={formData.project_name}
@@ -81,8 +82,8 @@ export default function PracticeProjectCreate() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</label>
-            <textarea
+            <FieldLabelWithHelp helpKey="sim.practice_projects.project_description" htmlFor="fh-practice-projects-project-description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</FieldLabelWithHelp>
+            <textarea id="fh-practice-projects-project-description"
               value={formData.project_description}
               onChange={(e) => setFormData({ ...formData, project_description: e.target.value })}
               rows={4}
@@ -92,8 +93,8 @@ export default function PracticeProjectCreate() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Project Type</label>
-              <select
+              <FieldLabelWithHelp helpKey="sim.practice_projects.project_type_id" htmlFor="fh-practice-projects-project-type-id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Project Type</FieldLabelWithHelp>
+              <select id="fh-practice-projects-project-type-id"
                 value={formData.project_type_id}
                 onChange={(e) => setFormData({ ...formData, project_type_id: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
@@ -106,8 +107,8 @@ export default function PracticeProjectCreate() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status</label>
-              <select
+              <FieldLabelWithHelp helpKey="sim.practice_projects.status_id" htmlFor="fh-practice-projects-status-id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status</FieldLabelWithHelp>
+              <select id="fh-practice-projects-status-id"
                 value={formData.status_id}
                 onChange={(e) => setFormData({ ...formData, status_id: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
@@ -122,8 +123,8 @@ export default function PracticeProjectCreate() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Start Date</label>
-              <RegionalDateInput eventStyle
+              <FieldLabelWithHelp helpKey="sim.practice_projects.planned_start_date" htmlFor="fh-practice-projects-planned-start-date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Start Date</FieldLabelWithHelp>
+              <RegionalDateInput id="fh-practice-projects-planned-start-date" eventStyle
                 value={formData.planned_start_date}
                 onChange={(e) => setFormData({ ...formData, planned_start_date: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
@@ -131,8 +132,8 @@ export default function PracticeProjectCreate() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">End Date</label>
-              <RegionalDateInput eventStyle
+              <FieldLabelWithHelp helpKey="sim.practice_projects.planned_end_date" htmlFor="fh-practice-projects-planned-end-date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">End Date</FieldLabelWithHelp>
+              <RegionalDateInput id="fh-practice-projects-planned-end-date" eventStyle
                 value={formData.planned_end_date}
                 onChange={(e) => setFormData({ ...formData, planned_end_date: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"

@@ -7,6 +7,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { createPracticeConfigItem } from '../../services/sim/practiceConfigMSService'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 export default function PracticeConfigItemCreate() {
   const navigate = useNavigate()
@@ -54,12 +55,12 @@ export default function PracticeConfigItemCreate() {
       ) : (
       <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 space-y-6">
         <div>
-          <label className="block text-sm font-medium mb-2">Item Name *</label>
-          <input type="text" required value={formData.item_name} onChange={(e) => setFormData({ ...formData, item_name: e.target.value })} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
+          <FieldLabelWithHelp helpKey="sim.practice_configuration_items.item_name" htmlFor="fh-practice-configuration-items-item-name" className="block text-sm font-medium mb-2">Item Name *</FieldLabelWithHelp>
+          <input id="fh-practice-configuration-items-item-name" type="text" required value={formData.item_name} onChange={(e) => setFormData({ ...formData, item_name: e.target.value })} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-2">Description</label>
-          <textarea value={formData.item_description} onChange={(e) => setFormData({ ...formData, item_description: e.target.value })} rows={4} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
+          <FieldLabelWithHelp helpKey="sim.practice_configuration_items.item_description" htmlFor="fh-practice-configuration-items-item-description" className="block text-sm font-medium mb-2">Description</FieldLabelWithHelp>
+          <textarea id="fh-practice-configuration-items-item-description" value={formData.item_description} onChange={(e) => setFormData({ ...formData, item_description: e.target.value })} rows={4} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
         </div>
         <div className="flex justify-end gap-4">
           <button type="button" onClick={() => navigate(-1)} className="px-4 py-2 border rounded-lg">Cancel</button>

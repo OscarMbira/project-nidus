@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { getPracticeWorkPackageById, updatePracticeWorkPackage } from '../../services/sim/practiceWorkPackageService'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 export default function PracticeWorkPackageEdit() {
   const { id } = useParams()
@@ -63,12 +64,12 @@ export default function PracticeWorkPackageEdit() {
       <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">Edit Practice Work Package</h1>
       <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 space-y-6">
         <div>
-          <label className="block text-sm font-medium mb-2">Work Package Name *</label>
-          <input type="text" required value={formData.work_package_name} onChange={(e) => setFormData({ ...formData, work_package_name: e.target.value })} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
+          <FieldLabelWithHelp helpKey="sim.practice_work_packages.work_package_name" htmlFor="fh-practice-work-packages-work-package-name" className="block text-sm font-medium mb-2">Work Package Name *</FieldLabelWithHelp>
+          <input id="fh-practice-work-packages-work-package-name" type="text" required value={formData.work_package_name} onChange={(e) => setFormData({ ...formData, work_package_name: e.target.value })} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-2">Description</label>
-          <textarea value={formData.work_package_description} onChange={(e) => setFormData({ ...formData, work_package_description: e.target.value })} rows={4} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
+          <FieldLabelWithHelp helpKey="sim.practice_work_packages.work_package_description" htmlFor="fh-practice-work-packages-work-package-description" className="block text-sm font-medium mb-2">Description</FieldLabelWithHelp>
+          <textarea id="fh-practice-work-packages-work-package-description" value={formData.work_package_description} onChange={(e) => setFormData({ ...formData, work_package_description: e.target.value })} rows={4} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
         </div>
         <div className="flex justify-end gap-4">
           <button type="button" onClick={() => navigate(-1)} className="px-4 py-2 border rounded-lg">Cancel</button>

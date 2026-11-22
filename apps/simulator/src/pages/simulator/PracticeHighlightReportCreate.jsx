@@ -9,6 +9,7 @@ import { createPracticeHighlightReport } from '../../services/sim/practiceHighli
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 import DraftWithAiButton from '@nidus/ui/ai/DraftWithAiButton.jsx'
 import RegionalDateInput from '@nidus/ui/RegionalDateInput'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 export default function PracticeHighlightReportCreate() {
   const navigate = useNavigate()
@@ -56,16 +57,16 @@ export default function PracticeHighlightReportCreate() {
       ) : (
       <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 space-y-6">
         <div>
-          <label className="block text-sm font-medium mb-2">Report Title *</label>
-          <input type="text" required value={formData.report_title} onChange={(e) => setFormData({ ...formData, report_title: e.target.value })} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
+          <FieldLabelWithHelp helpKey="sim.practice_highlight_reports.report_title" htmlFor="fh-practice-highlight-reports-report-title" className="block text-sm font-medium mb-2">Report Title *</FieldLabelWithHelp>
+          <input id="fh-practice-highlight-reports-report-title" type="text" required value={formData.report_title} onChange={(e) => setFormData({ ...formData, report_title: e.target.value })} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-2">Report Date *</label>
-          <RegionalDateInput eventStyle required value={formData.report_date} onChange={(e) => setFormData({ ...formData, report_date: e.target.value })} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
+          <FieldLabelWithHelp helpKey="sim.practice_highlight_reports.report_date" htmlFor="fh-practice-highlight-reports-report-date" className="block text-sm font-medium mb-2">Report Date *</FieldLabelWithHelp>
+          <RegionalDateInput id="fh-practice-highlight-reports-report-date" eventStyle required value={formData.report_date} onChange={(e) => setFormData({ ...formData, report_date: e.target.value })} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-2">Executive Summary</label>
-          <textarea value={formData.executive_summary} onChange={(e) => setFormData({ ...formData, executive_summary: e.target.value })} rows={6} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
+          <FieldLabelWithHelp helpKey="sim.practice_highlight_reports.executive_summary" htmlFor="fh-practice-highlight-reports-executive-summary" className="block text-sm font-medium mb-2">Executive Summary</FieldLabelWithHelp>
+          <textarea id="fh-practice-highlight-reports-executive-summary" value={formData.executive_summary} onChange={(e) => setFormData({ ...formData, executive_summary: e.target.value })} rows={6} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
         </div>
         <div className="flex justify-end gap-4">
           <button type="button" onClick={() => navigate(-1)} className="px-4 py-2 border rounded-lg">Cancel</button>

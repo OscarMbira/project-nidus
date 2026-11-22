@@ -23,6 +23,7 @@ import { listPracticeProjectFunctionalRoles } from '../../services/sim/simTeamSe
 import { listRoleLibrary, addRolesFromLibrary } from '../../services/sim/projectRoleLibraryService'
 import { listPracticeProjectIndustries } from '../../services/sim/simProjectIndustryService'
 import { simDb } from '../../services/supabase/supabaseClient'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 const PAGE_SIZE = 20
 
@@ -349,9 +350,9 @@ export default function PracticeProjectFunctionalRoleFromLibrary() {
                     {isTicked && (
                       <tr>
                         <td colSpan={5} className="px-3 pb-4 pt-0 bg-gray-50 dark:bg-gray-900/40">
-                          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          <FieldLabelWithHelp helpKey="sim.practice_team_members.required_skills" htmlFor={`skills_${role.id}`} className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                             Required skills for this practice project *
-                          </label>
+                          </FieldLabelWithHelp>
                           <MultiLineListInput
                             viewModeId={`practice-project-roles-from-library-skills-${role.id}`}
                             id={`skills_${role.id}`}
@@ -396,9 +397,9 @@ export default function PracticeProjectFunctionalRoleFromLibrary() {
                 {added && <p className="text-xs text-gray-500 dark:text-gray-400">Already added</p>}
                 {isTicked && (
                   <div className="pt-2">
-                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <FieldLabelWithHelp helpKey="sim.practice_team_members.required_skills" htmlFor={`skills_${role.id}`} className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Required skills for this practice project *
-                    </label>
+                    </FieldLabelWithHelp>
                     <MultiLineListInput
                       viewModeId={`practice-project-roles-from-library-skills-${role.id}`}
                       id={`skills_${role.id}`}

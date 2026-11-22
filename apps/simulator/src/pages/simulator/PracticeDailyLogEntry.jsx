@@ -9,6 +9,7 @@ import { createPracticeDailyLogEntry, updatePracticeDailyLogEntry } from '../../
 import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
 import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '@nidus/shared/utils/exportUtils'
 import RegionalDateInput from '@nidus/ui/RegionalDateInput'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 const PRACTICE_DAILY_LOG_ENTRY_SECTIONS = [
   { title: 'Daily Log Entry', fields: [
@@ -74,12 +75,12 @@ export default function PracticeDailyLogEntry() {
       <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">Daily Log Entry</h1>
       <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 space-y-6">
         <div>
-          <label className="block text-sm font-medium mb-2">Entry Date *</label>
-          <RegionalDateInput eventStyle required value={formData.entry_date} onChange={(e) => setFormData({ ...formData, entry_date: e.target.value })} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
+          <FieldLabelWithHelp helpKey="sim.practice_daily_log_entries.entry_date" htmlFor="fh-practice-daily-log-entries-entry-date" className="block text-sm font-medium mb-2">Entry Date *</FieldLabelWithHelp>
+          <RegionalDateInput id="fh-practice-daily-log-entries-entry-date" eventStyle required value={formData.entry_date} onChange={(e) => setFormData({ ...formData, entry_date: e.target.value })} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-2">Entry Type *</label>
-          <select required value={formData.entry_type} onChange={(e) => setFormData({ ...formData, entry_type: e.target.value })} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700">
+          <FieldLabelWithHelp helpKey="sim.practice_daily_log_entries.entry_type" htmlFor="fh-practice-daily-log-entries-entry-type" className="block text-sm font-medium mb-2">Entry Type *</FieldLabelWithHelp>
+          <select id="fh-practice-daily-log-entries-entry-type" required value={formData.entry_type} onChange={(e) => setFormData({ ...formData, entry_type: e.target.value })} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700">
             <option value="problem">Problem</option>
             <option value="action">Action</option>
             <option value="event">Event</option>
@@ -89,8 +90,8 @@ export default function PracticeDailyLogEntry() {
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium mb-2">Description *</label>
-          <textarea required value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} rows={6} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
+          <FieldLabelWithHelp helpKey="sim.practice_daily_log_entries.description" htmlFor="fh-practice-daily-log-entries-description" className="block text-sm font-medium mb-2">Description *</FieldLabelWithHelp>
+          <textarea id="fh-practice-daily-log-entries-description" required value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} rows={6} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
         </div>
         <div className="flex justify-end gap-4">
           <button type="button" onClick={() => navigate(-1)} className="px-4 py-2 border rounded-lg">Cancel</button>

@@ -7,6 +7,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { createPracticeEndProjectReport } from '../../services/sim/practiceEndProjectReportService'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 export default function PracticeEndProjectReportCreate() {
   const navigate = useNavigate()
@@ -53,12 +54,12 @@ export default function PracticeEndProjectReportCreate() {
       ) : (
       <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 space-y-6">
         <div>
-          <label className="block text-sm font-medium mb-2">Report Title *</label>
-          <input type="text" required value={formData.report_title} onChange={(e) => setFormData({ ...formData, report_title: e.target.value })} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
+          <FieldLabelWithHelp helpKey="sim.practice_end_project_reports.report_title" htmlFor="fh-practice-end-project-reports-report-title" className="block text-sm font-medium mb-2">Report Title *</FieldLabelWithHelp>
+          <input id="fh-practice-end-project-reports-report-title" type="text" required value={formData.report_title} onChange={(e) => setFormData({ ...formData, report_title: e.target.value })} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-2">Executive Summary</label>
-          <textarea value={formData.executive_summary} onChange={(e) => setFormData({ ...formData, executive_summary: e.target.value })} rows={6} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
+          <FieldLabelWithHelp helpKey="sim.practice_end_project_reports.executive_summary" htmlFor="fh-practice-end-project-reports-executive-summary" className="block text-sm font-medium mb-2">Executive Summary</FieldLabelWithHelp>
+          <textarea id="fh-practice-end-project-reports-executive-summary" value={formData.executive_summary} onChange={(e) => setFormData({ ...formData, executive_summary: e.target.value })} rows={6} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
         </div>
         <div className="flex justify-end gap-4">
           <button type="button" onClick={() => navigate(-1)} className="px-4 py-2 border rounded-lg">Cancel</button>

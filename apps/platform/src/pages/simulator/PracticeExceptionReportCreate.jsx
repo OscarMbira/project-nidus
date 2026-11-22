@@ -7,6 +7,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { createPracticeExceptionReport } from '../../services/sim/practiceExceptionReportService'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 export default function PracticeExceptionReportCreate() {
   const navigate = useNavigate()
@@ -53,12 +54,12 @@ export default function PracticeExceptionReportCreate() {
       ) : (
       <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 space-y-6">
         <div>
-          <label className="block text-sm font-medium mb-2">Report Title *</label>
-          <input type="text" required value={formData.report_title} onChange={(e) => setFormData({ ...formData, report_title: e.target.value })} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
+          <FieldLabelWithHelp helpKey="sim.practice_exception_reports.report_title" htmlFor="fh-practice-exception-reports-report-title" className="block text-sm font-medium mb-2">Report Title *</FieldLabelWithHelp>
+          <input id="fh-practice-exception-reports-report-title" type="text" required value={formData.report_title} onChange={(e) => setFormData({ ...formData, report_title: e.target.value })} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-2">Exception Description *</label>
-          <textarea required value={formData.exception_description} onChange={(e) => setFormData({ ...formData, exception_description: e.target.value })} rows={6} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
+          <FieldLabelWithHelp helpKey="sim.practice_exception_reports.exception_description" htmlFor="fh-practice-exception-reports-exception-description" className="block text-sm font-medium mb-2">Exception Description *</FieldLabelWithHelp>
+          <textarea id="fh-practice-exception-reports-exception-description" required value={formData.exception_description} onChange={(e) => setFormData({ ...formData, exception_description: e.target.value })} rows={6} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
         </div>
         <div className="flex justify-end gap-4">
           <button type="button" onClick={() => navigate(-1)} className="px-4 py-2 border rounded-lg">Cancel</button>

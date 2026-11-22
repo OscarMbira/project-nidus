@@ -7,6 +7,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { createPracticeLessonsReport } from '../../services/sim/practiceLessonsService'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 export default function PracticeLessonsReportCreate() {
   const navigate = useNavigate()
@@ -53,12 +54,12 @@ export default function PracticeLessonsReportCreate() {
       ) : (
       <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 space-y-6">
         <div>
-          <label className="block text-sm font-medium mb-2">Report Reference</label>
-          <input type="text" value={formData.report_reference} readOnly className="w-full px-3 py-2 border rounded-lg bg-gray-100 dark:bg-gray-700" />
+          <FieldLabelWithHelp helpKey="sim.practice_lessons_reports.report_reference" htmlFor="fh-practice-lessons-reports-report-reference" className="block text-sm font-medium mb-2">Report Reference</FieldLabelWithHelp>
+          <input id="fh-practice-lessons-reports-report-reference" type="text" value={formData.report_reference} readOnly className="w-full px-3 py-2 border rounded-lg bg-gray-100 dark:bg-gray-700" />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-2">Executive Summary</label>
-          <textarea value={formData.executive_summary} onChange={(e) => setFormData({ ...formData, executive_summary: e.target.value })} rows={6} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
+          <FieldLabelWithHelp helpKey="sim.practice_lessons_reports.executive_summary" htmlFor="fh-practice-lessons-reports-executive-summary" className="block text-sm font-medium mb-2">Executive Summary</FieldLabelWithHelp>
+          <textarea id="fh-practice-lessons-reports-executive-summary" value={formData.executive_summary} onChange={(e) => setFormData({ ...formData, executive_summary: e.target.value })} rows={6} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
         </div>
         <div className="flex justify-end gap-4">
           <button type="button" onClick={() => navigate(-1)} className="px-4 py-2 border rounded-lg">Cancel</button>

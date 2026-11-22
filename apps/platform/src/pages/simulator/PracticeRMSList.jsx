@@ -8,6 +8,7 @@ import { Shield, Plus } from 'lucide-react'
 import { getPracticeRMS, createPracticeRMS, updatePracticeRMS } from '../../services/sim/practiceRMSService'
 import ExportListMenu from '@nidus/ui/ExportListMenu'
 import { RowActionButton } from '@nidus/ui'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 const PRACTICE_RMS_COLUMNS = [
   { key: 'strategy_name', label: 'Name' },
@@ -92,8 +93,8 @@ export default function PracticeRMSList() {
       ) : editing ? (
         <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 space-y-6">
           <div>
-            <label className="block text-sm font-medium mb-2">Strategy Name *</label>
-            <input type="text" required value={formData.strategy_name} onChange={(e) => setFormData({ ...formData, strategy_name: e.target.value })} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
+            <FieldLabelWithHelp helpKey="sim.practice_risk_management_strategies.strategy_name" htmlFor="fh-practice-risk-management-strategies-strategy-name" className="block text-sm font-medium mb-2">Strategy Name *</FieldLabelWithHelp>
+            <input id="fh-practice-risk-management-strategies-strategy-name" type="text" required value={formData.strategy_name} onChange={(e) => setFormData({ ...formData, strategy_name: e.target.value })} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
           </div>
           <div className="flex justify-end gap-4">
             <button type="button" onClick={() => { setEditing(false); if (rms) setFormData(rms) }} className="px-4 py-2 border rounded-lg">Cancel</button>

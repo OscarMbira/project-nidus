@@ -8,6 +8,7 @@ import { FileText, Plus } from 'lucide-react'
 import { RowActionButton } from '@nidus/ui'
 import { getPracticePlan, createPracticePlan, updatePracticePlan } from '../../services/sim/practicePlanService'
 import ExportListMenu from '@nidus/ui/ExportListMenu'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 const PRACTICE_PLAN_COLUMNS = [
   { key: 'plan_title', label: 'Title' },
@@ -94,12 +95,12 @@ export default function PracticePlanList() {
       ) : editing ? (
         <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 space-y-6">
           <div>
-            <label className="block text-sm font-medium mb-2">Plan Title *</label>
-            <input type="text" required value={formData.plan_title} onChange={(e) => setFormData({ ...formData, plan_title: e.target.value })} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
+            <FieldLabelWithHelp helpKey="sim.practice_project_plans.plan_title" htmlFor="fh-practice-project-plans-plan-title" className="block text-sm font-medium mb-2">Plan Title *</FieldLabelWithHelp>
+            <input id="fh-practice-project-plans-plan-title" type="text" required value={formData.plan_title} onChange={(e) => setFormData({ ...formData, plan_title: e.target.value })} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-2">Plan Purpose *</label>
-            <textarea required value={formData.plan_purpose} onChange={(e) => setFormData({ ...formData, plan_purpose: e.target.value })} rows={3} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
+            <FieldLabelWithHelp helpKey="sim.practice_project_plans.plan_purpose" htmlFor="fh-practice-project-plans-plan-purpose" className="block text-sm font-medium mb-2">Plan Purpose *</FieldLabelWithHelp>
+            <textarea id="fh-practice-project-plans-plan-purpose" required value={formData.plan_purpose} onChange={(e) => setFormData({ ...formData, plan_purpose: e.target.value })} rows={3} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
           </div>
           <div className="flex justify-end gap-4">
             <button type="button" onClick={() => { setEditing(false); if (plan) setFormData(plan) }} className="px-4 py-2 border rounded-lg">Cancel</button>

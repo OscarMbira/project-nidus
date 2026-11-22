@@ -8,6 +8,7 @@ import { MessageSquare, Plus } from 'lucide-react'
 import { RowActionButton } from '@nidus/ui'
 import { getPracticeCMS, createPracticeCMS, updatePracticeCMS } from '../../services/sim/practiceCMSService'
 import ExportListMenu from '@nidus/ui/ExportListMenu'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 const PRACTICE_CMS_COLUMNS = [
   { key: 'cms_reference', label: 'Reference' },
@@ -93,8 +94,8 @@ export default function PracticeCMSList() {
       ) : editing ? (
         <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 space-y-6">
           <div>
-            <label className="block text-sm font-medium mb-2">Purpose</label>
-            <textarea value={formData.purpose} onChange={(e) => setFormData({ ...formData, purpose: e.target.value })} rows={4} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
+            <FieldLabelWithHelp helpKey="sim.practice_communication_management_strategies.purpose" htmlFor="fh-practice-communication-management-strategies-purpose" className="block text-sm font-medium mb-2">Purpose</FieldLabelWithHelp>
+            <textarea id="fh-practice-communication-management-strategies-purpose" value={formData.purpose} onChange={(e) => setFormData({ ...formData, purpose: e.target.value })} rows={4} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
           </div>
           <div className="flex justify-end gap-4">
             <button type="button" onClick={() => { setEditing(false); if (cms) setFormData(cms) }} className="px-4 py-2 border rounded-lg">Cancel</button>

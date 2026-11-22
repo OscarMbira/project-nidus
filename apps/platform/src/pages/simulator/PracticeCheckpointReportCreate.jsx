@@ -8,6 +8,7 @@ import { ArrowLeft } from 'lucide-react'
 import { createPracticeCheckpointReport } from '../../services/sim/practiceCheckpointReportService'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 import RegionalDateInput from '@nidus/ui/RegionalDateInput'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 
 export default function PracticeCheckpointReportCreate() {
   const navigate = useNavigate()
@@ -54,16 +55,16 @@ export default function PracticeCheckpointReportCreate() {
       ) : (
       <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 space-y-6">
         <div>
-          <label className="block text-sm font-medium mb-2">Report Title</label>
-          <input type="text" value={formData.report_title} onChange={(e) => setFormData({ ...formData, report_title: e.target.value })} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
+          <FieldLabelWithHelp helpKey="sim.practice_checkpoint_reports.report_title" htmlFor="fh-practice-checkpoint-reports-report-title" className="block text-sm font-medium mb-2">Report Title</FieldLabelWithHelp>
+          <input id="fh-practice-checkpoint-reports-report-title" type="text" value={formData.report_title} onChange={(e) => setFormData({ ...formData, report_title: e.target.value })} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-2">Checkpoint Date *</label>
-          <RegionalDateInput eventStyle required value={formData.checkpoint_date} onChange={(e) => setFormData({ ...formData, checkpoint_date: e.target.value })} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
+          <FieldLabelWithHelp helpKey="sim.practice_checkpoint_reports.checkpoint_date" htmlFor="fh-practice-checkpoint-reports-checkpoint-date" className="block text-sm font-medium mb-2">Checkpoint Date *</FieldLabelWithHelp>
+          <RegionalDateInput id="fh-practice-checkpoint-reports-checkpoint-date" eventStyle required value={formData.checkpoint_date} onChange={(e) => setFormData({ ...formData, checkpoint_date: e.target.value })} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-2">Progress Summary</label>
-          <textarea value={formData.progress_summary} onChange={(e) => setFormData({ ...formData, progress_summary: e.target.value })} rows={4} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
+          <FieldLabelWithHelp helpKey="sim.practice_checkpoint_reports.progress_summary" htmlFor="fh-practice-checkpoint-reports-progress-summary" className="block text-sm font-medium mb-2">Progress Summary</FieldLabelWithHelp>
+          <textarea id="fh-practice-checkpoint-reports-progress-summary" value={formData.progress_summary} onChange={(e) => setFormData({ ...formData, progress_summary: e.target.value })} rows={4} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
         </div>
         <div className="flex justify-end gap-4">
           <button type="button" onClick={() => navigate(-1)} className="px-4 py-2 border rounded-lg">Cancel</button>

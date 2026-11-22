@@ -189,7 +189,7 @@ export default function PracticeStakeholderAssessmentMatrixPage() {
 
       <div className="mb-4 flex flex-wrap gap-4 items-end">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label data-help="exempt" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Practice project
           </label>
           <select
@@ -207,7 +207,7 @@ export default function PracticeStakeholderAssessmentMatrixPage() {
         </div>
         {view === 'list' && (
           <div className="flex-1 min-w-[200px] max-w-md">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Search</label>
+            <label data-help="exempt" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Search</label>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
               <input

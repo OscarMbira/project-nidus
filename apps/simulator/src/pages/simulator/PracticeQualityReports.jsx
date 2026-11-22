@@ -62,7 +62,7 @@ export default function PracticeQualityReports() {
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 mb-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Practice Project</label>
+            <label data-help="exempt" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Practice Project</label>
             <select
               value={selectedProjectId}
               onChange={(e) => setSelectedProjectId(e.target.value)}
@@ -75,7 +75,7 @@ export default function PracticeQualityReports() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Start Date</label>
+            <label data-help="exempt" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Start Date</label>
             <RegionalDateInput eventStyle
               value={dateRange.start}
               onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
@@ -83,7 +83,7 @@ export default function PracticeQualityReports() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">End Date</label>
+            <label data-help="exempt" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">End Date</label>
             <RegionalDateInput eventStyle
               value={dateRange.end}
               onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
