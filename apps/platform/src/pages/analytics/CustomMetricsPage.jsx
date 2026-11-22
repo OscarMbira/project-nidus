@@ -72,10 +72,10 @@ export default function CustomMetricsPage() {
             <form onSubmit={handleSave} className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div><FieldLabelWithHelp helpKey="public.custom_metrics.metric_name" htmlFor="fh-custom-metrics-metric-name" className={lbl}>Metric Name <span className="text-red-500">*</span></FieldLabelWithHelp><input id="fh-custom-metrics-metric-name" className={inp} value={form.metric_name} onChange={set('metric_name')} required /></div>
-                <div><label className={lbl}>Unit</label><input className={inp} value={form.unit} onChange={set('unit')} placeholder="e.g. %, days, $" /></div>
+                <div><FieldLabelWithHelp helpKey="public.custom_metrics.unit" htmlFor="fh-custom-metrics-unit" className={lbl}>Unit</FieldLabelWithHelp><input id="fh-custom-metrics-unit" className={inp} value={form.unit} onChange={set('unit')} placeholder="e.g. %, days, $" /></div>
               </div>
               <div><FieldLabelWithHelp helpKey="public.custom_metrics.formula" htmlFor="fh-custom-metrics-formula" className={lbl}>Formula</FieldLabelWithHelp><input id="fh-custom-metrics-formula" className={inp} value={form.formula} onChange={set('formula')} placeholder="e.g. (completed_tasks / total_tasks) * 100" /></div>
-              <div><label className={lbl}>Description</label><textarea className={`${inp} h-16 resize-none`} value={form.description} onChange={set('description')} /></div>
+              <div><FieldLabelWithHelp helpKey="public.custom_metrics.description" htmlFor="fh-custom-metrics-description" className={lbl}>Description</FieldLabelWithHelp><textarea id="fh-custom-metrics-description" className={`${inp} h-16 resize-none`} value={form.description} onChange={set('description')} /></div>
               <label data-help="exempt" className="flex items-center gap-3 cursor-pointer"><input type="checkbox" checked={form.is_shared} onChange={set('is_shared')} className="w-4 h-4 accent-blue-500" /><span className="text-sm text-gray-700 dark:text-gray-300">Share with team</span></label>
               <div className="flex gap-3">
                 <button type="submit" disabled={saving} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 rounded-lg text-sm font-medium">{saving ? 'Saving…' : 'Save'}</button>

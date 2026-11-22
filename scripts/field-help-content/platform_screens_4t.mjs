@@ -96,6 +96,8 @@ export const ROWS = [
   // Misc
   t('public.custom_metrics.metric_name', 'Metric name', 'A name for the metric.', 'Average days to close an issue'),
   t('public.custom_metrics.formula', 'Formula', 'How the metric is calculated from the fields available.', 'sum(closed_issue_days) / count(closed_issues)'),
+  t('public.custom_metrics.unit', 'Unit', 'The unit the metric is shown in.', 'days'),
+  t('public.custom_metrics.description', 'Description', 'What the metric tells you and how to read it.', 'Lower is better; above 10 days means issues are waiting too long.'),
   t('public.organisation_branding.font_family', 'Font family', 'The typeface used across your organisation’s screens and exports.', 'Inter'),
   t('public.project_contacts.emails', 'Email', 'The project’s contact email addresses, one per row. Tick Primary on the main one.', 'office.move@company.example'),
   t('public.project_contacts.phones', 'Phone', 'The project’s contact numbers, one per row. Tick Primary on the main one.', '+44 20 7946 0456'),

@@ -2,7 +2,7 @@
 -- v1345 wave 4t — Platform-only screens
 -- ============================================================================
 -- Generated from scripts/field-help-content/platform_screens_4t.mjs by scripts/field-help-content/build-sql.mjs (v1345 slice 2).
--- 83 help entries, module_code 'platform_screens'. Register keys fall back to the common
+-- 85 help entries, module_code 'platform_screens'. Register keys fall back to the common
 -- register:*:<field_key> help when a register has no entry of its own (S2-D1).
 -- Examples follow CLAUDE.md rule 77. Drafted by Claude for owner sample review (G-D5).
 -- Idempotent: re-running refreshes the text. Prerequisites: v1490, v1491.
@@ -88,6 +88,8 @@ VALUES
   ('public.legacy_template_uploads.category', 'Category', 'Where the template is filed.', '- Risk management', NULL, NULL, 'platform_screens'),
   ('public.custom_metrics.metric_name', 'Metric name', 'A name for the metric.', '- Average days to close an issue', NULL, NULL, 'platform_screens'),
   ('public.custom_metrics.formula', 'Formula', 'How the metric is calculated from the fields available.', '- sum(closed_issue_days) / count(closed_issues)', NULL, NULL, 'platform_screens'),
+  ('public.custom_metrics.unit', 'Unit', 'The unit the metric is shown in.', '- days', NULL, NULL, 'platform_screens'),
+  ('public.custom_metrics.description', 'Description', 'What the metric tells you and how to read it.', '- Lower is better; above 10 days means issues are waiting too long.', NULL, NULL, 'platform_screens'),
   ('public.organisation_branding.font_family', 'Font family', 'The typeface used across your organisation’s screens and exports.', '- Inter', NULL, NULL, 'platform_screens'),
   ('public.project_contacts.emails', 'Email', 'The project’s contact email addresses, one per row. Tick Primary on the main one.', '- office.move@company.example', NULL, NULL, 'platform_screens'),
   ('public.project_contacts.phones', 'Phone', 'The project’s contact numbers, one per row. Tick Primary on the main one.', '- +44 20 7946 0456', NULL, NULL, 'platform_screens'),

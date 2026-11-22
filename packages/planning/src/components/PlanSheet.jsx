@@ -305,7 +305,7 @@ export default function PlanSheet({ tasks, dependencies = [], team = [], calenda
           </select>
         </label>
         <label data-help="exempt" className="inline-flex items-center gap-2"><input type="checkbox" checked={prefs.showOutline} onChange={(e) => setPref('showOutline', e.target.checked)} /> Outline number</label>
-        <label className="inline-flex items-center gap-2"><input type="checkbox" checked={prefs.showProjectSummary} onChange={(e) => setPref('showProjectSummary', e.target.checked)} /> Project summary</label>
+        <label data-help="exempt" className="inline-flex items-center gap-2"><input type="checkbox" checked={prefs.showProjectSummary} onChange={(e) => setPref('showProjectSummary', e.target.checked)} /> Project summary</label>
         <label data-help="exempt" className="inline-flex items-center gap-2"><input type="checkbox" checked={prefs.showBars} onChange={(e) => setPref('showBars', e.target.checked)} /> Gantt bars</label>
         {prefs.showBars && (
           <>
