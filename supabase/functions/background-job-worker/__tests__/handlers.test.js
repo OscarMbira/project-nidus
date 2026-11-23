@@ -10,11 +10,20 @@ const ctxWith = (res, env = {}) => ({
 })
 
 describe('background job handlers', () => {
-  it('ai.embed calls ai-embed with the AI cron secret and counts stored rows', async () => {
+  it('ai.embed calls ai-embed with the AI cron secret, a row limit, and counts stored rows', async () => {
     const ctx = ctxWith({ ok: true, status: 200, data: { result: { public: { stored: 3 }, sim: { stored: 2 } }, ms: 10 } }, { AI_CRON_SECRET: 's3cret' })
     const out = await handlers['ai.embed'].handle({}, ctx)
-    expect(ctx.invokeFunction).toHaveBeenCalledWith('ai-embed', { limit: 3, budgetMs: 5000 }, { headers: { 'x-ai-cron-secret': 's3cret' } })
+    expect(ctx.invokeFunction).toHaveBeenCalledWith('ai-embed', { limit: 8 }, { headers: { 'x-ai-cron-secret': 's3cret' } })
     expect(out.processed).toBe(5)
+    expect(out.calls).toBe(1) // 5 handled < limit 8 → backlog empty, no second call
+  })
+
+  it('ai.embed makes several short calls while full batches come back, up to the call cap', async () => {
+    const full = { ok: true, status: 200, data: { result: { public: { stored: 8 }, sim: {} } } }
+    const ctx = ctxWith(full)
+    const out = await handlers['ai.embed'].handle({ limit: 8, calls: 3 }, ctx)
+    expect(ctx.invokeFunction).toHaveBeenCalledTimes(3)
+    expect(out).toMatchObject({ processed: 24, calls: 3 })
   })
 
   it('ai.embed passes through the kill switch skip and reports HTTP errors', async () => {
@@ -24,12 +33,14 @@ describe('background job handlers', () => {
       .toMatch(/401: Not allowed/)
   })
 
-  it('ai.embed sends a small batch, honours a payload override and explains a 546 resource-limit error', async () => {
-    const ctx = ctxWith({ ok: true, status: 200, data: { result: {} } })
-    await handlers['ai.embed'].handle({ limit: 1, budgetMs: 3000 }, ctx)
-    expect(ctx.invokeFunction.mock.calls[0][1]).toEqual({ limit: 1, budgetMs: 3000 })
-    expect((await handlers['ai.embed'].handle({}, ctxWith({ ok: false, status: 546, data: null }))).error)
-      .toMatch(/resource limit \(546\) with 3 rows/)
+  it('ai.embed explains a 546 and keeps rows stored by earlier calls', async () => {
+    const ctx = ctxWith(null)
+    ctx.invokeFunction = vi.fn()
+      .mockResolvedValueOnce({ ok: true, status: 200, data: { result: { public: { stored: 8 } } } })
+      .mockResolvedValueOnce({ ok: false, status: 546, data: null })
+    const out = await handlers['ai.embed'].handle({}, ctx)
+    expect(out.error).toMatch(/resource limit \(546\) with 8 rows/)
+    expect(out.processed).toBe(8)
   })
 
   it('drafts.expire calls expire-drafts and adds up expiries and warnings', async () => {

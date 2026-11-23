@@ -3,27 +3,43 @@
  * Calls the existing ai-embed edge function with the same AI_CRON_SECRET header.
  * The tick only queues this job when public.ai_embed_has_work() is true.
  *
- * Small batches: one ai-embed call with the original 40 rows / 45 s exceeded the edge runtime's CPU limit
- * (HTTP 546, first live run 2026-11-23), so the worker asks for a few rows per call. The payload may
- * override { limit, budgetMs }; the backlog drains over successive runs.
+ * CPU limit: each ai-embed call has its own edge CPU allowance (~0.1 s CPU per row). One call that kept
+ * fetching rows for 45 s — or 5 s — exceeded it (HTTP 546, first live runs 2026-11-23). So each call embeds
+ * at most `limit` rows and stops, and this handler makes several short calls per run, stopping when the
+ * backlog is empty. The payload may override { limit, calls }.
  */
-export const DEFAULT_LIMIT = 3
-export const DEFAULT_BUDGET_MS = 5_000
+export const DEFAULT_LIMIT = 8
+export const DEFAULT_CALLS = 6
+
+function rowsHandled(result) {
+  return Object.values(result || {}).reduce(
+    (n, r) => n + (Number(r?.stored) || 0) + (Number(r?.changed) || 0) + (Number(r?.failed) || 0), 0)
+}
+
+function storedCount(result) {
+  return Object.values(result || {}).reduce((n, r) => n + (Number(r?.stored) || 0), 0)
+}
 
 export async function handle(payload, ctx) {
-  const body = {
-    limit: Number(payload?.limit) || DEFAULT_LIMIT,
-    budgetMs: Number(payload?.budgetMs) || DEFAULT_BUDGET_MS,
-  }
-  const res = await ctx.invokeFunction('ai-embed', body, { headers: { 'x-ai-cron-secret': ctx.env('AI_CRON_SECRET') || '' } })
-  if (!res.ok) {
-    if (res.status === 546) {
-      return { error: `ai-embed hit the edge runtime resource limit (546) with ${body.limit} rows; lower the limit` }
+  const limit = Number(payload?.limit) || DEFAULT_LIMIT
+  const calls = Number(payload?.calls) || DEFAULT_CALLS
+  const headers = { 'x-ai-cron-secret': ctx.env('AI_CRON_SECRET') || '' }
+  let processed = 0
+  let callsMade = 0
+
+  for (let i = 0; i < calls; i += 1) {
+    const res = await ctx.invokeFunction('ai-embed', { limit }, { headers })
+    callsMade += 1
+    if (!res.ok) {
+      const reason = res.status === 546
+        ? `ai-embed hit the edge runtime resource limit (546) with ${limit} rows; lower the limit`
+        : `ai-embed returned ${res.status}: ${res.data?.error || 'no detail'}`
+      // Rows already stored in earlier calls are kept; report them with the error.
+      return { error: reason, processed, calls: callsMade }
     }
-    return { error: `ai-embed returned ${res.status}: ${res.data?.error || 'no detail'}` }
+    if (res.data?.skipped) return { processed, skipped: res.data.skipped, calls: callsMade }
+    processed += storedCount(res.data?.result)
+    if (rowsHandled(res.data?.result) < limit) break // backlog empty
   }
-  if (res.data?.skipped) return { processed: 0, skipped: res.data.skipped }
-  const result = res.data?.result || {}
-  const stored = Object.values(result).reduce((n, r) => n + (Number(r?.stored) || 0), 0)
-  return { processed: stored, result, ms: res.data?.ms }
+  return { processed, calls: callsMade }
 }

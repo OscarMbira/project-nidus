@@ -45,21 +45,26 @@ serve(async (req) => {
     const { data: settings } = await db.from('ai_platform_settings').select('kill_switch').eq('id', true).maybeSingle()
     if (settings?.kill_switch) return json(req, 200, { skipped: 'kill switch on' })
 
-    // v1352: the background-job worker sends a small { limit, budgetMs } so one call stays within the edge
-    // runtime's CPU limit (HTTP 546 otherwise). Without them the original batch / budget apply.
+    // v1352: the background-job worker sends { limit } so one call stays within the edge runtime's CPU
+    // limit (HTTP 546 otherwise, ~0.1 s CPU per row). With a limit the call embeds at most that many rows in
+    // total and stops — it does not keep fetching batches until the time budget runs out. Without a limit the
+    // original batch / budget apply.
+    const capped = body?.limit !== undefined && body?.limit !== null
     const batch = clampInt(body?.limit, 1, BATCH, BATCH)
-    const budgetMs = clampInt(body?.budgetMs, 2_000, TIME_BUDGET_MS, TIME_BUDGET_MS)
+    const budgetMs = clampInt(body?.budgetMs, 1_000, TIME_BUDGET_MS, TIME_BUDGET_MS)
+    let remaining = capped ? batch : Number.POSITIVE_INFINITY
     const started = Date.now()
     const result: Record<string, { stored: number; changed: number; failed: number }> = {}
     for (const schema of ['public', 'sim']) {
       const counts = { stored: 0, changed: 0, failed: 0 }
       result[schema] = counts
-      while (Date.now() - started < budgetMs) {
-        const { data: rows, error } = await db.rpc('ai_embed_pending', { p_schema: schema, p_limit: batch })
+      while (remaining > 0 && Date.now() - started < budgetMs) {
+        const { data: rows, error } = await db.rpc('ai_embed_pending', { p_schema: schema, p_limit: Math.min(batch, remaining) })
         if (error) throw error
         if (!rows?.length) break
         for (const row of rows) {
-          if (Date.now() - started >= budgetMs) break
+          if (remaining <= 0 || Date.now() - started >= budgetMs) break
+          remaining -= 1
           try {
             const vector = toVectorLiteral(await embed(row.embed_text))
             const { data: ok, error: storeError } = await db.rpc('ai_embed_store', {
@@ -74,10 +79,10 @@ serve(async (req) => {
             await db.rpc('ai_embed_failed', { p_schema: schema, p_id: row.id, p_error: String((err as Error)?.message || err) })
           }
         }
-        if (rows.length < batch) break
+        if (rows.length < batch || capped) break
       }
     }
-    return json(req, 200, { result, ms: Date.now() - started })
+    return json(req, 200, { result, ms: Date.now() - started, remainingCapacity: capped ? remaining : null })
   } catch (err) {
     return errorResponse(req, err)
   }
