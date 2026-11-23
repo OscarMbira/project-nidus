@@ -219,3 +219,13 @@ exception); guide `Documentation/Background_Jobs_v1352_Guide.md`; `Cron_Job_Setu
 
 **Exit still open:** owner SQL run, browser check in Admin, and confirming each existing job's next run behaves
 as before.
+
+**Slice 0 close-out (2026-11-23, owner asked to continue to Slice 1):**
+- Done: all SQL run; pg_net enabled (was off — the v1284 AI embed schedule had never run); worker deployed, wake → 200.
+- Fixed on the way: v1561 temp tables → transaction settings; v1560 pg_net warning + guide step 6; `ai.embed` sends
+  small batches (e0deba72).
+- **Open — `ai.embed` (v1272 issue, not v1352):** `ai-embed` returns 546 (edge CPU / memory limit) even with 3 rows;
+  2,837 `public.search_index` rows have never been embedded; keyword search unaffected. Owner to turn the job off
+  and run the one-word eval test; decision (leave off / external embedding API / plan limits) belongs to v1272.
+- **Open — `expire-drafts` and `admin-moratorium-cron` were never deployed:** owner to deploy or turn their jobs off.
+- **Open — Admin browser check** of System › Background Jobs.
