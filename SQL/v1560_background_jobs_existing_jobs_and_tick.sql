@@ -149,6 +149,9 @@ BEGIN
     RAISE NOTICE 'v1560: pg_cron is not installed. Enable it (Database → Extensions), then re-run this file.';
     RETURN;
   END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pg_net') THEN
+    RAISE WARNING 'v1560: pg_net is not installed, so worker jobs (AI embed, draft expiry, moratorium, alert emails) cannot start. Enable it (Database → Extensions or CREATE EXTENSION IF NOT EXISTS pg_net), then check SELECT public.background_job_wake_worker(); returns requested.';
+  END IF;
   FOREACH v_name IN ARRAY ARRAY['daily-trial-expiry-check', 'nidus_auto_archive_history',
                                 'nidus_ai_retention_purge', 'nidus_ai_embed', 'nidus_background_tick'] LOOP
     PERFORM cron.unschedule(jobid) FROM cron.job WHERE jobname = v_name;

@@ -96,6 +96,18 @@ Each moved job keeps the function or edge function it had; only the way it is st
    v1251 again, the v1561 tests, then Admin v255 and the v256 tests).
 5. **Check:** Admin › System › Background Jobs shows "Scheduler last ran less than a minute ago", and the
    jobs fill their **Last run** column as their schedules come round.
+6. **Check the worker is reachable** (SQL editor):
+   ```sql
+   SELECT public.background_job_wake_worker();   -- expect: requested
+   ```
+   `pg_net missing` → turn pg_net on (`CREATE EXTENSION IF NOT EXISTS pg_net;`); `not configured` → step 3.
+   About 10 seconds later:
+   ```sql
+   SELECT status_code, left(content::text, 200) FROM net._http_response ORDER BY created DESC LIMIT 3;
+   ```
+   200 = working; 401 = `BACKGROUND_JOB_SECRET` ≠ `worker_secret`; 404 = worker not deployed.
+   (Found on first setup, 2026-11-23: pg_net was off, so the worker — and the old v1284 AI embed schedule —
+   had never been reachable.)
 
 ---
 
