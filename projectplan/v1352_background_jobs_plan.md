@@ -179,7 +179,7 @@ Each job: failing SQL/Vitest test → job → Admin catalogue row → commit-rea
 
 | # | Repo | File | Status |
 |---|---|---|---|
-| 0 | — | Deploy edge function `background-job-worker` (`--no-verify-jwt`), set secret `BACKGROUND_JOB_SECRET`; confirm `expire-drafts` and `admin-moratorium-cron` are deployed | worker deployed 2026-11-23 ✓ (pg_net enabled, wake → 200, ai.embed runs); `expire-drafts` + `admin-moratorium-cron` were never deployed — owner decision pending |
+| 0 | — | Deploy edge function `background-job-worker` (`--no-verify-jwt`), set secret `BACKGROUND_JOB_SECRET`; confirm `expire-drafts` and `admin-moratorium-cron` are deployed | worker deployed 2026-11-23 ✓ (pg_net enabled, wake → 200, ai.embed runs); `expire-drafts` + `admin-moratorium-cron` deployed 2026-11-23 ✓ |
 | 1 | monorepo | `SQL/v1559_background_jobs_framework.sql` | run 2026-11-23 ✓ |
 | 2 | monorepo | `SQL/v1560_background_jobs_existing_jobs_and_tick.sql` (needs pg_cron + pg_net) | run 2026-11-23 ✓ |
 | 3 | monorepo | `SQL/v1251_planner_table_wall.sql` (re-run, table registration rule 6) | run 2026-11-23 ✓ |
@@ -227,5 +227,5 @@ as before.
 - **Open — `ai.embed` (v1272 issue, not v1352):** `ai-embed` returns 546 (edge CPU / memory limit) even with 3 rows;
   2,837 `public.search_index` rows have never been embedded; keyword search unaffected. Owner to turn the job off
   and run the one-word eval test; decision (leave off / external embedding API / plan limits) belongs to v1272.
-- **Open — `expire-drafts` and `admin-moratorium-cron` were never deployed:** owner to deploy or turn their jobs off.
+- **Done (2026-11-23):** `expire-drafts` and `admin-moratorium-cron` deployed by the owner (they had never been deployed before); `drafts.expire` (00:00 UTC) and `testers.moratorium_expiry` (00:15 UTC) run from tonight.
 - **Open — Admin browser check** of System › Background Jobs.
