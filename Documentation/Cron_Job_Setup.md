@@ -1,7 +1,39 @@
 # Cron Job Setup Guide
 
-**Version:** 1.0  
-**Last Updated:** 2025-01-XX
+**Version:** 2.0 (v1352)  
+**Last Updated:** 2026-11-23
+
+---
+
+## v1352 update — one scheduler tick, one job catalogue
+
+From SQL **v1560** there is only **one** pg_cron entry in the database:
+
+| pg_cron job | Schedule | Command |
+|---|---|---|
+| `nidus_background_tick` | `* * * * *` | `SELECT public.run_due_background_jobs();` |
+
+Every background job — including the trial expiry check this guide describes — is now a row in
+`public.background_jobs` and is started by that tick when its schedule is due. Its runs are recorded in
+`public.background_job_runs` and shown in **Admin › System › Background Jobs**. The older entries
+`daily-trial-expiry-check`, `nidus_auto_archive_history`, `nidus_ai_retention_purge`, `nidus_ai_embed`,
+`admin_id_generation_capacity_check` and `admin_record_lifecycle_auto_archive_daily` are removed by v1560 / Admin v255.
+
+**Do not add new `cron.schedule` calls** (CLAUDE.md rule 80). Register the job in the catalogue instead.
+Setup, the worker secret, running a job by hand and troubleshooting are in
+[`Background_Jobs_v1352_Guide.md`](./Background_Jobs_v1352_Guide.md).
+
+Quick checks:
+
+```sql
+SELECT jobname, schedule, command FROM cron.job;                     -- expect nidus_background_tick only
+SELECT last_tick_at FROM public.background_job_settings WHERE id;    -- should be within the last minute
+SELECT code, enabled, last_status, last_finished_at FROM public.background_jobs ORDER BY code;
+```
+
+The rest of this guide is kept for history: the trial expiry function (`check_trial_expirations_cron`) is
+unchanged, but it is no longer scheduled with its own `cron.schedule`. To run it by hand use **Run now** in
+Admin, not `cron.run_job`.
 
 ---
 

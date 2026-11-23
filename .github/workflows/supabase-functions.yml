@@ -31,7 +31,8 @@ env:
     agent-run status-report-agent ai-insights meeting-ai-extract meeting-register-agent import-mapper
     ai-simulator-hint ai-simulator-debrief plan-ai-generate whisper-transcribe sim-ai-npc sim-ai-assess
   # Called by pg_cron with the AI_CRON_SECRET header instead of a user JWT.
-  CRON_FUNCTIONS: ai-embed
+  # v1352: background-job-worker is woken by the background job tick with the BACKGROUND_JOB_SECRET header.
+  CRON_FUNCTIONS: ai-embed background-job-worker
 
 jobs:
   test:

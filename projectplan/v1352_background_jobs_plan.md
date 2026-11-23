@@ -49,41 +49,41 @@ failures / late jobs ──► Admin in-app notification + email, grouped per jo
 ## Slice 0 — Framework + existing jobs + monitoring (Wave 0)
 
 Tests first:
-- [ ] SQL test script (`SQL/v{N}_background_jobs_tests.sql`, run in a transaction, rolls back): due-job
+- [x] SQL test script (`SQL/v{N}_background_jobs_tests.sql`, run in a transaction, rolls back): due-job
       selection for cron text in UTC and organisation time; disabled job skipped; overlap lock; run row written
       on success and failure; retry policy; late-job detection; (A1) per-item back-off and `run_after`, item
       becomes `dead` after `max_attempts` / `expires_at`, single-item replay, `enqueue_background_job` dedupe,
       per-organisation batch cap.
-- [ ] Vitest: worker claims queue rows once under concurrency (mocked client), handler errors recorded, adapter
+- [x] Vitest: worker claims queue rows once under concurrency (mocked client), handler errors recorded, adapter
       is the only module importing `@supabase/supabase-js`.
 
 Build:
-- [ ] SQL migration: `background_jobs`, `background_job_runs`, `background_job_queue`,
+- [x] SQL migration: `background_jobs`, `background_job_runs`, `background_job_queue`,
       `background_job_settings` (retention D11, alert grouping), `run_background_job`,
       `run_due_background_jobs`, `background_jobs_detect_late`; registry rows; Planner wall re-run.
-- [ ] **A1 queue capabilities:** queue columns `run_after`, `attempts`, `max_attempts`, `expires_at`, `dedupe_key`
+- [x] **A1 queue capabilities:** queue columns `run_after`, `attempts`, `max_attempts`, `expires_at`, `dedupe_key`
       (unique per job), `organisation_id`, status incl. `dead`; per-job `backoff_schedule`, `batch_size`,
       `per_org_batch_cap`; `enqueue_background_job(code, payload, run_after, dedupe_key, organisation_id)`
       (`SECURITY DEFINER`, no client grant); worker claim respects `run_after` and the per-organisation cap;
       `admin_background_job_replay_item(item_id, reason)` (audited) + a replay helper the owning feature can call
       for its own organisation’s items.
-- [ ] Move existing jobs into the catalogue (behaviour unchanged): trial expiry, auto-archive (public), AI
+- [x] Move existing jobs into the catalogue (behaviour unchanged): trial expiry, auto-archive (public), AI
       retention purge, AI embed (handler, every 2 min), draft expiry (handler, daily), tester moratorium
       (handler, daily); `cron.unschedule` their old entries; one `cron.schedule('nidus_background_tick', '* * * * *', …)`.
-- [ ] Admin SQL (Admin repo): ID capacity alerts + Admin lifecycle archive registered through the same
+- [x] Admin SQL (Admin repo): ID capacity alerts + Admin lifecycle archive registered through the same
       catalogue (Admin-owned rows, `owner_system = 'admin'`).
-- [ ] Worker edge function `background-job-worker` + handlers for draft expiry, moratorium, AI embed (wrapping
+- [x] Worker edge function `background-job-worker` + handlers for draft expiry, moratorium, AI embed (wrapping
       the existing functions' logic, not rewriting it).
-- [ ] Failure / late alerts (D4): Admin in-app notification + grouped email via `send-email`.
-- [ ] Admin RPCs `public.admin_background_job_list|runs|set_enabled|run_now|rerun` gated by
+- [x] Failure / late alerts (D4): Admin in-app notification + grouped email via `send-email`.
+- [x] Admin RPCs `public.admin_background_job_list|runs|set_enabled|run_now|rerun` gated by
       `system.background_jobs.view|run|edit`, reason required, audited; permissions seeded in Admin SQL.
-- [ ] Admin page **System › Background Jobs** (`modules/system`): table (rules 40, 40.1, 41, 44), job detail
+- [x] Admin page **System › Background Jobs** (`modules/system`): table (rules 40, 40.1, 41, 44), job detail
       routed page with run history and Audit tab (rules 63.1, 65), Run now / re-run / enable-disable with reason
       (confirm dialogs), back button (rule 73), field help (Admin rule 23), dates via `AdminDateInput`.
-- [ ] Check script `scripts/check-background-jobs.mjs` + CI: no `cron.schedule` in SQL newer than this slice
+- [x] Check script `scripts/check-background-jobs.mjs` + CI: no `cron.schedule` in SQL newer than this slice
       except the tick; every catalogue `handler` code has a handler file (D9).
-- [ ] CLAUDE.md **rule 80** + rule 34.5 narrow exception; Admin CLAUDE.md equivalent rule.
-- [ ] Guide `Documentation/Background_Jobs_v1352_Guide.md`; update `Documentation/Cron_Job_Setup.md`.
+- [x] CLAUDE.md **rule 80** + rule 34.5 narrow exception; Admin CLAUDE.md equivalent rule.
+- [x] Guide `Documentation/Background_Jobs_v1352_Guide.md`; update `Documentation/Cron_Job_Setup.md`.
 - [ ] Exit: all 8 existing jobs listed in Admin with run history; old cron entries gone; owner runs SQL +
       browser check; commit (monorepo + Admin).
 
@@ -173,4 +173,49 @@ Each job: failing SQL/Vitest test → job → Admin catalogue row → commit-rea
 
 ## Review
 
-(to be completed after each slice)
+### Slice 0 review (2026-11-23) — code complete, SQL not run
+
+**SQL run order (owner runs; all status: not run):**
+
+| # | Repo | File | Status |
+|---|---|---|---|
+| 0 | — | Deploy edge function `background-job-worker` (`--no-verify-jwt`), set secret `BACKGROUND_JOB_SECRET`; confirm `expire-drafts` and `admin-moratorium-cron` are deployed | not done |
+| 1 | monorepo | `SQL/v1559_background_jobs_framework.sql` | not run |
+| 2 | monorepo | `SQL/v1560_background_jobs_existing_jobs_and_tick.sql` (needs pg_cron + pg_net) | not run |
+| 3 | monorepo | `SQL/v1251_planner_table_wall.sql` (re-run, table registration rule 6) | not run |
+| 4 | monorepo | `SQL/v1561_background_jobs_tests.sql` (rolls back; expect "all background job tests passed") | not run |
+| 5 | Admin | `E:\project-nidus-admin\SQL\v255_background_jobs_admin.sql` | not run |
+| 6 | Admin | `E:\project-nidus-admin\SQL\v256_background_jobs_admin_tests.sql` (rolls back) | not run |
+
+After step 1, check `public.background_job_config` has `functions_base_url` and `worker_secret` (copied from
+`ai_job_config` when set) and that `worker_secret` equals `BACKGROUND_JOB_SECRET`.
+
+**Built:** catalogue / runs / queue / settings / config tables (RLS on, no client access, registry rows); cron
+matcher with next-fire and organisation time zones; runner with advisory lock + running-row guard, retry policy,
+grouped alerts; tick with catch-up of missed minutes; late / stuck detection; queue with dedupe, run_after,
+back-off, dead, expiry, per-job batch and per-organisation cap, single-item replay (Admin and per-organisation);
+worker edge function (`worker.js` core, `adapter.ts` the only Supabase import, 4 handlers); 8 existing jobs + 2
+framework jobs in the catalogue; old pg_cron entries replaced by `nidus_background_tick`; Admin RPCs, page and job
+page; `check-background-jobs.mjs` + CI in both repos; CLAUDE.md rule 80 + rule 34.5 exception (Admin rule 25 +
+exception); guide `Documentation/Background_Jobs_v1352_Guide.md`; `Cron_Job_Setup.md` updated.
+
+**Decisions made during the build (not in the plan text):**
+- Admin "Run now" / "Re-run" for database jobs sets a run request that the next tick starts (within a minute),
+  instead of running the job inside the Admin RPC — Supabase's statement time-out for signed-in users would cut
+  long jobs. Worker jobs are queued at once. Run now is refused while a job is off.
+- Handler jobs wrap the existing edge functions over HTTP (`ctx.invokeFunction`) — no logic copied.
+- `ai.embed` keeps "only when rows wait" through a guard function (`public.ai_embed_has_work`).
+- Alerts for Admin go through a configured hook name (`background_job_settings.alert_hook_function`), so monorepo
+  SQL never names the `admin` schema. Alert emails are queue items of `system.alert_email`.
+- `pg_try_advisory_xact_lock` (transaction-scoped) is used, so a crashed session can never leave a lock behind.
+- SQL job time-outs are enforced by the late / stuck check (runs still `running` after the time-out are closed as
+  failed); the worker enforces its own time budget.
+- Settings edits in Admin (retention, late grace) are not in Slice 0; values are stored as data and edited with
+  SQL until the retention job (3.3) lands.
+
+**Tests:** `supabase/functions` Vitest 84/84 (14 new); `node --test scripts/__tests__/check-background-jobs.test.mjs`
+6/6; Admin `packages/shared` new test 7/7 (full suite: 2 pre-existing failures in `shared.test.js` and
+`documentationContentUtils.test.js`, unrelated). SQL tests (v1561, Admin v256) written, to be run by the owner.
+
+**Exit still open:** owner SQL run, browser check in Admin, and confirming each existing job's next run behaves
+as before.

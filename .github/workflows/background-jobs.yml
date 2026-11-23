@@ -1,0 +1,38 @@
+name: Background Jobs Check
+
+# v1352 (CLAUDE.md rule 80): background work runs through public.background_jobs and the single
+# 'nidus_background_tick' pg_cron entry. Fails on any new cron.schedule in SQL (v1559 on) other than the tick,
+# and on a catalogue handler job without a handler file in supabase/functions/background-job-worker/handlers.
+
+on:
+  push:
+    branches: [master, main]
+    paths:
+      - 'SQL/**'
+      - 'supabase/functions/background-job-worker/**'
+      - 'scripts/check-background-jobs.mjs'
+      - 'scripts/__tests__/check-background-jobs.test.mjs'
+      - '.github/workflows/background-jobs.yml'
+  pull_request:
+    paths:
+      - 'SQL/**'
+      - 'supabase/functions/background-job-worker/**'
+      - 'scripts/check-background-jobs.mjs'
+      - 'scripts/__tests__/check-background-jobs.test.mjs'
+      - '.github/workflows/background-jobs.yml'
+
+jobs:
+  background-jobs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Script unit tests
+        run: node --test scripts/__tests__/check-background-jobs.test.mjs
+
+      - name: No new pg_cron schedules; every handler job has a handler
+        run: node scripts/check-background-jobs.mjs
