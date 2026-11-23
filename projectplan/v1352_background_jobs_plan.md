@@ -173,19 +173,19 @@ Each job: failing SQL/Vitest test → job → Admin catalogue row → commit-rea
 
 ## Review
 
-### Slice 0 review (2026-11-23) — code complete, SQL not run
+### Slice 0 review (2026-11-23) — code complete, all SQL run by the owner 2026-11-23
 
-**SQL run order (owner runs; all status: not run):**
+**SQL run order (owner runs; all run successfully 2026-11-23):**
 
 | # | Repo | File | Status |
 |---|---|---|---|
 | 0 | — | Deploy edge function `background-job-worker` (`--no-verify-jwt`), set secret `BACKGROUND_JOB_SECRET`; confirm `expire-drafts` and `admin-moratorium-cron` are deployed | not done |
-| 1 | monorepo | `SQL/v1559_background_jobs_framework.sql` | not run |
-| 2 | monorepo | `SQL/v1560_background_jobs_existing_jobs_and_tick.sql` (needs pg_cron + pg_net) | not run |
-| 3 | monorepo | `SQL/v1251_planner_table_wall.sql` (re-run, table registration rule 6) | not run |
-| 4 | monorepo | `SQL/v1561_background_jobs_tests.sql` (rolls back; expect "all background job tests passed") | not run |
-| 5 | Admin | `E:\project-nidus-admin\SQL\v255_background_jobs_admin.sql` | not run |
-| 6 | Admin | `E:\project-nidus-admin\SQL\v256_background_jobs_admin_tests.sql` (rolls back) | not run |
+| 1 | monorepo | `SQL/v1559_background_jobs_framework.sql` | run 2026-11-23 ✓ |
+| 2 | monorepo | `SQL/v1560_background_jobs_existing_jobs_and_tick.sql` (needs pg_cron + pg_net) | run 2026-11-23 ✓ |
+| 3 | monorepo | `SQL/v1251_planner_table_wall.sql` (re-run, table registration rule 6) | run 2026-11-23 ✓ |
+| 4 | monorepo | `SQL/v1561_background_jobs_tests.sql` (rolls back; expect "all background job tests passed") | run 2026-11-23 ✓ |
+| 5 | Admin | `E:\project-nidus-admin\SQL\v255_background_jobs_admin.sql` | run 2026-11-23 ✓ |
+| 6 | Admin | `E:\project-nidus-admin\SQL\v256_background_jobs_admin_tests.sql` (rolls back) | run 2026-11-23 ✓ |
 
 After step 1, check `public.background_job_config` has `functions_base_url` and `worker_secret` (copied from
 `ai_job_config` when set) and that `worker_secret` equals `BACKGROUND_JOB_SECRET`.
