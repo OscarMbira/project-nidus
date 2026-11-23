@@ -20,6 +20,11 @@ import { guessLanguage, toVectorLiteral } from '../_shared/ai/embedding.js'
 const BATCH = 40
 const TIME_BUDGET_MS = 45_000
 
+function clampInt(value: unknown, min: number, max: number, fallback: number): number {
+  const n = Number(value)
+  return Number.isFinite(n) ? Math.min(max, Math.max(min, Math.round(n))) : fallback
+}
+
 serve(async (req) => {
   try {
     if (req.method !== 'POST') return json(req, 405, { error: 'Method not allowed' })
@@ -40,17 +45,21 @@ serve(async (req) => {
     const { data: settings } = await db.from('ai_platform_settings').select('kill_switch').eq('id', true).maybeSingle()
     if (settings?.kill_switch) return json(req, 200, { skipped: 'kill switch on' })
 
+    // v1352: the background-job worker sends a small { limit, budgetMs } so one call stays within the edge
+    // runtime's CPU limit (HTTP 546 otherwise). Without them the original batch / budget apply.
+    const batch = clampInt(body?.limit, 1, BATCH, BATCH)
+    const budgetMs = clampInt(body?.budgetMs, 2_000, TIME_BUDGET_MS, TIME_BUDGET_MS)
     const started = Date.now()
     const result: Record<string, { stored: number; changed: number; failed: number }> = {}
     for (const schema of ['public', 'sim']) {
       const counts = { stored: 0, changed: 0, failed: 0 }
       result[schema] = counts
-      while (Date.now() - started < TIME_BUDGET_MS) {
-        const { data: rows, error } = await db.rpc('ai_embed_pending', { p_schema: schema, p_limit: BATCH })
+      while (Date.now() - started < budgetMs) {
+        const { data: rows, error } = await db.rpc('ai_embed_pending', { p_schema: schema, p_limit: batch })
         if (error) throw error
         if (!rows?.length) break
         for (const row of rows) {
-          if (Date.now() - started >= TIME_BUDGET_MS) break
+          if (Date.now() - started >= budgetMs) break
           try {
             const vector = toVectorLiteral(await embed(row.embed_text))
             const { data: ok, error: storeError } = await db.rpc('ai_embed_store', {
@@ -65,7 +74,7 @@ serve(async (req) => {
             await db.rpc('ai_embed_failed', { p_schema: schema, p_id: row.id, p_error: String((err as Error)?.message || err) })
           }
         }
-        if (rows.length < BATCH) break
+        if (rows.length < batch) break
       }
     }
     return json(req, 200, { result, ms: Date.now() - started })
