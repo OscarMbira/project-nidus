@@ -25,25 +25,29 @@ BEGIN;
 UPDATE public.background_jobs SET enabled = FALSE;
 UPDATE public.background_job_settings SET alert_hook_function = NULL, late_grace_minutes = 15 WHERE id;
 
-CREATE TEMP TABLE bgtest_hits (job TEXT, ctx JSONB) ON COMMIT DROP;
-CREATE TEMP TABLE bgtest_flag (fail BOOLEAN) ON COMMIT DROP;
-INSERT INTO pg_temp.bgtest_flag VALUES (TRUE);
+-- Test state lives in transaction-local settings (no table is created here: the SQL editor appends an
+-- RLS statement after every created table, which fails once the transaction has rolled back).
+SELECT set_config('bgtest.ok_hits', '0', true),
+       set_config('bgtest.ctx', '', true),
+       set_config('bgtest.fail', 'on', true);
 
 CREATE FUNCTION public.bgtest_ok() RETURNS JSONB LANGUAGE plpgsql AS $$
 BEGIN
-  INSERT INTO pg_temp.bgtest_hits VALUES ('ok', NULL);
+  PERFORM set_config('bgtest.ok_hits', (current_setting('bgtest.ok_hits')::INT + 1)::TEXT, true);
   RETURN jsonb_build_object('processed', 3);
 END $$;
 
 CREATE FUNCTION public.bgtest_ctx(p_context JSONB) RETURNS INTEGER LANGUAGE plpgsql AS $$
 BEGIN
-  INSERT INTO pg_temp.bgtest_hits VALUES ('ctx', p_context);
+  IF current_setting('bgtest.ctx') = '' THEN
+    PERFORM set_config('bgtest.ctx', p_context::TEXT, true);
+  END IF;
   RETURN 1;
 END $$;
 
 CREATE FUNCTION public.bgtest_flaky() RETURNS VOID LANGUAGE plpgsql AS $$
 BEGIN
-  IF (SELECT fail FROM pg_temp.bgtest_flag) THEN RAISE EXCEPTION 'boom from bgtest_flaky'; END IF;
+  IF current_setting('bgtest.fail') = 'on' THEN RAISE EXCEPTION 'boom from bgtest_flaky'; END IF;
 END $$;
 
 SELECT public.background_job_register(p_code => 'test.ok', p_name => 'Test OK', p_kind => 'sql',
@@ -88,7 +92,7 @@ BEGIN
   v_run := (SELECT r FROM public.background_job_runs r WHERE r.job_code = 'test.ok' ORDER BY r.started_at DESC LIMIT 1);
   ASSERT v_run.status = 'succeeded' AND v_run.records_processed = 3 AND v_run.triggered_by = 'schedule', 'T2 run row';
   ASSERT (SELECT last_status FROM public.background_jobs WHERE code = 'test.ok') = 'succeeded', 'T2 job state';
-  ASSERT (SELECT count(*) FROM pg_temp.bgtest_hits WHERE job = 'ok') = 1, 'T2 job ran once';
+  ASSERT current_setting('bgtest.ok_hits')::INT = 1, 'T2 job ran once';
 
   v_res := public.run_due_background_jobs('2026-03-01 10:00+00');
   ASSERT v_res ->> 'note' = 'already ticked', 'T3 same minute not ticked twice';
@@ -106,7 +110,7 @@ BEGIN
   UPDATE public.background_job_settings SET last_tick_at = '2026-03-02 08:59+00' WHERE id;
   v_res := public.run_due_background_jobs('2026-03-02 09:00+00');
   ASSERT v_res -> 'started' ? 'test.org', 'T4 organisation job started (UTC zone): ' || v_res::TEXT;
-  v_ctx := (SELECT ctx FROM pg_temp.bgtest_hits WHERE job = 'ctx' LIMIT 1);
+  v_ctx := NULLIF(current_setting('bgtest.ctx'), '')::JSONB;
   ASSERT v_ctx -> 'time_zones' ? 'UTC', 'T4 context carries the due zones: ' || COALESCE(v_ctx::TEXT, 'null');
   RAISE NOTICE 'PASS T4 organisation time basis';
 END $$;
@@ -148,7 +152,7 @@ BEGIN
   v_job := (SELECT j FROM public.background_jobs j WHERE j.code = 'test.flaky');
   ASSERT v_job.alert_open AND v_job.alert_kind = 'failed' AND v_job.next_retry_at IS NULL, 'T6 alert after retries used up';
 
-  UPDATE pg_temp.bgtest_flag SET fail = FALSE;
+  PERFORM set_config('bgtest.fail', 'off', true);
   v_res := public.run_background_job('test.flaky', 'manual', 'After the fix');
   ASSERT v_res ->> 'status' = 'succeeded', 'T6 succeeds after fix';
   v_job := (SELECT j FROM public.background_jobs j WHERE j.code = 'test.flaky');
