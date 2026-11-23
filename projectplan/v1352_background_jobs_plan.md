@@ -179,7 +179,7 @@ Each job: failing SQL/Vitest test → job → Admin catalogue row → commit-rea
 
 | # | Repo | File | Status |
 |---|---|---|---|
-| 0 | — | Deploy edge function `background-job-worker` (`--no-verify-jwt`), set secret `BACKGROUND_JOB_SECRET`; confirm `expire-drafts` and `admin-moratorium-cron` are deployed | not done |
+| 0 | — | Deploy edge function `background-job-worker` (`--no-verify-jwt`), set secret `BACKGROUND_JOB_SECRET`; confirm `expire-drafts` and `admin-moratorium-cron` are deployed | worker deployed 2026-11-23 ✓ (pg_net enabled, wake → 200, ai.embed runs); `expire-drafts` + `admin-moratorium-cron` were never deployed — owner decision pending |
 | 1 | monorepo | `SQL/v1559_background_jobs_framework.sql` | run 2026-11-23 ✓ |
 | 2 | monorepo | `SQL/v1560_background_jobs_existing_jobs_and_tick.sql` (needs pg_cron + pg_net) | run 2026-11-23 ✓ |
 | 3 | monorepo | `SQL/v1251_planner_table_wall.sql` (re-run, table registration rule 6) | run 2026-11-23 ✓ |
