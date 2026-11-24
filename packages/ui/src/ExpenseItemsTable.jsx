@@ -9,10 +9,11 @@ import { Plus } from 'lucide-react'
 import RowActionButton from './RowActionButton'
 import SmartAmountInput from './SmartAmountInput'
 import SelectField from './SelectField'
+import FieldLabelWithHelp from './FieldLabelWithHelp'
 import { TableRowNumberHeader, TableRowNumberCell } from './Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
-const EMPTY_DRAFT = { description: '', amount: null, category_id: '', notes: '' }
+const EMPTY_DRAFT = { description: '', amount: null, category_id: '', notes: '', is_rechargeable: false }
 
 export default function ExpenseItemsTable({ items = [], onChange, categories = [], readOnly = false, currency = '' }) {
   const [draft, setDraft] = useState(EMPTY_DRAFT)
@@ -27,7 +28,7 @@ export default function ExpenseItemsTable({ items = [], onChange, categories = [
     const description = draft.description.trim()
     const amount = Number(draft.amount)
     if (!description || !(amount > 0)) return
-    onChange([...items, { description, amount, category_id: draft.category_id || null, notes: draft.notes.trim() || null }])
+    onChange([...items, { description, amount, category_id: draft.category_id || null, notes: draft.notes.trim() || null, is_rechargeable: !!draft.is_rechargeable }])
     setDraft(EMPTY_DRAFT)
   }
 
@@ -42,7 +43,7 @@ export default function ExpenseItemsTable({ items = [], onChange, categories = [
     if (!description || !(amount > 0)) return
     const next = items.map((it, i) =>
       i === editingIndex
-        ? { ...it, description, amount, category_id: editDraft.category_id || null, notes: (editDraft.notes || '').trim() || null }
+        ? { ...it, description, amount, category_id: editDraft.category_id || null, notes: (editDraft.notes || '').trim() || null, is_rechargeable: !!editDraft.is_rechargeable }
         : it,
     )
     onChange(next)
@@ -70,6 +71,9 @@ export default function ExpenseItemsTable({ items = [], onChange, categories = [
               </th>
               <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wider">
                 Category
+              </th>
+              <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wider" data-help="exempt">
+                Recharge
               </th>
               <th scope="col" className="px-3 py-3 text-right text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wider">
                 Amount
@@ -107,7 +111,10 @@ export default function ExpenseItemsTable({ items = [], onChange, categories = [
                       <SelectField
                         options={categoryOptions}
                         value={editDraft.category_id || ''}
-                        onChange={(v) => setEditDraft({ ...editDraft, category_id: v })}
+                        onChange={(v) => {
+                          const cat = categories.find((c) => c.id === v)
+                          setEditDraft({ ...editDraft, category_id: v, is_rechargeable: typeof cat?.rechargeable_default === 'boolean' ? cat.rechargeable_default : editDraft.is_rechargeable })
+                        }}
                         placeholder="Category"
                       />
                     </td>
@@ -158,6 +165,7 @@ export default function ExpenseItemsTable({ items = [], onChange, categories = [
                       {item.notes && <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{item.notes}</div>}
                     </td>
                     <td className="px-3 py-3 text-sm text-gray-500 dark:text-gray-400">{categoryLabel(item.category_id)}</td>
+                    <td className="px-3 py-3 text-sm text-gray-700 dark:text-gray-200">{item.is_rechargeable ? 'Yes' : 'No'}</td>
                     <td className="px-3 py-3 text-sm text-right text-gray-900 dark:text-gray-100 tabular-nums">
                       {Number(item.amount).toLocaleString()}
                     </td>
@@ -203,7 +211,10 @@ export default function ExpenseItemsTable({ items = [], onChange, categories = [
             <SelectField
               options={categoryOptions}
               value={draft.category_id || ''}
-              onChange={(v) => setDraft({ ...draft, category_id: v })}
+              onChange={(v) => {
+                const cat = categories.find((c) => c.id === v)
+                setDraft({ ...draft, category_id: v, is_rechargeable: typeof cat?.rechargeable_default === 'boolean' ? cat.rechargeable_default : draft.is_rechargeable })
+              }}
               placeholder="Category"
             />
           </div>
@@ -218,6 +229,10 @@ export default function ExpenseItemsTable({ items = [], onChange, categories = [
             className="flex-1 min-w-[140px] px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             aria-label="New item notes"
           />
+          <div className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
+            <input id="expense-item-recharge" type="checkbox" checked={!!draft.is_rechargeable} onChange={(e) => setDraft({ ...draft, is_rechargeable: e.target.checked })} />
+            <FieldLabelWithHelp helpKey="public.project_expense_claim_items.is_rechargeable" htmlFor="expense-item-recharge">Recharge</FieldLabelWithHelp>
+          </div>
           <button
             type="button"
             onClick={handleAdd}

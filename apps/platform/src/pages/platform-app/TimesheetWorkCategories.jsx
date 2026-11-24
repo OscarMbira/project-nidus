@@ -29,6 +29,7 @@ const DEFAULT_FORM = {
   description: '',
   sort_order: 0,
   is_active: true,
+  billable_default: '',
 };
 
 function TimesheetWorkCategoriesBody() {
@@ -85,6 +86,7 @@ function TimesheetWorkCategoriesBody() {
       description: category.description || '',
       sort_order: category.sort_order ?? 0,
       is_active: category.is_active !== undefined ? category.is_active : true,
+      billable_default: category.billable_default === true ? 'yes' : category.billable_default === false ? 'no' : '',
     });
     setShowForm(true);
   }, []);
@@ -277,6 +279,16 @@ function TimesheetWorkCategoriesBody() {
                   </FieldLabelWithHelp>
                 </div>
               </div>
+              <div>
+                <FieldLabelWithHelp helpKey="public.timesheet_work_categories.billable_default" htmlFor="billable_default" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Billable by default
+                </FieldLabelWithHelp>
+                <select id="billable_default" value={formData.billable_default} onChange={(e) => handleFormChange('billable_default', e.target.value)} className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                  <option value="">Use the project setting</option>
+                  <option value="yes">Billable</option>
+                  <option value="no">Not billable</option>
+                </select>
+              </div>
 
               <div className="flex items-center gap-3 pt-4">
                 <button
@@ -375,7 +387,7 @@ function TimesheetWorkCategoriesBody() {
 // v1345 slice 4: field help for this component (public.timesheet_work_categories.<column>). It carries its own scope,
 // so every page that renders it shows the help.
 const HELP_KEYS = [
-  'code', 'name', 'description', 'sort_order', 'is_active',
+  'code', 'name', 'description', 'sort_order', 'is_active', 'billable_default',
 ].map((name) => `public.timesheet_work_categories.${name}`)
 
 export default function TimesheetWorkCategories(props) {

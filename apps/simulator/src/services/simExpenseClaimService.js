@@ -34,6 +34,7 @@ export async function saveSimDraft(payload) {
     description: payload.description || null,
     notes: payload.notes || null,
     claim_status: 'draft',
+    is_rechargeable: !!payload.is_rechargeable,
   }
   let claim
   if (payload.id) {
@@ -59,6 +60,7 @@ export async function saveSimExpenseClaimItems(claimId, items) {
     amount: Number(it.amount),
     category_id: it.category_id || null,
     notes: it.notes || null,
+    is_rechargeable: !!it.is_rechargeable,
     display_order: index,
   }))
   const { data, error } = await simDb.from('project_expense_claim_items').insert(rows).select()

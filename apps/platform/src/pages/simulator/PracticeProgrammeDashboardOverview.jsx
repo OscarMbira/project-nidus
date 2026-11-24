@@ -8,6 +8,8 @@ import { useState, useEffect, useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { BarChart3, Layers, Target, TrendingUp, CheckCircle, Activity, GitBranch, DollarSign } from 'lucide-react'
 import DashboardStatCard from '@nidus/ui/DashboardStatCard'
+import QraRollupPanel from '@nidus/planning/screens/qra/QraRollupPanel.jsx'
+import { simDb } from '../../services/supabase/supabaseClient'
 import { getPracticeProgrammesForDashboard } from '../../services/sim/practicePortfolioService'
 
 export default function PracticeProgrammeDashboardOverview() {
@@ -104,6 +106,16 @@ export default function PracticeProgrammeDashboardOverview() {
           <DashboardStatCard label="Avg. Health Score" value={`${Math.round(metrics.avgHealthPct)}%`} description="Programme health" icon={Activity} iconClassName="text-amber-400" />
           <DashboardStatCard label="Budget (Allocated)" value={metrics.totalBudget > 0 ? `${Number(metrics.totalSpent).toLocaleString()} / ${Number(metrics.totalBudget).toLocaleString()}` : '0'} description={metrics.totalBudget > 0 ? 'Allocated vs total budget' : 'No budget data'} icon={DollarSign} iconClassName="text-gray-300" />
         </div>
+
+        <QraRollupPanel
+          db={simDb}
+          linkTable="practice_programme_projects"
+          parentColumn="practice_programme_id"
+          projectColumn="practice_project_id"
+          projectTable="practice_projects"
+          parentIds={rollups.map((row) => row.id)}
+          analysisPath={(row) => `/simulator/risk-analysis?projectId=${encodeURIComponent(row.project_code || row.project_id)}`}
+        />
 
         {rollups.length === 0 ? (
           <div className="bg-gray-800 rounded-lg border border-gray-700 p-8 text-center">

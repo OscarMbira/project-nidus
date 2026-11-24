@@ -24,6 +24,8 @@ import SimilarRiskPanel from './SimilarRiskPanel'
 import { addRiskCategory, addRiskSubcategory, findSimilarRisks, getRiskCatalogueAccess, listRiskCatalogue } from '../../services/riskCategoryCatalogService'
 import { similarCatalogueNames } from '@nidus/shared/utils/riskCategoryMatch'
 import RegionalDateInput from '@nidus/ui/RegionalDateInput'
+import QuantifiedRiskFields from '@nidus/planning/screens/qra/QuantifiedRiskFields.jsx'
+import { quantifiedProblem } from '@nidus/planning/engine/qra/riskExposure.js'
 
 function EnhancedRiskFormBody({ risk, projectId, riskRegisterId, onSave, onCancel, variant: variantProp, accountId: accountIdProp = null }) {
   const location = useLocation()
@@ -53,6 +55,25 @@ function EnhancedRiskFormBody({ risk, projectId, riskRegisterId, onSave, onCance
     pre_impact_rationale: '',
     pre_cost_impact: '',
     pre_schedule_impact_days: '',
+    pre_probability_percent: '',
+    pre_cost_min: '',
+    pre_cost_ml: '',
+    pre_cost_max: '',
+    pre_schedule_days_min: '',
+    pre_schedule_days_ml: '',
+    pre_schedule_days_max: '',
+    post_probability: 3,
+    post_probability_percent: '',
+    post_cost_impact: '',
+    post_cost_min: '',
+    post_cost_ml: '',
+    post_cost_max: '',
+    post_schedule_impact_days: '',
+    post_schedule_days_min: '',
+    post_schedule_days_ml: '',
+    post_schedule_days_max: '',
+    impact_distribution: 'triangular',
+    qra_group_id: '',
     
     // Step 3: Proximity & Response
     proximity: 'within_project',
@@ -130,6 +151,25 @@ function EnhancedRiskFormBody({ risk, projectId, riskRegisterId, onSave, onCance
         pre_impact_rationale: risk.pre_impact_rationale || '',
         pre_cost_impact: risk.pre_cost_impact?.toString() || '',
         pre_schedule_impact_days: risk.pre_schedule_impact_days?.toString() || '',
+        pre_probability_percent: risk.pre_probability_percent ?? '',
+        pre_cost_min: risk.pre_cost_min ?? '',
+        pre_cost_ml: risk.pre_cost_ml ?? risk.pre_cost_impact ?? '',
+        pre_cost_max: risk.pre_cost_max ?? '',
+        pre_schedule_days_min: risk.pre_schedule_days_min ?? '',
+        pre_schedule_days_ml: risk.pre_schedule_days_ml ?? risk.pre_schedule_impact_days ?? '',
+        pre_schedule_days_max: risk.pre_schedule_days_max ?? '',
+        post_probability: risk.post_probability || 3,
+        post_probability_percent: risk.post_probability_percent ?? '',
+        post_cost_impact: risk.post_cost_impact?.toString() || '',
+        post_cost_min: risk.post_cost_min ?? '',
+        post_cost_ml: risk.post_cost_ml ?? risk.post_cost_impact ?? '',
+        post_cost_max: risk.post_cost_max ?? '',
+        post_schedule_impact_days: risk.post_schedule_impact_days?.toString() || '',
+        post_schedule_days_min: risk.post_schedule_days_min ?? '',
+        post_schedule_days_ml: risk.post_schedule_days_ml ?? risk.post_schedule_impact_days ?? '',
+        post_schedule_days_max: risk.post_schedule_days_max ?? '',
+        impact_distribution: risk.impact_distribution || 'triangular',
+        qra_group_id: risk.qra_group_id || '',
         proximity: risk.proximity || 'within_project',
         proximity_date: risk.proximity_date ? risk.proximity_date.split('T')[0] : '',
         proximity_notes: risk.proximity_notes || '',
@@ -351,6 +391,10 @@ function EnhancedRiskFormBody({ risk, projectId, riskRegisterId, onSave, onCance
       if (!formData.pre_impact || formData.pre_impact < 1 || formData.pre_impact > 5) {
         newErrors.pre_impact = 'Impact must be between 1 and 5'
       }
+      const preRange = quantifiedProblem(formData, { percentKey: 'pre_probability_percent', minKey: 'pre_cost_min', mlKey: 'pre_cost_ml', maxKey: 'pre_cost_max' })
+      const preDays = quantifiedProblem(formData, { percentKey: 'pre_probability_percent', minKey: 'pre_schedule_days_min', mlKey: 'pre_schedule_days_ml', maxKey: 'pre_schedule_days_max' })
+      if (preRange) newErrors.pre_cost_ml = preRange
+      if (preDays) newErrors.pre_schedule_days_ml = preDays
     }
     
     if (step === 3) {
@@ -367,6 +411,10 @@ function EnhancedRiskFormBody({ risk, projectId, riskRegisterId, onSave, onCance
       if (formData.risk_type === 'opportunity' && !opportunityResponses.includes(formData.response_category)) {
         newErrors.response_category = 'Response category must be appropriate for opportunities'
       }
+      const postRange = quantifiedProblem(formData, { percentKey: 'post_probability_percent', minKey: 'post_cost_min', mlKey: 'post_cost_ml', maxKey: 'post_cost_max' })
+      const postDays = quantifiedProblem(formData, { percentKey: 'post_probability_percent', minKey: 'post_schedule_days_min', mlKey: 'post_schedule_days_ml', maxKey: 'post_schedule_days_max' })
+      if (postRange) newErrors.post_cost_ml = postRange
+      if (postDays) newErrors.post_schedule_days_ml = postDays
     }
     
     if (step === 4) {
@@ -415,8 +463,27 @@ function EnhancedRiskFormBody({ risk, projectId, riskRegisterId, onSave, onCance
         ...formData,
         risk_register_id: riskRegisterId,
         project_id: projectId,
-        pre_cost_impact: formData.pre_cost_impact ? parseFloat(formData.pre_cost_impact) : null,
-        pre_schedule_impact_days: formData.pre_schedule_impact_days ? parseInt(formData.pre_schedule_impact_days) : null,
+        pre_cost_impact: formData.pre_cost_ml !== '' && formData.pre_cost_ml != null ? Number(formData.pre_cost_ml) : (formData.pre_cost_impact ? parseFloat(formData.pre_cost_impact) : null),
+        pre_schedule_impact_days: formData.pre_schedule_days_ml !== '' && formData.pre_schedule_days_ml != null ? Math.round(Number(formData.pre_schedule_days_ml)) : (formData.pre_schedule_impact_days ? parseInt(formData.pre_schedule_impact_days) : null),
+        pre_probability_percent: formData.pre_probability_percent === '' ? null : Number(formData.pre_probability_percent),
+        pre_cost_min: blankNumber(formData.pre_cost_min),
+        pre_cost_ml: blankNumber(formData.pre_cost_ml),
+        pre_cost_max: blankNumber(formData.pre_cost_max),
+        pre_schedule_days_min: blankNumber(formData.pre_schedule_days_min),
+        pre_schedule_days_ml: blankNumber(formData.pre_schedule_days_ml),
+        pre_schedule_days_max: blankNumber(formData.pre_schedule_days_max),
+        post_probability: formData.post_probability || null,
+        post_probability_percent: formData.post_probability_percent === '' ? null : Number(formData.post_probability_percent),
+        post_cost_impact: blankNumber(formData.post_cost_ml ?? formData.post_cost_impact),
+        post_schedule_impact_days: formData.post_schedule_days_ml === '' || formData.post_schedule_days_ml == null ? null : Math.round(Number(formData.post_schedule_days_ml)),
+        post_cost_min: blankNumber(formData.post_cost_min),
+        post_cost_ml: blankNumber(formData.post_cost_ml),
+        post_cost_max: blankNumber(formData.post_cost_max),
+        post_schedule_days_min: blankNumber(formData.post_schedule_days_min),
+        post_schedule_days_ml: blankNumber(formData.post_schedule_days_ml),
+        post_schedule_days_max: blankNumber(formData.post_schedule_days_max),
+        impact_distribution: formData.impact_distribution || 'triangular',
+        qra_group_id: formData.qra_group_id || null,
         proximity_date: formData.proximity_date || null,
         related_product_id: formData.related_product_id || null,
         escalated_from_issue_id: formData.escalated_from_issue_id || null,
@@ -795,35 +862,9 @@ function EnhancedRiskFormBody({ risk, projectId, riskRegisterId, onSave, onCance
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <FieldLabelWithHelp helpKey="public.risks.pre_cost_impact" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" isAmount>
-                  Estimated Cost Impact ($)
-                </FieldLabelWithHelp>
-                <input
-                  type="number"
-                  value={formData.pre_cost_impact}
-                  onChange={(e) => handleChange('pre_cost_impact', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  placeholder="0.00"
-                  step="0.01"
-                  min="0"
-                />
-              </div>
-              <div>
-                <FieldLabelWithHelp helpKey="public.risks.pre_schedule_impact_days" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Estimated Schedule Impact (Days)
-                </FieldLabelWithHelp>
-                <input
-                  type="number"
-                  value={formData.pre_schedule_impact_days}
-                  onChange={(e) => handleChange('pre_schedule_impact_days', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  placeholder="0"
-                  min="0"
-                />
-              </div>
-            </div>
+            <QuantifiedRiskFields prefix="pre" values={formData} onChange={handleChange} helpTable="public.risks" projectId={projectId} db={platformDb} />
+            {errors.pre_cost_ml && <p className="text-sm text-red-600">{errors.pre_cost_ml}</p>}
+            {errors.pre_schedule_days_ml && <p className="text-sm text-red-600">{errors.pre_schedule_days_ml}</p>}
           </div>
         )
 
@@ -956,6 +997,12 @@ function EnhancedRiskFormBody({ risk, projectId, riskRegisterId, onSave, onCance
                 </div>
               </>
             )}
+            <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+              <h4 className="text-base font-semibold text-gray-900 dark:text-white mb-3">After the response</h4>
+              <QuantifiedRiskFields prefix="post" values={formData} onChange={handleChange} helpTable="public.risks" showShape={false} />
+              {errors.post_cost_ml && <p className="text-sm text-red-600 mt-2">{errors.post_cost_ml}</p>}
+              {errors.post_schedule_days_ml && <p className="text-sm text-red-600">{errors.post_schedule_days_ml}</p>}
+            </div>
           </div>
         )
 
@@ -1259,7 +1306,18 @@ const HELP_KEYS = [
   'pre_cost_impact', 'pre_schedule_impact_days', 'proximity', 'proximity_date', 'proximity_notes',
   'response_category', 'response_strategy', 'contingency_plan', 'trigger_conditions', 'date_registered',
   'risk_author_id', 'risk_owner_id', 'risk_actionee_id',
+  'pre_probability_percent', 'post_probability_percent',
+  'pre_cost_min', 'pre_cost_ml', 'pre_cost_max', 'post_cost_min', 'post_cost_ml', 'post_cost_max',
+  'pre_schedule_days_min', 'pre_schedule_days_ml', 'pre_schedule_days_max',
+  'post_schedule_days_min', 'post_schedule_days_ml', 'post_schedule_days_max',
+  'impact_distribution', 'qra_group_id',
 ].map((name) => `public.risks.${name}`)
+
+function blankNumber(value) {
+  if (value == null || value === '') return null
+  const n = Number(value)
+  return Number.isFinite(n) ? n : null
+}
 
 export default function EnhancedRiskForm(props) {
   return (

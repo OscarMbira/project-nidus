@@ -23,7 +23,7 @@ export function createTimeData(isSim) {
   async function listMyEntries(projectId, authId, from = null, to = null) {
     let q = db
       .from('timesheet_entries')
-      .select('id, task_id, entry_date, hours_worked, status, description')
+      .select('id, task_id, entry_date, hours_worked, status, description, is_billable')
       .eq('project_id', projectId)
       .eq('user_id', authId)
       .eq('is_deleted', false)
@@ -47,9 +47,9 @@ export function createTimeData(isSim) {
       if (c.entry && hours === 0) {
         ops.push(db.from('timesheet_entries').update({ is_deleted: true }).eq('id', c.entry.id).eq('status', 'draft'))
       } else if (c.entry) {
-        ops.push(db.from('timesheet_entries').update({ hours_worked: hours, updated_at: new Date().toISOString() }).eq('id', c.entry.id).eq('status', 'draft'))
+        ops.push(db.from('timesheet_entries').update({ hours_worked: hours, is_billable: c.billable !== false, updated_at: new Date().toISOString() }).eq('id', c.entry.id).eq('status', 'draft'))
       } else if (hours > 0) {
-        ops.push(db.from('timesheet_entries').insert({ project_id: projectId, user_id: authId, task_id: c.taskId, entry_date: c.date, hours_worked: hours, status: 'draft' }))
+        ops.push(db.from('timesheet_entries').insert({ project_id: projectId, user_id: authId, task_id: c.taskId, entry_date: c.date, hours_worked: hours, status: 'draft', is_billable: c.billable !== false }))
       }
     }
     const results = await Promise.all(ops)

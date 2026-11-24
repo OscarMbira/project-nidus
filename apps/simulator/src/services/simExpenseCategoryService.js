@@ -30,6 +30,7 @@ export async function createSimExpenseCategory(payload) {
       category_name: payload.category_name,
       category_description: payload.category_description || null,
       is_active: payload.is_active !== undefined ? payload.is_active : true,
+      rechargeable_default: payload.rechargeable_default === 'yes' || payload.rechargeable_default === true ? true : payload.rechargeable_default === 'no' || payload.rechargeable_default === false ? false : null,
       created_by: userId,
       updated_by: userId,
     }
@@ -50,6 +51,7 @@ export async function updateSimExpenseCategory(categoryId, payload) {
       category_name: payload.category_name,
       category_description: payload.category_description || null,
       is_active: payload.is_active !== undefined ? payload.is_active : true,
+      rechargeable_default: payload.rechargeable_default === 'yes' || payload.rechargeable_default === true ? true : payload.rechargeable_default === 'no' || payload.rechargeable_default === false ? false : null,
       updated_by: userId,
     }
     const { data, error } = await simDb

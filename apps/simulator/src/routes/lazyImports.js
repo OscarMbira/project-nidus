@@ -109,6 +109,7 @@ export const TimesheetReviewReasons = lazy(() => import('../pages/platform-app/T
 export const TimesheetWorkCategories = lazy(() => import('../pages/platform-app/TimesheetWorkCategories'))
 export const TimesheetOvertimeTypes = lazy(() => import('../pages/platform-app/TimesheetOvertimeTypes'))
 export const TimesheetSettings = lazy(() => import('../pages/pmo-admin/TimesheetSettings'))
+export const ReminderLeadTimes = lazy(() => import('../pages/pmo-admin/ReminderLeadTimes')) // v1352 Slice 1 (D7)
 export const ProjectTimesheetSettings = lazy(() => import('../pages/projectSetup/ProjectTimesheetSettings'))
 export const TimesheetOverviewReport = lazy(() => import('../pages/platform-app/TimesheetOverviewReport'))
 export const SimAppointmentDashboard = lazy(() => import('../pages/sim/pmo/SimAppointmentDashboard'))
@@ -352,6 +353,7 @@ export const SimWBSBuilderPage = lazy(() => import('../pages/simulator/scope/WBS
 export const SimScheduleManagementPlanPage = lazy(() => import('../pages/simulator/schedule/ScheduleManagementPlan'))
 // v1239 Slice 3 — shared schedule screens on tasks (@nidus/planning, sim mode).
 export const ScheduleRoutes = lazy(() => import('@nidus/planning/routes/ScheduleRoutes.jsx'))
+export const QraRoutes = lazy(() => import('@nidus/planning/routes/QraRoutes.jsx'))
 export const SimActivityDetailPage = lazy(() => import('../pages/simulator/schedule/ActivityDetail'))
 // Practice Projects
 export const PracticeProjects = lazy(() => import('../pages/simulator/PracticeProjects'))
@@ -411,6 +413,7 @@ export const PracticeDailyLogEntry = lazy(() => import('../pages/simulator/Pract
 // Practice Risk Register
 export const PracticeRiskRegister = lazy(() => import('../pages/simulator/PracticeRiskRegister'))
 export const PracticeRiskDetail = lazy(() => import('../pages/simulator/PracticeRiskDetail'))
+export const PracticeRiskForm = lazy(() => import('../pages/simulator/PracticeRiskForm'))
 // Practice RMS
 export const PracticeRMSList = lazy(() => import('../pages/simulator/PracticeRMSList'))
 export const PracticeRMSCreate = lazy(() => import('../pages/simulator/PracticeRMSCreate'))

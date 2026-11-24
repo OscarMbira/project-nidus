@@ -20,6 +20,7 @@ const DEFAULT_SECTIONS = [
   { section_key: 'milestones', section_label: 'Milestones' },
   { section_key: 'risks_issues', section_label: 'Risks & Issues' },
   { section_key: 'documents', section_label: 'Documents' },
+  { section_key: 'invoices', section_label: 'Invoices' },
 ]
 
 export default function ClientPortalDetailPage({ sim = false }) {
@@ -67,6 +68,9 @@ export default function ClientPortalDetailPage({ sim = false }) {
       <div className="flex items-start justify-between gap-3">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{portal.portal_name}</h1>
         <div className="flex items-center gap-2">
+          <button type="button" onClick={() => navigate(`/platform/billing/portal?projectId=${portal.project_id}`)} className="inline-flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 rounded-lg text-sm font-medium">
+            Invoices
+          </button>
           <button type="button" onClick={() => navigate('guests')} className="inline-flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 rounded-lg text-sm font-medium">
             <Users className="h-4 w-4" />
             Guests

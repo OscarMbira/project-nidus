@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
@@ -18,6 +18,7 @@ import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken } from '@nidus/shared/utils/auditDisplayUtils'
 import { looksLikeProjectUuid } from '@nidus/shared/utils/projectRouteParam'
+import { billableDefault } from '@nidus/planning/engine/billing.js'
 import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 
 const EMPTY = {
@@ -30,6 +31,7 @@ const EMPTY = {
   work_location: 'onsite',
   overtime_type_code: '',
   status: 'draft',
+  is_billable: true,
 }
 
 function parseHours(raw) {
@@ -107,6 +109,7 @@ function TimesheetEntryFormBody() {
   const projectId = searchParams.get('projectId')
   const navigate = useNavigate()
   const isEdit = Boolean(id)
+  const billableTouched = useRef(false)
 
   const [form, setForm] = useState(EMPTY)
   const [saving, setSaving] = useState(false)
@@ -213,6 +216,21 @@ function TimesheetEntryFormBody() {
   }, [projectId])
 
   useEffect(() => {
+    if (isEdit || billableTouched.current || !projectUuid) return
+    let cancel = false
+    ;(async () => {
+      const [{ data: settings }, { data: project }] = await Promise.all([
+        platformDb.from('project_billing_settings').select('billable_default').eq('project_id', projectUuid).maybeSingle(),
+        platformDb.from('projects').select('billing_type').eq('id', projectUuid).maybeSingle(),
+      ])
+      const cat = categories.find((c) => c.code === form.work_category)
+      const next = billableDefault({ billingType: project?.billing_type, categoryDefault: cat?.billable_default, projectDefault: settings?.billable_default })
+      if (!cancel) setForm((f) => ({ ...f, is_billable: next }))
+    })().catch(() => {})
+    return () => { cancel = true }
+  }, [isEdit, projectUuid, form.work_category, categories])
+
+  useEffect(() => {
     if (!isEdit) return
     ;(async () => {
       setLoading(true)
@@ -223,6 +241,7 @@ function TimesheetEntryFormBody() {
         setForm({
           entry_date: data.entry_date || '',
           hours_worked: String(data.hours_worked || ''),
+          is_billable: data.is_billable !== false,
           start_time: data.start_time ? data.start_time.slice(0, 5) : '',
           end_time: data.end_time ? data.end_time.slice(0, 5) : '',
           work_category: data.work_category || 'general',
@@ -285,6 +304,7 @@ function TimesheetEntryFormBody() {
         task_id: null,
         description: form.activity.trim() || null,
         work_location: form.work_location || null,
+        is_billable: !!form.is_billable,
         status: submitAfter ? 'submitted' : 'draft',
       }
       if (record?.is_overtime) payload.overtime_type_code = form.overtime_type_code || null
@@ -437,6 +457,10 @@ function TimesheetEntryFormBody() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
+              <div className="flex items-center gap-2 text-sm mb-2">
+                <input id="ts-billable" type="checkbox" checked={form.is_billable !== false} onChange={(e) => { billableTouched.current = true; setForm((f) => ({ ...f, is_billable: e.target.checked })) }} />
+                <FieldLabelWithHelp helpKey="public.timesheet_entries.is_billable" htmlFor="ts-billable">Billable</FieldLabelWithHelp>
+              </div>
               <FieldLabelWithHelp helpKey="public.timesheet_entries.work_category" className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Work Category</FieldLabelWithHelp>
               <select name="work_category" value={form.work_category} onChange={handleChange}
                 className="w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2.5 text-sm text-gray-900 dark:text-slate-100 focus:border-blue-500 focus:outline-none">
@@ -516,7 +540,7 @@ function TimesheetEntryFormBody() {
 // v1345 slice 4: field help for this component (public.timesheet_entries.<column>). It carries its own scope,
 // so every page that renders it shows the help.
 const HELP_KEYS = [
-  'entry_date', 'hours_worked', 'start_time', 'end_time', 'work_category', 'work_location',
+  'entry_date', 'hours_worked', 'is_billable', 'start_time', 'end_time', 'work_category', 'work_location',
   'overtime_type_code', 'activity', 'status',
 ].map((name) => `public.timesheet_entries.${name}`)
 

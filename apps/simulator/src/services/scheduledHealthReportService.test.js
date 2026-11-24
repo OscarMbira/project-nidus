@@ -2,11 +2,13 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { listSchedules, createSchedule, deleteSchedule, runScheduleNow } from './scheduledHealthReportService'
 
 const mockFrom = vi.fn()
+const mockRpc = vi.fn()
 const mockGetUser = vi.fn(() => Promise.resolve({ data: { user: { id: 'u1' } } }))
 
 vi.mock('./supabaseClient', () => ({
   simDb: {
     from: (...args) => mockFrom(...args),
+    rpc: (...args) => mockRpc(...args),
     auth: { getUser: (...args) => mockGetUser(...args) },
   },
 }))
@@ -50,11 +52,16 @@ describe('scheduledHealthReportService (simulator)', () => {
     expect(builder.update).toHaveBeenCalledWith({ is_deleted: true })
   })
 
-  it('runScheduleNow fetches the schedule then inserts a completed run', async () => {
-    const scheduleBuilder = makeBuilder({ data: { id: 's1', schedule_name: 'Weekly Health' }, error: null })
-    const runBuilder = makeBuilder({ data: { id: 'r1', run_status: 'completed' }, error: null })
-    mockFrom.mockImplementationOnce(() => scheduleBuilder).mockImplementationOnce(() => runBuilder)
+  it('runScheduleNow queues a real run through the background job RPC (v1352)', async () => {
+    mockRpc.mockResolvedValueOnce({ data: { id: 'r1', run_status: 'pending' }, error: null })
     const run = await runScheduleNow('s1')
-    expect(run.id).toBe('r1')
+    expect(mockRpc).toHaveBeenCalledWith('scheduled_health_report_run_now', { p_schedule_id: 's1' })
+    expect(mockFrom).not.toHaveBeenCalled()
+    expect(run).toEqual({ id: 'r1', run_status: 'pending' })
+  })
+
+  it('runScheduleNow surfaces an RPC error (no placeholder run)', async () => {
+    mockRpc.mockResolvedValueOnce({ data: null, error: new Error('You do not have access to this project') })
+    await expect(runScheduleNow('s1')).rejects.toThrow(/access/)
   })
 })

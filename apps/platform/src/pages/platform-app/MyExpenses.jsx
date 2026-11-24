@@ -24,6 +24,7 @@ const EMPTY_FORM = {
   notes: '',
   expense_date: new Date().toISOString().slice(0, 10),
   itemize: false,
+  is_rechargeable: false,
   items: [],
 }
 
@@ -131,7 +132,7 @@ function MyExpensesBody() {
         setForm((f) => ({
           ...f,
           itemize: true,
-          items: items.map((it) => ({ description: it.description, amount: Number(it.amount), category_id: it.category_id, notes: it.notes })),
+          items: items.map((it) => ({ description: it.description, amount: Number(it.amount), category_id: it.category_id, notes: it.notes, is_rechargeable: !!it.is_rechargeable })),
         }))
       }
     } catch {
@@ -239,6 +240,10 @@ function MyExpensesBody() {
               className="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500"
             />
             <FieldLabelWithHelp helpKey="public.project_expense_claims.is_itemized" htmlFor="expense-itemize" className="text-sm font-medium text-gray-700 dark:text-gray-300">Itemize this expense</FieldLabelWithHelp>
+          </div>
+          <div className="flex items-center gap-2">
+            <input type="checkbox" id="expense-recharge" checked={!!form.is_rechargeable} onChange={(e) => setForm({ ...form, is_rechargeable: e.target.checked })} className="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500" />
+            <FieldLabelWithHelp helpKey="public.project_expense_claims.is_rechargeable" htmlFor="expense-recharge" className="text-sm font-medium text-gray-700 dark:text-gray-300">Recharge to the client</FieldLabelWithHelp>
           </div>
           {form.itemize ? (
             <div className="space-y-2">
@@ -385,7 +390,7 @@ function MyExpensesBody() {
 // v1345 slice 4: field help for this component (public.project_expense_claims.<column>). It carries its own scope,
 // so every page that renders it shows the help.
 const HELP_KEYS = [
-  'project_id', 'expense_date', 'is_itemized', 'amount', 'description', 'notes',
+  'project_id', 'expense_date', 'is_itemized', 'is_rechargeable', 'amount', 'description', 'notes',
 ].map((name) => `public.project_expense_claims.${name}`)
 
 export default function MyExpenses(props) {

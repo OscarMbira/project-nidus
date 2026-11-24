@@ -53,6 +53,7 @@ export async function saveDraft(payload) {
     vendor_name: payload.vendor_name || null,
     claim_status: 'draft',
     is_reimbursable: payload.is_reimbursable !== false,
+    is_rechargeable: !!payload.is_rechargeable,
   }
   let claim
   if (payload.id) {
@@ -78,6 +79,7 @@ export async function saveExpenseClaimItems(claimId, items) {
     amount: Number(it.amount),
     category_id: it.category_id || null,
     notes: it.notes || null,
+    is_rechargeable: !!it.is_rechargeable,
     display_order: index,
   }))
   const { data, error } = await platformDb.from('project_expense_claim_items').insert(rows).select()

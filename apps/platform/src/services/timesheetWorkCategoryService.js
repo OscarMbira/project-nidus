@@ -47,6 +47,7 @@ export async function createWorkCategory(categoryData) {
       description: categoryData.description || null,
       sort_order: categoryData.sort_order || 0,
       is_active: categoryData.is_active !== undefined ? categoryData.is_active : true,
+      billable_default: categoryData.billable_default === 'yes' || categoryData.billable_default === true ? true : categoryData.billable_default === 'no' || categoryData.billable_default === false ? false : null,
     };
 
     const { data, error } = await platformDb
@@ -71,6 +72,7 @@ export async function updateWorkCategory(categoryId, categoryData) {
       description: categoryData.description || null,
       sort_order: categoryData.sort_order || 0,
       is_active: categoryData.is_active !== undefined ? categoryData.is_active : true,
+      billable_default: categoryData.billable_default === 'yes' || categoryData.billable_default === true ? true : categoryData.billable_default === 'no' || categoryData.billable_default === false ? false : null,
     };
 
     const { data, error } = await platformDb

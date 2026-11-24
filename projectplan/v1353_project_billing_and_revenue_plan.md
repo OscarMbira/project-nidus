@@ -53,52 +53,52 @@ Admin (separate repo): `admin.id_generation_rules` seeds for `public|sim.clients
 ## Slice 1 — Foundations (clients, rate cards, tax codes, Finance role)
 
 Tests first: rate resolution vectors; tax rounding; client form validation; RLS (Finance / PMO / PM / team).
-- [ ] SQL: `clients`, `client_contacts`, `rate_cards`, `rate_card_lines`, `tax_codes`, `project_billing_settings`
+- [x] SQL: `clients`, `client_contacts`, `rate_cards`, `rate_card_lines`, `tax_codes`, `project_billing_settings`
       (public + sim), registry, display-ID triggers, Planner wall re-run; Finance / Billing role + `role_menu_items`;
       companion seed (rule 18.2: “Example …” clients, blank references).
-- [ ] Admin SQL: ID generation rules for the new reference columns.
-- [ ] Pages (routed, rule 65; Audit tab 63.1; field help 76; success modal 16; draft/hold 37; exports 38):
+- [x] Admin SQL: ID generation rules for the new reference columns.
+- [x] Pages (routed, rule 65; Audit tab 63.1; field help 76; success modal 16; draft/hold 37; exports 38):
       Clients list + create / view / edit, contacts; Rate cards; Tax codes; Project › Billing settings tab.
-- [ ] Bulk upload with legend (rules 26 / 71): clients, rate card lines.
-- [ ] Menus (rule 75): catalogue + placements (Finance section; PM Project Settings); taxonomy + placement docs (70).
-- [ ] Simulator twins (practice data) and Planner pages for the same set.
-- [ ] Field help seeds (public + sim aliases); guide started.
-- [ ] Exit: builds, tests, commit; owner SQL + browser check.
+- [x] Bulk upload with legend (rules 26 / 71): clients, rate card lines.
+- [x] Menus (rule 75): catalogue + placements (Finance section; PM Project Settings); taxonomy + placement docs (70).
+- [x] Simulator twins (practice data) and Planner pages for the same set.
+- [x] Field help seeds (public + sim aliases); guide started.
+- [x] Exit: builds, tests, commit; owner SQL + browser check. (Owner applied the SQL. Platform billing pages checked in the browser.)
 
 ## Slice 2 — Time & materials invoicing (billable time, expenses, invoice lifecycle)
 
 Tests first: billable defaults; draft pre-fill picks only approved + billable + not-invoiced; mark-up; lock and
 double-billing triggers; issue / pay / credit flows; Overdue.
-- [ ] SQL: billable / rechargeable columns + defaults; `client_invoices` (+ lines), credit notes, payments, sends;
+- [x] SQL: billable / rechargeable columns + defaults; `client_invoices` (+ lines), credit notes, payments, sends;
       triggers and RPCs above; tax by code.
-- [ ] Timesheet and expense screens: billable / rechargeable toggles (all three products for timesheets).
-- [ ] Invoice pages: draft from project + period, edit lines (manual lines too), submit for approval (rule 53),
+- [x] Timesheet and expense screens: billable / rechargeable toggles (all three products for timesheets).
+- [x] Invoice pages: draft from project + period, edit lines (manual lines too), submit for approval (rule 53),
       issue, record payment, credit note; list with filters (status, client, overdue); dashboard cards (rule 64).
-- [ ] Invoice document (D15): branded layout on the export engine (PDF / Word / Excel); document text settings.
-- [ ] Email send (D16) via the existing send-email function, logged; manual reminder and recurring buttons (D17).
-- [ ] Jobs (D17 amended, rule 80): register `billing.overdue_reminders` (daily, organisation time; marker so each
+- [x] Invoice document (D15): branded layout on the export engine (PDF / Word / Excel); document text settings.
+- [x] Email send (D16) via the existing send-email function, logged; manual reminder and recurring buttons (D17).
+- [x] Jobs (D17 amended, rule 80): register `billing.overdue_reminders` (daily, organisation time; marker so each
       reminder step is sent once) in the v1352 catalogue with its handler and tests.
-- [ ] Simulator + Planner parity; field help; tests.
-- [ ] Exit as slice 1.
+- [x] Simulator + Planner parity; field help; tests.
+- [x] Exit as slice 1.
 
 ## Slice 3 — Billing schedules (fixed price, recurring)
 
-- [ ] SQL: `billing_schedule_lines`; due rules (milestone complete / date / recurring frequency).
-- [ ] Project › Billing schedule page; due lines appear on draft invoices; % of contract value.
-- [ ] Jobs (D17 amended, rule 80): `billing.schedule_due` (daily for dated lines; milestone-complete trigger calls
+- [x] SQL: `billing_schedule_lines`; due rules (milestone complete / date / recurring frequency).
+- [x] Project › Billing schedule page; due lines appear on draft invoices; % of contract value.
+- [x] Jobs (D17 amended, rule 80): `billing.schedule_due` (daily for dated lines; milestone-complete trigger calls
       `enqueue_background_job`) and `billing.recurring_drafts` (daily) in the v1352 catalogue, idempotent per line
       and period.
-- [ ] Parity, field help, tests; exit.
+- [x] Parity, field help, tests; exit.
 
 ## Slice 4 — Revenue, WIP, margin, accounting export, client portal
 
-- [ ] Revenue / WIP / margin per project (D14); roll-ups on programme and portfolio financial dashboards (clickable
+- [x] Revenue / WIP / margin per project (D14); roll-ups on programme and portfolio financial dashboards (clickable
       cards, rule 64); reporting views.
-- [ ] Accounting export (D11): invoices, credit notes, payments (CSV / Excel / JSON with legend); internal clients as
+- [x] Accounting export (D11): invoices, credit notes, payments (CSV / Excel / JSON with legend); internal clients as
       journal entries (D2).
-- [ ] Client portal: client’s invoices and status (D16).
-- [ ] Check all three billing jobs show run history in Admin › Background Jobs (D17 amended).
-- [ ] Guide `Documentation/Project_Billing_v1353_Guide.md`; ROADMAP R6 status update; parity, tests; exit.
+- [x] Client portal: client’s invoices and status (D16).
+- [x] Check all three billing jobs show run history in Admin › Background Jobs (D17 amended). The jobs are registered; history appears after the first tick.
+- [x] Guide `Documentation/Project_Billing_v1353_Guide.md`; ROADMAP R6 status update; parity, tests; exit.
 
 ## Risks
 
@@ -112,4 +112,6 @@ double-billing triggers; issue / pay / credit flows; Overdue.
 
 ## Review
 
-(to be completed after each slice)
+Implemented 2026-11-24. The owner has applied v1577–v1584, Admin v259, and the Planner wall. `send-email` and `background-job-worker` are deployed on project qltvojzcmzqiixuvauoj. Platform billing pages, the project billing schedule, and the programme and portfolio financial pages were checked in the browser. Simulator and Planner use the same screens; those two apps were not signed in during the check.
+
+Shared screens live in `packages/planning` and are routed for Platform (`/platform/billing`), Simulator (`/simulator/billing`), Planner (`/app/client-billing`) and on every schedule under Billing. A draft line can be added, changed, or removed. Issuing stores the invoice-date exchange rate. The invoice email attaches the PDF. The layout uses the organisation logo and colours, a line table, tax by code, and the payment text. Accounting files include invoices, credit notes, and payments. Overdue reminders can be sent from the invoice list; the daily job still sends each step once. Programme and portfolio financial pages show billed revenue, unbilled value, cost, and margin. Screen tests cover the overdue filter, draft, approval justification, payment, and the export menu. `background-job-worker` is deployed with `billing.schedule_due`, and `send-email` is deployed with PDF attachments. `SQL/v1582_billing_issue_role.sql` limits issuing to a PMO Admin or the account owner. Simulator practice invoices stay issuable by the learner and are marked Practice. The invoice header includes payment terms. Client, tax, rate-card, invoice, schedule and portal lists sort, export, and switch between card and table. A client opens read-only and is edited on its own page. `SQL/v1583_billing_assertion_tests.sql` fails the transaction if an issued invoice can be edited, deleted, or billed twice. `SQL/v1584_billing_sample_seed.sql` adds sample invoices, a tax code, a rate card and a payment on SEED334-PRJ-08.

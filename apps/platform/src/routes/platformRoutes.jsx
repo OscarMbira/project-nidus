@@ -1,7 +1,11 @@
 /** Platform routes — extracted from App.jsx (v729 Option B) */
 import { Route, Navigate, Routes, Outlet } from 'react-router-dom'
 import EnvironmentsRegisterRedirect from '@nidus/ui/EnvironmentsRegisterRedirect'
-import { Suspense } from 'react'
+import { Suspense, lazy } from 'react'
+const ResourceLevellingPage = lazy(() => import('../pages/resources/ResourceLevellingPage.jsx'))
+const BillingRoutes = lazy(() => import('@nidus/planning/screens/billing/BillingScreens.jsx').then((m) => ({ default: m.BillingRoutes })))
+const PortfolioScoringScreen = lazy(() => import('@nidus/planning/screens/portfolio/PortfolioScoringScreen.jsx'))
+const PortfolioScenarioScreen = lazy(() => import('@nidus/planning/screens/portfolio/PortfolioScenarioScreen.jsx'))
 import AppToPlatformRedirect from '../components/AppToPlatformRedirect'
 import { PmisGapRouteElements, PmisGapPlatformNestedRouteElements } from '../modules/pmis-gaps/routes/PmisGapRoutes.jsx'
 import { RecordLifecycleRouteElements, RecordLifecyclePlatformNestedRouteElements } from '../modules/record-lifecycle/routes/RecordLifecycleRoutes.jsx'
@@ -252,6 +256,7 @@ import {
   TimesheetWorkCategories,
   TimesheetOvertimeTypes,
   TimesheetSettings,
+  ReminderLeadTimes,
   ProjectTimesheetSettings,
   TimesheetOverviewReport,
   FundingSources,
@@ -1754,6 +1759,36 @@ export function PlatformRouteElements() {
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
+                              <Route path="portfolio/scoring" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute><PortfolioScoringScreen /></ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="portfolio/scoring/:portfolioKey" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute><PortfolioScoringScreen /></ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="portfolio/scoring/:portfolioKey/projects/:projectKey" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute><PortfolioScoringScreen /></ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="portfolio/scenarios" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute><PortfolioScenarioScreen /></ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="portfolio/scenarios/:portfolioKey" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute><PortfolioScenarioScreen /></ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="portfolio/scenarios/:portfolioKey/:scenarioKey" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute><PortfolioScenarioScreen /></ProtectedRoute>
+                                </Suspense>
+                              } />
                               <Route path="portfolio/projects" element={
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
@@ -2475,6 +2510,14 @@ export function PlatformRouteElements() {
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
                                     <TimesheetSettings />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              {/* v1352 Slice 1 (D7): Reminder Lead Times — PMO Configuration */}
+                              <Route path="pmo-admin/reminder-lead-times" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ReminderLeadTimes />
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
@@ -4783,6 +4826,20 @@ export function PlatformRouteElements() {
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
                                     <ResourceForecasts />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="billing/*" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <BillingRoutes />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="resources/levelling" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ResourceLevellingPage />
                                   </ProtectedRoute>
                                 </Suspense>
                               } />

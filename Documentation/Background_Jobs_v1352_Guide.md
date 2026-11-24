@@ -70,6 +70,28 @@ changes them only through the `public.admin_background_job_*` RPCs (CLAUDE.md ru
 
 Each moved job keeps the function or edge function it had; only the way it is started changed.
 
+### Jobs added in Slice 1 (SQL v1562–v1564) — both apps (D8)
+
+| Code | Kind | Schedule | What it does |
+|---|---|---|---|
+| `reports.health_due` | sql | `*/15 * * * *` UTC | Queues every scheduled health report whose send time has come. `next_run_at` already holds the local send time (project time zone, else organisation — D5); default Monday / 1st of the month / quarter at 07:00, or `schedule_config` `send_hour`, `weekday`, `day_of_month` |
+| `reports.health_send` | handler | queue only | Builds one report (`scheduled_report_build`), emails each recipient, records the run (`scheduled_report_finish`). **Run now** in both apps queues the same item (`scheduled_health_report_run_now`) |
+| `tasks.recurring_generate` | sql | `30 0 * * *` UTC | Creates recurring tasks up to 7 days ahead (`recurrence_config.lead_days`, max 90), once per template and date; also runs when a schedule is saved |
+| `reminders.due_dates` | sql | `0 6 * * *` organisation | In-app reminders for every row of `reminder_record_types`: one "before" and one "overdue" per item and due date (`reminder_markers`) |
+| `timesheets.reminders` | sql | `0 14 * * 5` organisation | Members with no or draft time this period (organisation's first day of week), once per project and period; logged in `timesheet_reminders` (`is_automatic`) |
+| `evm.period_snapshots` | sql | `15 1 * * *` UTC | One snapshot per project at each project-local month end: PV = budget × planned share elapsed, EV = budget × % complete, AC = recorded costs. Existing snapshots are never changed |
+| `notifications.daily_digest` | sql | `0 7 * * *` organisation | Queues one email per person per day with the unread notices of the last 24 hours |
+| `notifications.digest_send` | handler | queue only | Sends the digest through `send-email` and marks the notices as emailed |
+
+**Email rule (D6):** reminders are in-app per item; email only arrives as the daily digest. The digest
+respects the **Reports & Digests** email switch in Notification Preferences (Platform items use the
+Platform preference, practice items the Simulator one) and `users.email_notifications_enabled`.
+Simulator items are marked "Practice:" in the app and "Simulator practice" in emails (D8).
+
+**Planner (story 18):** a Planner-edition account only gets a job's effect when all the tables it touches
+are on the Planner allow-list (`bj_account_allows_tables`). Simulator tables are written `sim.<table>`, so
+they never match.
+
 ---
 
 ## 3. Setup (owner, once per environment)
@@ -144,6 +166,31 @@ From a trigger or RPC, queue work with
 **Handlers** receive `(payload, ctx)` and return `{ processed, error? }`. `ctx` (`adapter.ts`) is the only
 code that talks to the database client or reads secrets: `ctx.rpc(fn, args)`, `ctx.invokeFunction(name, body)`,
 `ctx.env(name)`, `ctx.log(text)`. Keep handlers free of Supabase imports so the jobs move with the database.
+
+**Reminders for a new record type (A1.6) — add a row, not code:**
+
+```sql
+INSERT INTO public.reminder_messages (message_key, before_title, before_body, overdue_title, overdue_body)
+VALUES ('scenario_approval', 'Scenario waiting for approval', 'The scenario “{title}” needs a decision by {date}.',
+        'Scenario approval overdue', 'The scenario “{title}” needed a decision by {date}.')
+ON CONFLICT (message_key) DO NOTHING;
+
+INSERT INTO public.reminder_record_types (schema_name, record_type, label, description, table_name, date_column,
+  title_column, project_column, owner_columns, status_filter, recipient_rule, default_lead_days, message_key, planner_tables)
+VALUES ('public', 'scenario_approval', 'Portfolio scenarios', 'Scenarios waiting for approval.', 'portfolio_scenarios',
+  'decision_due_date', 'scenario_name', 'project_id', ARRAY['approver_user_id'], 'r.status = ''submitted''',
+  'owner', 3, 'scenario_approval', ARRAY['portfolio_scenarios'])
+ON CONFLICT (schema_name, record_type) DO NOTHING;
+```
+
+- `table_name` may be a view (`reminder_src_*`) when the project is one join away; revoke client access on it.
+- `project_column` or `account_column` is required (organisation, time zone, lead time).
+- `owner_id_kind` is `user` (public.users.id) or `auth` (auth user id, most Simulator tables).
+- `recipient_rule`: `owner`, `role:<role_code>` (e.g. `role:project_manager`) or `org_admins`; nobody found → the
+  project manager (Simulator: the learner).
+- `due_offset_days` turns a start date into a deadline (sign-offs: requested + 7 days).
+- Organisations change the lead time on **PMO Configuration → Reminder Lead Times** (both apps).
+- Check with `SELECT public.run_due_reminders('{"dry_run": true}');` — `skipped_types` must be empty.
 
 **Replay from a feature page:** a feature's own `SECURITY DEFINER` RPC checks the caller's rights and calls
 `public.background_job_replay_item_for_org(item_id, organisation_id, reason, actor)`, which refuses items of

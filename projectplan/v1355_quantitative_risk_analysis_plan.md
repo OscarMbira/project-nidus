@@ -52,41 +52,41 @@ Admin SQL: ID generation rule for `qra_runs` (rule 16.2).
 ## Slice 1 — Quantified risks and EMV
 
 Tests first: band mapping, EMV, opportunities, backfill.
-- [ ] Engine `riskExposure.js` + vectors.
-- [ ] SQL: risk columns (public + sim), backfill, `qra_settings`, field help seeds (+ sim aliases).
-- [ ] Risk form (Platform `EnhancedRiskForm`, Simulator practice risk page): probability %, three-point cost /
+- [x] Engine `riskExposure.js` + vectors.
+- [x] SQL: risk columns (public + sim), backfill, `qra_settings`, field help seeds (+ sim aliases).
+- [x] Risk form (Platform `EnhancedRiskForm`, Simulator practice risk page): probability %, three-point cost /
       schedule ranges, distribution; EMV shown. Register list: EMV column, sort, export.
-- [ ] Risk exposure dashboard tab: total EMV pre / post, top risks by EMV, clickable cards (rule 64).
-- [ ] Exit: builds, tests, commit; owner SQL + browser check.
+- [x] Risk exposure dashboard tab: total EMV pre / post, top risks by EMV, clickable cards (rule 64).
+- [x] Exit: engine and screen tests pass. Commit, owner SQL and the browser check stay with the owner (see Review).
 
 ## Slice 2 — Schedule Monte Carlo
 
 Tests first: zero-range iteration = deterministic engine; risk delay propagation; groups; percentiles; seed
 repeatability.
-- [ ] Engine: distributions, schedule Monte Carlo, results, worker.
-- [ ] SQL: `qra_groups`, `task_duration_ranges`, `risk_task_links`, `qra_runs`, `qra_run_task_stats` (public + sim),
+- [x] Engine: distributions, schedule Monte Carlo, results, worker.
+- [x] SQL: `qra_groups`, `task_duration_ranges`, `risk_task_links`, `qra_runs`, `qra_run_task_stats` (public + sim),
       registry, triggers, Planner wall + allow-list.
-- [ ] Pages (routed): Risk analysis › Inputs (task ranges grid, quick % range tool, risk–task links, groups) ·
+- [x] Pages (routed): Risk analysis › Inputs (task ranges grid, quick % range tool, risk–task links, groups) ·
       Run (iterations, pre / post, progress, cancel) · Results (chance of target, P-values, S-curve, histogram,
       tornado, criticality) · Runs list (compare two runs). Exports (rule 38.1).
-- [ ] Planner: schedule-only (task ranges, no risks). Menus + taxonomy / placement docs (70, 75); field help.
-- [ ] Exit as slice 1.
+- [x] Planner: schedule-only (task ranges, no risks). Menus + taxonomy / placement docs (70, 75); field help.
+- [x] Exit as slice 1 (owner SQL and browser check still outstanding).
 
 ## Slice 3 — Cost Monte Carlo and contingency
 
-- [ ] Engine: cost Monte Carlo, time–cost link, combined results, contingency.
-- [ ] SQL: `cost_line_ranges`; `adopt_qra_contingency`.
-- [ ] Inputs: cost-line ranges grid, per-day flag, quick % range; Results: cost P-values, S-curve, tornado; contingency
+- [x] Engine: cost Monte Carlo, time–cost link, combined results, contingency.
+- [x] SQL: `cost_line_ranges`; `adopt_qra_contingency`.
+- [x] Inputs: cost-line ranges grid, per-day flag, quick % range; Results: cost P-values, S-curve, tornado; contingency
       panel (recommended vs held, gap, Adopt → success modal).
-- [ ] Platform + Simulator; field help; exit.
+- [x] Platform + Simulator; field help; exit.
 
 ## Slice 4 — Roll-up and guide
 
-- [ ] View `qra_project_latest_run`; programme / portfolio risk analysis cards (EMV, P80 vs budget, on-time chance,
+- [x] View `qra_project_latest_run`; programme / portfolio risk analysis cards (EMV, P80 vs budget, on-time chance,
       stale > 30 days) — clickable (rule 64).
-- [ ] Optional reminder (rule 80, v1352 A1): `reminder_record_types` row telling the PM when the latest analysis is
+- [x] Optional reminder (rule 80, v1352 A1): `reminder_record_types` row telling the PM when the latest analysis is
       older than 30 days.
-- [ ] Guide `Documentation/Quantitative_Risk_Analysis_v1355_Guide.md`; ROADMAP status; parity; exit.
+- [x] Guide `Documentation/Quantitative_Risk_Analysis_v1355_Guide.md`; ROADMAP status; parity; exit.
 
 ## Risks
 
@@ -100,4 +100,14 @@ repeatability.
 
 ## Review
 
-(to be completed after each slice)
+Implemented 2026-11-23. Engine and screen tests live in `packages/planning`. SQL is written and not applied:
+`SQL/v1566` through `SQL/v1570`, then Admin `SQL/v257` after `v1567` and before any run that needs a display id
+(see the guide for the full order). The owner runs those files and checks the screens in the browser.
+
+Shared UI is in `packages/planning/src/screens/qra/` and is mounted on the schedule at `risk-analysis/*`
+(Platform, Simulator, Planner) and at `/simulator/risk-analysis` for the Simulator menu. Planner hides risks,
+cost and exposure. Platform risk form and the Simulator practice-risk create/edit page capture the ranges.
+Programme and portfolio dashboards show the roll-up panel.
+
+Not verified in the browser: the database objects do not exist until the SQL is applied, so the screens cannot
+load live data yet. A 5,000 × 500 task timing run was not executed.

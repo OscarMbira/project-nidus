@@ -5,6 +5,7 @@ import { platformDb } from '@nidus/supabase'
 import { getProgrammeRollupsForDashboard } from '../../services/programmeService'
 import PmoDashboardInsightsSection from '../../components/app/dashboard/PmoDashboardInsightsSection'
 import { DashboardStatCard } from '@nidus/ui'
+import QraRollupPanel from '@nidus/planning/screens/qra/QraRollupPanel.jsx'
 
 function MetricCard({ title, value, subtitle, icon: Icon, iconBg, iconColor, onClick }) {
   return (
@@ -198,6 +199,16 @@ export default function ProgrammeDashboardOverview() {
             iconColor="text-gray-300"
           />
         </div>
+
+        <QraRollupPanel
+          db={platformDb}
+          linkTable="programme_projects"
+          parentColumn="programme_id"
+          projectColumn="project_id"
+          projectTable="projects"
+          parentIds={rollups.map((row) => row.programme_id)}
+          analysisPath={(row) => `/platform/schedule/risk-analysis?projectId=${encodeURIComponent(row.project_code || row.project_id)}`}
+        />
 
         {accountId && (
           <div className="mb-8">

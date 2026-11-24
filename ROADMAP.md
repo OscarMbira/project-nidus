@@ -274,6 +274,8 @@ Completion indicators:
 
 **Status:** IN PROGRESS
 
+Quantitative risk analysis (v1355) adds probability percentages, three-point ranges, a schedule and cost simulation, and programme and portfolio roll-up cards. The owner still runs the SQL before it is usable.
+
 **Outcome:** Provide integrated project-control registers and governance workflows.
 
 Strategic areas:
@@ -351,6 +353,8 @@ Strategic areas:
 - resource demand
 - resource assignments
 - capacity
+- resource levelling, project and cross-project (v1354; owner runs SQL v1572 and Admin v258)
+- client billing and revenue: clients, rate cards, invoices, credit notes (v1353; owner runs SQL v1577–v1581 and Admin v259)
 - variance
 - performance indicators
 
@@ -375,6 +379,7 @@ Strategic areas:
 - PMO dashboards
 - programme management
 - portfolio management
+- portfolio scoring and selection scenarios (v1354; owner runs SQL v1573–v1575 and Admin v258)
 - cross-project milestones
 - aggregate RAID/change views
 - resource/cost rollups

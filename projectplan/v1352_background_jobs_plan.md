@@ -90,26 +90,26 @@ Build:
 ## Slice 1 — Promised features (Wave 1 + daily digest 2.2), both schemas (D8)
 
 Each job: failing SQL/Vitest test → job → Admin catalogue row → commit-ready.
-- [ ] **1.1 Scheduled health reports:** due-schedule picker (every 15 min, organisation time) → queue →
+- [x] **1.1 Scheduled health reports:** due-schedule picker (every 15 min, organisation time) → queue →
       handler builds the report from existing report services' data functions, emails recipients, writes
       `scheduled_report_runs`; "Run now" in both apps calls the same path (replaces the placeholder in
       `scheduledHealthReportService.js`, both apps). Practice emails marked Simulator (D8).
-- [ ] **1.2 Recurring task generator:** daily + on schedule save; idempotent on (schedule, occurrence date);
+- [x] **1.2 Recurring task generator:** daily + on schedule save; idempotent on (schedule, occurrence date);
       writes `recurring_task_instances` and the tasks; both schemas.
-- [ ] **1.3 Due-date reminders:** one job over registered record types (risk / issue reviews, actions,
+- [x] **1.3 Due-date reminders:** one job over registered record types (risk / issue reviews, actions,
       milestones, strategy scheduled activities, document sign-offs, daily logs); in-app per item; marker table
       so each item gets one "before" and one "overdue" reminder only (D6).
       **(A1)** Record types come from a data table `reminder_record_types` (record type, schema, table, date column,
       status filter, recipient rule `owner` / `role:<code>` / `org_admins`, default lead time, message key) so
       v1354 / v1355 / v1356 add rows, not code; seeded with today’s types.
-- [ ] **1.3a Reminder lead times (D7):** `reminder_lead_time_settings` (system defaults + organisation
+- [x] **1.3a Reminder lead times (D7):** `reminder_lead_time_settings` (system defaults + organisation
       overrides, both schemas) + PMO Configuration page in Platform and Simulator (routed page, field help,
       Audit tab, success modal, menu catalogue + placement + taxonomy rows — rules 70, 75).
-- [ ] **1.4 Timesheet reminders:** per timesheet period in organisation time; reuses `timesheet_reminders`
+- [x] **1.4 Timesheet reminders:** per timesheet period in organisation time; reuses `timesheet_reminders`
       logging; manual send stays.
-- [ ] **1.5 EVM / progress snapshots:** period-end capture per project, idempotent per (project, period);
+- [x] **1.5 EVM / progress snapshots:** period-end capture per project, idempotent per (project, period);
       both schemas.
-- [ ] **2.2 Daily digest (pulled forward, D6):** one email per person per day with that day's reminders and
+- [x] **2.2 Daily digest (pulled forward, D6):** one email per person per day with that day's reminders and
       notices, organisation time; respects the digest switch in notification preferences (add the preference
       key if missing, both schemas).
 - [ ] Exit: each job visible in Admin, unit tests green, owner SQL run + browser check (reports email, tasks
@@ -229,3 +229,76 @@ as before.
   and run the one-word eval test; decision (leave off / external embedding API / plan limits) belongs to v1272.
 - **Done (2026-11-23):** `expire-drafts` and `admin-moratorium-cron` deployed by the owner (they had never been deployed before); `drafts.expire` (00:00 UTC) and `testers.moratorium_expiry` (00:15 UTC) run from tonight.
 - **Open — Admin browser check** of System › Background Jobs.
+
+### Slice 1 review (2026-11-23) — code complete, SQL not run
+
+**SQL run order (owner runs; none run yet):**
+
+| # | Repo | File | Status |
+|---|---|---|---|
+| 0 | — | Redeploy edge function `background-job-worker` (new handlers `reports.health_send`, `notifications.digest_send`; `--no-verify-jwt`) | not run |
+| 1 | monorepo | `SQL/v1562_reminders_lead_times_daily_digest.sql` (ends with a dry run of the reminder engine: expect `skipped_types: []`) | not run |
+| 2 | monorepo | `SQL/v1563_scheduled_reports_recurring_tasks_timesheets_evm_jobs.sql` | not run |
+| 3 | monorepo | `SQL/v1564_reminder_lead_times_menu_and_help.sql` | not run |
+| 4 | monorepo | `SQL/v1251_planner_table_wall.sql` (re-run, table registration rule 6 — six new tables) | not run |
+| 5 | monorepo | `SQL/v1565_background_jobs_slice1_tests.sql` (rolls back; expect "all Slice 1 background job tests passed") | not run |
+
+No Admin SQL: the Admin Background Jobs page lists the new catalogue rows as they are. No new reference
+columns, so no Admin ID Generation rule (rule 16.2).
+
+**Built:** 8 catalogue jobs (6 sql, 2 handler), all for `public` and `sim`:
+`reports.health_due` / `reports.health_send` (1.1; Run now in both apps uses the same queue item through
+`scheduled_health_report_run_now`), `tasks.recurring_generate` (1.2, + trigger on schedule save),
+`reminders.due_dates` (1.3, data-driven by `reminder_record_types` + `reminder_messages`, markers in
+`public|sim.reminder_markers`), `timesheets.reminders` (1.4), `evm.period_snapshots` (1.5),
+`notifications.daily_digest` / `notifications.digest_send` (2.2). Reminder Lead Times page (1.3a) in both apps:
+routed page `/platform/pmo-admin/reminder-lead-times`, `/simulator/pmo/reminder-lead-times`, PMO Configuration card,
+menu rows under the PMO Admin category (placement through the placed parent + `default_section_code`), field help
++ Simulator alias, Audit tab, success modal, unsaved-changes guard, back button, theme-aware. Taxonomy §26 and
+placement proposal §3 / §6.8 updated; guide `Documentation/Background_Jobs_v1352_Guide.md` (Slice 1 jobs,
+adding a reminder record type).
+
+**Decisions made during the build (not in the plan text):**
+- **Strategy scheduled activities are not seeded** as reminder types: `qms|rms|cms|cfg_scheduled_activities` have no
+  date column (only a text `timing`). They need a date field first (own PRD/plan); then it is one row.
+- **Sign-offs** = register record sign-offs (both schemas). No deadline column exists, so the date is "requested +
+  7 days" (`due_offset_days`, data), and only the slot whose turn it is. Process-template document signatories are
+  not included (template level, no project or deadline).
+- **Actions** = issue actions (`issue_actions` / `sim.practice_issue_actions`); **issue reviews** use the issue due
+  date (issues have no review date). Meeting action items are not included (project is optional on meetings).
+- Record types that need a join use source views (`reminder_src_*`, no client access). A type whose table or
+  columns are wrong is skipped and listed in the run result, never stopping the others.
+- Each reminder marker key includes the due date: moving a date earns one new before / overdue pair. Overdue
+  reminders stop after `overdue_window_days` (14), so the first run does not flood old items.
+- `reports.health_due` runs every 15 minutes on UTC: `next_run_at` already holds the local send time (project
+  override, else organisation — D5), kept filled by a trigger. Default send time Monday / 1st / quarter start at
+  07:00 local; `schedule_config` `send_hour`, `weekday`, `day_of_month` override (no form field added).
+- No recipients on a schedule → the schedule's creator; none at all → the run fails without retry.
+- Recurring tasks: 7 days ahead by default (`recurrence_config.lead_days`, max 90); only `entity_type = 'task'`.
+  Monthly patterns step by calendar month (31st → 28th drift after February).
+- EVM: monthly at project-local month end for all projects with a budget and planned dates (no per-project period
+  setting exists); EV uses the project's % complete when captured (the 1st); stops 92 days after planned end.
+- Timesheet reminders: Friday 14:00 organisation time, week from the organisation's first day of week; only
+  projects with time logged in the last 28 days; in-app only (email through the digest, D6). Simulator: the learner
+  and practice-project members; no reminder log table in `sim` (markers only). `timesheet_reminders` gained
+  `is_automatic`; `sent_by` is now nullable.
+- Digest switch = the existing **Reports & Digests** category (`event_category = 'reports'`) in both apps'
+  Notification Preferences — no new key needed. Unread notices of the last 24 hours not yet emailed, at most 100;
+  marked `email_sent` after sending. "Weekly digest" is treated as on.
+- In-app reminders for practice items go to `public.notifications` (the Simulator reads that table; no
+  `sim.notifications` exists), titled "Practice: …" with `notification_data.schema = 'sim'`.
+- Lead-time overrides are kept per schema (`public|sim.reminder_lead_time_settings`), so practice settings never
+  change live reminders. Writes only through the RPCs (PMO Admin / account owner).
+- Planner (story 18): `bj_account_allows_tables` — a Planner-edition account gets a job's effect only when every
+  table is on the allow-list (risk reviews qualify today). Simulator tables are written `sim.<table>`.
+- The PMO Configuration area list is still a code array (v1292 not built), so the new card follows that pattern.
+
+**Tests:** `supabase/functions` Vitest 95/95 (11 new); `packages/shared` new `reminderLeadTimes` 4/4; Platform
+`ReminderLeadTimes` page 5/5, `reminderLeadTimeService` 2/2, `scheduledHealthReportService` 8/8; Simulator same
+5/5, 2/2, 5/5. SQL tests v1565 written (S1–S10), to be run by the owner. Checks: `check-background-jobs`,
+`check-field-help --enforce` (100%), `check-native-date-inputs`, `find-unreachable-app-files --fail` (Platform,
+Simulator, Planner) pass.
+
+**Open / for the owner:** run the SQL above, redeploy the worker, browser check (lead-times page, Run now, a
+recurring task, reminder + digest, Admin Background Jobs list). The Planner table allow-list was already stale
+before this slice (`account_menu_settings` no longer used since b5bb0b7e) — not changed here.

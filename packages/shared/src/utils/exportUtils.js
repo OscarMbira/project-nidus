@@ -999,6 +999,13 @@ export async function exportRecordToWord(sections, record, baseFilename, brandin
   const { footerText, headerHex } = resolveBranding(branding)
   const children = []
   const exportDate = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+  const logo = branding?.primary_logo_url ? await loadAttachmentImageForEmbed(branding.primary_logo_url, 140, 48) : null
+  if (logo?.bytes) {
+    children.push(new Paragraph({
+      children: [new ImageRun({ data: logo.bytes, transformation: { width: logo.width, height: logo.height } })],
+      spacing: { after: 120 },
+    }))
+  }
 
   // Title and subtitle with clear spacing
   children.push(new Paragraph({
@@ -1822,7 +1829,7 @@ export function exportRecordToPrint(sectionsOrFields, record, baseFilename, bran
   }
   const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${escapeHtml(title)}</title>
 <style>body{font-family:sans-serif;padding:16px;} table{border-collapse:collapse;} td{border:1px solid #ccc;} h2{margin-top:16px;}</style></head>
-<body><h1>${escapeHtml(title)}</h1><p>Exported: ${new Date().toLocaleString()}</p>${body}
+<body>${branding?.primary_logo_url ? `<img src="${escapeHtml(branding.primary_logo_url)}" alt="" style="max-width:140px;max-height:48px;object-fit:contain;" />` : ''}<h1>${escapeHtml(title)}</h1><p>Exported: ${new Date().toLocaleString()}</p>${body}
 <p style="margin-top:24px;color:#666;">${escapeHtml(footerText)}</p></body></html>`
   printHtml(html, title)
 }
@@ -1852,6 +1859,15 @@ async function _buildRecordPdfDocument(sections, record, title, branding, blankP
       doc.addPage()
       y = 40
     }
+  }
+
+  const logo = branding?.primary_logo_url ? await loadAttachmentImageForEmbed(branding.primary_logo_url, 140, 48) : null
+  if (logo?.dataUrl) {
+    const format = String(logo.dataUrl).includes('image/png') ? 'PNG' : 'JPEG'
+    try {
+      doc.addImage(logo.dataUrl, format, marginX, y, logo.width, logo.height)
+      y += logo.height + 10
+    } catch { /* a logo that will not draw must not stop the invoice */ }
   }
 
   doc.setFontSize(14)

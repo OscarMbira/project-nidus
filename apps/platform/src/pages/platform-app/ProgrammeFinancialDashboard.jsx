@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import ExportListMenu from '@nidus/ui/ExportListMenu'
+import DashboardStatCard from '@nidus/ui/DashboardStatCard'
 import { platformDb } from '@nidus/supabase'
+import { createBillingData } from '@nidus/planning/services/billingData.js'
 import { listCostEntries } from '../../services/projectCostService'
 import { sumAmounts } from '../../services/projectRevenueService'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
@@ -10,9 +12,14 @@ import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 export default function ProgrammeFinancialDashboard() {
   const { id: programmeId } = useParams()
+  const navigate = useNavigate()
   const [programme, setProgramme] = useState(null)
   const [rows, setRows] = useState([])
   const [rollup, setRollup] = useState(null)
+  const [billed, setBilled] = useState(null)
+  const [wip, setWip] = useState(null)
+  const [cost, setCost] = useState(null)
+  const [margin, setMargin] = useState(null)
 
   useEffect(() => {
     ;(async () => {
@@ -30,6 +37,12 @@ export default function ProgrammeFinancialDashboard() {
         setRows([])
         return
       }
+      const figures = await createBillingData(false).figuresFor(ids).catch(() => [])
+      const sum = (key) => figures.reduce((s, r) => s + Number(r[key] || 0), 0)
+      setBilled(sum('revenue'))
+      setWip(sum('wip'))
+      setCost(sum('cost'))
+      setMargin(sum('margin'))
       const { data: projs } = await platformDb.from('projects').select('id, project_name, project_code').in('id', ids)
       const out = []
       for (const p of projs || []) {
@@ -54,7 +67,7 @@ export default function ProgrammeFinancialDashboard() {
   }))
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 p-4 md:p-6">
+    <div className="w-full px-3 sm:px-4 lg:px-5 xl:px-6 py-6 text-gray-900 dark:text-gray-100">
       <div className="max-w-6xl mx-auto space-y-4">
         <div className="flex flex-wrap justify-between gap-3">
           <div className="flex items-center gap-3">
@@ -78,6 +91,14 @@ export default function ProgrammeFinancialDashboard() {
             baseFilename={`programme_financial_${programmeId}`}
           />
         </div>
+        {billed != null && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <DashboardStatCard label="Billed revenue" value={billed} onClick={() => navigate('/platform/billing/invoices')} />
+            <DashboardStatCard label="Unbilled value" value={wip} />
+            <DashboardStatCard label="Cost" value={cost} />
+            <DashboardStatCard label="Margin" value={margin} />
+          </div>
+        )}
         {rollup && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
             <div className="rounded-lg border border-gray-200 dark:border-gray-800 p-3 bg-white dark:bg-gray-900">

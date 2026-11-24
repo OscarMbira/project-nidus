@@ -62,23 +62,12 @@ export async function listRuns(scheduleId) {
 }
 
 /**
- * Record a manual "Run Now" execution. No background worker exists yet to
- * generate/email the real report body, so this creates a completed run row
- * with a placeholder snapshot — enough to exercise the run-history UI and
- * give schedule owners an on-demand trigger.
+ * "Run now" (v1352 Slice 1, 1.1): queues a real report run on the same path as the schedule
+ * (scheduled_health_report_run_now → background job reports.health_send). The run row is returned as
+ * 'pending'; the background worker builds and emails the report and marks it completed or failed.
  */
 export async function runScheduleNow(scheduleId) {
-  const schedule = await getSchedule(scheduleId)
-  const { data, error } = await platformDb
-    .from('scheduled_report_runs')
-    .insert({
-      schedule_id: scheduleId,
-      run_status: 'completed',
-      report_data: { triggered: 'manual', schedule_name: schedule?.schedule_name || null },
-      sent_at: new Date().toISOString(),
-    })
-    .select()
-    .single()
+  const { data, error } = await platformDb.rpc('scheduled_health_report_run_now', { p_schedule_id: scheduleId })
   if (error) throw error
   return data
 }

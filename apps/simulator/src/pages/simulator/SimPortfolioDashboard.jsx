@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Briefcase, TrendingUp, DollarSign, Activity, RefreshCw, AlertCircle } from 'lucide-react'
 import { getSimPortfolios, getAllSimPortfolioProjects } from '../../services/simPortfolioService'
+import { simDb } from '../../services/supabase/supabaseClient'
+import QraRollupPanel from '@nidus/planning/screens/qra/QraRollupPanel.jsx'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
@@ -102,6 +104,16 @@ export default function SimPortfolioDashboard() {
         <KpiCard label="Total Budget"      value={fmt(totalBudget)}   icon={DollarSign}  colour="bg-blue-600" />
         <KpiCard label="Avg Health Score"  value={`${Math.round(avgHealth)}%`} icon={TrendingUp} colour="bg-orange-600" />
       </div>
+
+      <QraRollupPanel
+        db={simDb}
+        linkTable="practice_portfolio_projects"
+        parentColumn="practice_portfolio_id"
+        projectColumn="practice_project_id"
+        projectTable="practice_projects"
+        parentIds={portfolios.map((row) => row.id)}
+        analysisPath={(row) => `/simulator/risk-analysis?projectId=${encodeURIComponent(row.project_code || row.project_id)}`}
+      />
 
       <div className="bg-gray-800 border border-gray-700 rounded-lg overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-700">

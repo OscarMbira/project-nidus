@@ -9,6 +9,7 @@ import RiskStatusBadge from './RiskStatusBadge';
 import RiskScoreBadge from './RiskScoreBadge';
 import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table';
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils';
+import { riskEmv } from '@nidus/planning/engine/qra/riskExposure.js';
 import { RowActionButton } from '@nidus/ui';
 
 /** Sky tones are not remapped by BrandingContext (blue/purple are). */
@@ -64,6 +65,7 @@ export default function RisksList({
                 <TableHeaderCell sortable={false} className="!normal-case whitespace-nowrap">Proximity</TableHeaderCell>
                 <TableHeaderCell sortable={false} className="!normal-case whitespace-nowrap">Risk Response</TableHeaderCell>
                 <TableHeaderCell sortable={false} className="!normal-case whitespace-nowrap">Impact</TableHeaderCell>
+                <TableHeaderCell sortable={false} className="!normal-case whitespace-nowrap">Expected cost</TableHeaderCell>
                 <TableHeaderCell sortable={false} className="!normal-case whitespace-nowrap">Status</TableHeaderCell>
                 <TableHeaderCell sortable={false} className="!normal-case whitespace-nowrap min-w-[9rem] max-w-[12rem]">Owner</TableHeaderCell>
                 <TableHeaderCell sortable={false} className="!normal-case whitespace-nowrap">Identified</TableHeaderCell>
@@ -103,8 +105,11 @@ export default function RisksList({
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
                     {formatEnumLabel(risk.response_category)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-200">
                     {risk.pre_impact ? `${risk.pre_impact}/5` : '—'}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm tabular-nums text-gray-700 dark:text-gray-200">
+                    {Math.round(riskEmv(risk, { basis: 'pre' }).costEmv).toLocaleString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <RiskStatusBadge status={risk.status_enum || risk.status} />

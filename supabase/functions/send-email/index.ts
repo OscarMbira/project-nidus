@@ -17,6 +17,12 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+interface EmailAttachment {
+  filename: string;
+  content: string;
+  content_type?: string;
+}
+
 interface EmailRequest {
   to: string;
   subject: string;
@@ -26,6 +32,7 @@ interface EmailRequest {
   from_name?: string;
   template_id?: string;
   project_type_id?: string;
+  attachments?: EmailAttachment[];
 }
 
 interface SenderProfileRow {
@@ -123,21 +130,21 @@ serve(async (req) => {
       case 'resend':
         sendResult = await sendViaResend(
           emailData.to, emailData.subject, emailData.html, emailData.text,
-          fromEmail, fromName, config.api_key
+          fromEmail, fromName, config.api_key, emailData.attachments || []
         );
         break;
 
       case 'sendgrid':
         sendResult = await sendViaSendGrid(
           emailData.to, emailData.subject, emailData.html, emailData.text,
-          fromEmail, fromName, config.api_key
+          fromEmail, fromName, config.api_key, emailData.attachments || []
         );
         break;
 
       case 'smtp':
         sendResult = await sendViaSMTP(
           emailData.to, emailData.subject, emailData.html, emailData.text,
-          fromEmail, fromName, config.smtp_config
+          fromEmail, fromName, config.smtp_config, emailData.attachments || []
         );
         break;
 
@@ -250,7 +257,7 @@ async function resolveSenderProfile(
 
 async function sendViaResend(
   to: string, subject: string, html: string, text: string | undefined,
-  fromEmail: string, fromName: string, apiKey: string | null
+  fromEmail: string, fromName: string, apiKey: string | null, attachments: EmailAttachment[] = []
 ): Promise<{ success: boolean; messageId?: string; error?: string; warning?: boolean }> {
   if (!apiKey) return { success: false, error: 'Resend API key not configured.', warning: true };
 
@@ -264,6 +271,7 @@ async function sendViaResend(
         subject,
         html,
         text: text || html.replace(/<[^>]*>/g, ''),
+        ...(attachments.length ? { attachments: attachments.map((a) => ({ filename: a.filename, content: a.content })) } : {}),
       }),
     });
 
@@ -280,9 +288,16 @@ async function sendViaResend(
   }
 }
 
+function bytesFromBase64(content: string): Uint8Array {
+  const bin = atob(content);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
 async function sendViaSMTP(
   to: string, subject: string, html: string, text: string | undefined,
-  fromEmail: string, fromName: string, smtpConfig: Record<string, unknown> | null
+  fromEmail: string, fromName: string, smtpConfig: Record<string, unknown> | null, attachments: EmailAttachment[] = []
 ): Promise<{ success: boolean; messageId?: string; error?: string; warning?: boolean }> {
   if (!smtpConfig?.host) {
     return { success: false, error: 'SMTP configuration is missing.', warning: true };
@@ -303,6 +318,7 @@ async function sendViaSMTP(
     const info = await transporter.sendMail({
       from: `"${fromName}" <${fromEmail}>`, to, subject, html,
       text: text || html.replace(/<[^>]*>/g, ''),
+      attachments: attachments.map((a) => ({ filename: a.filename, content: bytesFromBase64(a.content), contentType: a.content_type || 'application/pdf' })),
     });
     return { success: true, messageId: info.messageId };
   } catch (error) {
@@ -313,7 +329,7 @@ async function sendViaSMTP(
 
 async function sendViaSendGrid(
   to: string, subject: string, html: string, text: string | undefined,
-  fromEmail: string, fromName: string, apiKey: string | null
+  fromEmail: string, fromName: string, apiKey: string | null, attachments: EmailAttachment[] = []
 ): Promise<{ success: boolean; messageId?: string; error?: string; warning?: boolean }> {
   if (!apiKey) return { success: false, error: 'SendGrid API key not configured.', warning: true };
 
@@ -329,6 +345,9 @@ async function sendViaSendGrid(
           { type: 'text/html', value: html },
           ...(text ? [{ type: 'text/plain', value: text }] : []),
         ],
+        ...(attachments.length ? {
+          attachments: attachments.map((a) => ({ content: a.content, filename: a.filename, type: a.content_type || 'application/pdf', disposition: 'attachment' })),
+        } : {}),
       }),
     });
 

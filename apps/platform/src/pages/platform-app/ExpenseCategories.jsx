@@ -26,7 +26,7 @@ import AuditField from '@nidus/ui/AuditField';
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
 import { resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
 
-const defaultFormData = { category_code: '', category_name: '', category_description: '', is_active: true };
+const defaultFormData = { category_code: '', category_name: '', category_description: '', is_active: true, rechargeable_default: '' };
 
 function ExpenseCategoriesBody() {
   const navigate = useNavigate();
@@ -83,6 +83,7 @@ function ExpenseCategoriesBody() {
       category_name: category.category_name || '',
       category_description: category.category_description || '',
       is_active: category.is_active !== undefined ? category.is_active : true,
+      rechargeable_default: category.rechargeable_default === true ? 'yes' : category.rechargeable_default === false ? 'no' : '',
     });
     setShowForm(true);
   }, []);
@@ -267,6 +268,14 @@ function ExpenseCategoriesBody() {
                     Active
                   </FieldLabelWithHelp>
                 </div>
+                <div>
+                  <FieldLabelWithHelp helpKey="public.expense_categories.rechargeable_default" htmlFor="rechargeable_default" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Rechargeable by default</FieldLabelWithHelp>
+                  <select id="rechargeable_default" value={formData.rechargeable_default || ''} onChange={(e) => handleFormChange('rechargeable_default', e.target.value)} className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                    <option value="">Not set</option>
+                    <option value="yes">Rechargeable</option>
+                    <option value="no">Not rechargeable</option>
+                  </select>
+                </div>
 
                 <div className="flex items-center gap-3 pt-4">
                   <button
@@ -366,7 +375,7 @@ function ExpenseCategoriesBody() {
 // v1345 slice 4: field help for this component (public.expense_categories.<column>). It carries its own scope,
 // so every page that renders it shows the help.
 const HELP_KEYS = [
-  'category_code', 'category_name', 'category_description', 'is_active',
+  'category_code', 'category_name', 'category_description', 'is_active', 'rechargeable_default',
 ].map((name) => `public.expense_categories.${name}`)
 
 export default function ExpenseCategories(props) {

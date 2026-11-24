@@ -15,6 +15,9 @@ import ScheduleLayout, { ChooseProject, Loading } from '../../components/Schedul
 import { useSchedule, useScheduleProjectId } from '../../hooks/useSchedule.js'
 import { usePlanning } from '@nidus/planning/context/PlanningContext.jsx'
 import { createTimeData, buildTimeGrid } from '../../services/timeData.js'
+import { createBillingData } from '../../services/billingData.js'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { weekStart } from '../../services/workload.js'
 
 const DAY_MS = 86400000
@@ -25,6 +28,7 @@ const cellKey = (taskId, date) => `${taskId}|${date}`
 export default function ScheduleTimeScreen() {
   const { isSim } = usePlanning()
   const time = useMemo(() => createTimeData(isSim), [isSim])
+  const billing = useMemo(() => createBillingData(!!isSim), [isSim])
   const { projectId, loading: projectLoading } = useScheduleProjectId()
   const schedule = useSchedule(projectId, { withCalendar: false })
   const { showSuccess, modal } = useSuccessModal()
@@ -35,7 +39,14 @@ export default function ScheduleTimeScreen() {
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
+  const [billable, setBillable] = useState(true)
   const days = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(week, i)), [week])
+  useEffect(() => {
+    if (!projectId) return
+    let live = true
+    billing.billableDefaultFor(projectId, null).then((value) => { if (live) setBillable(value) }).catch(() => {})
+    return () => { live = false }
+  }, [billing, projectId])
 
   const load = useCallback(async () => {
     if (!projectId) return
@@ -77,7 +88,7 @@ export default function ScheduleTimeScreen() {
       const changes = Object.entries(edits).map(([k, hours]) => {
         const [taskId, date] = k.split('|')
         const row = rows.find((r) => r.task.id === taskId)
-        return { taskId, date, hours, entry: row?.cells[date]?.entry || null }
+        return { taskId, date, hours, billable: billable, entry: row?.cells[date]?.entry || null }
       })
       const n = await time.saveWeek(projectId, who.authId, changes)
       showSuccess({ recordId: `Week of ${week}`, operation: 'updated', message: `${n} day(s) of time saved as draft.` })
@@ -114,6 +125,7 @@ export default function ScheduleTimeScreen() {
   }))
 
   return (
+    <FieldHelpScope helpKeys={[isSim ? 'sim.timesheet_entries.is_billable' : 'public.timesheet_entries.is_billable']}>
     <ScheduleLayout title="My time" description="Log hours against your tasks and see how they compare with the estimate." schedule={projectId ? schedule : null}>
       {!projectId ? (projectLoading ? <Loading /> : <ChooseProject />) : schedule.loading || loading ? <Loading text="Loading your time…" /> : !who.authId ? (
         <p className="text-sm text-red-600 dark:text-red-400">Sign in again to log time.</p>
@@ -131,6 +143,10 @@ export default function ScheduleTimeScreen() {
                 data={exportRows}
                 baseFilename={`MyTime_${week}`}
               />
+              <div className="inline-flex items-center gap-2 text-sm">
+                <input id="time-billable" type="checkbox" checked={billable} onChange={(e) => setBillable(e.target.checked)} />
+                <FieldLabelWithHelp helpKey={isSim ? 'sim.timesheet_entries.is_billable' : 'public.timesheet_entries.is_billable'} htmlFor="time-billable">Billable</FieldLabelWithHelp>
+              </div>
               <button type="button" onClick={save} disabled={!dirty || busy} className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm disabled:opacity-50"><Save className="h-4 w-4" /> Save</button>
               <button type="button" onClick={submit} disabled={busy} className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-800 dark:text-gray-100 bg-white dark:bg-gray-800 disabled:opacity-50"><Send className="h-4 w-4" /> Submit week</button>
             </div>
@@ -194,5 +210,6 @@ export default function ScheduleTimeScreen() {
       )}
       {modal}
     </ScheduleLayout>
+    </FieldHelpScope>
   )
 }

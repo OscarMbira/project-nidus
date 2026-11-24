@@ -13,13 +13,39 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useLocation, useParams, useSearchParams } from 'react-router-dom'
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId'
 import { usePlanning } from '@nidus/planning/context/PlanningContext.jsx'
+import { simDb } from '@nidus/supabase'
 import { createScheduleData, expectedVersionsOf, ScheduleConflictError } from '../services/scheduleData.js'
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 function useSimProjectId() {
   const params = useParams()
   const [searchParams] = useSearchParams()
   const key = params.projectId || searchParams.get('projectId') || ''
-  return { projectId: key || null, routeKey: key || null, loading: false, error: null }
+  const [projectId, setProjectId] = useState(key && UUID_RE.test(key) ? key : null)
+  const [loading, setLoading] = useState(Boolean(key) && !UUID_RE.test(key))
+
+  useEffect(() => {
+    if (!key) {
+      setProjectId(null)
+      setLoading(false)
+      return undefined
+    }
+    if (UUID_RE.test(key)) {
+      setProjectId(key)
+      setLoading(false)
+      return undefined
+    }
+    let cancelled = false
+    setLoading(true)
+    simDb.from('practice_projects').select('id').eq('project_code', key).maybeSingle()
+      .then(({ data }) => { if (!cancelled) setProjectId(data?.id || null) })
+      .catch(() => { if (!cancelled) setProjectId(null) })
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
+  }, [key])
+
+  return { projectId, routeKey: key || null, loading, error: null }
 }
 
 export function useScheduleProjectId() {

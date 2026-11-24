@@ -9,6 +9,7 @@
 import { lazy, Suspense } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import ScheduleLayout from '../components/ScheduleLayout.jsx'
+import { useScheduleProjectId } from '../hooks/useSchedule.js'
 
 const ScheduleGridScreen = lazy(() => import('../screens/schedule/ScheduleGridScreen.jsx'))
 const TaskFormScreen = lazy(() => import('../screens/schedule/TaskFormScreen.jsx'))
@@ -24,11 +25,35 @@ const ScheduleTimeScreen = lazy(() => import('../screens/schedule/ScheduleTimeSc
 const ScheduleExchangeScreen = lazy(() => import('../screens/schedule/ScheduleExchangeScreen.jsx'))
 const TasksBoard = lazy(() => import('../screens/tasks/TasksBoard.jsx'))
 const TasksCalendar = lazy(() => import('../screens/tasks/TasksCalendar.jsx'))
+const QraRoutes = lazy(() => import('./QraRoutes.jsx'))
+const LevelResourcesScreen = lazy(() => import('../screens/levelling/LevelResourcesScreen.jsx'))
+const LevellingInboxScreen = lazy(() => import('../screens/levelling/LevellingInboxScreen.jsx'))
+const ProjectBillingScreen = lazy(() => import('../screens/billing/BillingScreens.jsx').then((m) => ({ default: m.ProjectBillingScreen })))
+const InvoicesScreen = lazy(() => import('../screens/billing/BillingScreens.jsx').then((m) => ({ default: m.InvoicesScreen })))
+const BillingScheduleScreen = lazy(() => import('../screens/billing/BillingScreens.jsx').then((m) => ({ default: m.BillingScheduleScreen })))
+const RevenueScreen = lazy(() => import('../screens/billing/BillingScreens.jsx').then((m) => ({ default: m.RevenueScreen })))
+const InvoiceDetailScreen = lazy(() => import('../screens/billing/BillingScreens.jsx').then((m) => ({ default: m.InvoiceDetailScreen })))
 
 // v1265: Board and Due dates sit inside the schedule frame like every other tab (Back, tabs,
 // full screen, task modal); the standalone /tasks/board and /tasks/calendar pages are unchanged.
 function ScheduleBoardTab() {
   return <ScheduleLayout title="Board" description="Tasks as cards by status."><TasksBoard embedded /></ScheduleLayout>
+}
+function ProjectBillingTab() {
+  const { projectId } = useScheduleProjectId()
+  return <ProjectBillingScreen projectId={projectId} />
+}
+function ProjectInvoicesTab() {
+  const { projectId } = useScheduleProjectId()
+  return <InvoicesScreen projectId={projectId} />
+}
+function ProjectScheduleTab() {
+  const { projectId } = useScheduleProjectId()
+  return <BillingScheduleScreen projectId={projectId} />
+}
+function ProjectRevenueTab() {
+  const { projectId } = useScheduleProjectId()
+  return <RevenueScreen projectId={projectId} />
 }
 function ScheduleDueDatesTab() {
   return <ScheduleLayout title="Due dates" description="Tasks by due date. Pick a day to see what is due."><TasksCalendar embedded /></ScheduleLayout>
@@ -58,10 +83,18 @@ export default function ScheduleRoutes({ fallback = null }) {
         <Route path="calendar/exceptions/:exceptionId/edit" element={<CalendarExceptionFormScreen />} />
         <Route path="baselines" element={<ScheduleBaselinesScreen />} />
         <Route path="workload" element={<ScheduleWorkloadScreen />} />
+        <Route path="level" element={<LevelResourcesScreen />} />
+        <Route path="level-inbox" element={<LevellingInboxScreen />} />
         <Route path="board" element={<ScheduleBoardTab />} />
         <Route path="time" element={<ScheduleTimeScreen />} />
+        <Route path="billing" element={<ProjectBillingTab />} />
+        <Route path="billing-schedule" element={<ProjectScheduleTab />} />
+        <Route path="invoices" element={<ProjectInvoicesTab />} />
+        <Route path="invoices/:invoiceKey" element={<InvoiceDetailScreen />} />
+        <Route path="revenue" element={<ProjectRevenueTab />} />
         <Route path="exchange" element={<ScheduleExchangeScreen />} />
         <Route path="due-dates" element={<ScheduleDueDatesTab />} />
+        <Route path="risk-analysis/*" element={<QraRoutes embedded fallback={fallback} />} />
       </Routes>
     </Suspense>
   )

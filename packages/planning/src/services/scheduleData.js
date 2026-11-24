@@ -27,7 +27,7 @@ const TASK_COLUMNS = [
   'id', 'task_code', 'task_name', 'task_description', 'parent_task_id', 'task_type', 'priority', 'status_id',
   'assigned_to_user_id', 'planned_start_date', 'planned_end_date', 'actual_start_date', 'actual_end_date',
   'estimated_hours', 'actual_hours', 'estimated_duration_days', 'percentage_complete', 'is_milestone',
-  'schedule_mode', 'constraint_type', 'constraint_date', 'row_version',
+  'schedule_mode', 'constraint_type', 'constraint_date', 'is_level_pinned', 'row_version',
   'earliest_start_date', 'earliest_finish_date', 'latest_start_date', 'latest_finish_date', 'slack_days', 'is_critical_path',
   'baseline_start_date', 'baseline_end_date', 'baseline_duration_days', 'is_blocked', 'due_date',
   'created_at', 'created_by', 'updated_at', 'updated_by',
@@ -45,7 +45,7 @@ export const EDITABLE_TASK_FIELDS = [
   'task_name', 'task_description', 'parent_task_id', 'priority', 'assigned_to_user_id',
   'planned_start_date', 'planned_end_date', 'actual_start_date', 'actual_end_date',
   'estimated_hours', 'estimated_duration_days', 'percentage_complete', 'is_milestone',
-  'schedule_mode', 'constraint_type', 'constraint_date',
+  'schedule_mode', 'constraint_type', 'constraint_date', 'is_level_pinned',
   'outline_position', 'wbs_code',
 ]
 

@@ -9,7 +9,7 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  Compass, Sliders, Layers, FileStack, GitBranch, ShieldCheck, Users, Database, ArrowLeft, Package, Tags, UserCog, ClipboardCheck, CalendarRange, Settings, Sparkles, Search, Factory,
+  Compass, Sliders, Layers, FileStack, GitBranch, ShieldCheck, Users, Database, ArrowLeft, Package, Tags, UserCog, ClipboardCheck, CalendarRange, Settings, Sparkles, Search, Factory, BellRing,
 } from 'lucide-react'
 import { useViewMode } from '@nidus/shared/hooks/useViewMode'
 import { useSortableTable } from '@nidus/shared/hooks/useSortableTable'
@@ -76,6 +76,13 @@ const CARDS = [
     description: 'Set standard daily hours, overtime maximums, and the standard working week for timesheets.',
     to: '/simulator/pmo/timesheet-settings',
     cta: 'Manage timesheet settings →',
+  },
+  {
+    icon: BellRing,
+    title: 'Reminder Lead Times',
+    description: 'Choose how many days before a review, due date or sign-off people get their reminder.',
+    to: '/simulator/pmo/reminder-lead-times',
+    cta: 'Manage reminder lead times →',
   },
   {
     icon: Factory,

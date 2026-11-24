@@ -3,6 +3,7 @@ import { Briefcase, TrendingUp, DollarSign, Activity, RefreshCw, AlertCircle } f
 import { getPortfolios } from '../../services/portfolioService'
 import { getAllPortfolioProjects } from '../../services/portfolioService'
 import { platformDb } from '@nidus/supabase'
+import QraRollupPanel from '@nidus/planning/screens/qra/QraRollupPanel.jsx'
 import PmoDashboardInsightsSection from '../../components/app/dashboard/PmoDashboardInsightsSection'
 import { DashboardStatCard } from '@nidus/ui'
 import IndustryProjectsFilter from '@nidus/ui/IndustryProjectsFilter'
@@ -141,6 +142,16 @@ export default function PortfolioDashboard() {
         <KpiCard label="Total Budget"      value={fmt(totalBudget)}  icon={DollarSign} />
         <KpiCard label="Avg Health Score"  value={`${Math.round(avgHealth)}%`} icon={TrendingUp} />
       </div>
+
+      <QraRollupPanel
+        db={platformDb}
+        linkTable="portfolio_projects"
+        parentColumn="portfolio_id"
+        projectColumn="project_id"
+        projectTable="projects"
+        parentIds={displayPortfolios.map((row) => row.id)}
+        analysisPath={(row) => `/platform/schedule/risk-analysis?projectId=${encodeURIComponent(row.project_code || row.project_id)}`}
+      />
 
       {organizationId && (
         <PmoDashboardInsightsSection organizationId={organizationId} />

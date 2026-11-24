@@ -26,6 +26,7 @@ export const SCHEDULE_GROUPS = [
     { sub: 'board', label: 'Board' },
     { sub: 'due-dates', label: 'Due dates' },
     { sub: 'exchange', label: 'Import / export' },
+    { sub: 'risk-analysis', label: 'Risk analysis' },
   ] },
   { key: 'sequence', label: 'Sequence', items: [
     { sub: 'network', label: 'Network' },
@@ -41,7 +42,15 @@ export const SCHEDULE_GROUPS = [
   { key: 'time', label: 'Time & people', items: [
     { sub: 'calendar', label: 'Calendar' },
     { sub: 'workload', label: 'Workload' },
+    { sub: 'level', label: 'Level resources' },
+    { sub: 'level-inbox', label: 'Levelling proposals' },
     { sub: 'time', label: 'My time' },
+  ] },
+  { key: 'billing', label: 'Billing', items: [
+    { sub: 'billing', label: 'Billing settings' },
+    { sub: 'billing-schedule', label: 'Billing schedule' },
+    { sub: 'invoices', label: 'Client invoices' },
+    { sub: 'revenue', label: 'Revenue and margin' },
   ] },
 ]
 

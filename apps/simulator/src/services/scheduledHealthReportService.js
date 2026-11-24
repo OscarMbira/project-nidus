@@ -59,18 +59,13 @@ export async function listRuns(scheduleId) {
   return data || []
 }
 
+/**
+ * "Run now" (v1352 Slice 1, 1.1): queues a real report run on the same path as the schedule
+ * (scheduled_health_report_run_now → background job reports.health_send). The run row is returned as
+ * 'pending'; the background worker builds and emails the report and marks it completed or failed.
+ */
 export async function runScheduleNow(scheduleId) {
-  const schedule = await getSchedule(scheduleId)
-  const { data, error } = await simDb
-    .from('scheduled_report_runs')
-    .insert({
-      schedule_id: scheduleId,
-      run_status: 'completed',
-      report_data: { triggered: 'manual', schedule_name: schedule?.schedule_name || null },
-      sent_at: new Date().toISOString(),
-    })
-    .select()
-    .single()
+  const { data, error } = await simDb.rpc('scheduled_health_report_run_now', { p_schedule_id: scheduleId })
   if (error) throw error
   return data
 }

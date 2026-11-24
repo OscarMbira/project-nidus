@@ -1,7 +1,11 @@
 /** Simulator routes — extracted from App.jsx (v729 Option B) */
 import { Route, Navigate } from 'react-router-dom'
 import EnvironmentsRegisterRedirect from '@nidus/ui/EnvironmentsRegisterRedirect'
-import { Suspense } from 'react'
+import { Suspense, lazy } from 'react'
+const SimResourceLevellingPage = lazy(() => import('../pages/resources/ResourceLevellingPage.jsx'))
+const SimBillingRoutes = lazy(() => import('@nidus/planning/screens/billing/BillingScreens.jsx').then((m) => ({ default: m.BillingRoutes })))
+const SimPortfolioScoringScreen = lazy(() => import('@nidus/planning/screens/portfolio/PortfolioScoringScreen.jsx'))
+const SimPortfolioScenarioScreen = lazy(() => import('@nidus/planning/screens/portfolio/PortfolioScenarioScreen.jsx'))
 import AppToPlatformRedirect from '../components/AppToPlatformRedirect'
 import { PmisGapRouteElements } from '../modules/pmis-gaps/routes/PmisGapRoutes.jsx'
 import { RecordLifecycleRouteElements } from '../modules/record-lifecycle/routes/RecordLifecycleRoutes.jsx'
@@ -229,6 +233,7 @@ import {
   TimesheetWorkCategories,
   TimesheetOvertimeTypes,
   TimesheetSettings,
+  ReminderLeadTimes,
   ProjectTimesheetSettings,
   TimesheetOverviewReport,
   ManagerAssignments,
@@ -647,7 +652,7 @@ import {
   SimRequirementDetailPage,
   SimTraceabilityMatrixPage,
   SimWBSBuilderPage,
-  SimScheduleManagementPlanPage, ScheduleRoutes,
+  SimScheduleManagementPlanPage, ScheduleRoutes, QraRoutes,
   SimActivityDetailPage,
   PracticeProjects,
   SimProjectMembers,
@@ -699,6 +704,7 @@ import {
   PracticeChangeManagement,
   PracticeChangeRequestDetail,
   PracticeRiskDetail,
+  PracticeRiskForm,
   PracticeRMSList,
   PracticeRMSCreate,
   PracticeRMSView,
@@ -3500,6 +3506,21 @@ export function SimulatorRouteElements() {
                   </Suspense>
                 } />
 
+                {/* v1355 — quantitative risk analysis, opened from the Simulator menu. */}
+                <Route path="simulator/risk-analysis/*" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <QraRoutes fallback={<LoadingFallback />} />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+
                 {/* Practice Risk Register Routes */}
                 <Route path="simulator/practice-risk-register" element={
                   <Suspense fallback={<LoadingFallback />}>
@@ -3508,6 +3529,32 @@ export function SimulatorRouteElements() {
                         <ProtectedRoute requiredPlatform="simulator">
                           <Layout>
                             <PracticeRiskRegister />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/practice-risk-register/create" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <PracticeRiskForm />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/practice-risk-register/:id/edit" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <PracticeRiskForm />
                           </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
@@ -4608,6 +4655,64 @@ export function SimulatorRouteElements() {
                   </Suspense>
                 } />
       
+                <Route path="simulator/resources/levelling" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider><ToastProvider><ProtectedRoute requiredPlatform="simulator"><Layout>
+                      <SimResourceLevellingPage />
+                    </Layout></ProtectedRoute></ToastProvider></ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/practice-portfolio/scoring" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider><ToastProvider><ProtectedRoute requiredPlatform="simulator"><Layout>
+                      <SimPortfolioScoringScreen base="/simulator/practice-portfolio" />
+                    </Layout></ProtectedRoute></ToastProvider></ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/practice-portfolio/scoring/:portfolioKey" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider><ToastProvider><ProtectedRoute requiredPlatform="simulator"><Layout>
+                      <SimPortfolioScoringScreen base="/simulator/practice-portfolio" />
+                    </Layout></ProtectedRoute></ToastProvider></ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/practice-portfolio/scoring/:portfolioKey/projects/:projectKey" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider><ToastProvider><ProtectedRoute requiredPlatform="simulator"><Layout>
+                      <SimPortfolioScoringScreen base="/simulator/practice-portfolio" />
+                    </Layout></ProtectedRoute></ToastProvider></ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/practice-portfolio/scenarios" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider><ToastProvider><ProtectedRoute requiredPlatform="simulator"><Layout>
+                      <SimPortfolioScenarioScreen base="/simulator/practice-portfolio" />
+                    </Layout></ProtectedRoute></ToastProvider></ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/practice-portfolio/scenarios/:portfolioKey" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider><ToastProvider><ProtectedRoute requiredPlatform="simulator"><Layout>
+                      <SimPortfolioScenarioScreen base="/simulator/practice-portfolio" />
+                    </Layout></ProtectedRoute></ToastProvider></ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/practice-portfolio/scenarios/:portfolioKey/:scenarioKey" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider><ToastProvider><ProtectedRoute requiredPlatform="simulator"><Layout>
+                      <SimPortfolioScenarioScreen base="/simulator/practice-portfolio" />
+                    </Layout></ProtectedRoute></ToastProvider></ThemeProvider>
+                  </Suspense>
+                } />
+
+                <Route path="simulator/billing/*" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider><ToastProvider><ProtectedRoute requiredPlatform="simulator"><Layout>
+                      <SimBillingRoutes />
+                    </Layout></ProtectedRoute></ToastProvider></ThemeProvider>
+                  </Suspense>
+                } />
+
                 {/* Practice Portfolio & Governance Routes */}
                 <Route path="simulator/practice-portfolio" element={
                   <Suspense fallback={<LoadingFallback />}>
@@ -6075,6 +6180,20 @@ export function SimulatorRouteElements() {
                         <ProtectedRoute requiredPlatform="simulator">
                           <Layout scope="pmo">
                             <TimesheetSettings />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                {/* v1352 Slice 1 (D7): Reminder Lead Times — PMO Configuration (practice projects) */}
+                <Route path="simulator/pmo/reminder-lead-times" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout scope="pmo">
+                            <ReminderLeadTimes />
                           </Layout>
                         </ProtectedRoute>
                       </ToastProvider>

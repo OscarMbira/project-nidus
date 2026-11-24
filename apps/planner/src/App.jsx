@@ -34,6 +34,8 @@ const InviteAcceptPage = lazy(() => import('./pages/app/InviteAcceptPage.jsx'))
 const UpgradePage = lazy(() => import('./pages/app/UpgradePage.jsx'))
 const BillingPage = lazy(() => import('./pages/app/BillingPage.jsx'))
 const ScheduleRoutes = lazy(() => import('@nidus/planning/routes/ScheduleRoutes.jsx'))
+const CrossProjectLevellingScreen = lazy(() => import('@nidus/planning/screens/levelling/CrossProjectLevellingScreen.jsx'))
+const ClientBillingRoutes = lazy(() => import('@nidus/planning/screens/billing/BillingScreens.jsx').then((m) => ({ default: m.BillingRoutes })))
 const PlanningHubRoutes = lazy(() => import('@nidus/planning/routes/PlanningHubRoutes.jsx'))
 // v1272 Ask Nidus (D16: schedule, resources and dependencies only)
 const AskNidusWorkspace = lazy(() => import('@nidus/ui/ai/AskNidusWorkspace.jsx'))
@@ -118,6 +120,8 @@ export function PlannerRoutes() {
           <Route path="projects" element={<ProjectsListPage />} />
           <Route path="projects/new" element={<ProjectCreatePage />} />
           <Route path="schedule/*" element={<ScheduleRoutes fallback={<Spinner />} />} />
+          <Route path="levelling" element={<CrossProjectLevellingScreen />} />
+          <Route path="client-billing/*" element={<ClientBillingRoutes />} />
           <Route path="planning/*" element={<PlanningHubRoutes fallback={<Spinner />} />} />
           <Route path="members" element={<MembersPage />} />
           <Route path="settings" element={<SettingsPage />} />

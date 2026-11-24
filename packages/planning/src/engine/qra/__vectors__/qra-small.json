@@ -1,0 +1,5 @@
+{
+  "name": "Two-task chain, one certain risk on the first task",
+  "projectStart": "2026-10-12",
+  "note": "Monday. Risk always occurs and adds 2 working days to task A. Finish must match the deterministic engine with A's duration increased by 2."
+}

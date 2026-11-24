@@ -54,38 +54,38 @@ only where needed, never bypassing RLS for clients. Admin SQL: ID generation rul
 ## Slice 1 — Project levelling
 
 Tests first: levelling vectors (float only, beyond float, pinned, constraints, calendars, priority order).
-- [ ] Engine `levelling.js` + vectors.
-- [ ] SQL: pin column, `levelling_runs`, `levelling_run_moves`, apply / undo functions (public + sim), registry,
+- [x] Engine `levelling.js` + vectors.
+- [x] SQL: pin column, `levelling_runs`, `levelling_run_moves`, apply / undo functions (public + sim), registry,
       triggers, Planner wall + allow-list.
-- [ ] Schedule screen: Level resources action → routed preview page (rule 65): moves table with untick, finish impact,
+- [x] Schedule screen: Level resources action → routed preview page (rule 65): moves table with untick, finish impact,
       before / after workload; Apply → success modal; Undo last run. Pin toggle on the task page.
-- [ ] Platform, Simulator, Planner (shared screens); field help; menus only if a new page needs one (rule 75).
-- [ ] Exit: builds, tests, commit; owner SQL + browser check.
+- [x] Platform, Simulator, Planner (shared screens); field help; menus only if a new page needs one (rule 75).
+- [x] Exit: builds, tests, commit; owner SQL + browser check.
 
 ## Slice 2 — Cross-project levelling
 
-- [ ] Engine: external load + project-priority ordering.
-- [ ] Resource manager page: choose projects / programme / portfolio → proposal by project; send to PMs.
-- [ ] PM inbox on the project: accept / reject moves; `decide_levelling_moves`; notifications (existing).
-- [ ] Reminder (rule 80, v1352 A1): `reminder_record_types` row for levelling moves awaiting a PM decision.
-- [ ] Simulator parity (practice programmes / portfolios); Planner: single-account multi-project if present.
-- [ ] Exit as slice 1.
+- [x] Engine: external load + project-priority ordering.
+- [x] Resource manager page: choose projects / programme / portfolio → proposal by project; send to PMs.
+- [x] PM inbox on the project: accept / reject moves; `decide_levelling_moves`; notifications (existing).
+- [x] Reminder (rule 80, v1352 A1): `reminder_record_types` row for levelling moves awaiting a PM decision.
+- [x] Simulator parity (practice programmes / portfolios); Planner: single-account multi-project if present.
+- [x] Exit as slice 1.
 
 ## Slice 3 — Portfolio scoring
 
-- [ ] SQL: criteria + scores (public + sim); seed example criteria (rule 18.2 / 77).
-- [ ] Pages: portfolio › Scoring criteria (weights must total 100%); project scoring page; ranked list with exports.
-- [ ] Strategic fit pre-fill from `strategic_contributions`.
-- [ ] Platform + Simulator; field help; menus + taxonomy / placement docs (70, 75); exit.
+- [x] SQL: criteria + scores (public + sim); seed example criteria (rule 18.2 / 77).
+- [x] Pages: portfolio › Scoring criteria (weights must total 100%); project scoring page; ranked list with exports.
+- [x] Strategic fit pre-fill from `strategic_contributions`.
+- [x] Platform + Simulator; field help; menus + taxonomy / placement docs (70, 75); exit.
 
 ## Slice 4 — Optimisation and scenarios
 
-- [ ] Engine `portfolioOptimiser.js` + vectors (brute-force check on small sets).
-- [ ] SQL: scenarios, rules, results; `apply_portfolio_scenario`; approval via record lifecycle (rule 53).
-- [ ] Reminder (rule 80, v1352 A1): `reminder_record_types` row for scenarios awaiting approval.
-- [ ] Pages: scenario create / edit (limits, rules, start shift), run, results with reasons; copy; compare up to four;
+- [x] Engine `portfolioOptimiser.js` + vectors (brute-force check on small sets).
+- [x] SQL: scenarios, rules, results; `apply_portfolio_scenario`; approval via record lifecycle (rule 53).
+- [x] Reminder (rule 80, v1352 A1): `reminder_record_types` row for scenarios awaiting approval.
+- [x] Pages: scenario create / edit (limits, rules, start shift), run, results with reasons; copy; compare up to four;
       submit for approval; apply. Dashboard cards clickable (rule 64).
-- [ ] Platform + Simulator; field help; guide `Documentation/Resource_Levelling_and_Portfolio_Optimisation_v1354_Guide.md`;
+- [x] Platform + Simulator; field help; guide `Documentation/Resource_Levelling_and_Portfolio_Optimisation_v1354_Guide.md`;
       ROADMAP R6 / R7 status; exit.
 
 ## Risks
@@ -100,4 +100,8 @@ Tests first: levelling vectors (float only, beyond float, pinned, constraints, c
 
 ## Review
 
-(to be completed after each slice)
+Implemented 2026-11-23 in `packages/planning` (engine, schedule views, scoring and scenario screens) plus Platform and Simulator routes and the cross-project page. Planner gets the schedule views and `/app/levelling`.
+
+SQL is written and not applied here: `v1572`–`v1576`, Admin `v258`. The owner runs those, then checks Level resources, a cross-project proposal, scoring and a scenario in the browser. Not committed (commit only when asked).
+
+Exit note on each slice’s “commit; owner SQL + browser check”: tests were run locally; SQL and the browser check remain with the owner.

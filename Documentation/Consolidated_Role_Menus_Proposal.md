@@ -83,6 +83,7 @@ Sidebar depth rule: **Level 1 = section, Level 2 = page, Level 3 = (rare) sub-pa
 | Approvals History (v1343) | 6 Risks, Changes & Governance → Governance | Tab beside Stage Gates and Meetings (slot `governance`); read-only |
 | Messages: Comms Hub, Channels, Direct, Meeting Summaries (v1343 tabs) | 1 Home → Communications → Messages | One entry with tabs (slot `messages`) |
 | Planning (Schedule, Milestones, Dependencies, Baselines, Assumptions, Scenarios) | 4 Plan & Schedule | Calendar *settings* are in Project Settings |
+| Quantitative analysis (v1355) | 4 Plan & Schedule | Also a tab on the schedule. Planner is schedule-only (no risks or cost). |
 | RAID → Dependencies | 4 Plan & Schedule → Dependencies | One home; the RAID Log shows them as a tab |
 | Quality (plan, reviews, acceptance, non-conformance, configuration items) | 5 Deliver & Test → Quality | |
 | Testing (planning, cases, execution, evidence) and Defects | 5 Deliver & Test → Testing / Defects | |
@@ -100,6 +101,7 @@ Sidebar depth rule: **Level 1 = section, Level 2 = page, Level 3 = (rare) sub-pa
 | Procurement | 9 Money & Resources → Procurement | |
 | Reports | Footer → Reports | |
 | Documents | Footer → Documents | |
+| Reminder Lead Times (v1352, organisation level) | PMO Organisation zone (sub-menu of the PMO Admin category, `pmo_oversight`) | Not in the PM menu; Simulator: PMO Admin › Reminder Lead Times |
 
 ---
 
@@ -217,7 +219,8 @@ PROJECT MANAGER
 │
 ├── 4. Plan & Schedule
 │   ├── Schedule                tabs: Plan Sheet · Activity Register · Board · Network · Critical Path ·
-│   │                                 Look-Ahead · Variance · Workload
+│   │                                 Look-Ahead · Variance · Workload · Risk analysis (v1355)
+│   ├── Quantitative analysis (v1355)
 │   ├── Milestones
 │   ├── Dependencies            tabs: Register · Parties · Incoming · Outgoing · Escalated
 │   ├── Baselines
@@ -268,7 +271,8 @@ PROJECT MANAGER
 │
 ├── 9. Money & Resources
 │   ├── Budget & Costs          tabs: Budget · Actuals · Forecast · Cost Performance · ◆ Appropriation [GOV]
-│   ├── Resources               tabs: Resource Plan · Assignments · Capacity · ◆ Equipment [CON]
+│   ├── Resources               tabs: Resource Plan · Assignments · Capacity · Level resources (v1354) · ◆ Equipment [CON]
+│   ├── Billing                 tabs: Clients · Rate cards · Tax codes · Client invoices · Revenue and margin (v1353)
 │   ├── Timesheets              tabs: Time Entry & Work Plan · Approvals · Exceptions · Utilisation
 │   ├── Procurement             tabs: Plan · Vendors · Contracts · Purchase Requests · Vendor Performance ·
 │   │                                 Closure · ◆ Tenders · Suppliers · Materials
@@ -874,6 +878,7 @@ PMO ADMIN / ACCOUNT OWNER
     │                                  Configuration Item Types · Constraint Categories
     ├── Regional & Format Settings
     ├── Working Days & Holidays
+    ├── Reminder Lead Times      (v1352 — days before a review / due date / sign-off that reminders start)
     ├── AI Settings
     └── Account                  tabs: Organisation · Branding · Subscription & Billing (Account Owner)
 ```

@@ -10,7 +10,9 @@ import ExportListMenu from '@nidus/ui/ExportListMenu'
 import { useViewMode } from '@nidus/shared/hooks/useViewMode'
 import ViewToggle from '@nidus/ui/ViewToggle'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
+import RowNumberBadge from '@nidus/ui/RowNumberBadge'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import { riskEmv } from '@nidus/planning/engine/qra/riskExposure.js'
 
 const PRACTICE_RISK_COLUMNS = [
   { key: 'risk_title', label: 'Title' },
@@ -27,7 +29,7 @@ export default function PracticeRiskRegister() {
   const [searchInput, setSearchInput] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [filters, setFilters] = useState({ status: '', risk_level: '' })
-  const [riskViewMode, setRiskViewMode] = useViewMode('simulator-practice-risk-register', 'grid')
+  const [riskViewMode, setRiskViewMode] = useViewMode('simulator-practice-risk-register', 'list')
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(searchInput), 300)
@@ -42,7 +44,14 @@ export default function PracticeRiskRegister() {
     try {
       setLoading(true)
       const result = await getPracticeRisks(projectId, { ...filters, search: debouncedSearch })
-      if (result.success) setRisks(result.data || [])
+      if (result.success) {
+        const rows = [...(result.data || [])].sort((a, b) => {
+          const title = String(a.risk_title || '').localeCompare(String(b.risk_title || ''), undefined, { sensitivity: 'base' })
+          if (title !== 0) return title
+          return String(a.created_at || '').localeCompare(String(b.created_at || ''))
+        })
+        setRisks(rows)
+      }
     } catch (error) {
       console.error('Error loading risks:', error)
     } finally {
@@ -95,14 +104,14 @@ export default function PracticeRiskRegister() {
       ) : riskViewMode === 'list' ? (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-            <thead className="bg-gray-50 dark:bg-gray-900">
+            <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
                 <TableRowNumberHeader className="!normal-case" />
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Risk</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Category</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Level</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Score</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-200 uppercase">Risk</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-200 uppercase">Category</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-200 uppercase">Level</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-200 uppercase">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-200 uppercase">Expected cost</th>
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
@@ -110,11 +119,12 @@ export default function PracticeRiskRegister() {
                 <tr
                   key={risk.id}
                   onClick={() => navigate(`/simulator/practice-risk-register/${risk.id}?projectId=${projectId}`)}
-                  className="cursor-pointer hover:bg-gray-700/50 dark:hover:bg-gray-700"
+                  className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50"
                 >
+                  <TableRowNumberCell number={getDisplayRowNumber(index)} />
                   <td className="px-6 py-4">
                     <div className="text-sm font-medium text-gray-900 dark:text-white">{risk.risk_title}</div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">{risk.risk_description?.substring(0, 60)}...</div>
+                    <div className="text-sm text-gray-700 dark:text-gray-200">{risk.risk_description?.substring(0, 60)}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{risk.risk_category || 'N/A'}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -132,8 +142,8 @@ export default function PracticeRiskRegister() {
                       {risk.risk_level}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{risk.status}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{risk.risk_score}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-200">{risk.status}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm tabular-nums text-gray-700 dark:text-gray-200">{Math.round(riskEmv(risk).costEmv).toLocaleString()}</td>
                 </tr>
               ))}
             </tbody>

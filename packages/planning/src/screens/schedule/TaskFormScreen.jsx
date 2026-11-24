@@ -37,6 +37,7 @@ const EMPTY = {
   schedule_mode: 'auto', planned_start_date: '', planned_end_date: '',
   constraint_type: 'asap', constraint_date: '', percentage_complete: 0,
   actual_start_date: '', actual_end_date: '', estimated_hours: '', priority: 'medium', assigned_to_user_id: '',
+  is_level_pinned: false,
   parent_task_id: '', outline_position: '',
 }
 
@@ -453,6 +454,10 @@ export function TaskForm({ taskKey = null, mode = 'view', parentKey = null, onCl
             {form.schedule_mode === 'auto' && form.constraint_type !== 'asap' && (
               <Field label="Constraint date *" helpKey="public.tasks.constraint_date"><RegionalDateInput eventStyle className={input} value={form.constraint_date || ''} onChange={set('constraint_date')} /></Field>
             )}
+            <label data-help="exempt" className="flex items-center gap-2 text-sm text-gray-800 dark:text-gray-200 sm:col-span-2">
+              <input type="checkbox" checked={!!form.is_level_pinned} onChange={(e) => setForm((f) => ({ ...f, is_level_pinned: e.target.checked }))} />
+              <FieldLabelWithHelp as="span" helpKey="public.tasks.is_level_pinned">Keep this date when levelling resources</FieldLabelWithHelp>
+            </label>
             {!isNew && (
               <p className="sm:col-span-2 text-xs text-gray-500 dark:text-gray-400">
                 Float {task?.slack_days ?? '—'} days{task?.is_critical_path ? ' · On the critical path' : ''}

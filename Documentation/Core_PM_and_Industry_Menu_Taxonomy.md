@@ -149,7 +149,9 @@ PROJECT MANAGEMENT
 │   │   ├── Critical Path
 │   │   ├── Look-Ahead Plan
 │   │   ├── Schedule Variance
-│   │   └── Workload (v1239)
+│   │   ├── Workload (v1239)
+│   │   ├── Level resources (v1354) — schedule view, with Levelling proposals
+│   │   └── Quantitative analysis (v1355) → §4 Plan & Schedule
 │   ├── Milestones
 │   │   ├── Milestone Register
 │   │   ├── Key Dates
@@ -272,6 +274,7 @@ PROJECT MANAGEMENT
 │   │   ├── Role Assignments
 │   │   └── Assignment History
 │   ├── Capacity
+│   │   ├── Level resources (v1354) → §9 Money & Resources
 │   │   ├── Availability
 │   │   ├── Allocation
 │   │   ├── Over-allocation
@@ -289,6 +292,11 @@ PROJECT MANAGEMENT
 │       └── Utilisation
 │
 ├── Cost Management
+│   ├── Clients (v1353) → §9 Money & Resources
+│   ├── Rate cards (v1353) → §9 Money & Resources
+│   ├── Tax codes (v1353) → §9 Money & Resources
+│   ├── Client invoices (v1353) → §9 Money & Resources
+│   ├── Revenue and margin (v1353) → §9 Money & Resources
 │   ├── Budget
 │   │   ├── Budget Structure
 │   │   ├── Budget Lines
@@ -1809,7 +1817,7 @@ Project Planner
     └── Upgrade
 ```
 
-Schedule sub-navigation (Level 4, every shell — Platform, Simulator and Planner, v1239): Tasks · Board · Plan Sheet (renamed from Gantt, v1265) · Network · Critical path · Milestones · Look-ahead · Variance · Dependencies · Calendar · Baselines · Workload · My time · Import / export · Due dates.
+Schedule sub-navigation (Level 4, every shell — Platform, Simulator and Planner, v1239): Tasks · Board · Plan Sheet (renamed from Gantt, v1265) · Network · Critical path · Milestones · Look-ahead · Variance · Dependencies · Calendar · Baselines · Workload · Level resources (v1354) · Levelling proposals (v1354) · My time · Import / export · Due dates.
 
 # 24. Ask Nidus and AI (v1272)
 
@@ -1882,6 +1890,19 @@ Simulator
 └── PMO Admin
     ├── PMO Configuration (v1292) — /simulator/pmo/configuration
     └── AI Settings (v1272)
+```
+
+Additive entries (v1352 Slice 1, PRD `projectprd/v1352_background_jobs_PRD.md` D7) — reminder lead times per
+record type (risk reviews, issues, actions, milestones, sign-offs, daily log items), also a PMO Configuration area:
+
+```text
+Platform
+└── PMO Admin (pmo-cat-admin)
+    └── Reminder Lead Times (v1352) — /platform/pmo-admin/reminder-lead-times → Organisation zone (PMO sub-menu)
+
+Simulator
+└── PMO Admin (sim_pmo_cat_admin)
+    └── Reminder Lead Times (v1352) — /simulator/pmo/reminder-lead-times → Organisation zone (PMO sub-menu, practice projects)
 ```
 
 ---

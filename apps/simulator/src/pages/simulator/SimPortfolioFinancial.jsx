@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Plus, Search, RefreshCw, AlertCircle, X, Pencil, Trash2 } from 'lucide-react'
@@ -8,7 +9,9 @@ import {
   saveSimPortfolioBudget,
   deleteSimPortfolioBudget,
 } from '../../services/simPortfolioService'
-import { platformDb } from '@nidus/supabase'
+import { platformDb, simDb } from '@nidus/supabase'
+import { createBillingData } from '@nidus/planning/services/billingData.js'
+import DashboardStatCard from '@nidus/ui/DashboardStatCard'
 import ExportListMenu from '@nidus/ui/ExportListMenu'
 import SelectField from '@nidus/ui/SelectField'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
@@ -46,6 +49,11 @@ function UtilBar({ approved, spent }) {
 const EMPTY_FORM = { practice_portfolio_id: '', budget_name: '', budget_type: '', budget_currency: 'USD', approved_amount: '', actual_spent: '', remaining_amount: '', budget_status: 'draft' }
 
 function SimPortfolioFinancialBody() {
+  const navigate = useNavigate()
+  const [billed, setBilled] = useState(0)
+  const [wip, setWip] = useState(0)
+  const [billingCost, setBillingCost] = useState(0)
+  const [margin, setMargin] = useState(0)
   const [rows, setRows]         = useState([])
   const [portfolios, setPortfolios] = useState([])
   const [loading, setLoading]   = useState(true)
@@ -79,6 +87,18 @@ function SimPortfolioFinancialBody() {
   }, [filterPortfolio, filterType, filterStatus])
 
   useEffect(() => { load() }, [load])
+  useEffect(() => {
+    let live = true
+    ;(async () => {
+      const { data: links } = await simDb.from('practice_portfolio_projects').select('practice_project_id')
+      const ids = [...new Set((links || []).map((r) => r.practice_project_id).filter(Boolean))]
+      if (!ids.length) { if (live) { setBilled(0); setWip(0); setBillingCost(0); setMargin(0) } return }
+      const figs = await createBillingData(true).figuresFor(ids).catch(() => [])
+      const sum = (key) => figs.reduce((s, r) => s + Number(r[key] || 0), 0)
+      if (live) { setBilled(sum('revenue')); setWip(sum('wip')); setBillingCost(sum('cost')); setMargin(sum('margin')) }
+    })().catch(() => {})
+    return () => { live = false }
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -161,7 +181,7 @@ function SimPortfolioFinancialBody() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         {[
           { label: 'Total Approved', value: `$${fmt(totalApproved)}` },
           { label: 'Total Spent',    value: `$${fmt(totalSpent)}` },
@@ -173,6 +193,10 @@ function SimPortfolioFinancialBody() {
             <p className="text-xl font-bold text-white mt-1">{k.value}</p>
           </div>
         ))}
+        <DashboardStatCard label="Billed revenue" value={billed} onClick={() => navigate('/simulator/billing/invoices')} />
+        <DashboardStatCard label="Unbilled value" value={wip} />
+        <DashboardStatCard label="Cost" value={billingCost} />
+        <DashboardStatCard label="Margin" value={margin} />
       </div>
 
       {success && <div className="p-3 bg-green-900/40 border border-green-700 rounded-lg text-green-300 text-sm">{success}</div>}

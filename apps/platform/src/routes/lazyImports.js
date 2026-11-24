@@ -234,6 +234,7 @@ export const TimesheetReviewReasons = lazy(() => import('../pages/platform-app/T
 export const TimesheetWorkCategories = lazy(() => import('../pages/platform-app/TimesheetWorkCategories'))
 export const TimesheetOvertimeTypes = lazy(() => import('../pages/platform-app/TimesheetOvertimeTypes'))
 export const TimesheetSettings = lazy(() => import('../pages/pmo-admin/TimesheetSettings'))
+export const ReminderLeadTimes = lazy(() => import('../pages/pmo-admin/ReminderLeadTimes')) // v1352 Slice 1 (D7)
 export const ProjectTimesheetSettings = lazy(() => import('../pages/projectSetup/ProjectTimesheetSettings'))
 export const TimesheetOverviewReport = lazy(() => import('../pages/platform-app/TimesheetOverviewReport'))
 export const FundingSources = lazy(() => import('../pages/platform-app/FundingSources'))
