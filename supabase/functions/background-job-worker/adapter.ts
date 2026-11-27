@@ -7,6 +7,8 @@
  *                                              body, or a url-encoded `form` string such as a Paynow message)
  *   ctx.httpGet(url)                           → { ok, status, text }   an outside HTTPS address (v1352 Slice 2)
  *   ctx.storageRemove(bucket, paths)           → { removed, error }   delete Storage files (v1352 Slice 3)
+ *   ctx.storageDownload(bucket, path)          → { data: Uint8Array, error }   read a Storage file (v1358)
+ *   ctx.storageUpload(bucket, path, bytes, type) → { error }   write (or replace) a Storage file (v1358)
  *   ctx.env(name)                              → string | undefined   server-only setting
  *   ctx.log(message)
  *
@@ -23,6 +25,8 @@ export interface JobContext {
   ) => Promise<{ ok: boolean; status: number; data: any }>
   httpGet: (url: string) => Promise<{ ok: boolean; status: number; text: string }>
   storageRemove: (bucket: string, paths: string[]) => Promise<{ removed: number; error: { message: string } | null }>
+  storageDownload: (bucket: string, path: string) => Promise<{ data: Uint8Array | null; error: { message: string } | null }>
+  storageUpload: (bucket: string, path: string, bytes: Uint8Array, contentType: string) => Promise<{ error: { message: string } | null }>
   env: (name: string) => string | undefined
   log: (message: string) => void
 }
@@ -67,6 +71,15 @@ export function createJobContext(): JobContext {
     storageRemove: async (bucket, paths) => {
       const { data, error } = await db.storage.from(bucket).remove(paths)
       return { removed: Array.isArray(data) ? data.length : 0, error: error ? { message: error.message } : null }
+    },
+    storageDownload: async (bucket, path) => {
+      const { data, error } = await db.storage.from(bucket).download(path)
+      if (error || !data) return { data: null, error: { message: error?.message || 'not found' } }
+      return { data: new Uint8Array(await data.arrayBuffer()), error: null }
+    },
+    storageUpload: async (bucket, path, bytes, contentType) => {
+      const { error } = await db.storage.from(bucket).upload(path, bytes, { contentType, upsert: true })
+      return { error: error ? { message: error.message } : null }
     },
     env: (name) => Deno.env.get(name) ?? undefined,
     log: (message) => console.log(message),

@@ -25,7 +25,7 @@ next starts. SQL numbers are taken from `ls SQL` immediately before each file (r
 | Table / change | Slice | Purpose |
 |---|---|---|
 | `organisation_data_requests` | 1 | Request: reference (display ID), account, kind export / deletion, status, requested by, on behalf of (admin), reason, timestamps, export file path, expires at, error |
-| `organisation_data_kept_tables` | 1 | Data-driven kept list: table, reason, keep period (D6, D7) |
+| `organisation_data_table_rules` | 1 | Per-table rules (replaces the planned kept list): in the export or not, delete or keep with reason and period (D6, D7), allowed columns, extra scope (people) |
 | `accounts` lifecycle columns | 2 / 3 | `legal_hold`, `legal_hold_reason`, `locked_at`, `lock_reason`, `deletion_due_at` |
 | `organisation_deletion_records` | 3 | Kept after deletion: reference, organisation name, requester / approver / confirmer, dates, tables + row counts deleted, kept tables + reasons, certificate path |
 
@@ -37,15 +37,18 @@ both CLAUDE.md files (rule 34.5).
 
 Tests first: footprint + kept list cover every organisation table (no table unaccounted for); ZIP contents (CSV +
 JSON per table, files, dictionary, display IDs); owner-only request; 7-day expiry.
-- [ ] SQL: `organisation_data_requests`, `organisation_data_kept_tables` (seeded), request / list / download-URL RPCs
-      (owner only), private bucket `organisation-exports`, registry, display-ID trigger, Planner wall.
-- [ ] Job `organisation.export_build` (handler): streams each table to CSV + JSON, copies referenced Storage files,
+- [x] SQL: `organisation_data_requests`, `organisation_data_table_rules` (seeded), scope / plan / page RPCs, owner
+      request / list RPCs, private bucket `organisation-exports` + owner read policy, registry, display-ID trigger.
+      (`SQL/v1600`, tests `SQL/v1601`, Admin `SQL/v264`)
+- [x] Job `organisation.export_build` (handler): streams each table to CSV + JSON, copies referenced Storage files,
       writes the read-me / dictionary, uploads the ZIP, resumes if a run stops; owner notice + email (no link).
-- [ ] Expired exports removed after 7 days (retention / storage clean-up).
-- [ ] Pages: Platform (Organisation › Data export & deletion, routed) and Planner (Settings): request export, list
-      with status, download. Field help, Audit tab, success modal; menu catalogue + placement + taxonomy (rules 70, 75).
-- [ ] Admin: export requests visible in a read-only list.
-- [ ] Exit: builds, tests; owner SQL + a real export downloaded and opened.
+- [x] Expired exports removed after 7 days: job `organisation.export_expire` (also fails builds stalled 24 hours).
+- [x] Pages: Platform (Account › Data export, `/platform/organisation/data-export`) and Planner (Settings › Data
+      export, `/app/settings/data`): request export, list with status, download per part; success modal; menu
+      catalogue + grants + placement + taxonomy (rules 70, 75). No input fields, so no field help; not a record
+      form, so no Audit tab.
+- [x] Admin: moved to Slice 2, which builds the Admin requests list (one list for exports and deletions).
+- [ ] Exit: builds, tests (done); owner SQL + a real export downloaded and opened.
 
 ## Slice 2 — Admin tools (D13, D14)
 
@@ -81,4 +84,36 @@ and leaves another untouched; kept tables keep rows; member rules (D8); certific
 
 ## Review
 
-(Added after implementation.)
+### Slice 1 review (2026-11-27) — code complete, SQL not run
+
+**Run order (owner):**
+
+| # | Repo | Step | Status |
+|---|---|---|---|
+| 0 | — | Redeploy `background-job-worker` (`--no-verify-jwt`): new handlers `organisation.export_build`, `organisation.export_expire`; adapter gained `storageDownload` / `storageUpload` | pending |
+| 1 | monorepo | `SQL/v1600_organisation_data_export.sql` (ends with a read-only check: tables in scope, menus, jobs) | pending |
+| 2 | Admin | `SQL/v264_organisation_data_requests_id_generation_seed.sql` | pending |
+| 3 | monorepo | `SQL/v1251_planner_table_wall.sql` (re-run; two new tables) | pending |
+| 4 | monorepo | `SQL/v1601_organisation_data_export_tests.sql` (rolls back; expect "v1601: all organisation export tests passed (rolling back)") | pending |
+
+**Built:** scope from the database catalogue (account / organisation / project columns, foreign-key children up
+to three levels, rule scopes; `users` never a parent); per-table rules (`organisation_data_table_rules`); export
+plan stored on the request so resumed runs use the same plan; worker builds ZIP parts (~40 MB, stored, own ZIP
+writer — no library) with README, dictionary, CSV + JSON per table (large tables split), uploaded files; checkpoint
+after each part, continuation when the 100-second budget is used; owner notice + email without a link; 7-day
+expiry; owner-only download policy on the private bucket; shared page in Platform and Planner.
+
+**Decisions made while building (owner may change):**
+- Large exports come as several ZIP parts (about 40 MB each) instead of one ZIP, so the worker stays inside the
+  edge memory and the 50 MB upload limit. Files over 45 MB are listed in `files-not-included.csv`.
+- People export only name, email, job title, active flag and created date (`users` rule); secret-looking columns
+  (hash, secret, token, password, encrypted, salt, otp) are never exported.
+- CSV text starting with = + - @ gets a leading apostrophe (spreadsheet formula safety).
+- The Admin read-only list moved to Slice 2 (one list for exports and deletions).
+
+**Tests:** worker Vitest `v1358OrganisationExport.test.js` 12/12; screen test `OrganisationDataExportPage.test.jsx`
+4/4; `check-background-jobs` passes; SQL tests E1–E7 written (owner runs).
+
+**Known gaps / notes:** the Planner table allow-list is already stale from other work (API, SCIM, billing
+tables) — not changed by this slice, which uses RPCs only. Tables linked more than three foreign keys away
+from the organisation are not exported; E1 prints the count found.

@@ -11,6 +11,7 @@ import { PmisGapRouteElements, PmisGapPlatformNestedRouteElements } from '../mod
 import { RecordLifecycleRouteElements, RecordLifecyclePlatformNestedRouteElements } from '../modules/record-lifecycle/routes/RecordLifecycleRoutes.jsx'
 import { PmPlanningFederated, PmoPlanningFederated } from './PlanningFederatedOutlet.jsx'
 import { PmoFederated } from './PmoFederatedOutlet.jsx'
+import { OrganisationDataExportPage } from './lazyImports' // v1358 organisation data export
 import { AiSettingsPage, ReportLayoutsPage, ReportLayoutEditor, IndustryModulesPage, MyApprovalsPage, MeetingFollowUpsPage, ApprovalsHistoryPage } from './lazyImports' // v1272 AI settings + report layouts; v1341 Industry Modules
 import {
   LoadingFallback,
@@ -2645,6 +2646,13 @@ export function PlatformRouteElements() {
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
                                     <AiSettingsPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="organisation/data-export" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <OrganisationDataExportPage />
                                   </ProtectedRoute>
                                 </Suspense>
                               } />

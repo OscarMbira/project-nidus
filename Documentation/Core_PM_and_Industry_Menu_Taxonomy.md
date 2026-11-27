@@ -1936,3 +1936,17 @@ New in v1341 (catalogue rows shown only in the consolidated sidebar, `is_visible
 - Home › Communications › Messages (v1343 tabs) → §1 Home — Comms Hub · Channels · Direct · Meeting Summaries as one entry with tabs (slot `messages`)
 - Role menu: Project Administrator — placement key `support` (v1343, SQL v1471): the Project Manager's placements minus authority pages, plus Team Timesheets / My Timesheets (proposal §6.7a)
 
+
+# 28. Organisation data export and deletion (v1358)
+
+Additive entries (PRD `projectprd/v1358_organisation_data_export_and_deletion_PRD.md`). Account Owner only. Deletion requests, legal hold and ownership transfer arrive in later slices on the same page and in Admin. Simulator has no organisation-level page: learners use the Privacy Center (v1108).
+
+```text
+Platform
+└── Account / Organisation Settings
+    └── Data export (v1358) → § Organisation zone — request a full export, download the ZIP parts for 7 days
+
+Project Planner
+└── Settings
+    └── Data export (v1358)
+```

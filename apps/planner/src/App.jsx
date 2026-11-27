@@ -40,6 +40,7 @@ const PlanningHubRoutes = lazy(() => import('@nidus/planning/routes/PlanningHubR
 // v1272 Ask Nidus (D16: schedule, resources and dependencies only)
 const AskNidusWorkspace = lazy(() => import('@nidus/ui/ai/AskNidusWorkspace.jsx'))
 const AiSettingsPage = lazy(() => import('@nidus/ui/ai/AiSettingsPage.jsx'))
+const OrganisationDataExportPage = lazy(() => import('@nidus/ui/organisationData/OrganisationDataExportPage.jsx')) // v1358
 const AskNidusWidget = lazy(() => import('@nidus/ui/ai/AskNidusWidget.jsx'))
 
 const Spinner = ({ text = 'Loading…' }) => <div className="p-6 text-sm text-gray-600 dark:text-gray-300">{text}</div>
@@ -126,6 +127,7 @@ export function PlannerRoutes() {
           <Route path="members" element={<MembersPage />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="settings/ai" element={<AiSettingsPage />} />
+          <Route path="settings/data" element={<OrganisationDataExportPage />} />
           <Route path="ask" element={<AskNidusWorkspace settingsPath="/app/settings/ai" />} />
           <Route path="billing" element={<BillingPage />} />
           <Route path="upgrade" element={<UpgradePage />} />

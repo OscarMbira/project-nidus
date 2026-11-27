@@ -61,6 +61,7 @@ export const MethodologySelection = lazy(() => import('../pages/MethodologySelec
 export const PlatformDashboard = lazy(() => import('../pages/platform-app/Dashboard'))
 export const AIWorkspace = lazy(() => import('@nidus/ui/ai/AskNidusWorkspace.jsx')) // v1272 Ask Nidus
 export const AiSettingsPage = lazy(() => import('@nidus/ui/ai/AiSettingsPage.jsx')) // v1272
+export const OrganisationDataExportPage = lazy(() => import('@nidus/ui/organisationData/OrganisationDataExportPage.jsx')) // v1358
 export const ReportLayoutsPage = lazy(() => import('@nidus/ui/reports/ReportLayoutsPage.jsx')) // v1272 D12a
 export const ReportLayoutEditor = lazy(() => import('@nidus/ui/reports/ReportLayoutEditor.jsx')) // v1272 D12a
 // PMO and PM Independent Dashboards

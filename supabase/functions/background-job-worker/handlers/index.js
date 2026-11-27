@@ -13,6 +13,8 @@ import * as billingScheduleDue from './billing.schedule_due.js'
 import * as emailSend from './email.send.js'
 import * as paymentsPendingRecheck from './payments.pending_recheck.js'
 import * as storageCleanup from './storage.cleanup.js'
+import * as organisationExportBuild from './organisation.export_build.js'
+import * as organisationExportExpire from './organisation.export_expire.js'
 
 export const handlers = {
   'ai.embed': aiEmbed,
@@ -26,4 +28,6 @@ export const handlers = {
   'email.send': emailSend,
   'payments.pending_recheck': paymentsPendingRecheck,
   'storage.cleanup': storageCleanup,
+  'organisation.export_build': organisationExportBuild,
+  'organisation.export_expire': organisationExportExpire,
 }

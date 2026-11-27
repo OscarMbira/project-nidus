@@ -102,6 +102,7 @@ Sidebar depth rule: **Level 1 = section, Level 2 = page, Level 3 = (rare) sub-pa
 | Reports | Footer → Reports | |
 | Documents | Footer → Documents | |
 | Reminder Lead Times (v1352, organisation level) | PMO Organisation zone (sub-menu of the PMO Admin category, `pmo_oversight`) | Not in the PM menu; Simulator: PMO Admin › Reminder Lead Times |
+| Data export (v1358, organisation level, Account Owner only) | PMO Organisation zone → Account (`plat_sec_account`, default section `organisation`) | Not in the PM menu; Planner: Settings › Data export; Simulator: none (learners use the Privacy Center, v1108) |
 
 ---
 
@@ -880,6 +881,7 @@ PMO ADMIN / ACCOUNT OWNER
     ├── Working Days & Holidays
     ├── Reminder Lead Times      (v1352 — days before a review / due date / sign-off that reminders start)
     ├── AI Settings
+    ├── Data export              (v1358 — Account Owner: full copy of the organisation’s data, ZIP, 7 days)
     └── Account                  tabs: Organisation · Branding · Subscription & Billing (Account Owner)
 ```
 
