@@ -4,7 +4,7 @@
 `projectplan/v1354_resource_levelling_and_portfolio_optimisation_plan.md`,
 `projectplan/v1355_quantitative_risk_analysis_plan.md`, `projectplan/v1356_public_api_and_scim_plan.md`.
 **No new PRD:** every gap below is inside the scope the owner already approved in the v1353–v1356 PRDs; this plan
-only finishes and corrects that work. **Status:** audit done 2026-11-27; decisions G1–G4 taken; awaiting owner approval to start Slice 1.
+only finishes and corrects that work. **Status:** approved 2026-11-27. Slice 1 code done and committed (ece42930, Admin f21f322); owner to run SQL v1609, re-run v1251, run check v1608, and deploy.
 
 ## 1. How the audit was done
 
@@ -112,7 +112,7 @@ browser before the next slice. SQL numbers from `ls SQL` right before each file 
 
 ### Slice 1 — Unblock CI and commit what is live
 
-- [ ] X1: commit Admin v257–v259 (they belong to committed plans); v260–v261 with A1 per G1.
+- [x] X1: Admin v257–v261 and the v1356 Admin pages committed (Admin f21f322); v1356 monorepo work committed with Slice 1 (ece42930).
 - [x] X2: `generate-planner-table-allowlist.mjs --write` (10 tables added); owner re-runs `SQL/v1251_planner_table_wall.sql`.
 - [x] A2: deleted `apps/platform/src/services/organisationApiService.js` and `ssoService.js` (unreachable check passes).
 - [x] A9: `webhooks.deliver` rewritten on `webhook_delivery_context` / `webhook_delivery_result` (SQL v1609); refuses
