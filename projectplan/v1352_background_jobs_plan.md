@@ -404,19 +404,20 @@ re-check, report retry); `node --test scripts/__tests__/check-background-jobs.te
   (`SELECT policyname FROM pg_policies WHERE tablename = 'payment_transactions'`); if present it needs a fix (not changed here).
 - No Admin screen for `saas_job_settings` yet (SQL edits); invitations without an expiry date are never expired.
 
-### Slice 3 review (2026-11-27) — code complete, SQL not run (owner runs)
+### Slice 3 review (2026-11-27) — code complete, SQL run by the owner 2026-11-27
 
 **Run order (owner):**
 
 | # | Repo | Step | Status |
 |---|---|---|---|
 | 0 | — | Redeploy edge function `background-job-worker` (new handler `storage.cleanup`; the adapter gained `storageRemove`; `--no-verify-jwt`). Until it is redeployed the weekly `storage.cleanup` item fails with "No handler is registered" | pending |
-| 1 | monorepo | `SQL/v1596_background_jobs_housekeeping.sql` (context fix, retention list + D11 purge, storage clean-up tables / scan, Simulator housekeeping; ends with dry runs that change nothing) | pending |
-| 2 | monorepo | `SQL/v1597_background_jobs_data_quality_and_manual_jobs.sql` (weekly data check, Global Template back-fill, search re-index, footprint dry run; ends with dry runs) | pending |
-| 3 | monorepo | `SQL/v1251_planner_table_wall.sql` (re-run, table registration rule 6 — four new tables: `retention_targets`, `storage_cleanup_buckets`, `storage_cleanup_references`, `data_quality_checks`) | pending |
-| 4 | monorepo | `SQL/v1598_background_jobs_slice3_tests.sql` (rolls back; expect "v1598: all Slice 3 background job tests passed (rolling back)") | pending |
-| 5 | Admin | `E:\project-nidus-admin\SQL\v262_background_jobs_housekeeping_admin.sql` | pending |
-| 6 | Admin | `E:\project-nidus-admin\SQL\v263_background_jobs_housekeeping_admin_tests.sql` (rolls back; expect "v263: all housekeeping Admin tests passed (rolling back)") | pending |
+| 1 | monorepo | `SQL/v1596_background_jobs_housekeeping.sql` (context fix, retention list + D11 purge, storage clean-up tables / scan, Simulator housekeeping; ends with dry runs that change nothing) | done 2026-11-27 |
+| 2 | monorepo | `SQL/v1597_background_jobs_data_quality_and_manual_jobs.sql` (weekly data check, Global Template back-fill, search re-index, footprint dry run; ends with dry runs) | done 2026-11-27 |
+| 3 | monorepo | `SQL/v1251_planner_table_wall.sql` (re-run, table registration rule 6 — four new tables: `retention_targets`, `storage_cleanup_buckets`, `storage_cleanup_references`, `data_quality_checks`) | done 2026-11-27 |
+| 3a | monorepo | `SQL/v1599_bj_safe_count_type_fix.sql` (fix found by v1598 T7: count / JSON helpers cast to one type, PL/pgSQL record type caching) | done 2026-11-27 |
+| 4 | monorepo | `SQL/v1598_background_jobs_slice3_tests.sql` (rolls back; expect "v1598: all Slice 3 background job tests passed (rolling back)") | done 2026-11-27 |
+| 5 | Admin | `E:\project-nidus-admin\SQL\v262_background_jobs_housekeeping_admin.sql` | done 2026-11-27 |
+| 6 | Admin | `E:\project-nidus-admin\SQL\v263_background_jobs_housekeeping_admin_tests.sql` (rolls back; expect "v263: all housekeeping Admin tests passed (rolling back)") | done 2026-11-27 |
 
 v1596 and v1356's `SQL/v1586_api_webhooks.sql` create `public.retention_targets` with the same base shape and key,
 so either may run first (v1586's two rows then get the Slice 3 defaults). No new reference columns, so no Admin ID
