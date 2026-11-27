@@ -230,18 +230,19 @@ as before.
 - **Done (2026-11-23):** `expire-drafts` and `admin-moratorium-cron` deployed by the owner (they had never been deployed before); `drafts.expire` (00:00 UTC) and `testers.moratorium_expiry` (00:15 UTC) run from tonight.
 - **Open — Admin browser check** of System › Background Jobs.
 
-### Slice 1 review (2026-11-23) — code complete, SQL not run
+### Slice 1 review (2026-11-23) — code complete, SQL run 2026-11-27
 
-**SQL run order (owner runs; none run yet):**
+**SQL run order (all run by the owner, 2026-11-27; `ai-embed` redeployed too):**
 
 | # | Repo | File | Status |
 |---|---|---|---|
-| 0 | — | Redeploy edge function `background-job-worker` (new handlers `reports.health_send`, `notifications.digest_send`; `--no-verify-jwt`) | not run |
-| 1 | monorepo | `SQL/v1562_reminders_lead_times_daily_digest.sql` (ends with a dry run of the reminder engine: expect `skipped_types: []`) | not run |
-| 2 | monorepo | `SQL/v1563_scheduled_reports_recurring_tasks_timesheets_evm_jobs.sql` | not run |
-| 3 | monorepo | `SQL/v1564_reminder_lead_times_menu_and_help.sql` | not run |
-| 4 | monorepo | `SQL/v1251_planner_table_wall.sql` (re-run, table registration rule 6 — six new tables) | not run |
-| 5 | monorepo | `SQL/v1565_background_jobs_slice1_tests.sql` (rolls back; expect "all Slice 1 background job tests passed") | not run |
+| 0 | — | Redeploy edge function `background-job-worker` (new handlers `reports.health_send`, `notifications.digest_send`; `--no-verify-jwt`) | run 2026-11-27 |
+| 1 | monorepo | `SQL/v1562_reminders_lead_times_daily_digest.sql` (ends with a dry run of the reminder engine: expect `skipped_types: []`) | run 2026-11-27 |
+| 2 | monorepo | `SQL/v1563_scheduled_reports_recurring_tasks_timesheets_evm_jobs.sql` | run 2026-11-27 |
+| 3 | monorepo | `SQL/v1564_reminder_lead_times_menu_and_help.sql` | run 2026-11-27 |
+| 4 | monorepo | `SQL/v1251_planner_table_wall.sql` (re-run, table registration rule 6 — six new tables) | run 2026-11-27 |
+| 5 | monorepo | `SQL/v1565_background_jobs_slice1_tests.sql` (rolls back; expect "all Slice 1 background job tests passed") | run 2026-11-27 |
+| 4a | monorepo | `SQL/v1591_digest_preference_columns_fix.sql` (fix: `public.notification_preferences` has the v30 columns; run before step 5) | run 2026-11-27 |
 
 No Admin SQL: the Admin Background Jobs page lists the new catalogue rows as they are. No new reference
 columns, so no Admin ID Generation rule (rule 16.2).
