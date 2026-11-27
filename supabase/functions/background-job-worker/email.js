@@ -2,6 +2,7 @@
  * v1352 Slice 1 — email bodies for background jobs (host-neutral, pure functions; unit tested).
  *   buildHealthReportEmail(data)  scheduled health report (reports.health_send), data from scheduled_report_build
  *   buildDigestEmail(payload)     daily digest (notifications.digest_send), payload from run_daily_digest
+ *   buildNoticeEmail(item)        plain notice for the email outbox (email.send, Slice 2)
  * Practice (Simulator) content is always marked as practice (PRD D8). Dates arrive already formatted in
  * the organisation's date format (rule 68); nothing here formats dates.
  */
@@ -103,4 +104,35 @@ export function buildDigestEmail(payload = {}) {
     '</div>',
   ].join('')
   return { subject, html }
+}
+
+/**
+ * v1352 Slice 2 (2.1) — a plain notice email for the outbox (`email.send`) when the caller gives a text
+ * body instead of ready HTML: renewal reminders, failed-payment follow-up, and any feature that queues a
+ * short message through public.queue_email. Lines become paragraphs; "- " lines become a bullet list.
+ */
+export function buildNoticeEmail({ subject, body, practice } = {}) {
+  const lines = String(body ?? '').split(/\r?\n/)
+  const parts = []
+  let bullets = []
+  const flush = () => {
+    if (bullets.length) parts.push(`<ul style="padding-left:18px">${bullets.map((b) => `<li>${escapeHtml(b)}</li>`).join('')}</ul>`)
+    bullets = []
+  }
+  for (const raw of lines) {
+    const line = raw.trim()
+    if (line.startsWith('- ')) { bullets.push(line.slice(2)); continue }
+    flush()
+    if (line) parts.push(`<p style="margin:0 0 12px">${escapeHtml(line)}</p>`)
+  }
+  flush()
+  const title = String(subject ?? '').trim()
+  const html = [
+    '<div style="font-family:Arial,sans-serif;font-size:14px;color:#222;max-width:640px">',
+    practice ? `<p style="background:#fff7e6;border:1px solid #f0c36d;padding:8px 12px;border-radius:6px">${PRACTICE_LABEL}: this message is about the Simulator, not a live project.</p>` : '',
+    title ? `<h2 style="margin:0 0 12px">${escapeHtml(title)}</h2>` : '',
+    parts.join(''),
+    '</div>',
+  ].join('')
+  return { subject: `${practice ? `[${PRACTICE_LABEL}] ` : ''}${title}`, html }
 }

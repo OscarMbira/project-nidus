@@ -117,11 +117,11 @@ Each job: failing SQL/Vitest test → job → Admin catalogue row → commit-rea
 
 ## Slice 2 — Notifications and SaaS operations (Wave 2)
 
-- [ ] **2.1 Notification / email outbox** with retry and back-off; existing direct sends move onto it
+- [x] **2.1 Notification / email outbox** with retry and back-off; existing direct sends move onto it
       opportunistically (no batch rewrite).
-- [ ] **2.3 Payment follow-up:** hourly re-check of pending Paynow payments (server-side `paynow-poll` logic,
+- [x] **2.3 Payment follow-up:** hourly re-check of pending Paynow payments (server-side `paynow-poll` logic,
       hash-verified), daily renewal reminders and failed-payment follow-up.
-- [ ] **2.4 Invitation expiry**, **2.5 monthly allowances** (AI credits and other plan allowances).
+- [x] **2.4 Invitation expiry**, **2.5 monthly allowances** (AI credits and other plan allowances).
 - [ ] Exit: owner check with a test payment in Paynow's test mode; commit.
 
 ## Slice 3 — Data health, performance, manual jobs (Wave 3 + M)
@@ -303,3 +303,99 @@ Simulator, Planner) pass.
 **Open / for the owner:** run the SQL above, redeploy the worker, browser check (lead-times page, Run now, a
 recurring task, reminder + digest, Admin Background Jobs list). The Planner table allow-list was already stale
 before this slice (`account_menu_settings` no longer used since b5bb0b7e) — not changed here.
+
+### Slice 2 review (2026-11-27) — code complete, SQL not yet run
+
+**Run order (owner):**
+
+| # | Repo | Step | Status |
+|---|---|---|---|
+| 0 | — | Redeploy edge functions `background-job-worker` (new handlers `email.send`, `payments.pending_recheck`; the adapter gained `httpGet` and form posts), `paynow-webhook` and `paynow-poll` (both now use `_shared/paynow.js`). Check `PAYNOW_INTEGRATION_KEY` is set (`supabase secrets list`; secrets are shared by all functions) | pending |
+| 1 | monorepo | `SQL/v1592_background_jobs_email_outbox.sql` (outbox, retry wake-up, markers / messages / settings tables) | pending |
+| 2 | monorepo | `SQL/v1593_background_jobs_payments_invitations_allowances.sql` (ends with dry runs of the four jobs: nothing changes) | pending |
+| 3 | monorepo | `SQL/v1251_planner_table_wall.sql` (re-run, table registration rule 6 — three new tables in v1592) | pending |
+| 4 | monorepo | `SQL/v1594_background_jobs_slice2_tests.sql` (rolls back; expect "v1594: all Slice 2 background job tests passed (rolling back)") | pending |
+
+No Admin SQL: the Admin Background Jobs page lists the seven new catalogue rows as they are. No new reference
+columns (no Admin ID Generation rule, rule 16.2). No UI fields were added, so no field help rows (rule 76).
+
+**Built:**
+- **2.1 Email outbox** — handler job `email.send` (one item = one email; 6 attempts, back-off 1 min → 24 h, dead
+  after 3 days, per-organisation cap 25) and `public.queue_email(to, subject, html | body, dedupe_key,
+  organisation_id, practice)` for SQL, triggers, RPCs and handlers (`ctx.rpc`). It uses the v1352 queue's own
+  retry / dead / replay — no second mechanism. `public.bj_notice` writes an in-app notice and, when asked, the
+  same text as an outbox email (marked `email_sent`, so the daily digest does not repeat it). Texts in
+  `public.background_job_messages`, markers in `public.background_job_markers`, thresholds in
+  `public.saas_job_settings`.
+- **Retry wake-up** `system.queue_wake` (found while building 2.1): items waiting for their back-off time were
+  only picked up when some other job woke the worker. The new job wakes it each minute, guarded so it runs only
+  while an item has been ready for 30 seconds or more.
+- **2.3 Payments** — `payments.pending_recheck` (handler, hourly, guarded): the server-side `paynow-poll`, with
+  the shared verifier `supabase/functions/_shared/paynow.js` (now also used by `paynow-webhook` and
+  `paynow-poll`); verified final answers are handed to `paynow-webhook` unchanged, so fulfilment (subscription,
+  Planner seats / edition) stays in one place and stays idempotent. `payments.followup` (sql, hourly): stale
+  pending → `expired` after 7 days; one follow-up per failed / cancelled payment. `subscriptions.renewal_reminders`
+  (sql, 08:00 organisation time): 7 / 1 days before the end and once after it, Platform / Planner and Simulator.
+  `payment_transactions` gained `last_checked_at`, `check_count`, `last_check_result`.
+- **2.4 Invitations** — `invitations.expire` (sql, 01:00 UTC): `project_invitations` (project / portfolio /
+  programme), `organisation_invitations` and `sim.entity_invitations` (D8) → `expired`; the inviter gets an in-app
+  notice.
+- **2.5 Allowances** — `allowances.monthly` (sql, 01:30 UTC), AI credits.
+- Health reports: a copy that failed while others were sent is queued on the outbox instead of being lost.
+- Guide `Documentation/Background_Jobs_v1352_Guide.md` (Slice 2 jobs, sending an email from a feature,
+  Paynow verification, AI credits, troubleshooting).
+
+**Decisions made during the build (not in the plan text):**
+- **The queue is the outbox.** Digest, alert and report emails were already queue items with per-item retry, so
+  they were not re-routed (that would add a hop and a second dedupe); only partial report failures move to the
+  outbox. New background emails (renewal, failed payment) use it. Direct sends from the apps (invitations,
+  `send-trial-email`, AI quota warnings) move opportunistically.
+- **The re-check hands off to the webhook** instead of copying its fulfilment code: one place creates
+  subscriptions. The webhook verifies the hash again on the forwarded message.
+- **The verifier accepts two hash methods.** The existing code hashed sorted `key=value&…` + key; Paynow documents
+  "values in order + key". Both need the secret integration key, so accepting either cannot be forged; it keeps
+  current behaviour and also accepts correctly-signed Paynow messages. `paynow-poll` now refuses unsigned answers
+  and non-Paynow poll addresses (it trusted an answer with no hash, from any URL the caller passed). It has no
+  caller in the apps today.
+- **Billing emails go out regardless of the digest switch** (they are account notices, not reminders): to the
+  owner and active billing delegates (Platform / Planner) or the learner (Simulator). The failed-payment follow-up
+  goes to the payer (`initiated_by_auth_user_id`), else the owner.
+- **Renewal = end date.** Paynow has no recurring charge, so "renewal" means paying again before `expires_at`.
+  Trial and lifetime subscriptions are skipped; a longer-running active subscription of the same organisation
+  (or learner) means it was already renewed. Steps work as a window (a missed day still sends the next step),
+  once per subscription × end date × step.
+- **Invitations:** only rows with an expiry date are expired (Platform rows always get one on insert, 7 days);
+  notices only for expiries in the last 7 days, so the first run does not flood inviters with old ones. Planner
+  accounts are included (housekeeping, no data outside the wall). In-app only, email through the digest (D6).
+- **AI credits renew by themselves.** `ai_account_allowance` + `ai_period_start` already give each period a fresh
+  allowance and usage counts from the period start; a ledger top-up would double it. The job records the new
+  period once (marker with last period's use) and tells the owner / PMO Admins. It runs daily because periods are
+  anchored on each subscription's start day, not the 1st. First periods (trial, new subscription, new
+  organisation) are not renewals. No other monthly allowance exists today (seats, Planner limits and email limits
+  are not monthly counters; Simulator leaderboard resets are Slice 3.5). AI credits are organisation-wide (both
+  apps share the ledger), so there is no separate Simulator allowance job.
+- Schedules: billing checks and housekeeping on UTC (D5); renewal reminders on organisation time (people-facing).
+
+**Tests:** `supabase/functions` Vitest 115/115 (13 files; 12 new in `slice2Handlers.test.js`: verifier, outbox,
+re-check, report retry); `node --test scripts/__tests__/check-background-jobs.test.mjs` 6/6;
+`node scripts/check-background-jobs.mjs` passes. SQL tests v1594 (T1–T8) written, to be run by the owner.
+
+**Owner checks after the run:**
+1. Admin › System › Background Jobs lists `email.send`, `system.queue_wake`, `payments.pending_recheck`,
+   `payments.followup`, `subscriptions.renewal_reminders`, `invitations.expire`, `allowances.monthly`.
+2. **Paynow test-mode payment:** start a payment in test mode and close the browser on the Paynow page before
+   returning. Within about an hour (`:05`) the payment row shows `last_check_result` "verified paid; passed to
+   paynow-webhook" and the subscription exists. If it says "answer not verified", the integration key or the hash
+   method does not match. A cancelled test payment gets one follow-up email after an hour.
+3. A test subscription with `expires_at` 5 days ahead gets one reminder email at 08:00 organisation time.
+
+**Open / for the owner:**
+- **`paynow-webhook` trusts unsigned messages for non-Planner payments** (pre-existing): when no `hash` is sent it
+  still sets the status and creates a subscription. Recommend refusing messages without a valid hash whenever
+  `PAYNOW_INTEGRATION_KEY` is set — not changed here (behaviour change to live payments; owner decision).
+- **`paynow-initiate` signs with the sorted `key=value` method.** If Paynow rejects test payments with "Invalid
+  hash", that signing (not this slice) needs Paynow's documented method; the test-mode payment above shows it.
+- `payment_transactions` has a pre-existing policy `policy_payment_transactions_service_role` with no role
+  (`FOR ALL USING (true)`, v117, never dropped by any later SQL file), which lets any signed-in user change payment rows. Check it live
+  (`SELECT policyname FROM pg_policies WHERE tablename = 'payment_transactions'`); if present it needs a fix (not changed here).
+- No Admin screen for `saas_job_settings` yet (SQL edits); invitations without an expiry date are never expired.

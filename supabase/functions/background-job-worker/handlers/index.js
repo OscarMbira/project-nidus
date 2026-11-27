@@ -10,6 +10,8 @@ import * as reportsHealthSend from './reports.health_send.js'
 import * as notificationsDigestSend from './notifications.digest_send.js'
 import * as billingOverdueReminders from './billing.overdue_reminders.js'
 import * as billingScheduleDue from './billing.schedule_due.js'
+import * as emailSend from './email.send.js'
+import * as paymentsPendingRecheck from './payments.pending_recheck.js'
 
 export const handlers = {
   'ai.embed': aiEmbed,
@@ -20,4 +22,6 @@ export const handlers = {
   'notifications.digest_send': notificationsDigestSend,
   'billing.overdue_reminders': billingOverdueReminders,
   'billing.schedule_due': billingScheduleDue,
+  'email.send': emailSend,
+  'payments.pending_recheck': paymentsPendingRecheck,
 }

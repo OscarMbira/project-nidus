@@ -92,6 +92,62 @@ Simulator items are marked "Practice:" in the app and "Simulator practice" in em
 are on the Planner allow-list (`bj_account_allows_tables`). Simulator tables are written `sim.<table>`, so
 they never match.
 
+### Jobs added in Slice 2 (SQL v1592–v1593) — notifications and SaaS operations
+
+| Code | Kind | Schedule | What it does |
+|---|---|---|---|
+| `email.send` | handler | queue only | **Email outbox.** One item = one email, sent through `send-email`. Up to 6 attempts (1 min, 5 min, 30 min, 2 h, 6 h, 24 h), dead after 3 days; Admin can replay a dead item |
+| `system.queue_wake` | sql | every minute (only while an item has waited 30 s) | Wakes the worker for queue items whose back-off time has come, so retries never wait for an unrelated job |
+| `payments.pending_recheck` | handler | `5 * * * *` UTC (only while a payment is due a check) | Server-side `paynow-poll`: asks Paynow about each pending payment 10 min – 72 h old (once an hour), trusts only hash-verified answers, and passes final ones to `paynow-webhook` (normal fulfilment) |
+| `payments.followup` | sql | `20 * * * *` UTC | Pending payments older than 7 days → `expired`; one follow-up (in-app + email) per failed / cancelled payment, unless the organisation paid since |
+| `subscriptions.renewal_reminders` | sql | `0 8 * * *` organisation | Reminders 7 and 1 days before a subscription ends and once after it ended (within 3 days): Platform / Planner subscriptions → owner + billing delegates; Simulator subscriptions → the learner. In-app + email |
+| `invitations.expire` | sql | `0 1 * * *` UTC | Pending invitations past their expiry → `expired` (project / portfolio / programme, organisation, Simulator practice). The inviter gets an in-app notice (email through the daily digest) when it expired in the last 7 days |
+| `allowances.monthly` | sql | `30 1 * * *` UTC | Records each organisation's new AI credit period once (with the previous period's use) and tells the owner and PMO Admins in the app. Nothing is written to the credit ledger — see below |
+
+**Thresholds are data** — one row in `public.saas_job_settings` (re-check age and window, expiry age, failed
+follow-up delay and window, renewal reminder days `{7,1}`, ended-notice days, invitation notice window,
+allowance notice switch). Change them with SQL until an Admin screen exists. **Texts are data** —
+`public.background_job_messages` (`{placeholder}` fields). **Once only** — `public.background_job_markers`
+(job + key, e.g. `failed:<payment id>`, `platform:<subscription>:<end date>:7`, `ai_credits:<org>:<period start>`);
+an invitation's own status change is its marker.
+
+**Sending an email from a feature (2.1):**
+
+```sql
+-- from a SECURITY DEFINER function, trigger or job (no client grant)
+SELECT public.queue_email(
+  p_to => 'head.of.finance@company.example',
+  p_subject => 'Your export is ready',
+  p_body => 'Your organisation data export finished.' || chr(10) || '- Open it from Settings › Data export',
+  p_dedupe_key => 'export:' || v_export_id,       -- a repeat is ignored
+  p_organisation_id => v_account);                -- per-organisation fairness cap
+-- or p_html => '<p>…</p>' for a ready HTML body; p_practice => TRUE adds the Simulator practice banner.
+PERFORM public.background_job_wake_worker();      -- once after a loop (else system.queue_wake within a minute)
+
+-- in-app notice + the same text by email, digest skipped for it:
+PERFORM public.bj_notice(v_user, 'payment_failed', jsonb_build_object('amount', 'USD 40.00', …),
+                         'billing', 'warning', TRUE, 'payment_failed:' || v_id, v_account);
+```
+
+A handler uses `ctx.rpc('queue_email', {...})`. Existing direct sends move to the outbox opportunistically
+(no batch rewrite). Already on it or already retried by the queue: alert emails (`system.alert_email` items),
+the daily digest (`notifications.digest_send` items), health reports (a copy that failed while others were
+sent goes to the outbox).
+
+**Paynow verification (2.3).** `supabase/functions/_shared/paynow.js` is the one verifier for
+`paynow-webhook`, `paynow-poll` and the re-check job. A message counts only when its `hash` matches, with
+the integration key, either Paynow's documented method (field values in order + key, SHA-512) or the method
+this code used before (sorted `key=value&…` + key). No hash or no key → not trusted. The worker needs the
+`PAYNOW_INTEGRATION_KEY` secret (Supabase secrets are shared by all functions); without it the re-check
+fails and Admin is alerted. Only `https://www.paynow.co.zw` / `paynow.co.zw` (plus the host of `PAYNOW_URL`)
+poll addresses are fetched.
+
+**AI credits (2.5).** The monthly allowance is computed for the current period (`ai_period_start`,
+`ai_account_allowance`) and usage counts from the period start, so credits renew by themselves. A "top-up"
+ledger row would double them; the job only records the period and tells people. No other monthly plan
+allowance exists today (seats and Planner limits are not monthly; Simulator leaderboard resets belong to
+Slice 3 housekeeping).
+
 ---
 
 ## 3. Setup (owner, once per environment)
@@ -214,6 +270,13 @@ from v1559 on other than the tick, and on a handler job without a handler file.
 
 **Worker not running?** Handler jobs then show as late after the grace period. Check the worker secret and
 `public.background_job_config`, and the function's logs.
+
+**A payment stays pending?** `SELECT reference, status, check_count, last_checked_at, last_check_result FROM
+public.payment_transactions WHERE status = 'pending' ORDER BY created_at DESC;` — "answer not verified" means
+the hash did not match (check `PAYNOW_INTEGRATION_KEY`); "Paynow did not answer" is retried next hour.
+
+**An outbox email is dead?** Admin › Background Jobs › Email outbox › Work items shows the last error; fix
+the cause (e.g. `send-email` settings) and **Replay** it.
 
 ---
 

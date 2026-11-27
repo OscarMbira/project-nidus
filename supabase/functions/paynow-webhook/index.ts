@@ -5,6 +5,7 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { verifyPaynowHash } from '../_shared/paynow.js';
 
 function periodEnd(cycle: string): string {
   const d = new Date();
@@ -104,26 +105,13 @@ serve(async (req) => {
       );
     }
 
-    // Verify hash
+    // Verify hash (v1352 Slice 2: shared verifier, also used by the payments.pending_recheck job, which
+    // hands verified poll answers to this function in the same form-encoded shape).
     const integrationKey = Deno.env.get('PAYNOW_INTEGRATION_KEY');
     if (integrationKey && hash) {
-      const hashParams = new Map<string, string>();
-      Object.keys(params).forEach(key => {
-        if (key !== 'hash') {
-          hashParams.set(key, params[key]);
-        }
-      });
-      
-      const sortedParams = Array.from(hashParams.entries()).sort((a, b) => a[0].localeCompare(b[0]));
-      const hashString = sortedParams.map(([key, value]) => `${key}=${value}`).join('&') + integrationKey;
-      
-      const encoder = new TextEncoder();
-      const data = encoder.encode(hashString);
-      const hashBuffer = await crypto.subtle.digest('SHA-512', data);
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      const calculatedHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
-
-      if (hash !== calculatedHash) {
+      const orderedParams = new URLSearchParams();
+      for (const [key, value] of formData.entries()) orderedParams.append(key, value.toString());
+      if (!(await verifyPaynowHash(orderedParams, integrationKey))) {
         console.error('Invalid hash in webhook');
         return new Response(
           JSON.stringify({ error: 'Invalid hash' }),
