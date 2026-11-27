@@ -84,17 +84,17 @@ and leaves another untouched; kept tables keep rows; member rules (D8); certific
 
 ## Review
 
-### Slice 1 review (2026-11-27) — code complete, SQL not run
+### Slice 1 review (2026-11-27) — code complete, SQL run and worker redeployed by the owner (2026-11-27)
 
 **Run order (owner):**
 
 | # | Repo | Step | Status |
 |---|---|---|---|
-| 0 | — | Redeploy `background-job-worker` (`--no-verify-jwt`): new handlers `organisation.export_build`, `organisation.export_expire`; adapter gained `storageDownload` / `storageUpload` | pending |
-| 1 | monorepo | `SQL/v1600_organisation_data_export.sql` (ends with a read-only check: tables in scope, menus, jobs) | pending |
-| 2 | Admin | `SQL/v264_organisation_data_requests_id_generation_seed.sql` | pending |
-| 3 | monorepo | `SQL/v1251_planner_table_wall.sql` (re-run; two new tables) | pending |
-| 4 | monorepo | `SQL/v1601_organisation_data_export_tests.sql` (rolls back; expect "v1601: all organisation export tests passed (rolling back)") | pending |
+| 0 | — | Redeploy `background-job-worker` (`--no-verify-jwt`): new handlers `organisation.export_build`, `organisation.export_expire`; adapter gained `storageDownload` / `storageUpload` | done 2026-11-27 |
+| 1 | monorepo | `SQL/v1600_organisation_data_export.sql` (ends with a read-only check: tables in scope, menus, jobs) | done 2026-11-27 |
+| 2 | Admin | `SQL/v264_organisation_data_requests_id_generation_seed.sql` | done 2026-11-27 |
+| 3 | monorepo | `SQL/v1251_planner_table_wall.sql` (re-run; two new tables) | done 2026-11-27 |
+| 4 | monorepo | `SQL/v1601_organisation_data_export_tests.sql` (rolls back; expect "v1601: all organisation export tests passed (rolling back)") | done 2026-11-27 |
 
 **Built:** scope from the database catalogue (account / organisation / project columns, foreign-key children up
 to three levels, rule scopes; `users` never a parent); per-table rules (`organisation_data_table_rules`); export
