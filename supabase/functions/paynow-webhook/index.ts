@@ -107,21 +107,25 @@ serve(async (req) => {
 
     // Verify hash (v1352 Slice 2: shared verifier, also used by the payments.pending_recheck job, which
     // hands verified poll answers to this function in the same form-encoded shape).
+    // Every message must carry a valid hash (owner decision 2026-11-27): a message with no hash, a wrong
+    // hash, or a server without the integration key changes nothing. Paynow always signs its messages.
     const integrationKey = Deno.env.get('PAYNOW_INTEGRATION_KEY');
-    if (integrationKey && hash) {
-      const orderedParams = new URLSearchParams();
-      for (const [key, value] of formData.entries()) orderedParams.append(key, value.toString());
-      if (!(await verifyPaynowHash(orderedParams, integrationKey))) {
-        console.error('Invalid hash in webhook');
-        return new Response(
-          JSON.stringify({ error: 'Invalid hash' }),
-          { status: 400, headers: { 'Content-Type': 'application/json' } }
-        );
-      }
+    if (!integrationKey) {
+      console.error('Paynow webhook refused: PAYNOW_INTEGRATION_KEY is not set');
+      return new Response(
+        JSON.stringify({ error: 'Payment verification is not configured' }),
+        { status: 503, headers: { 'Content-Type': 'application/json' } }
+      );
     }
-
-    // Reaching here with both set means the hash matched (a mismatch returned 400 above).
-    const hashVerified = Boolean(integrationKey && hash);
+    const orderedParams = new URLSearchParams();
+    for (const [key, value] of formData.entries()) orderedParams.append(key, value.toString());
+    if (!hash || !(await verifyPaynowHash(orderedParams, integrationKey))) {
+      console.error(hash ? 'Invalid hash in webhook' : 'Unsigned webhook refused', reference);
+      return new Response(
+        JSON.stringify({ error: hash ? 'Invalid hash' : 'Missing hash' }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
 
     // Create Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
@@ -162,14 +166,10 @@ serve(async (req) => {
     }
 
     // v1239 Slice 8.1 — Project Planner payments (per-seat plan, or upgrade to the full PMIS).
-    // Stricter than the generic branch below: requires a verified hash, the payer must own the
-    // account, and the amount must cover the catalog price.
+    // The hash was verified above; the payer must own the account, and the amount must cover the
+    // catalog price.
     if (status === 'Paid' && transaction?.metadata?.product === 'planner') {
-      if (!hashVerified) {
-        console.error('Planner payment ignored: webhook was not signed', reference);
-      } else {
-        await handlePlannerPayment(supabase, transaction, amount, paynowReference);
-      }
+      await handlePlannerPayment(supabase, transaction, amount, paynowReference);
       return new Response(JSON.stringify({ status: 'ok' }), { headers: { 'Content-Type': 'application/json' } });
     }
 
