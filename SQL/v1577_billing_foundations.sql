@@ -407,7 +407,9 @@ INSERT INTO public.menu_item_placements (menu_item_id, placement_key, section_co
 SELECT mi.id, v.placement_key, 'money_resources', mi.sort_order
 FROM public.menu_items mi
 CROSS JOIN (VALUES ('pm'), ('pmo_oversight'), ('programme'), ('portfolio')) AS v(placement_key)
-WHERE mi.menu_code LIKE '%\_fin\_%' AND COALESCE(mi.is_deleted, FALSE) = FALSE
+WHERE mi.menu_code IN ('plat_fin_clients', 'plat_fin_invoices', 'plat_fin_rates', 'plat_fin_revenue', 'plat_fin_tax',
+                       'sim_fin_clients', 'sim_fin_invoices', 'sim_fin_rates', 'sim_fin_revenue', 'sim_fin_tax')
+  AND COALESCE(mi.is_deleted, FALSE) = FALSE  -- v1359 (B5): was LIKE '%_fin_%', which also placed FIN register pages (fixed by v1610)
 ON CONFLICT (menu_item_id, placement_key) DO UPDATE SET section_code = EXCLUDED.section_code, sort_order = EXCLUDED.sort_order, is_active = TRUE, updated_at = NOW();
 
 INSERT INTO public.role_menu_items (id, role_id, menu_item_id, can_view, can_use, is_active, created_at, updated_at)

@@ -122,7 +122,7 @@ browser before the next slice. SQL numbers from `ls SQL` right before each file 
       (`auth_user_is_account_admin`, same rule as API keys). Members keep sign-in, invitations and the profile lock
       (SECURITY DEFINER functions).
 - [x] A12: Planner sign-in hook order fixed.
-- [x] B5: read-only query `SQL/v1608_billing_finance_placement_check.sql` (owner runs; no rows = nothing to fix).
+- [x] B5: read-only check `SQL/v1608` (owner ran 2026-11-27: v1577 had placed FIN register pages `fin_reg_fin_*` in Money & Resources and re-activated the retired FIN Environments placement). Fix `SQL/v1610_fix_billing_finance_placement_overreach.sql` deletes the placements v1577 created for non-billing pages and restores what it overwrote; `SQL/v1577` narrowed to the ten billing codes.
 - [x] X3: owner ran v1566–v1576, v1585–v1590 and Admin v257–v261 (2026-11-27).
 
 ### Slice 2 — Safety and rule gaps (Platform + Simulator + Planner, shared screens)
