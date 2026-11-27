@@ -121,15 +121,15 @@ expiry; owner-only download policy on the private bucket; shared page in Platfor
 tables) — not changed by this slice, which uses RPCs only. Tables linked more than three foreign keys away
 from the organisation are not exported; E1 prints the count found.
 
-### Slice 2 review (2026-11-27) — code complete, SQL not run
+### Slice 2 review (2026-11-27) — code complete, SQL run by the owner (2026-11-27)
 
 **Run order (owner):**
 
 | # | Repo | Step | Status |
 |---|---|---|---|
-| 1 | monorepo | `SQL/v1602_organisation_legal_hold_and_owner_transfer.sql` | pending |
-| 2 | Admin | `SQL/v265_organisation_data_admin.sql` (permissions, RPCs, sidebar item, field help) | pending |
-| 3 | monorepo | `SQL/v1603_organisation_legal_hold_and_owner_transfer_tests.sql` (rolls back; expect "v1603: all legal hold and ownership transfer tests passed (rolling back)") | pending |
+| 1 | monorepo | `SQL/v1602_organisation_legal_hold_and_owner_transfer.sql` | done 2026-11-27 |
+| 2 | Admin | `SQL/v265_organisation_data_admin.sql` (permissions, RPCs, sidebar item, field help) | done 2026-11-27 |
+| 3 | monorepo | `SQL/v1603_organisation_legal_hold_and_owner_transfer_tests.sql` (rolls back; expect "v1603: all legal hold and ownership transfer tests passed (rolling back)") | done 2026-11-27 |
 
 No edge function changes. No new tables (columns only), so no Planner wall re-run.
 
