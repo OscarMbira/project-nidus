@@ -12,6 +12,7 @@ import * as billingOverdueReminders from './billing.overdue_reminders.js'
 import * as billingScheduleDue from './billing.schedule_due.js'
 import * as emailSend from './email.send.js'
 import * as paymentsPendingRecheck from './payments.pending_recheck.js'
+import * as storageCleanup from './storage.cleanup.js'
 
 export const handlers = {
   'ai.embed': aiEmbed,
@@ -24,4 +25,5 @@ export const handlers = {
   'billing.schedule_due': billingScheduleDue,
   'email.send': emailSend,
   'payments.pending_recheck': paymentsPendingRecheck,
+  'storage.cleanup': storageCleanup,
 }

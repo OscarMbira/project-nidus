@@ -6,6 +6,7 @@
  *   ctx.invokeFunction(name, body, { headers, form }) → { ok, status, data }   another edge function (JSON
  *                                              body, or a url-encoded `form` string such as a Paynow message)
  *   ctx.httpGet(url)                           → { ok, status, text }   an outside HTTPS address (v1352 Slice 2)
+ *   ctx.storageRemove(bucket, paths)           → { removed, error }   delete Storage files (v1352 Slice 3)
  *   ctx.env(name)                              → string | undefined   server-only setting
  *   ctx.log(message)
  *
@@ -21,6 +22,7 @@ export interface JobContext {
     options?: { headers?: Record<string, string>; form?: string },
   ) => Promise<{ ok: boolean; status: number; data: any }>
   httpGet: (url: string) => Promise<{ ok: boolean; status: number; text: string }>
+  storageRemove: (bucket: string, paths: string[]) => Promise<{ removed: number; error: { message: string } | null }>
   env: (name: string) => string | undefined
   log: (message: string) => void
 }
@@ -61,6 +63,10 @@ export function createJobContext(): JobContext {
       } finally {
         clearTimeout(timer)
       }
+    },
+    storageRemove: async (bucket, paths) => {
+      const { data, error } = await db.storage.from(bucket).remove(paths)
+      return { removed: Array.isArray(data) ? data.length : 0, error: error ? { message: error.message } : null }
     },
     env: (name) => Deno.env.get(name) ?? undefined,
     log: (message) => console.log(message),

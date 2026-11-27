@@ -148,6 +148,72 @@ ledger row would double them; the job only records the period and tells people. 
 allowance exists today (seats and Planner limits are not monthly; Simulator leaderboard resets belong to
 Slice 3 housekeeping).
 
+### Jobs added in Slice 3 (SQL v1596–v1597) — data health, housekeeping, manual jobs
+
+| Code | Kind | Schedule | What it does |
+|---|---|---|---|
+| `retention.purge` | sql | `0 3 * * 0` UTC | **Log retention.** Deletes background job history past its keep period (D11: successful / skipped runs and finished items after 90 days, failed / partly failed runs and dead items after 365 days — changeable in Admin) and old rows of every active table in `public.retention_targets`, in batches |
+| `storage.cleanup` | handler | `0 4 * * 6` UTC (only while a bucket is listed) | **Storage clean-up.** Lists files no record points to any more, older than each bucket's safety window (30 days). Report only until deletion is switched on for a bucket in Admin; then the worker deletes them through the Storage API (up to 500 per bucket per run) |
+| `simulator.housekeeping` | sql | `45 2 * * *` UTC | Practice runs idle for 90 days and collaborative sessions idle for 90 days → `abandoned`; collaborative lobbies never started after 30 days → `abandoned` (thresholds in `saas_job_settings`) |
+| `quality.weekly_report` | sql | `0 7 * * 1` organisation | **Weekly data check.** Counts the checks in `public.data_quality_checks` per organisation and sends one in-app notice to the owner and PMO Admins when something needs attention (email through the daily digest). The counts are kept in the week's marker |
+| `backfill.global_templates` | sql | manual only | Organisations missing Global Template copies catch up (50 per run; run again for more) |
+| `search.reindex` | sql | manual only | Rebuilds `public` / `sim` `search_index` rows from the records; changed rows are embedded again by `ai.embed` |
+
+**Manual jobs** have no schedule: start them from **Admin › System › Background Jobs › (job) › Run now** (reason
+required, audited). Re-embedding everything is **Admin › AI › Embeddings** (Admin v238).
+
+**Roll-up refresh (3.1)** needs no job: no materialised views or cached roll-up tables exist; portfolio, programme
+and PMO dashboards read live tables. If a cached summary is added later, its feature registers its own refresh job.
+
+**Adding a table to log retention (A1.5) — a row, not code:**
+
+```sql
+INSERT INTO public.retention_targets (table_schema, table_name, date_column, retain_days, status_column, status_values, notes)
+VALUES ('public', 'api_request_log', 'created_at', 90, NULL, NULL, 'Public API request log (v1356).')
+ON CONFLICT (table_schema, table_name) DO NOTHING;
+-- only some rows: status_column => 'is_read', status_values => ARRAY['true']
+```
+
+- Plain tables only (`relkind = 'r'`); the table, date column (a date or time) and status column are checked
+  against the catalog before each run, and a target that does not match is skipped and reported, never fatal.
+- Seeded active: technical logs only (job markers 400 days, reminder markers 400 days by due date, email / error /
+  sync / session / sign-in logs 90–365 days, field help events 730 days). Seeded **off**: `notifications` (read,
+  older than a year), `audit_log`, `activity_logs`, `data_access_logs`, `security_events` — owner decision.
+- Admin › Background Jobs › **Housekeeping** changes a target's keep period and on / off, and the run-history
+  periods. New targets come from versioned SQL only.
+- Check: `SELECT public.run_retention_purge('{"dry_run": true}');` counts what would go.
+
+**Storage clean-up (3.2).** A bucket is checked only when it has rows in `public.storage_cleanup_references`
+(table + column holding the path). A stored value matches a file when, after dropping any `?query` and any leading
+`…/<bucket>/` (public or signed Storage URL), it equals the file name. If any reference column is missing, the
+whole bucket is skipped. Seeded (all report only): `risk-attachments`, `defect-attachments`, `sim-defect-attachments`,
+`local-register-attachments`, `change-log-attachments`, `user-avatars`, `stakeholder-photos`. Switch deletion on in
+Admin › Background Jobs › Housekeeping only after a report-only run's counts look right — the server refuses it
+before the first scan. Check: `SELECT public.storage_cleanup_scan(TRUE);`.
+
+**Data checks (3.4) — a row, not code.** `count_sql` returns one count; `$1` is the organisation id, `$2` its
+local date. A check that fails to run is skipped and listed in the run result. Planner-edition organisations only
+get checks whose `planner_tables` are on the Planner allow-list.
+
+```sql
+INSERT INTO public.data_quality_checks (check_code, label, description, count_sql, planner_tables, sort_order)
+VALUES ('task_without_owner', 'Open tasks without an owner', 'Open tasks nobody is assigned to.',
+        'SELECT count(*) FROM public.tasks t JOIN public.projects p ON p.id = t.project_id WHERE p.account_id = $1 AND …',
+        ARRAY['tasks', 'projects'], 80)
+ON CONFLICT (check_code) DO NOTHING;
+```
+
+Seeded checks: open projects without a project manager, without planned dates, more than 30 days past their
+planned finish; projects that finish before they start; open risks / issues without an owner; milestones more
+than 30 days overdue. Platform only — practice projects belong to one learner and have no PMO Admin.
+
+**Organisation data footprint (M.5 dry run).** `SELECT public.organisation_data_footprint('<account id>');` (SQL
+editor, service role) lists the tables and row counts that belong to one organisation. It changes nothing.
+
+**Organisation-time jobs now get their time zones.** Before v1596, a job function with a defaulted `jsonb`
+argument was called without the tick's context, so organisation-time jobs ran for every organisation at the
+first zone's time. `background_job_function_shape` now passes the context to them.
+
 ---
 
 ## 3. Setup (owner, once per environment)
@@ -221,7 +287,7 @@ From a trigger or RPC, queue work with
 
 **Handlers** receive `(payload, ctx)` and return `{ processed, error? }`. `ctx` (`adapter.ts`) is the only
 code that talks to the database client or reads secrets: `ctx.rpc(fn, args)`, `ctx.invokeFunction(name, body)`,
-`ctx.env(name)`, `ctx.log(text)`. Keep handlers free of Supabase imports so the jobs move with the database.
+`ctx.httpGet(url)`, `ctx.storageRemove(bucket, paths)` (Slice 3), `ctx.env(name)`, `ctx.log(text)`. Keep handlers free of Supabase imports so the jobs move with the database.
 
 **Reminders for a new record type (A1.6) — add a row, not code:**
 

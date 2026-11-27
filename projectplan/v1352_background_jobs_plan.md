@@ -126,13 +126,17 @@ Each job: failing SQL/Vitest test → job → Admin catalogue row → commit-rea
 
 ## Slice 3 — Data health, performance, manual jobs (Wave 3 + M)
 
-- [ ] **3.1 Roll-up refresh** (portfolio / programme / PMO summaries), **3.2 storage clean-up**, **3.3 log
+- [x] **3.1 Roll-up refresh** — nothing to refresh (no materialised views or cached roll-ups exist; see review),
+      **3.2 storage clean-up**, **3.3 log
       retention** (incl. D11 run-history purge; **A1:** driven by a `retention_targets` table — table, date
       column, keep period, optional status filter — so later features add rows), **3.4 data-quality report**, **3.5 Simulator housekeeping**.
-- [ ] **Manual jobs** in Admin with reason + audit: re-run failed (already in slice 0), back-fills (Global
-      Template sync), re-index / re-embed, large bulk-import processing (async, with progress), organisation
-      data export / deletion.
-- [ ] Exit: owner check; commit; plan review section.
+- [x] **Manual jobs** in Admin with reason + audit: re-run failed (already in slice 0), back-fills (Global
+      Template sync), re-index / re-embed — built (re-embed already existed: Admin v238). Large bulk-import
+      processing and organisation data export / deletion — **not built, owner decisions** (see review); a read-only
+      footprint dry run only.
+- [x] Retention / storage settings in Admin (D11 "changeable in Admin"): Background Jobs › Housekeeping.
+- [ ] Exit: owner SQL run + browser check (Admin Housekeeping pages, a report-only storage scan, the first weekly
+      data check); commit done; plan review section done.
 
 ---
 
@@ -399,3 +403,126 @@ re-check, report retry); `node --test scripts/__tests__/check-background-jobs.te
   (`FOR ALL USING (true)`, v117, never dropped by any later SQL file), which lets any signed-in user change payment rows. Check it live
   (`SELECT policyname FROM pg_policies WHERE tablename = 'payment_transactions'`); if present it needs a fix (not changed here).
 - No Admin screen for `saas_job_settings` yet (SQL edits); invitations without an expiry date are never expired.
+
+### Slice 3 review (2026-11-27) — code complete, SQL not run (owner runs)
+
+**Run order (owner):**
+
+| # | Repo | Step | Status |
+|---|---|---|---|
+| 0 | — | Redeploy edge function `background-job-worker` (new handler `storage.cleanup`; the adapter gained `storageRemove`; `--no-verify-jwt`). Until it is redeployed the weekly `storage.cleanup` item fails with "No handler is registered" | pending |
+| 1 | monorepo | `SQL/v1596_background_jobs_housekeeping.sql` (context fix, retention list + D11 purge, storage clean-up tables / scan, Simulator housekeeping; ends with dry runs that change nothing) | pending |
+| 2 | monorepo | `SQL/v1597_background_jobs_data_quality_and_manual_jobs.sql` (weekly data check, Global Template back-fill, search re-index, footprint dry run; ends with dry runs) | pending |
+| 3 | monorepo | `SQL/v1251_planner_table_wall.sql` (re-run, table registration rule 6 — four new tables: `retention_targets`, `storage_cleanup_buckets`, `storage_cleanup_references`, `data_quality_checks`) | pending |
+| 4 | monorepo | `SQL/v1598_background_jobs_slice3_tests.sql` (rolls back; expect "v1598: all Slice 3 background job tests passed (rolling back)") | pending |
+| 5 | Admin | `E:\project-nidus-admin\SQL\v262_background_jobs_housekeeping_admin.sql` | pending |
+| 6 | Admin | `E:\project-nidus-admin\SQL\v263_background_jobs_housekeeping_admin_tests.sql` (rolls back; expect "v263: all housekeeping Admin tests passed (rolling back)") | pending |
+
+v1596 and v1356's `SQL/v1586_api_webhooks.sql` create `public.retention_targets` with the same base shape and key,
+so either may run first (v1586's two rows then get the Slice 3 defaults). No new reference columns, so no Admin ID
+Generation rule (rule 16.2). No monorepo UI fields (no `field_help` rows); the Admin fields have Admin help rows.
+
+**Built:**
+- **Context fix (found while building):** `background_job_function_shape` treated a job function whose single
+  `jsonb` argument has a default as "no arguments", so the runner called every organisation-time job
+  (`reminders.due_dates`, `notifications.daily_digest`, `timesheets.reminders`, `reports.health_due`,
+  `subscriptions.renewal_reminders`) without the tick's `time_zones`; `bj_zone_due` then let every organisation
+  through at the first zone's time (markers prevented duplicates, but the timing was wrong for most
+  organisations). It now passes the context (v1596 §0, test T1).
+- **3.3 Log retention** `retention.purge` (sql, Sunday 03:00 UTC): D11 run history (succeeded / skipped runs and
+  finished items after `success_retention_days`, failed / partial runs and dead items after
+  `failure_retention_days`; running runs and waiting items never) plus every active `public.retention_targets` row.
+  Names checked against the catalog (`retention_target_problem`), `format('%I')` everywhere, plain tables only
+  (ctid batches), `batch_size` × `max_batches` per run, one target failing never stops the others, last result
+  per target, dry run.
+- **3.2 Storage clean-up** `storage.cleanup` (handler, Saturday 04:00 UTC, guarded): SQL scan
+  (`storage_cleanup_scan`) per bucket in `storage_cleanup_buckets` against its `storage_cleanup_references`; the
+  worker deletes through the Storage API (`ctx.storageRemove`), never SQL. Report only per bucket until deletion is
+  switched on in Admin (refused before one report-only scan); 30-day safety window; 500 files per bucket per run.
+- **3.5 Simulator housekeeping** `simulator.housekeeping` (sql, 02:45 UTC): idle practice runs (90 days) and idle
+  collaborative sessions (90 days) → `abandoned`; lobbies never started (30 days) → `abandoned`. Thresholds are
+  new columns of `saas_job_settings`.
+- **3.4 Weekly data check** `quality.weekly_report` (sql, Monday 07:00 organisation time): checks are rows of
+  `public.data_quality_checks` (count SQL, `$1` organisation, `$2` local date; broken checks skipped and listed);
+  one in-app notice per owner / PMO Admin when anything is found (email through the daily digest, D6); counts kept
+  in the week's marker.
+- **Manual jobs:** `backfill.global_templates` (M.2, 50 organisations per run) and `search.reindex` (M.3,
+  `ai_search_backfill`) — catalogue rows without a schedule, started with Admin's existing Run now (reason,
+  audited). Re-embedding already exists (Admin v238 › AI › Embeddings). `public.organisation_data_footprint` (M.5
+  dry run, service role only).
+- **Admin:** v262 RPCs + Background Jobs › **Housekeeping** page and three routed edit pages (run history, a
+  retention target, a Storage bucket); `describeCron` shows manual jobs as "Only when run by hand". Narrow
+  exception extended in both CLAUDE.md files (rule 34.5 / Admin Security).
+- Guides: `Documentation/Background_Jobs_v1352_Guide.md` (Slice 3 jobs, adding a retention target / data check,
+  storage clean-up), Admin `modules/system/docs/Background_Jobs_Guide.md` (Housekeeping), Admin plan note v219.
+
+**Decisions made during the build (not in the plan text):**
+- **3.1 Roll-up refresh: no job.** There are no materialised views or summary caches in `public` or `sim`;
+  portfolio / programme / PMO dashboards compute from live tables. `public.portfolio_metrics` is written only by
+  v36 test data and read by no live page, so refreshing it would invent a feature. A future cache registers its
+  own refresh job (rule 80).
+- **Retention seeds are conservative.** Active: technical logs (markers 400 days — every job window is under 100
+  days; email / error / API / sync / session / sign-in logs 90–365 days; field help events 730 days). Off until the
+  owner decides: `notifications` (read, older than a year), `audit_log`, `activity_logs`, `data_access_logs`,
+  `security_events`. `consent_logs` (GDPR evidence) is not listed at all. Business records and revision histories
+  are never targets.
+- **D11 lives in `background_job_settings`, not in `retention_targets`:** run history needs two periods (success /
+  failure) on one table, and the key of `retention_targets` (fixed by v1586) allows one row per table.
+- **Storage references verified in code** for seven buckets; other buckets (signatures, templates, evidence,
+  branding, programme / project documents) are not listed until their reference columns are confirmed — while
+  deletion is off a wrong reference could only produce wrong counts. A file is "referenced" when a stored value,
+  after dropping `?query` and any `…/<bucket>/` prefix, equals its name (or the name with `%20` for spaces).
+- **Simulator leaderboards are not recomputed:** nothing in the app writes `sim.leaderboard_entries`, and the live
+  table carries two conflicting definitions (v66 `leaderboard_type` / `score` NOT NULL, v692 `period` /
+  `total_points`). Recomputing needs its own decision on the scoring rule.
+- **Data check is Platform only:** practice projects belong to one learner and have no PMO Admin; a weekly "your
+  practice data has gaps" notice would be noise. Rule 34.1 gap recorded here.
+- **Data-check notices are in-app only;** the email comes through the daily digest under the Reports switch (D6),
+  so people control it.
+- **Manual jobs take no options from Admin** (Run now sends an empty context): the back-fill works in batches of 50
+  (run again for more), the re-index covers both schemas.
+
+**Tests:** `supabase/functions` Vitest 122/122 (14 files, 7 new in `slice3Handlers.test.js`; the count includes
+another session's uncommitted `_shared/api` tests); `node scripts/check-background-jobs.mjs` passes,
+`node --test scripts/__tests__/check-background-jobs.test.mjs` 6/6. Admin `packages/shared`
+`backgroundJobServices.test.js` 14/14 (7 new); Admin `check-background-jobs` and `check-native-date-inputs` pass;
+`check-field-help` 0 keys without help (its one raw label is another session's `ApiUsagePage.jsx`);
+`pnpm turbo build --filter=@nidus-admin/system` builds. SQL tests v1598 (T1–T8) and Admin v263 (H1–H5) written,
+to be run by the owner.
+
+**Owner checks after the run:**
+1. Admin › System › Background Jobs lists `retention.purge`, `storage.cleanup`, `simulator.housekeeping`,
+   `quality.weekly_report` and the manual `backfill.global_templates`, `search.reindex` ("Only when run by hand").
+2. Background Jobs › **Housekeeping** shows run history 90 / 365 days, the retention list (audit logs off) and the
+   seven buckets (report only). Run **Storage clean-up** now (reason), then check each bucket's "Last scan" counts
+   before switching deletion on for any bucket.
+3. `SELECT public.run_retention_purge('{"dry_run": true}');` — check the counts per table before the first Sunday.
+4. Monday 07:00 organisation time: owners / PMO Admins with gaps get one "Data check" notice.
+
+**Decisions needing the owner:**
+- **M.5 organisation data export / deletion — not built.** Recommended: a request record (organisation, type,
+  reason, requested by, approved by, status) created in Admin with two-person approval; an export job that writes
+  the organisation's rows (table list from `organisation_data_footprint` plus the GDPR registry) and Storage files
+  to a private bucket with an expiring link; deletion only after a cooling-off period (e.g. 30 days) as a lock
+  first, then a hard-delete job per table in dependency order. Needs a PRD: legal hold, billing records kept for
+  tax, Storage files, Simulator data, and who may request it.
+- **M.4 large bulk-import processing — not built.** Every bulk import today parses the file in the browser and
+  saves through the normal services; there is no server-side import to move to the queue. Recommended: build it
+  when the first import is too large for the browser (e.g. MS Project imports above a few thousand rows), as an
+  `imports.process` handler that reads an uploaded file in chunks with progress on an import record.
+- **Retention for audit / security logs and read notifications.** Recommended: keep `audit_log`,
+  `data_access_logs`, `security_events` 7 years (2555 days, as seeded) once legal confirms, then switch them on in
+  Housekeeping; read notifications 365 days.
+- **Simulator leaderboards** — choose the scoring rule (and which table definition stays) before a recompute job.
+
+**Remaining gaps:** no Admin screen for `saas_job_settings` (Simulator housekeeping thresholds are SQL edits);
+Storage buckets beyond the seven listed need their reference columns confirmed before they are added.
+
+### v1352 close-out (2026-11-27)
+
+All four slices are built: framework and existing jobs (Slice 0), promised features (Slice 1), notifications and
+SaaS operations (Slice 2), data health, housekeeping and manual jobs (Slice 3) — Platform, Simulator, Planner and
+Admin jobs running through one tick from one catalogue, with run history, grouped alerts, retries, a queue with
+back-off and replay, and Admin monitoring and housekeeping. Slices 0–2 SQL has been run; Slice 3 waits for the
+owner's SQL run, worker redeploy and browser check. Open beyond v1352: the owner decisions above (M.4, M.5,
+audit-log retention, leaderboards), the `ai.embed` edge limit (v1272) and the Slice 2 Paynow items listed above.
