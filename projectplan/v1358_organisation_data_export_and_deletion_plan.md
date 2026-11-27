@@ -60,18 +60,23 @@ JSON per table, files, dictionary, display IDs); owner-only request; 7-day expir
       (rule 28.1) and its back button now returns to the previous page (rule 73).
 - [ ] Exit as slice 1 (owner SQL + Admin check).
 
-## Slice 3 — Deletion (D1, D5–D12, D15)
+## Slice 3 — Deletion (D1, D5–D12, D15) — built in two parts: 3a (up to the lock), 3b (day-30 deletion)
 
 Tests first: approval refused under legal hold; confirmation link 7 days + day-5 reminder + lapse; lock blocks sign-in,
 API keys, SCIM, webhooks and jobs; cancel restores; day-30 deletion removes every in-scope row of a test organisation
 and leaves another untouched; kept tables keep rows; member rules (D8); certificate contents.
-- [ ] SQL: deletion request flow (request, admin approve / reject / open on behalf, owner confirm token, cancel),
-      lock columns, `organisation_deletion_records`, deletion in dependency order in batches.
-- [ ] Lock enforcement: organisation route guard (Platform, Planner), API gateway / SCIM / webhook delivery (v1356),
-      background jobs skip locked organisations; subscription cancelled at lock (D10).
-- [ ] Job `organisation.deletion_lifecycle` (daily, UTC): reminders, lapse, final export at lock, day-30 deletion,
-      member clean-up (D8), certificate PDF + email (D15); kept audit / security logs to a 7-year retention target.
-- [ ] Pages: owner request / confirm / cancel (Platform, Planner); Admin approve / reject / cancel / record view.
+- [x] 3a SQL: deletion request flow (request, admin approve / reject / open on behalf, owner confirm token, cancel),
+      lock columns (`SQL/v1604`, tests `SQL/v1605`, Admin `SQL/v266`).
+- [ ] 3b SQL: `organisation_deletion_records`, deletion in dependency order in batches.
+- [x] 3a Lock enforcement: app gate (`OrganisationLockGate`) in Platform `ProtectedRoute` and the Planner shell;
+      members signed out; API keys revoked, webhooks disabled, SCIM off (switched back on by a cancel); subscription
+      cancelled at lock (D10).
+- [x] 3a Jobs: `organisation.deletion_lifecycle` (hourly: day-5 reminder with a new link, lapse after 7 days) and
+      `organisation.deletion_notify` (worker: confirmation email with the link); final export at lock.
+- [ ] 3b: day-30 deletion, member clean-up (D8), certificate PDF + email (D15); kept audit / security logs.
+- [x] 3a Pages: owner request / confirm (emailed link) / cancel on Data export & deletion (Platform, Planner);
+      Admin open on behalf / approve / reject / cancel on Organisation detail. Menu label “Data export & deletion”.
+- [ ] 3b Admin deletion record view and certificate download.
 - [ ] Guide `Documentation/Organisation_Data_Export_and_Deletion_v1358_Guide.md`; ROADMAP status; exit.
 
 ## Risks
@@ -145,4 +150,37 @@ confidential); requests are listed newest first rather than A→Z (rule 12.1 exc
 change); Admin success messages use the Admin toast (Admin has no success modal).
 
 **Tests:** Admin `organisationDataServices.test.js` 4/4; SQL tests H1, T1–T3 written (owner runs).
+
+### Slice 3a review (2026-11-27) — code complete, SQL not run
+
+**Run order (owner):**
+
+| # | Repo | Step | Status |
+|---|---|---|---|
+| 0 | — | Redeploy `background-job-worker` (`--no-verify-jwt`): new handler `organisation.deletion_notify`. It needs the secret `SITE_URL` (already set for other functions); set `PLANNER_SITE_URL` too if Project Planner runs on its own address | pending |
+| 1 | monorepo | `SQL/v1604_organisation_deletion_request_and_lock.sql` (ends with a dry run of the lifecycle job) | pending |
+| 2 | Admin | `SQL/v266_organisation_deletion_admin.sql` | pending |
+| 3 | monorepo | `SQL/v1605_organisation_deletion_request_and_lock_tests.sql` (rolls back; expect "v1605: all organisation deletion (slice 3a) tests passed (rolling back)") | pending |
+
+No new tables (columns only), so no Planner wall re-run.
+
+**Built:** owner request with a reason (field help); Admin open on behalf / approve (refused on legal hold) / reject
+(owner told, with the reason) / cancel; approval stores only the hash of a 64-character token and queues the email;
+the emailed link opens Data export & deletion, which confirms it while signed in as the owner; the lock (30 days):
+organisation locked, members signed out (`auth.sessions`) and told, API keys revoked / webhooks disabled / SCIM off
+(remembered, so a cancel switches exactly those back on), subscription cancelled, final export queued; hourly
+lifecycle: one day-5 reminder with a new link, lapse after 7 days; the app gate keeps everyone but the owner out
+(the owner keeps Data export & deletion).
+
+**Decisions made while building:**
+- The lock is enforced by an app gate, by signing members out and by switching integrations off — not by changing
+  the row-level security helpers (which grant access in many ways, including global PMO access); the data itself is
+  deleted 30 days later. A member could still read data through the API with a fresh sign-in during the 30 days.
+- The reminder sends a new link and the earlier one stops working (only the hash is kept).
+- Admin is not alerted when a customer asks for deletion; pending requests show on Organisation Data Requests.
+- SSO connections are left on during the lock, so the owner can still sign in to cancel.
+
+**Tests:** worker `v1358OrganisationDeletion.test.js` 5/5; screens `OrganisationDataExportPage.test.jsx` +
+`OrganisationLockGate.test.jsx` 11/11; Admin `organisationDataServices.test.js` 5/5; Admin users module builds;
+SQL D1–D6 written (owner runs).
 

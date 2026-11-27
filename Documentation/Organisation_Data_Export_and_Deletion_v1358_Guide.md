@@ -1,7 +1,7 @@
 # Organisation data export and deletion (v1358)
 
 **PRD:** `projectprd/v1358_organisation_data_export_and_deletion_PRD.md` · **Plan:** `projectplan/v1358_organisation_data_export_and_deletion_plan.md`
-**Status:** Slice 1 (export) and slice 2 (Admin tools) built. Deletion (slice 3) follows.
+**Status:** Export (slice 1), Admin tools (slice 2) and the deletion request up to the 30-day lock (slice 3a) built. The day-30 deletion and certificate (slice 3b) follow.
 
 ## For the Account Owner
 
@@ -29,6 +29,17 @@
 - **Large files:** any single file over 45 MB is listed in `files-not-included.csv`. You can still download it in the app.
 - **Spreadsheet safety:** in the CSV files, text that starts with `=`, `+`, `-` or `@` begins with an apostrophe, so a spreadsheet does not run it as a formula.
 
+### Deleting the organisation
+
+1. On **Data export & deletion**, select **Request deletion**, give a reason and send it. Our support team reviews it.
+2. After approval you get an email with a **Confirm the deletion** link (valid 7 days; one reminder with a new link on day 5). Open it while signed in as the Account Owner. If you do nothing, the request lapses and nothing changes.
+3. When you confirm, the organisation is **locked for 30 days**:
+   - members are signed out and cannot use it (they are told by email; their own accounts and other organisations are not affected);
+   - API keys, webhooks and SCIM are switched off, and the subscription is cancelled (no automatic refund);
+   - a final export is prepared for you on the same page.
+4. You can **Cancel deletion** at any time before the 30 days end. The organisation is unlocked and integrations come back on; choose a plan again under Subscription.
+5. On day 30 the data is deleted permanently (slice 3b).
+
 ## For system admins (Admin app)
 
 - **Users & Organisations › Organisation Data Requests:** every organisation’s export requests (reference, status, size, who asked) and the organisations on legal hold. Select a reference or an organisation to open it.
@@ -36,7 +47,8 @@
   - **Legal hold.** Select **Place hold** or **Lift hold** and give a reason. While an organisation is on hold it cannot be deleted; exports still work. The organisation is not told.
   - **Transfer ownership.** Use this when the Account Owner has left. Choose one of the organisation’s PMO Admins and give a reason. The new owner gets the Account Owner role, billing delegates are removed, and both the old and the new owner are emailed.
   - The organisation’s own export requests.
-- Every hold and transfer is recorded in the Admin audit log. Permissions: `organisations.data.view`, `.hold` and `.transfer` (super admin and system admin).
+- **Deletion requests** (Organisation detail › Data & compliance): **Open deletion request** when a customer asked support; **Approve** (refused while on legal hold) or **Reject** (the owner sees your reason); **Cancel** before day 30. Approval only sends the owner a confirmation link; nothing is locked until they confirm.
+- Every hold, transfer and deletion decision is recorded in the Admin audit log. Permissions: `organisations.data.view`, `.hold` and `.transfer` (super admin and system admin).
 
 ## How it works
 

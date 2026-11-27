@@ -4,6 +4,7 @@ import { supabase } from '../services/supabaseClient'
 import { hasRegisteredForPlatform, canAccessPlatform, updatePlatformAccess } from '../services/unifiedSubscriptionService'
 import { checkOrganisationStatusByAuthId } from '../services/postLoginRouter'
 import PlatformSelectionModal from './PlatformSelectionModal'
+import OrganisationLockGate from '@nidus/ui/organisationData/OrganisationLockGate.jsx'
 
 const AUTH_CHECK_TIMEOUT_MS = 15000
 
@@ -217,6 +218,16 @@ export default function ProtectedRoute({
     )
   }
 
-  return children
+  // v1358: an organisation locked for deletion keeps members out (the owner keeps Data export & deletion).
+  // Simulator routes are not organisation data (learners own their practice data), so they are not gated.
+  if (requiredPlatform === 'simulator') return children
+  return (
+    <OrganisationLockGate
+      allowPath="/platform/organisation/data-export"
+      onSignOut={async () => { await supabase.auth.signOut(); window.location.assign('/platform/login') }}
+    >
+      {children}
+    </OrganisationLockGate>
+  )
 }
 

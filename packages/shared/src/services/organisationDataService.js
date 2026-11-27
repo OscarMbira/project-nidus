@@ -1,5 +1,5 @@
 /**
- * v1358 Slice 1 — organisation data export (PRD D2–D4). Platform and Planner (both public schema); the caller
+ * v1358 Slice 1 — organisation data export (PRD D2–D4); Slice 3a — deletion request, confirmation, cancel, lock. Platform and Planner (both public schema); the caller
  * passes its Supabase client (platformDb). The database checks that the caller is the Account Owner.
  */
 export const EXPORT_BUCKET = 'organisation-exports'
@@ -42,4 +42,43 @@ export const EXPORT_STATUS_LABELS = {
   ready: 'Ready to download',
   failed: 'Failed',
   expired: 'Expired',
+}
+
+export const DELETION_STATUS_LABELS = {
+  pending_approval: 'Waiting for approval',
+  rejected: 'Not approved',
+  awaiting_confirmation: 'Waiting for your confirmation',
+  lapsed: 'Lapsed (not confirmed)',
+  locked: 'Locked — deletion scheduled',
+  deleting: 'Being deleted',
+  deleted: 'Deleted',
+  cancelled: 'Cancelled',
+}
+
+/** Open deletion states (one at a time per organisation). */
+export const OPEN_DELETION_STATUSES = ['pending_approval', 'awaiting_confirmation', 'locked', 'deleting']
+
+export async function requestOrganisationDeletion(db, reason) {
+  const { data, error } = await db.rpc('organisation_data_request_deletion', { p_reason: reason })
+  if (error) throw error
+  return data
+}
+
+export async function confirmOrganisationDeletion(db, token) {
+  const { data, error } = await db.rpc('organisation_data_confirm_deletion', { p_token: token })
+  if (error) throw error
+  return data
+}
+
+export async function cancelOrganisationDeletion(db) {
+  const { data, error } = await db.rpc('organisation_data_cancel_deletion')
+  if (error) throw error
+  return data
+}
+
+/** { locked, is_owner, organisation, deletion_due_at } for the caller's current organisation. */
+export async function getOrganisationLockStatus(db) {
+  const { data, error } = await db.rpc('organisation_lock_status')
+  if (error) throw error
+  return data || { locked: false }
 }

@@ -15,6 +15,7 @@ import * as paymentsPendingRecheck from './payments.pending_recheck.js'
 import * as storageCleanup from './storage.cleanup.js'
 import * as organisationExportBuild from './organisation.export_build.js'
 import * as organisationExportExpire from './organisation.export_expire.js'
+import * as organisationDeletionNotify from './organisation.deletion_notify.js'
 
 export const handlers = {
   'ai.embed': aiEmbed,
@@ -30,4 +31,5 @@ export const handlers = {
   'storage.cleanup': storageCleanup,
   'organisation.export_build': organisationExportBuild,
   'organisation.export_expire': organisationExportExpire,
+  'organisation.deletion_notify': organisationDeletionNotify,
 }

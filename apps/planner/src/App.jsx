@@ -15,6 +15,7 @@ import { ThemeProvider, useTheme } from '@nidus/shared/context/ThemeContext'
 import { UnsavedChangesProvider } from '@nidus/shared/context/UnsavedChangesContext'
 import { PlanningProvider } from '@nidus/planning/context/PlanningContext.jsx'
 import PlannerShell from '@nidus/ui/PlannerShell'
+import OrganisationLockGate from '@nidus/ui/organisationData/OrganisationLockGate.jsx' // v1358
 import { AuthProvider, useAuth } from './lib/auth.jsx'
 import { WorkspaceProvider, useWorkspace } from './lib/workspace.jsx'
 import { isRouteAllowed, flattenMenu } from './lib/routeGuard.js'
@@ -95,7 +96,9 @@ function AppLayout() {
       onToggleTheme={toggleTheme}
     >
       <Suspense fallback={<Spinner />}>
-        <Outlet />
+        <OrganisationLockGate allowPath="/app/settings/data" onSignOut={signOut}>
+          <Outlet />
+        </OrganisationLockGate>
       </Suspense>
       {pathname !== '/app/ask' && (
         <Suspense fallback={null}>
