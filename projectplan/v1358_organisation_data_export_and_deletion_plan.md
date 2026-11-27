@@ -187,17 +187,17 @@ lifecycle: one day-5 reminder with a new link, lapse after 7 days; the app gate 
 `OrganisationLockGate.test.jsx` 11/11; Admin `organisationDataServices.test.js` 5/5; Admin users module builds;
 SQL D1–D6 written (owner runs).
 
-### Slice 3b review (2026-11-27) — code complete, SQL not run
+### Slice 3b review (2026-11-27) — code complete; SQL run and worker redeployed by the owner (2026-11-27)
 
 **Run order (owner):**
 
 | # | Repo | Step | Status |
 |---|---|---|---|
-| 0 | — | Redeploy `background-job-worker` (`--no-verify-jwt`): new handler `organisation.deletion_execute` (and the certificate PDF writer) | pending |
-| 1 | monorepo | `SQL/v1606_organisation_deletion_execute.sql` (ends with a read-only check: tables to delete for the oldest organisation, lifecycle dry run) | pending |
-| 2 | Admin | `SQL/v267_organisation_deletion_records_admin.sql` (ID rule ODL, deletion records, certificate download policy) | pending |
-| 3 | monorepo | `SQL/v1251_planner_table_wall.sql` (re-run; one new table) | pending |
-| 4 | monorepo | `SQL/v1607_organisation_deletion_execute_tests.sql` (rolls back; expect "v1607: all organisation deletion (slice 3b) tests passed (rolling back)") | pending |
+| 0 | — | Redeploy `background-job-worker` (`--no-verify-jwt`): new handler `organisation.deletion_execute` (and the certificate PDF writer) | done 2026-11-27 |
+| 1 | monorepo | `SQL/v1606_organisation_deletion_execute.sql` (ends with a read-only check: tables to delete for the oldest organisation, lifecycle dry run) | done 2026-11-27 |
+| 2 | Admin | `SQL/v267_organisation_deletion_records_admin.sql` (ID rule ODL, deletion records, certificate download policy) | done 2026-11-27 |
+| 3 | monorepo | `SQL/v1251_planner_table_wall.sql` (re-run; one new table) | done 2026-11-27 |
+| 4 | monorepo | `SQL/v1607_organisation_deletion_execute_tests.sql` (rolls back; expect "v1607: all organisation deletion (slice 3b) tests passed (rolling back)") | done 2026-11-27 |
 
 **Built:**
 - Hourly `organisation.deletion_lifecycle` now starts day-30 deletions (not on legal hold) and resumes any that stopped,
