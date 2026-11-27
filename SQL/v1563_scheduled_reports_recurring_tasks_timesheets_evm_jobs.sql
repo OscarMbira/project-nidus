@@ -211,13 +211,14 @@ LANGUAGE plpgsql STABLE SECURITY DEFINER
 SET search_path = public, sim SET row_security = off
 AS $$
 DECLARE
-  v   INTEGER;
+  v   BIGINT;
   rec RECORD;
 BEGIN
-  FOR rec IN EXECUTE 'SELECT (' || p_sql || ') AS n' USING p_id, p_date LOOP
+  -- v1599: cast so the record field type never changes between calls
+  FOR rec IN EXECUTE 'SELECT ((' || p_sql || '))::BIGINT AS n' USING p_id, p_date LOOP
     v := rec.n;
   END LOOP;
-  RETURN v;
+  RETURN LEAST(v, 2147483647)::INTEGER;
 EXCEPTION WHEN OTHERS THEN
   RETURN NULL;
 END;
@@ -232,7 +233,7 @@ DECLARE
   v   JSONB;
   rec RECORD;
 BEGIN
-  FOR rec IN EXECUTE 'SELECT (' || p_sql || ') AS j' USING p_id, p_date LOOP
+  FOR rec IN EXECUTE 'SELECT ((' || p_sql || '))::JSONB AS j' USING p_id, p_date LOOP
     v := rec.j;
   END LOOP;
   RETURN v;
