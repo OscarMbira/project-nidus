@@ -850,24 +850,41 @@ $$;
 -- ── 7. Daily digest (2.2, D6) ────────────────────────────────────────────────
 -- The "Reports & Digests" category in Notification Preferences is the digest switch: email off, or
 -- frequency off, means no digest email for that app's items. In-app reminders always stay.
+-- v1591: reads either notification_preferences column set (public has the v30 columns).
 CREATE OR REPLACE FUNCTION public.notifications_digest_wanted(p_schema TEXT, p_auth_user_id UUID)
 RETURNS BOOLEAN
 LANGUAGE plpgsql STABLE SECURITY DEFINER
 SET search_path = public, sim SET row_security = off
 AS $$
 DECLARE
-  v_email BOOLEAN;
-  v_freq  TEXT;
+  v_user_id UUID;
+  v_ids     TEXT[];
+  v_pref    JSONB;
+  v_email   BOOLEAN;
+  v_freq    TEXT;
 BEGIN
   IF p_auth_user_id IS NULL THEN RETURN FALSE; END IF;
+  v_user_id := (SELECT us.id FROM public.users us WHERE us.auth_user_id = p_auth_user_id LIMIT 1);
+  v_ids := ARRAY[p_auth_user_id::TEXT, COALESCE(v_user_id::TEXT, p_auth_user_id::TEXT)];
+
   IF p_schema = 'sim' THEN
-    v_email := (SELECT p.channel_email FROM sim.notification_preferences p WHERE p.user_id = p_auth_user_id AND p.event_category = 'reports');
-    v_freq  := (SELECT p.frequency FROM sim.notification_preferences p WHERE p.user_id = p_auth_user_id AND p.event_category = 'reports');
+    v_pref := (SELECT to_jsonb(p) FROM sim.notification_preferences p
+                WHERE to_jsonb(p) ->> 'user_id' = ANY (v_ids)
+                  AND COALESCE(to_jsonb(p) ->> 'event_category', to_jsonb(p) ->> 'preference_category',
+                               to_jsonb(p) ->> 'preference_type') = 'reports'
+                LIMIT 1);
   ELSE
-    v_email := (SELECT p.channel_email FROM public.notification_preferences p WHERE p.user_id = p_auth_user_id AND p.event_category = 'reports');
-    v_freq  := (SELECT p.frequency FROM public.notification_preferences p WHERE p.user_id = p_auth_user_id AND p.event_category = 'reports');
+    v_pref := (SELECT to_jsonb(p) FROM public.notification_preferences p
+                WHERE to_jsonb(p) ->> 'user_id' = ANY (v_ids)
+                  AND COALESCE(to_jsonb(p) ->> 'event_category', to_jsonb(p) ->> 'preference_category',
+                               to_jsonb(p) ->> 'preference_type') = 'reports'
+                LIMIT 1);
   END IF;
-  RETURN COALESCE(v_email, TRUE) AND COALESCE(v_freq, 'daily_digest') <> 'off';
+
+  IF v_pref IS NULL THEN RETURN TRUE; END IF;
+  v_email := COALESCE((v_pref ->> 'channel_email')::BOOLEAN, (v_pref ->> 'email_enabled')::BOOLEAN, TRUE);
+  v_freq  := COALESCE(v_pref ->> 'frequency', v_pref ->> 'digest_frequency', 'daily_digest');
+  RETURN v_email AND v_freq NOT IN ('off', 'never');
 END;
 $$;
 
