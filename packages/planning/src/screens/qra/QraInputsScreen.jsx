@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { FieldLabelWithHelp, RowActionButton, SmartAmountInput } from '@nidus/ui'
 import SelectField from '@nidus/ui/SelectField'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
+import { useConfirmDialog } from '@nidus/ui/ConfirmDialog.jsx'
 import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesContext'
 import { applyQuickRange, quantifiedProblem } from '../../engine/qra/riskExposure.js'
 import { useQraProject } from './useQraProject.js'
@@ -32,6 +33,7 @@ export default function QraInputsScreen() {
   const ctx = useQraProject()
   const help = ctx.isSim ? 'sim' : 'public'
   const { showSuccess, modal } = useSuccessModal()
+  const { confirm, dialog } = useConfirmDialog()
   const [section, setSection] = useState('tasks')
   const [ranges, setRanges] = useState([])
   const [links, setLinks] = useState([])
@@ -153,8 +155,18 @@ export default function QraInputsScreen() {
     }
   }
 
+  async function removeCostLine(row) {
+    if (!(await confirm({ title: 'Delete this cost line?', message: 'Its range and per-day setting are removed from the analysis inputs.', confirmLabel: 'Delete', danger: true }))) return
+    try {
+      await ctx.api.deleteCostLine(row.id)
+      setCosts((rows) => rows.filter((item) => item.id !== row.id))
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
   async function removeGroup(group) {
-    if (!window.confirm(`Delete the group ${group.name}? Items stay, they just leave the group.`)) return
+    if (!(await confirm({ title: `Delete the group ${group.name}?`, message: 'Items stay; they just leave the group.', confirmLabel: 'Delete group', danger: true }))) return
     try {
       await ctx.api.deleteGroup(group.id)
       setGroups((rows) => rows.filter((row) => row.id !== group.id))
@@ -298,7 +310,7 @@ export default function QraInputsScreen() {
               {row.is_time_dependent && (
                 <Amount label="Per day" helpKey={`${help}.cost_line_ranges.daily_rate`} value={row.daily_rate} onChange={(value) => setCosts((rows) => rows.map((item, i) => i === index ? { ...item, daily_rate: value } : item))} />
               )}
-              {row.id && <RowActionButton variant="delete" label="Delete cost line" onClick={async () => { if (!window.confirm('Delete this cost line?')) return; await ctx.api.deleteCostLine(row.id); setCosts((rows) => rows.filter((item) => item.id !== row.id)) }} />}
+              {row.id && <RowActionButton variant="delete" label="Delete cost line" onClick={() => removeCostLine(row)} />}
             </div>
           ))}
           <button type="button" data-help="exempt" className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg text-gray-800 dark:text-gray-100" onClick={() => setCosts((rows) => [...rows, { line_label: '', min_amount: '', ml_amount: '', max_amount: '', distribution: settings.default_distribution, is_time_dependent: false, daily_rate: '' }])}>
@@ -363,6 +375,7 @@ export default function QraInputsScreen() {
         </button>
       )}
       {modal}
+      {dialog}
     </div>
   )
 }

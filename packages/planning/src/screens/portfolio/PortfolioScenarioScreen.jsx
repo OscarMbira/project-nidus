@@ -9,6 +9,7 @@ import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { SmartAmountInput } from '@nidus/ui'
 import DashboardStatCard from '@nidus/ui/DashboardStatCard'
 import AuthorisationRequestModal from '@nidus/ui/AuthorisationRequestModal'
+import { useConfirmDialog } from '@nidus/ui/ConfirmDialog.jsx'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
 import AuditCard from '@nidus/ui/AuditCard'
@@ -126,7 +127,40 @@ function ScenarioEditor({ api, portfolio, scenarioKey, base, onSaved }) {
   const [decideOpen, setDecideOpen] = useState(false)
   const [error, setError] = useState(null)
   const [busy, setBusy] = useState(false)
+  const { confirm, dialog } = useConfirmDialog()
+  const { showSuccess, modal } = useSuccessModal()
+  const navigate = useNavigate()
   const locked = scenario && ['pending_approval', 'approved', 'applied'].includes(scenario.status)
+
+  // v1359 (L4): Submit and Apply ask first, report errors, and confirm success (rule 16).
+  const submitForApproval = async () => {
+    if (!(await confirm({
+      title: `Submit ${scenario.name} for approval?`,
+      message: 'The scenario is locked while it waits. An approver accepts or rejects it, with a reason.',
+      confirmLabel: 'Submit',
+    }))) return
+    setBusy(true); setError(null)
+    try {
+      await api.submit(scenario.id)
+      setScenario({ ...scenario, status: 'pending_approval' })
+      showSuccess({ recordId: scenario.display_id || scenario.name, operation: 'updated', subject: 'Scenario', message: 'Submitted for approval.' })
+    } catch (err) { setError(err.message) } finally { setBusy(false) }
+  }
+  const applyScenario = async () => {
+    const included = (result?.chosen || []).length
+    if (!(await confirm({
+      title: `Apply ${scenario.name} to the portfolio?`,
+      message: `This changes the portfolio itself: projects left out are set to not selected, the priority order follows the ranking${included ? ` (${included} projects selected)` : ''}, and shifted projects get new planned start dates. It cannot be undone automatically.`,
+      confirmLabel: 'Apply to portfolio',
+      danger: true,
+    }))) return
+    setBusy(true); setError(null)
+    try {
+      await api.apply(scenario.id)
+      setScenario({ ...scenario, status: 'applied' })
+      showSuccess({ recordId: scenario.display_id || scenario.name, operation: 'updated', subject: 'Scenario', message: 'Applied: project statuses, priority order and start dates were updated.' })
+    } catch (err) { setError(err.message) } finally { setBusy(false) }
+  }
 
   useEffect(() => {
     let cancel = false
@@ -275,18 +309,20 @@ function ScenarioEditor({ api, portfolio, scenarioKey, base, onSaved }) {
           )}
         </fieldset>
       )}
-      {scenario && !locked && <button type="button" className="px-3 py-1.5 rounded bg-blue-600 text-white text-sm" onClick={async () => { await api.submit(scenario.id); setScenario({ ...scenario, status: 'pending_approval' }) }}>Submit for approval</button>}
+      {scenario && !locked && <button type="button" disabled={busy} className="px-3 py-1.5 rounded bg-blue-600 text-white text-sm disabled:opacity-50" onClick={submitForApproval}>Submit for approval</button>}
       {scenario?.status === 'pending_approval' && <button type="button" className="px-3 py-1.5 rounded bg-blue-600 text-white text-sm" onClick={() => setDecideOpen(true)}>Decide</button>}
-      {scenario?.status === 'approved' && <button type="button" className="px-3 py-1.5 rounded bg-blue-600 text-white text-sm" onClick={async () => { await api.apply(scenario.id); setScenario({ ...scenario, status: 'applied' }) }}>Apply</button>}
+      {scenario?.status === 'approved' && <button type="button" disabled={busy} className="px-3 py-1.5 rounded bg-blue-600 text-white text-sm disabled:opacity-50" onClick={applyScenario}>Apply</button>}
       {scenario && <button type="button" className="ml-2 px-3 py-1.5 rounded border border-gray-300 dark:border-gray-600 text-sm text-gray-800 dark:text-gray-100" onClick={async () => {
         const copy = await api.saveScenario({ portfolio_id: portfolio.id, name: `${scenario.name} copy`, max_start_shift: scenario.max_start_shift, limits: scenario.limits, status: 'draft' }, rules, null)
-        window.location.assign(`${base}/scenarios/${portfolio.portfolio_code || portfolio.id}/${copy.display_id || copy.id}`)
+        navigate(`${base}/scenarios/${portfolio.portfolio_code || portfolio.id}/${copy.display_id || copy.id}`)
       }}>Copy</button>}
       <AuthorisationRequestModal open={decideOpen} mode="decide" onClose={() => setDecideOpen(false)} onDecision={async (decision, notes) => {
         await api.decide(scenario.id, decision === 'approve' ? 'approve' : 'reject', notes)
         setScenario({ ...scenario, status: decision === 'approve' ? 'approved' : 'rejected', approval_notes: notes })
         setDecideOpen(false)
       }} />
+      {dialog}
+      {modal}
     </div>
   )
 }

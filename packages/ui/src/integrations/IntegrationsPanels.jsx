@@ -28,6 +28,7 @@ import {
 } from '@nidus/shared/services/organisationApiService'
 import { platformDb } from '@nidus/supabase'
 import FieldLabelWithHelp from '../FieldLabelWithHelp.jsx'
+import { useConfirmDialog } from '../ConfirmDialog.jsx'
 import RegionalDateInput from '../RegionalDateInput.jsx'
 
 const shell = 'rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 space-y-3'
@@ -64,6 +65,37 @@ export function ApiKeysPanel() {
   const [form, setForm] = useState({ name: '', serviceAccountUserId: '', scopes: ['projects:read'], expires_at: '' })
   const [svcName, setSvcName] = useState('API service account')
   const [error, setError] = useState('')
+  const { confirm, dialog } = useConfirmDialog()
+
+  // v1359 (A4): rotating or revoking a key breaks integrations that use it, so ask first and report errors.
+  async function onRotate(r) {
+    if (!(await confirm({
+      title: `Rotate the key ${r.name}?`,
+      message: 'A new key is created and shown once. The old key keeps working for a short overlap so you can switch your integration over, then stops.',
+      confirmLabel: 'Rotate key',
+    }))) return
+    try {
+      setError('')
+      const n = await rotateApiCredential(r.id)
+      setPlainOnce(n.plain_key)
+      await reload()
+      showSuccess({ recordId: n.credential_reference || r.credential_reference || r.key_prefix, operation: 'created', message: 'New key created. Copy it now — it is shown only once.' })
+    } catch (e) { setError(e.message) }
+  }
+  async function onRevoke(r) {
+    if (!(await confirm({
+      title: `Revoke the key ${r.name}?`,
+      message: 'Every integration using this key stops working at once. This cannot be undone; create a new key to reconnect.',
+      confirmLabel: 'Revoke key',
+      danger: true,
+    }))) return
+    try {
+      setError('')
+      await revokeApiCredential(r.id)
+      await reload()
+      showSuccess({ recordId: r.credential_reference || r.key_prefix, operation: 'deleted', message: 'The key has been revoked.' })
+    } catch (e) { setError(e.message) }
+  }
 
   async function reload() {
     if (!accountId) return
@@ -152,8 +184,8 @@ export function ApiKeysPanel() {
                   <td className="p-2 space-x-2">
                     {!r.revoked_at && (
                       <>
-                        <button type="button" className="text-sm text-amber-700 dark:text-amber-300" onClick={async () => { const n = await rotateApiCredential(r.id); setPlainOnce(n.plain_key); await reload() }}>Rotate</button>
-                        <button type="button" className="text-sm text-red-600" onClick={async () => { await revokeApiCredential(r.id); await reload(); showSuccess({ recordId: r.credential_reference || r.key_prefix, operation: 'deleted', message: 'The key has been revoked.' }) }}>Revoke</button>
+                        <button type="button" className="text-sm text-amber-700 dark:text-amber-300" onClick={() => onRotate(r)}>Rotate</button>
+                        <button type="button" className="text-sm text-red-600 dark:text-red-400" onClick={() => onRevoke(r)}>Revoke</button>
                       </>
                     )}
                   </td>
@@ -172,6 +204,7 @@ export function ApiKeysPanel() {
           </ul>
         </div>
         {modal}
+        {dialog}
       </div>
     </FieldHelpScope>
   )

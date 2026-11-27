@@ -7,7 +7,8 @@ import { Link, Route, Routes, useLocation, useNavigate, useParams, useSearchPara
 import { ArrowLeft } from 'lucide-react'
 import { usePlanning } from '@nidus/planning/context/PlanningContext.jsx'
 import { createBillingData, accountingCsv, CLIENT_TEMPLATE, ACCOUNTING_DICTIONARY } from '../../services/billingData.js'
-import { paymentStatus, buildInvoiceDocument, applyInvoiceFilters, parseRateCardCsv, taxForLine, roundMoney } from '../../engine/billing.js'
+import { paymentStatus, buildInvoiceDocument, applyInvoiceFilters, parseRateCardCsv, taxForLine, roundMoney, validateClientRows } from '../../engine/billing.js'
+import { parseCsvText } from '@nidus/shared/utils/importMapping'
 import { generateRecordPdfBlob } from '@nidus/shared/utils/exportUtils'
 import { useBranding } from '@nidus/shared/hooks/useBranding'
 import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
@@ -17,6 +18,7 @@ import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesCont
 import RegionalDateInput from '@nidus/ui/RegionalDateInput'
 import SmartAmountInput from '@nidus/ui/SmartAmountInput'
 import AuthorisationRequestModal from '@nidus/ui/AuthorisationRequestModal'
+import { useConfirmDialog } from '@nidus/ui/ConfirmDialog.jsx'
 import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
 import AuditCard from '@nidus/ui/AuditCard'
 import AuditField from '@nidus/ui/AuditField'
@@ -24,6 +26,8 @@ import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 import DashboardStatCard from '@nidus/ui/DashboardStatCard'
 import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
 import RowActionButton from '@nidus/ui/RowActionButton'
+import SelectField from '@nidus/ui/SelectField'
+import { useCurrencyOptions } from '@nidus/shared/hooks/useCurrencyOptions'
 import PlanningTable from '../../components/PlanningTable.jsx'
 import { platformDb, simDb } from '@nidus/supabase'
 import { useScheduleProjectId } from '../../hooks/useSchedule.js'
@@ -71,22 +75,74 @@ export function ClientsScreen() {
     a.download = 'clients-template.csv'
     a.click()
   }
+  // v1359 (B4): read the file, show each row with its problems, and save only after the person confirms (rule 26).
+  const { options: currencyOptions, orgCurrency } = useCurrencyOptions()
+  const { showSuccess, modal } = useSuccessModal()
+  const [preview, setPreview] = useState(null)
+  const [importing, setImporting] = useState(false)
   async function upload(file) {
-    const text = await file.text()
-    const lines = text.split(/\r?\n/).filter((l) => l && !l.startsWith('#'))
-    const header = lines.shift()?.split(',') || []
-    for (const line of lines) {
-      const cells = line.split(',')
-      const row = Object.fromEntries(header.map((h, i) => [h.trim(), (cells[i] || '').replace(/^"|"$/g, '')]))
-      if (!row.name) continue
-      await api.saveClient({ name: row.name, kind: row.kind === 'internal' ? 'internal' : 'external', currency: row.currency || 'USD', payment_terms_days: Number(row.payment_terms_days) || 30, billing_address: row.billing_address || null })
+    try {
+      setError('')
+      const { rows: parsed } = parseCsvText(await file.text())
+      if (!parsed.length) { setError('The file has no client rows. Use Download template for the expected columns.'); return }
+      setPreview({ file: file.name, rows: validateClientRows(parsed, { currencies: currencyOptions.map((o) => o.value), orgCurrency, existingNames: rows.map((r) => r.name) }) })
+    } catch (e) { setError(`The file could not be read: ${e.message}`) }
+  }
+  async function confirmImport() {
+    const good = preview.rows.filter((r) => !r.errors.length)
+    setImporting(true)
+    const failed = []
+    for (const r of good) {
+      try { await api.saveClient(r.value) } catch (e) { failed.push(`Row ${r.line}: ${e.message}`) }
     }
+    setImporting(false)
     setRows(await api.listClients())
+    const skipped = preview.rows.length - good.length
+    setPreview(null)
+    if (failed.length) setError(failed.join(' · '))
+    showSuccess({
+      recordId: preview.file, operation: 'created',
+      message: `${good.length - failed.length} client(s) added.${skipped ? ` ${skipped} row(s) with problems were skipped.` : ''}${failed.length ? ` ${failed.length} could not be saved (see the message on the page).` : ''}`,
+    })
   }
   return (
     <div className={shell}>
       <h1 className="text-xl font-bold mb-4">Clients</h1>
-      {error && <p className="text-red-600 mb-3">{error}</p>}
+      {error && <p role="alert" className="text-red-600 dark:text-red-400 mb-3">{error}</p>}
+      {preview && (
+        <section aria-label="Upload preview" className="mb-6 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 space-y-3">
+          <h2 className="font-semibold">Check the file before adding: {preview.file}</h2>
+          <p className="text-sm text-gray-700 dark:text-gray-300">
+            {preview.rows.filter((r) => !r.errors.length).length} of {preview.rows.length} row(s) are ready. Rows with a problem are skipped; fix them in the file and upload it again to add them.
+          </p>
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead className="bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-200">
+                <tr>
+                  <th className="text-left p-2">#</th><th className="text-left p-2">Name</th><th className="text-left p-2">Kind</th>
+                  <th className="text-left p-2">Currency</th><th className="text-left p-2">Terms (days)</th><th className="text-left p-2">Result</th>
+                </tr>
+              </thead>
+              <tbody>
+                {preview.rows.map((r) => (
+                  <tr key={r.line} className="border-t border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100">
+                    <td className="p-2">{r.line}</td><td className="p-2">{r.value.name || '—'}</td><td className="p-2">{r.value.kind}</td>
+                    <td className="p-2">{r.value.currency || '—'}</td><td className="p-2">{r.value.payment_terms_days}</td>
+                    <td className={`p-2 ${r.errors.length ? 'text-red-700 dark:text-red-300' : 'text-green-700 dark:text-green-300'}`}>{r.errors.length ? r.errors.join('; ') : 'Ready'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="flex gap-2">
+            <button type="button" disabled={importing || !preview.rows.some((r) => !r.errors.length)} onClick={confirmImport}
+              className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm disabled:opacity-50">
+              {importing ? 'Adding…' : `Add ${preview.rows.filter((r) => !r.errors.length).length} client(s)`}
+            </button>
+            <button type="button" disabled={importing} onClick={() => setPreview(null)} className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm">Cancel</button>
+          </div>
+        </section>
+      )}
       <PlanningTable
         pageId="billing-clients"
         exportName="clients"
@@ -108,11 +164,12 @@ export function ClientsScreen() {
             <Link to="new" className="px-3 py-2 rounded-lg bg-blue-600 text-white text-sm">New client</Link>
             <button type="button" onClick={download} className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm">Download template</button>
             <label data-help="exempt" className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm cursor-pointer">Upload CSV
-              <input data-help="exempt" type="file" accept=".csv" className="hidden" onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])} />
+              <input data-help="exempt" type="file" accept=".csv" className="hidden" onChange={(e) => { if (e.target.files?.[0]) upload(e.target.files[0]); e.target.value = '' }} />
             </label>
           </>
         )}
       />
+      {modal}
     </div>
   )
 }
@@ -126,7 +183,8 @@ export function ClientForm() {
   const { showSuccess, modal } = useSuccessModal()
   const creating = !clientKey || clientKey === 'new'
   const editing = creating || pathname.endsWith('/edit')
-  const [form, setForm] = useState({ name: '', kind: 'external', currency: 'USD', payment_terms_days: 30, billing_address: '', tax_number: '', markup_percent: 0, notes: '' })
+  const [form, setForm] = useState({ name: '', kind: 'external', currency: '', payment_terms_days: 30, billing_address: '', tax_number: '', markup_percent: 0, notes: '' })
+  const { options: currencyOptions, orgCurrency } = useCurrencyOptions()
   const [saved, setSaved] = useState(null)
   const [contacts, setContacts] = useState([])
   const [contact, setContact] = useState({ name: '', role_title: '', email: '', phone: '', is_billing_contact: true })
@@ -134,6 +192,8 @@ export function ClientForm() {
   const [dirty, setDirty] = useState(false)
   const [error, setError] = useState('')
   useUnsavedChangesGuard(dirty, 'Leave without saving this client?')
+  // v1359 (B1): a new client starts in the organisation's currency (Regional & Format Settings).
+  const clientCurrency = form.currency || (creating ? orgCurrency || '' : '')
   useEffect(() => {
     if (creating) return
     api.listClients().then((rows) => {
@@ -146,10 +206,13 @@ export function ClientForm() {
   function set(field, value) { setForm((f) => ({ ...f, [field]: value })); setDirty(true) }
   async function save() {
     if (!String(form.name || '').trim()) { setError('Enter a client name.'); return }
+    if (!clientCurrency) { setError('Choose the client currency.'); return }
     setError('')
-    const row = await api.saveClient({ ...form, id: saved?.id, payment_terms_days: Number(form.payment_terms_days) || 0, markup_percent: Number(form.markup_percent) || 0 })
-    setSaved(row); setDirty(false)
-    showSuccess({ recordId: row.client_reference || row.name, operation: saved ? 'updated' : 'created', message: 'The client has been saved.' })
+    try {
+      const row = await api.saveClient({ ...form, currency: clientCurrency, id: saved?.id, payment_terms_days: Number(form.payment_terms_days) || 0, markup_percent: Number(form.markup_percent) || 0 })
+      setSaved(row); setDirty(false)
+      showSuccess({ recordId: row.client_reference || row.name, operation: saved ? 'updated' : 'created', message: 'The client has been saved.' })
+    } catch (e) { setError(e.message) }
   }
   async function addContact() {
     if (!saved || !contact.name) return
@@ -180,8 +243,8 @@ export function ClientForm() {
             <textarea id="client-address" className={inputClass} value={form.billing_address || ''} onChange={(e) => set('billing_address', e.target.value)} />
             <FieldLabelWithHelp helpKey={prefix('public.clients.tax_number')} htmlFor="client-tax">Tax number</FieldLabelWithHelp>
             <input id="client-tax" className={inputClass} value={form.tax_number || ''} onChange={(e) => set('tax_number', e.target.value)} />
-            <FieldLabelWithHelp helpKey={prefix('public.clients.currency')} htmlFor="client-currency">Currency</FieldLabelWithHelp>
-            <input id="client-currency" className={inputClass} value={form.currency || ''} onChange={(e) => set('currency', e.target.value)} />
+            <FieldLabelWithHelp helpKey={prefix('public.clients.currency')} htmlFor="client-currency" required>Currency</FieldLabelWithHelp>
+            <SelectField id="client-currency" options={currencyOptions} value={clientCurrency} onChange={(v) => set('currency', v)} placeholder="Choose a currency" forceSearchable combobox className={inputClass} />
             <FieldLabelWithHelp helpKey={prefix('public.clients.payment_terms_days')} htmlFor="client-terms">Payment terms (days)</FieldLabelWithHelp>
             <input id="client-terms" className={inputClass} value={form.payment_terms_days ?? ''} onChange={(e) => set('payment_terms_days', e.target.value)} />
             <FieldLabelWithHelp helpKey={prefix('public.clients.markup_percent')} htmlFor="client-markup" isAmount>Mark-up %</FieldLabelWithHelp>
@@ -281,11 +344,21 @@ export function RateCardsScreen() {
   const [clientId, setClientId] = useState('')
   const [projectId, setProjectId] = useState('')
   const [lines, setLines] = useState([{ role_name: '', user_id: '', work_category: '', unit: 'hour', rate: '' }])
+  const { options: currencyOptions, orgCurrency } = useCurrencyOptions()
+  const [currency, setCurrency] = useState('')
+  const [effectiveFrom, setEffectiveFrom] = useState(today())
+  const [effectiveTo, setEffectiveTo] = useState('')
+  const [roles, setRoles] = useState([])
+  const [people, setPeople] = useState([])
+  const [error, setError] = useState('')
   useEffect(() => {
     api.listCards().then(setCards).catch(() => {})
     api.listClients().then(setClients).catch(() => {})
     api.listProjects().then(setProjects).catch(() => {})
+    api.listRoles().then(setRoles).catch(() => {})
+    api.listPeople().then(setPeople).catch(() => {})
   }, [api])
+  const cardCurrency = currency || orgCurrency || ''
   function template() {
     const csv = ['# DATA DICTIONARY', '# role_name | required No | text | 80 | | Role this rate applies to', '# work_category | required No | text | 40 | |', '# unit | required Yes | text | 10 | hour or day |', '# rate | required Yes | number | 18,2 | | Charge-out amount', '#', 'role_name,work_category,unit,rate', 'Consultant,,hour,150'].join('\n')
     const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'rate-card-lines.csv'; a.click()
@@ -296,9 +369,14 @@ export function RateCardsScreen() {
     reader.readAsText(file)
   }
   async function save() {
+    if (!cardCurrency) { setError('Choose the card currency.'); return }
+    if (!effectiveFrom) { setError('Enter the date the rates start.'); return }
+    if (effectiveTo && effectiveTo < effectiveFrom) { setError('The end date must be on or after the start date.'); return }
+    setError('')
+    try {
     const row = await api.saveCard({
       name: name || (scope === 'client' ? 'Client rates' : scope === 'project' ? 'Project rates' : 'Organisation rates'),
-      currency: 'USD', effective_from: today(),
+      currency: cardCurrency, effective_from: effectiveFrom, effective_to: effectiveTo || null,
       client_id: scope === 'client' ? clientId || null : null,
       project_id: scope === 'project' ? projectId || null : null,
     }, lines.map((l) => ({
@@ -306,11 +384,13 @@ export function RateCardsScreen() {
     })))
     setCards(await api.listCards())
     showSuccess({ recordId: row.name, operation: 'created', message: 'The rate card has been saved. A person line beats a project card, then a client card, then the organisation card.' })
+    } catch (e) { setError(e.message) }
   }
   return (
-    <FieldHelpScope helpKeys={['name', 'client_id', 'project_id'].map((c) => prefix(`public.rate_cards.${c}`)).concat(['role_name', 'user_id', 'unit', 'rate', 'work_category'].map((c) => prefix(`public.rate_card_lines.${c}`)))}>
+    <FieldHelpScope helpKeys={['name', 'client_id', 'project_id', 'currency', 'effective_from', 'effective_to'].map((c) => prefix(`public.rate_cards.${c}`)).concat(['role_name', 'user_id', 'unit', 'rate', 'work_category'].map((c) => prefix(`public.rate_card_lines.${c}`)))}>
       <div className={shell}>
         <h1 className="text-xl font-bold mb-4">Rate cards</h1>
+        {error && <p role="alert" className="text-red-600 dark:text-red-400 mb-3">{error}</p>}
         <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 space-y-3 mb-6">
           <FieldLabelWithHelp helpKey={prefix('public.rate_cards.name')} htmlFor="card-name" required>Name</FieldLabelWithHelp>
           <input id="card-name" className={inputClass} value={name} onChange={(e) => setName(e.target.value)} />
@@ -332,10 +412,35 @@ export function RateCardsScreen() {
               {projects.map((p) => <option key={p.id} value={p.id}>{p.project_name}</option>)}
             </select>
           )}
+          <div className="grid md:grid-cols-3 gap-3">
+            <div>
+              <FieldLabelWithHelp helpKey={prefix('public.rate_cards.currency')} htmlFor="card-currency" required>Currency</FieldLabelWithHelp>
+              <SelectField id="card-currency" options={currencyOptions} value={cardCurrency} onChange={setCurrency} placeholder="Choose a currency" forceSearchable combobox className={inputClass} />
+            </div>
+            <div>
+              <FieldLabelWithHelp helpKey={prefix('public.rate_cards.effective_from')} htmlFor="card-from" required>Rates start</FieldLabelWithHelp>
+              <RegionalDateInput id="card-from" value={effectiveFrom} onChange={(e) => setEffectiveFrom(e.target.value)} className={inputClass} />
+            </div>
+            <div>
+              <FieldLabelWithHelp helpKey={prefix('public.rate_cards.effective_to')} htmlFor="card-to">Rates end (optional)</FieldLabelWithHelp>
+              <RegionalDateInput id="card-to" value={effectiveTo} min={effectiveFrom} onChange={(e) => setEffectiveTo(e.target.value)} className={inputClass} />
+            </div>
+          </div>
+          <div className="grid md:grid-cols-5 gap-2 text-xs font-medium text-gray-600 dark:text-gray-300">
+            <FieldLabelWithHelp helpKey={prefix('public.rate_card_lines.role_name')} as="span">Role</FieldLabelWithHelp>
+            <FieldLabelWithHelp helpKey={prefix('public.rate_card_lines.user_id')} as="span" listOptions={false}>Person</FieldLabelWithHelp>
+            <FieldLabelWithHelp helpKey={prefix('public.rate_card_lines.work_category')} as="span">Work category</FieldLabelWithHelp>
+            <FieldLabelWithHelp helpKey={prefix('public.rate_card_lines.unit')} as="span">Unit</FieldLabelWithHelp>
+            <FieldLabelWithHelp helpKey={prefix('public.rate_card_lines.rate')} as="span" isAmount>Rate</FieldLabelWithHelp>
+          </div>
           {lines.map((line, i) => (
             <div key={i} className="grid md:grid-cols-5 gap-2">
-              <input className={inputClass} aria-label="Role" placeholder="Role" value={line.role_name} onChange={(e) => setLines(lines.map((l, n) => n === i ? { ...l, role_name: e.target.value } : l))} />
-              <input className={inputClass} aria-label="Person" placeholder="Person id" value={line.user_id} onChange={(e) => setLines(lines.map((l, n) => n === i ? { ...l, user_id: e.target.value } : l))} />
+              {roles.length
+                ? <SelectField aria-label="Role" options={[{ value: '', label: 'Any role' }, ...roles]} value={line.role_name || ''} onChange={(v) => setLines(lines.map((l, n) => n === i ? { ...l, role_name: v } : l))} className={inputClass} />
+                : <input className={inputClass} aria-label="Role" placeholder="Role" value={line.role_name} onChange={(e) => setLines(lines.map((l, n) => n === i ? { ...l, role_name: e.target.value } : l))} />}
+              {people.length
+                ? <SelectField aria-label="Person" options={[{ value: '', label: 'Anyone' }, ...people]} value={line.user_id || ''} onChange={(v) => setLines(lines.map((l, n) => n === i ? { ...l, user_id: v } : l))} forceSearchable className={inputClass} />
+                : <span className="px-2 py-2 text-sm text-gray-500 dark:text-gray-400">Anyone</span>}
               <input className={inputClass} aria-label="Category" placeholder="Category" value={line.work_category} onChange={(e) => setLines(lines.map((l, n) => n === i ? { ...l, work_category: e.target.value } : l))} />
               <select className={inputClass} aria-label="Unit" value={line.unit} onChange={(e) => setLines(lines.map((l, n) => n === i ? { ...l, unit: e.target.value } : l))}><option value="hour">Hour</option><option value="day">Day</option></select>
               <SmartAmountInput value={line.rate} onChange={(amount) => setLines(lines.map((l, idx) => idx === i ? { ...l, rate: amount ?? '' } : l))} className={inputClass} />
@@ -520,6 +625,7 @@ export function InvoiceDetailScreen() {
   const db = isSim ? simDb : platformDb
   const { showSuccess, modal } = useSuccessModal()
   const { branding } = useBranding()
+  const { confirm, dialog } = useConfirmDialog()
   const [invoice, setInvoice] = useState(null)
   const [mayIssue, setMayIssue] = useState(true)
   const [edits, setEdits] = useState({})
@@ -598,9 +704,11 @@ export function InvoiceDetailScreen() {
     setInvoice(await api.loadInvoice(invoice.id))
   }
   async function removeLine(line) {
-    if (!window.confirm('Remove this line from the draft?')) return
-    await api.removeLine(invoice.id, line)
-    setInvoice(await api.loadInvoice(invoice.id))
+    if (!(await confirm({ title: 'Remove this line from the draft?', message: 'Time or expenses on it become available to bill again.', confirmLabel: 'Remove line', danger: true }))) return
+    try {
+      await api.removeLine(invoice.id, line)
+      setInvoice(await api.loadInvoice(invoice.id))
+    } catch (e) { setError(e.message) }
   }
   async function addLine() {
     const taxed = taxForLine(Number(manual.quantity || 1) * Number(manual.rate || 0), { kind: 'standard', ratePercent: Number(manual.tax) || 0 }, { internal: invoice.clients?.kind === 'internal' })
@@ -676,6 +784,7 @@ export function InvoiceDetailScreen() {
         )}
         {decide && <AuthorisationRequestModal mode="decide" open onClose={() => setDecide(false)} onDecision={onDecision} />}
         {modal}
+        {dialog}
       </div>
     </FieldHelpScope>
   )
@@ -740,7 +849,9 @@ export function DocumentSettingsScreen() {
   const api = useApi()
   const prefix = usePrefix()
   const { showSuccess, modal } = useSuccessModal()
-  const [form, setForm] = useState({ payment_instructions: '', footer: '', from_currency: 'GBP', to_currency: 'USD', effective_date: today(), rate: '' })
+  const [form, setForm] = useState({ payment_instructions: '', footer: '', from_currency: '', to_currency: '', effective_date: today(), rate: '' })
+  const { options: currencyOptions, orgCurrency } = useCurrencyOptions()
+  const toCurrency = form.to_currency || orgCurrency || ''
   const [rates, setRates] = useState([])
   const [error, setError] = useState('')
   useEffect(() => {
@@ -754,7 +865,7 @@ export function DocumentSettingsScreen() {
   }
   async function saveRate() {
     try {
-      const row = await api.saveRate({ from_currency: form.from_currency, to_currency: form.to_currency, effective_date: form.effective_date, rate: Number(form.rate) })
+      const row = await api.saveRate({ from_currency: form.from_currency, to_currency: toCurrency, effective_date: form.effective_date, rate: Number(form.rate) })
       setRates(await api.listRates())
       setError('')
       showSuccess({ recordId: `${row.from_currency}/${row.to_currency}`, operation: 'created', message: 'Draft invoices on or after this date will use this rate.' })
@@ -775,9 +886,9 @@ export function DocumentSettingsScreen() {
         </div>
         <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 space-y-3 max-w-xl">
           <FieldLabelWithHelp helpKey={prefix('public.currency_exchange_rates.from_currency')} htmlFor="fx-from">From currency</FieldLabelWithHelp>
-          <input id="fx-from" className={inputClass} value={form.from_currency} onChange={(e) => setForm({ ...form, from_currency: e.target.value })} />
+          <SelectField id="fx-from" options={currencyOptions} value={form.from_currency} onChange={(v) => setForm({ ...form, from_currency: v })} placeholder="Choose a currency" forceSearchable combobox className={inputClass} />
           <FieldLabelWithHelp helpKey={prefix('public.currency_exchange_rates.to_currency')} htmlFor="fx-to">To currency</FieldLabelWithHelp>
-          <input id="fx-to" className={inputClass} value={form.to_currency} onChange={(e) => setForm({ ...form, to_currency: e.target.value })} />
+          <SelectField id="fx-to" options={currencyOptions} value={toCurrency} onChange={(v) => setForm({ ...form, to_currency: v })} placeholder="Choose a currency" forceSearchable combobox className={inputClass} />
           <FieldLabelWithHelp helpKey={prefix('public.currency_exchange_rates.effective_date')} htmlFor="fx-date">Effective date</FieldLabelWithHelp>
           <RegionalDateInput id="fx-date" value={form.effective_date} onChange={(e) => setForm({ ...form, effective_date: e.target.value })} className={inputClass} />
           <FieldLabelWithHelp helpKey={prefix('public.currency_exchange_rates.rate')} htmlFor="fx-rate" isAmount>Rate</FieldLabelWithHelp>

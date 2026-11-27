@@ -23,6 +23,7 @@
     "client_payments",
     "clients",
     "cost_line_ranges",
+    "currencies",
     "currency_exchange_rates",
     "custom_field_definitions",
     "custom_field_values",

@@ -4,6 +4,7 @@
  * organisation card. Within a card, a role and a work category together beat either one alone.
  * Money is rounded to cents (half up).
  */
+import { parseCsvText } from '@nidus/shared/utils/importMapping'
 
 export function roundMoney(value) {
   const n = Number(value)
@@ -188,11 +189,9 @@ export function buildInvoiceDocument({ invoice, lines = [], instructions = '', f
 }
 
 export function parseRateCardCsv(text) {
-  const lines = String(text || '').split(/\r?\n/).filter((l) => l && !l.startsWith('#'))
-  const header = (lines.shift() || '').split(',').map((h) => h.trim())
-  return lines.map((line) => {
-    const cells = line.split(',')
-    const row = Object.fromEntries(header.map((h, i) => [h, (cells[i] || '').replace(/^"|"$/g, '').trim()]))
+  const { rows } = parseCsvText(text)
+  return rows.map((raw) => {
+    const row = Object.fromEntries(Object.entries(raw).map(([k, v]) => [k, String(v ?? '').trim()]))
     return {
       role_name: row.role_name || null,
       work_category: row.work_category || null,
@@ -232,4 +231,36 @@ export function paymentStatus(net, paid, dueDate, today) {
   if (owing <= 0) return 'paid'
   if (paid > 0) return dueDate && dueDate < today ? 'overdue' : 'part_paid'
   return dueDate && dueDate < today ? 'overdue' : 'issued'
+}
+
+/**
+ * v1359 (B4): check client rows from a bulk upload before anything is saved. Returns one entry per row:
+ * { line, value, errors } — value is the client to save, errors the reasons it cannot be saved (rules 26 / 71).
+ */
+export function validateClientRows(rows, { currencies = [], orgCurrency = null, existingNames = [] } = {}) {
+  const known = new Set((currencies || []).map((c) => String(c).toUpperCase()))
+  const taken = new Set((existingNames || []).map((n) => String(n).trim().toLowerCase()))
+  const seen = new Set()
+  return (rows || []).map((row, index) => {
+    const errors = []
+    const name = String(row.name ?? '').trim()
+    const kindRaw = String(row.kind ?? '').trim().toLowerCase()
+    const currency = String(row.currency ?? '').trim().toUpperCase() || (orgCurrency ? String(orgCurrency).toUpperCase() : '')
+    const termsRaw = String(row.payment_terms_days ?? '').trim()
+    const terms = termsRaw === '' ? 30 : Number(termsRaw)
+    if (!name) errors.push('Name is missing')
+    else if (name.length > 200) errors.push('Name is longer than 200 characters')
+    else if (taken.has(name.toLowerCase())) errors.push('A client with this name already exists')
+    else if (seen.has(name.toLowerCase())) errors.push('This name appears twice in the file')
+    if (kindRaw && kindRaw !== 'external' && kindRaw !== 'internal') errors.push('Kind must be external or internal')
+    if (!currency) errors.push('Currency is missing')
+    else if (known.size && !known.has(currency)) errors.push(`Currency ${currency} is not in the currency list`)
+    if (!Number.isInteger(terms) || terms < 0 || terms > 365) errors.push('Payment terms must be a whole number from 0 to 365')
+    if (name) seen.add(name.toLowerCase())
+    return {
+      line: index + 1,
+      errors,
+      value: { name, kind: kindRaw === 'internal' ? 'internal' : 'external', currency, payment_terms_days: Number.isInteger(terms) ? terms : 30, billing_address: String(row.billing_address ?? '').trim() || null },
+    }
+  })
 }

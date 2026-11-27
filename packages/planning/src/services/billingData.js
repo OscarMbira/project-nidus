@@ -5,6 +5,33 @@
  */
 import { platformDb, simDb } from '@nidus/supabase'
 import { resolveRate, taxForLine, withMarkup, roundMoney, projectFigures, scheduleAmount, exchangeRateFor, billableDefault, dueReminder } from '../engine/billing.js'
+import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
+import { loadResolvedRegionalFormatSettings } from '@nidus/shared/services/regionalFormatSettingsService'
+import { REGIONAL_FORMAT_DEFAULTS } from '@nidus/shared/utils/regionalFormatConstants'
+
+/**
+ * v1359 (B9): one entry per scope holding the lines of EVERY card in that scope (the rate engine reads one entry per
+ * scope), each line carrying its card's dates — so a dated replacement card (next year's rates) is used on its dates.
+ */
+export function groupCardsByScope(cards, scopeOf) {
+  const byScope = new Map()
+  for (const card of cards || []) {
+    const scope = scopeOf(card)
+    if (!scope) continue
+    if (!byScope.has(scope)) byScope.set(scope, [])
+    byScope.get(scope).push(...cardLinesWithDates(card))
+  }
+  return [...byScope].map(([scope, lines]) => ({ scope, lines }))
+}
+
+/** v1359 (B9): a card's dates apply to each of its lines (the rate engine reads dates per line). */
+export function cardLinesWithDates(card) {
+  return (card.rate_card_lines || []).map((l) => ({
+    ...l,
+    effective_from: l.effective_from || card.effective_from || null,
+    effective_to: l.effective_to || card.effective_to || null,
+  }))
+}
 
 export function createBillingData(isSim) {
   const db = isSim ? simDb : platformDb
@@ -127,7 +154,45 @@ export function createBillingData(isSim) {
   async function cardsFor(projectId, clientId) {
     const all = await listCards()
     const scopeOf = (card) => (card.project_id === projectId ? 'project' : card.client_id && card.client_id === clientId ? 'client' : !card.project_id && !card.client_id ? 'organisation' : null)
-    return all.map((card) => ({ scope: scopeOf(card), lines: card.rate_card_lines || [] })).filter((c) => c.scope)
+    return groupCardsByScope(all, scopeOf)
+  }
+
+  // v1359 (B9): each person's role on the project, so role lines on a rate card can apply. Simulator practice
+  // projects have no project roles; their role lines never match (person and work-category lines still do).
+  async function projectRoles(projectId) {
+    if (isSim) return new Map()
+    const { data, error } = await platformDb.from('user_roles').select('user_id, roles(role_name)')
+      .eq('project_id', projectId).eq('is_active', true)
+    if (error) return new Map()
+    const map = new Map()
+    for (const r of data || []) if (r.roles?.role_name && !map.has(r.user_id)) map.set(r.user_id, r.roles.role_name)
+    return map
+  }
+
+  /** Roles a rate-card line can name (B3): the system roles and this organisation's own. */
+  async function listRoles() {
+    if (isSim) return []
+    const scope = await ownerScope()
+    const { data, error } = await platformDb.from('roles').select('role_name, role_display_name, account_id').eq('is_active', true)
+      .order('role_display_name')
+    if (error) return []
+    return (data || []).filter((r) => !r.account_id || r.account_id === scope.ownerId)
+      .map((r) => ({ value: r.role_name, label: r.role_display_name || r.role_name }))
+  }
+
+  /** People a rate-card line can name (B3): everyone with a role on the organisation's projects. */
+  async function listPeople() {
+    if (isSim) return []
+    const projects = await listProjects()
+    const ids = projects.map((p) => p.id)
+    if (!ids.length) return []
+    const { data: roles, error } = await platformDb.from('user_roles').select('user_id').in('project_id', ids).eq('is_active', true)
+    if (error) return []
+    const userIds = [...new Set((roles || []).map((r) => r.user_id).filter(Boolean))]
+    if (!userIds.length) return []
+    const { data: users } = await platformDb.from('users').select('id, full_name, display_name, email').in('id', userIds)
+    return (users || []).map((u) => ({ value: u.id, label: u.display_name || u.full_name || u.email }))
+      .sort((a, b) => String(a.label).localeCompare(String(b.label)))
   }
 
   async function draftInvoice(projectId, periodStart, periodEnd) {
@@ -139,12 +204,13 @@ export function createBillingData(isSim) {
       ? (await listTax()).find((t) => t.id === client.default_tax_code_id)
       : null
     const cards = await cardsFor(projectId, client.id)
+    const roleOf = await projectRoles(projectId)
     const { data: time, error: timeError } = await db.from('timesheet_entries').select('id, hours_worked, entry_date, work_category, user_id, description')
       .eq('project_id', projectId).eq('status', 'approved').eq('is_billable', true).eq('is_deleted', false).is('client_invoice_line_id', null)
       .gte('entry_date', periodStart).lte('entry_date', periodEnd)
     if (timeError) throw new Error(timeError.message)
     const scope = await ownerScope()
-    const currency = settings.currency || client.currency || 'USD'
+    const currency = settings.currency || client.currency || await orgCurrency(scope.ownerId)
     const invoiceDate = new Date().toISOString().slice(0, 10)
     const rate = await rateFor(currency, invoiceDate, scope.ownerId)
     const { data: invoice, error } = await db.from('client_invoices').insert({
@@ -157,7 +223,7 @@ export function createBillingData(isSim) {
 
     const lines = []
     for (const entry of time || []) {
-      const found = resolveRate({ personId: entry.user_id, role: '', workCategory: entry.work_category, onDate: entry.entry_date, cards })
+      const found = resolveRate({ personId: entry.user_id, role: roleOf.get(entry.user_id) || '', workCategory: entry.work_category, onDate: entry.entry_date, cards })
       const amount = roundMoney(Number(entry.hours_worked) * (found?.rate || 0))
       const taxed = taxForLine(amount, tax, { internal: client.kind === 'internal' })
       lines.push({ invoice_id: invoice.id, source: 'time', source_id: entry.id, description: entry.description || entry.work_category || 'Time', quantity: entry.hours_worked, unit: 'hour', rate: found?.rate || 0, amount: taxed.net, tax_code_id: tax?.id || null, tax_amount: taxed.tax })
@@ -349,10 +415,17 @@ export function createBillingData(isSim) {
     return { due: due.data, recurring: recurring.data }
   }
 
+  // v1359 (B1): the organisation's currency from Regional & Format Settings (rule 68). Simulator practice uses the
+  // learner's organisation settings; the system default applies only when nothing is set.
   async function orgCurrency(ownerId) {
-    if (isSim || !ownerId) return 'USD'
-    const { data } = await platformDb.from('organisation_regional_format_settings').select('currency_code').eq('account_id', ownerId).maybeSingle()
-    return data?.currency_code || 'USD'
+    try {
+      const accountId = !isSim && ownerId ? ownerId : await getCurrentUserAccountId()
+      if (accountId) {
+        const resolved = await loadResolvedRegionalFormatSettings(accountId, null)
+        if (resolved?.settings?.currency_code) return String(resolved.settings.currency_code).toUpperCase()
+      }
+    } catch { /* fall through to the system default */ }
+    return REGIONAL_FORMAT_DEFAULTS.currency_code
   }
 
   async function listRates() {
@@ -464,6 +537,7 @@ export function createBillingData(isSim) {
     loadSettings, saveSettings, draftInvoice, listInvoices, loadInvoice, addManualLine, updateLine, removeLine, submitInvoice, accountingBundle, sendDueReminders,
     issueInvoice, recordPayment, creditInvoice, logSend, listSchedule, saveScheduleLine, runDueJobs, canIssue,
     figuresFor, loadDocumentSettings, saveDocumentSettings, listRates, saveRate, rateFor, billableDefaultFor, updateDraft, listProjects,
+    orgCurrency, listRoles, listPeople, projectRoles,
   }
 }
 

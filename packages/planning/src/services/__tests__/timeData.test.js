@@ -48,7 +48,7 @@ describe('createTimeData', () => {
   it('writes the sim timesheet table in Simulator mode and the public one otherwise', async () => {
     await createTimeData(true).saveWeek('pp1', 'auth1', [{ taskId: 't1', date: '2026-10-12', hours: '2.5' }])
     const ins = dbs.sim.calls.find((c) => c.table === 'timesheet_entries')
-    expect(opArgs(ins, 'insert')[0][0]).toEqual({ project_id: 'pp1', user_id: 'auth1', task_id: 't1', entry_date: '2026-10-12', hours_worked: 2.5, status: 'draft' })
+    expect(opArgs(ins, 'insert')[0][0]).toEqual({ project_id: 'pp1', user_id: 'auth1', task_id: 't1', entry_date: '2026-10-12', hours_worked: 2.5, status: 'draft', is_billable: true })
     expect(dbs.platform.calls).toHaveLength(0)
   })
 
