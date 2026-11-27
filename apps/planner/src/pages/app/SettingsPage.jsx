@@ -78,6 +78,13 @@ function SettingsPageBody() {
             </ul>
             {!status.is_paid && <Link to="/app/upgrade" className="mt-3 inline-block text-sm text-blue-600 dark:text-blue-400 underline">Upgrade</Link>}
           </section>
+          {isOwner && (
+            <section className={card}>
+              <h2 className="font-semibold">Integrations & Security</h2>
+              <p className="mt-1 text-sm text-gray-700 dark:text-gray-300">API keys, webhooks, SCIM and SSO for this workspace.</p>
+              <Link to="/app/settings/integrations" className="mt-3 inline-block text-sm text-blue-600 dark:text-blue-400 underline">Open Integrations</Link>
+            </section>
+          )}
         </>
       )}
       {modal}

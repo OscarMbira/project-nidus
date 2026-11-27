@@ -284,6 +284,13 @@ import {
   ExecutiveDashboard,
   SubscriptionManagement, SwitchEditionPage,
   OrganisationProfile,
+  IntegrationsSecurityPage,
+  IntegrationsOverview,
+  ApiKeysPanel,
+  WebhooksPanel,
+  ScimPanel,
+  SsoPanel,
+  ApiDocsPanel,
   StageGateList,
   StageGateForm,
   StageGateView,
@@ -2663,6 +2670,20 @@ export function PlatformRouteElements() {
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
+                              <Route path="organisation/integrations" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <IntegrationsSecurityPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              }>
+                                <Route index element={<Suspense fallback={<LoadingFallback />}><IntegrationsOverview /></Suspense>} />
+                                <Route path="api-keys" element={<Suspense fallback={<LoadingFallback />}><ApiKeysPanel /></Suspense>} />
+                                <Route path="webhooks" element={<Suspense fallback={<LoadingFallback />}><WebhooksPanel /></Suspense>} />
+                                <Route path="scim" element={<Suspense fallback={<LoadingFallback />}><ScimPanel /></Suspense>} />
+                                <Route path="sso" element={<Suspense fallback={<LoadingFallback />}><SsoPanel /></Suspense>} />
+                                <Route path="api-docs" element={<Suspense fallback={<LoadingFallback />}><ApiDocsPanel /></Suspense>} />
+                              </Route>
                               <Route path="pmo-admin/project-classifications" element={
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>

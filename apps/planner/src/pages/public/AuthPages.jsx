@@ -11,6 +11,11 @@ import PublicLayout, { AuthCard, inputCls, primaryBtn } from './PublicLayout.jsx
 import { useAuth } from '../../lib/auth.jsx'
 import { isSignupOpen } from '../../lib/plannerApi.js'
 import { rememberPendingPlan } from '../../lib/pendingPlan.js'
+import {
+  initiateOrgSsoLogin,
+  resolveSsoLoginDomain,
+  ssoPasswordAllowed,
+} from '@nidus/shared/services/organisationApiService'
 
 const Err = ({ msg }) => (msg ? <p role="alert" className="text-sm text-red-600 dark:text-red-400">{msg}</p> : null)
 
@@ -21,6 +26,7 @@ function LoginPageBody() {
   const [form, setForm] = useState({ email: '', password: '' })
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
+  const [ssoHint, setSsoHint] = useState(null)
   if (user) return <Navigate to={from} replace />
 
   const submit = async (e) => {
@@ -28,6 +34,11 @@ function LoginPageBody() {
     setBusy(true)
     setError(null)
     try {
+      const passwordOk = await ssoPasswordAllowed(form.email.trim())
+      if (!passwordOk) {
+        setError('Your organisation requires single sign-on. Use Continue with SSO.')
+        return
+      }
       await signIn(form.email.trim(), form.password)
       navigate(from, { replace: true })
     } catch (err) {
@@ -36,6 +47,26 @@ function LoginPageBody() {
       setBusy(false)
     }
   }
+
+  const continueSso = async () => {
+    setSsoHint(null)
+    setError(null)
+    try {
+      const connection = await resolveSsoLoginDomain(form.email.trim())
+      if (!connection) {
+        setSsoHint('No SSO is configured for this email domain.')
+        return
+      }
+      const result = await initiateOrgSsoLogin({
+        ...connection,
+        // Planner callback lands on the planner origin
+      })
+      if (!result.success) setSsoHint(result.message)
+    } catch (err) {
+      setSsoHint(err.message)
+    }
+  }
+
   return (
     <PublicLayout>
       <AuthCard title="Sign in" footer={<>New here? <Link to="/signup" className="text-blue-600 dark:text-blue-400 underline">Start a free trial</Link></>}>
@@ -44,6 +75,8 @@ function LoginPageBody() {
           <FieldLabelWithHelp helpKey="public.sign_in.password" className="block text-sm">Password<input type="password" required autoComplete="current-password" className={inputCls} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></FieldLabelWithHelp>
           <Err msg={error} />
           <button type="submit" disabled={busy} className={primaryBtn}>{busy ? 'Signing in…' : 'Sign in'}</button>
+          <button type="button" onClick={continueSso} className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm text-gray-800 dark:text-gray-100">Continue with SSO</button>
+          {ssoHint && <p className="text-sm text-gray-700 dark:text-gray-200">{ssoHint}</p>}
           <p className="text-right text-sm"><Link to="/reset-password" className="text-blue-600 dark:text-blue-400 underline">Forgot password?</Link></p>
         </form>
       </AuthCard>

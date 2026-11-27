@@ -1827,7 +1827,13 @@ Additive entries for the AI agents foundation (PRD `projectprd/v1272_ai_agents_f
 Platform
 ├── Ask Nidus (v1272 — label of the existing /platform/ai leaf)
 ├── Account / Organisation Settings
-│   └── AI Settings (v1272) — AI notice, on/off, retention, AI credit usage
+│   ├── AI Settings (v1272) — AI notice, on/off, retention, AI credit usage
+│   └── Integrations & Security (v1356) → § Project Setup / organisation
+│       ├── API keys (v1356)
+│       ├── Webhooks (v1356)
+│       ├── SCIM provisioning (v1356)
+│       ├── Single sign-on (v1356)
+│       └── API reference (v1356)
 ├── Template Library
 │   └── Highlight report layouts (v1272) — sections, order, AI drafting instructions
 └── Reports
@@ -1844,8 +1850,10 @@ Simulator
 Project Planner
 ├── Ask Nidus (v1272) — schedule, resources and dependencies only
 └── Settings
-    └── AI settings (v1272)
+    ├── AI settings (v1272)
+    └── Integrations & Security (v1356) — API keys, webhooks, SCIM, SSO, API reference
 ```
+
 
 # 25. Communications (v1289)
 

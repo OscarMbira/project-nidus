@@ -41,6 +41,8 @@ function SettingsBody() {
     ? '/platform/settings'
     : '/platform/settings'
 
+  const [scimManaged, setScimManaged] = useState(false)
+
   // Profile settings
   const [profileData, setProfileData] = useState({
     full_name: '',
@@ -114,6 +116,9 @@ function SettingsBody() {
       })
 
       if (userRecord?.id) {
+        const { data: managed } = await platformDb.rpc('scim_manages_profile', { p_user_id: userRecord.id })
+        setScimManaged(managed === true)
+
         const { data: org, error: orgError } = await platformDb
           .from('accounts')
           .select('id, account_name, account_code')
@@ -134,6 +139,10 @@ function SettingsBody() {
 
   const handleSaveProfile = async () => {
     try {
+      if (scimManaged) {
+        toast.error('Your organisation manages this profile through SCIM. Name and email are read-only.')
+        return
+      }
       setSaving(true)
       const updated = await updateUserProfile({
         full_name: profileData.full_name,
@@ -295,6 +304,11 @@ function SettingsBody() {
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
                   Profile Information
                 </h2>
+                {scimManaged && (
+                  <p className="mb-4 text-sm text-amber-800 dark:text-amber-200 bg-amber-50 dark:bg-amber-900/30 rounded-lg p-3">
+                    Your identity provider manages name and email through SCIM. Those fields are read-only here.
+                  </p>
+                )}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <FieldLabelWithHelp helpKey="public.users.full_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -303,8 +317,9 @@ function SettingsBody() {
                     <input
                       type="text"
                       value={profileData.full_name}
+                      disabled={scimManaged}
                       onChange={(e) => setProfileData({ ...profileData, full_name: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:cursor-not-allowed"
                     />
                   </div>
                   <div>

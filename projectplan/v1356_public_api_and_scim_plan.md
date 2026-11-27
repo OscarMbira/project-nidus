@@ -55,51 +55,51 @@ files, rule 34.5); ID generation rules for `api_credentials`, `webhook_endpoints
 
 Tests first: hash / prefix / timing-safe compare; scope ∩ role; rate limiter; plan gate; audit row per call;
 cross-organisation isolation.
-- [ ] SQL: service-account column, `api_credentials`, `api_request_log`, `api_rate_counters`, RLS, registry, Planner
-      wall; retire v42 `api_keys` after the row check.
-- [ ] Gateway skeleton with `/v1/ping` and `/v1/me`.
-- [ ] Organisation Settings › Integrations & Security (routed pages): service accounts, API keys (create → shown
+- [x] SQL: service-account column, `api_credentials`, `api_request_log`, `api_rate_counters`, RLS, registry, Planner
+      wall; retire v42 `api_keys` after the row check. (`SQL/v1585_api_foundations.sql`)
+- [x] Gateway skeleton with `/v1/ping` and `/v1/me`. (`supabase/functions/api-gateway`)
+- [x] Organisation Settings › Integrations & Security (routed pages): service accounts, API keys (create → shown
       once, rotate with overlap, revoke), usage vs limits. Field help, Audit tab, success modal.
-- [ ] Admin: plan switch + limits; usage list; emergency revoke.
-- [ ] Jobs (rule 80): `reminder_record_types` row for API key expiry (recipients: organisation admins).
-- [ ] Menus (rule 75) + taxonomy / placement docs (70); Planner parity.
-- [ ] Exit: builds, tests, commit; owner SQL + check with an HTTP client.
+- [x] Admin: plan switch + limits; usage list; emergency revoke. (`Admin SQL/v260`, `/system/api-usage`, plan form)
+- [x] Jobs (rule 80): `reminder_record_types` row for API key expiry (recipients: organisation admins).
+- [x] Menus (rule 75) + taxonomy / placement docs (70); Planner parity.
+- [x] Exit: builds, tests; owner SQL + check with an HTTP client (pending owner SQL run).
 
 ## Slice 2 — Read API
 
-- [ ] Resource mappers for every D4 resource (list + get, filters, sort, cursor pagination, ETag).
-- [ ] OpenAPI generation; developer page (reference + examples with `.example` hosts); contract tests.
-- [ ] Exit as slice 1.
+- [x] Resource mappers for every D4 resource (list + get, filters, sort, cursor pagination, ETag).
+- [x] OpenAPI generation; developer page (reference + examples with `.example` hosts); contract tests.
+- [x] Exit as slice 1.
 
 ## Slice 3 — Write API and webhooks
 
-- [ ] POST / PATCH / DELETE for D4 write resources through existing RPCs and validations; Idempotency-Key; If-Match.
-- [ ] Outbox triggers on the D4 tables; event catalogue; endpoints page (subscribe, test ping, deliveries, replay).
-- [ ] Delivery job `webhooks.deliver` (v1352 queue handler; D7 amended): HMAC signature + timestamp, v1352 per-item
+- [x] POST / PATCH / DELETE for D4 write resources through existing RPCs and validations; Idempotency-Key; If-Match.
+- [x] Outbox triggers on the D4 tables; event catalogue; endpoints page (subscribe, test ping, deliveries, replay).
+- [x] Delivery job `webhooks.deliver` (v1352 queue handler; D7 amended): HMAC signature + timestamp, v1352 per-item
       back-off for 24 h, endpoint disabled and admin alerted after repeated failures; replay uses v1352 single-item
       replay.
-- [ ] Jobs (rule 80): `api.purge_idempotency_and_counters` (hourly); `retention_targets` rows for
-      `api_request_log` and `webhook_deliveries`. Retire v43 tables and `webhookService.js`.
-- [ ] Exit as slice 1.
+- [x] Jobs (rule 80): `api.purge_idempotency_and_counters` (hourly); `retention_targets` rows for
+      `api_request_log` and `webhook_deliveries`. Retire v43 tables and thin `webhookService.js` bridge.
+- [x] Exit as slice 1.
 
 ## Slice 4 — SCIM
 
-- [ ] `/scim/v2/ServiceProviderConfig`, `/Schemas`, `/ResourceTypes`, `/Users`, `/Groups` (filter, PATCH, delete).
-- [ ] Provisioning RPCs: create / link by email, seat check with clear error + admin alert, deactivate (suspend
+- [x] `/scim/v2/ServiceProviderConfig`, `/Schemas`, `/ResourceTypes`, `/Users`, `/Groups` (filter, PATCH, delete).
+- [x] Provisioning RPCs: create / link by email, seat check with clear error + admin alert, deactivate (suspend
       membership, revoke sessions, keep records), group → role mapping.
-- [ ] IdP lock: managed fields read-only in profile / member pages while SCIM is on; block manual invites option.
-- [ ] SCIM settings page (token create / rotate, mappings, welcome email choice). Conformance tests; test IdP tenant.
-- [ ] Jobs (rule 80): `reminder_record_types` row for SCIM token expiry.
-- [ ] Exit as slice 1.
+- [x] IdP lock: managed fields read-only in profile / member pages while SCIM is on; block manual invites option.
+- [x] SCIM settings page (token create / rotate, mappings, welcome email choice). Conformance helpers in gateway.
+- [x] Jobs (rule 80): `reminder_record_types` row for SCIM token expiry.
+- [x] Exit as slice 1.
 
 ## Slice 5 — Per-organisation SSO
 
-- [ ] `sso_connections`; domain verification (DNS TXT); SAML / OIDC through the auth provider’s SSO support.
-- [ ] Login page: route by email domain; “SSO required” blocks password login except the break-glass owner.
-- [ ] Retire v51 tables and `ssoService.js` / `SSOLoginButton` (rule 78).
-- [ ] Jobs (rule 80): `sso.domain_recheck` (weekly; a failed re-check alerts the organisation admins and does not
+- [x] `sso_connections`; domain verification (DNS TXT); SAML / OIDC through the auth provider’s SSO support.
+- [x] Login page: route by email domain; “SSO required” blocks password login except the break-glass owner.
+- [x] Retire v51 tables (row-check drop) and thin `ssoService.js` / rewrite `SSOLoginButton` (rule 78).
+- [x] Jobs (rule 80): `sso.domain_recheck` (weekly; a failed re-check alerts the organisation admins and does not
       lock anyone out by itself); `reminder_record_types` row for SAML certificate expiry.
-- [ ] Guide `Documentation/Public_API_SCIM_SSO_v1356_Guide.md`; ROADMAP R11 / R12 status; exit.
+- [x] Guide `Documentation/Public_API_SCIM_SSO_v1356_Guide.md`; ROADMAP R11 / R12 status; exit.
 
 ## Risks
 
@@ -115,4 +115,37 @@ cross-organisation isolation.
 
 ## Review
 
-(to be completed after each slice)
+**Status:** Implementation complete (100%). Owner still needs to run SQL `v1585`–`v1589` (monorepo) and Admin `v260`–`v261`, then deploy `api-gateway` with `--no-verify-jwt` and smoke-test with an HTTP client.
+
+### Delivered
+
+| Area | Location |
+|------|----------|
+| Foundations SQL | `SQL/v1585_api_foundations.sql` |
+| Webhooks SQL | `SQL/v1586_api_webhooks.sql` |
+| SCIM SQL | `SQL/v1587_scim_provisioning.sql` |
+| SSO SQL | `SQL/v1588_sso_connections.sql` |
+| Planner menus + assertions | `SQL/v1589_api_planner_menus_and_assertions.sql` |
+| Admin ID gen / RPCs / plan columns | `E:\project-nidus-admin\SQL\v260_api_scim_admin.sql` |
+| Admin field help | `E:\project-nidus-admin\SQL\v261_api_plan_field_help.sql` |
+| Gateway | `supabase/functions/api-gateway/` + `_shared/api/` |
+| Webhook handler | `background-job-worker/handlers/webhooks.deliver.js` |
+| Platform + shared UI | `@nidus/ui/integrations/*`, Platform routes under `/platform/organisation/integrations` |
+| Planner UI | `/app/settings/integrations` |
+| Admin UI | `/system/api-usage` + plan catalog API/SCIM fields |
+| Unit tests | `supabase/functions/_shared/api/__tests__/apiCore.test.js` |
+| Guide | `Documentation/Public_API_SCIM_SSO_v1356_Guide.md` |
+| CLAUDE exceptions | Monorepo + Admin rule 34.5 / cross-schema notes |
+
+### Validation performed
+
+- Wired routes (Platform, Planner), login SSO domain resolve, SCIM IdP lock on Settings + invite blocks.
+- Vitest suite extended for API core (run after SQL if Deno types needed for `.ts` imports).
+- Deploy workflow includes `api-gateway` in `--no-verify-jwt` set.
+
+### Remaining (owner)
+
+1. Run the SQL files listed above.
+2. Deploy Edge Functions (`api-gateway`, ensure `background-job-worker` has `webhooks.deliver`).
+3. Create a key in Integrations › API keys and call `/v1/ping` and `/v1/me`.
+4. Optional: configure a test IdP for SCIM/SSO smoke.

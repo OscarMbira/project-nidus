@@ -33,7 +33,7 @@ env:
     send-email
   # Called by pg_cron with the AI_CRON_SECRET header instead of a user JWT.
   # v1352: background-job-worker is woken by the background job tick with the BACKGROUND_JOB_SECRET header.
-  CRON_FUNCTIONS: ai-embed background-job-worker
+  CRON_FUNCTIONS: ai-embed background-job-worker api-gateway
 
 jobs:
   test:

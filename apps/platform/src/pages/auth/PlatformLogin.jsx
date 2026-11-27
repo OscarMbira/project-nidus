@@ -4,6 +4,7 @@ import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { supabase, appDb, simDb } from '../../services/supabaseClient'
 import { login, getRecommendedPlatform, switchPlatform, getUserPlatformAccess } from '../../services/unifiedAuthService'
+import { ssoPasswordAllowed } from '@nidus/shared/services/organisationApiService'
 import { registerForPlatform, PLATFORMS } from '../../services/unifiedSubscriptionService'
 import { getPostLoginRoute } from '../../services/postLoginRouter'
 import { Mail, Lock, AlertCircle, Loader, LogIn } from 'lucide-react'
@@ -57,6 +58,13 @@ function PlatformLogin() {
     setLoading(true)
 
     try {
+      const passwordOk = await ssoPasswordAllowed(email.trim())
+      if (!passwordOk) {
+        setError('Your organisation requires single sign-on. Use Continue with SSO, or ask your break-glass account owner.')
+        setLoading(false)
+        return
+      }
+
       // Use unified auth service
       const result = await login(email, password)
 
@@ -219,7 +227,8 @@ function PlatformLogin() {
         <div className="mt-8">
           {/* SSO Login Options - Lazy loaded */}
           <Suspense fallback={null}>
-            <SSOLoginButton 
+            <SSOLoginButton
+              email={email}
               onLoginStart={handleSSOLoginStart}
               onLoginComplete={handleSSOLoginComplete}
             />

@@ -30,6 +30,13 @@ const HomePage = lazy(() => import('./pages/app/HomePage.jsx'))
 const ProjectsListPage = lazy(() => import('./pages/app/ProjectsPages.jsx').then((m) => ({ default: m.ProjectsListPage })))
 const ProjectCreatePage = lazy(() => import('./pages/app/ProjectsPages.jsx').then((m) => ({ default: m.ProjectCreatePage })))
 const SettingsPage = lazy(() => import('./pages/app/SettingsPage.jsx'))
+const IntegrationsLayout = lazy(() => import('./pages/app/IntegrationsPages.jsx'))
+const IntegrationsOverview = lazy(() => import('./pages/app/IntegrationsPages.jsx').then((m) => ({ default: m.IntegrationsOverview })))
+const ApiKeysPanel = lazy(() => import('./pages/app/IntegrationsPages.jsx').then((m) => ({ default: m.ApiKeysPanel })))
+const WebhooksPanel = lazy(() => import('./pages/app/IntegrationsPages.jsx').then((m) => ({ default: m.WebhooksPanel })))
+const ScimPanel = lazy(() => import('./pages/app/IntegrationsPages.jsx').then((m) => ({ default: m.ScimPanel })))
+const SsoPanel = lazy(() => import('./pages/app/IntegrationsPages.jsx').then((m) => ({ default: m.SsoPanel })))
+const ApiDocsPanel = lazy(() => import('./pages/app/IntegrationsPages.jsx').then((m) => ({ default: m.ApiDocsPanel })))
 const MembersPage = lazy(() => import('./pages/app/MembersPage.jsx'))
 const InviteAcceptPage = lazy(() => import('./pages/app/InviteAcceptPage.jsx'))
 const UpgradePage = lazy(() => import('./pages/app/UpgradePage.jsx'))
@@ -131,6 +138,14 @@ export function PlannerRoutes() {
           <Route path="settings" element={<SettingsPage />} />
           <Route path="settings/ai" element={<AiSettingsPage />} />
           <Route path="settings/data" element={<OrganisationDataExportPage />} />
+          <Route path="settings/integrations" element={<IntegrationsLayout />}>
+            <Route index element={<IntegrationsOverview />} />
+            <Route path="api-keys" element={<ApiKeysPanel />} />
+            <Route path="webhooks" element={<WebhooksPanel />} />
+            <Route path="scim" element={<ScimPanel />} />
+            <Route path="sso" element={<SsoPanel />} />
+            <Route path="api-docs" element={<ApiDocsPanel />} />
+          </Route>
           <Route path="ask" element={<AskNidusWorkspace settingsPath="/app/settings/ai" />} />
           <Route path="billing" element={<BillingPage />} />
           <Route path="upgrade" element={<UpgradePage />} />

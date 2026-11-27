@@ -499,19 +499,21 @@ Strategic areas:
 - external APIs
 - controlled automation
 
+**v1356 (Public API, webhooks, SCIM, SSO):** Organisation API keys (hashed, shown once), `/v1` + `/scim/v2` Edge gateway under RLS, OpenAPI developer page, webhook outbox + `webhooks.deliver` job, SCIM Users/Groups with IdP lock, per-org SSO domain routing. Platform + Planner (same `public` schema); Simulator excluded (D11). Admin plan switches, rate limits and emergency revoke (`admin_api_*`, Admin v260). SQL: monorepo `v1585`–`v1589`; Admin `v260`.
+
 Completion indicators:
 
-- [ ] Integration failures are observable
-- [ ] Side effects are auditable
-- [ ] Retries/idempotency are handled where applicable
+- [x] Integration failures are observable (API request log + webhook deliveries)
+- [x] Side effects are auditable (request log, Admin action log, webhook deliveries)
+- [x] Retries/idempotency are handled where applicable (idempotency keys + v1352 queue back-off)
 - [ ] Imports preserve validation and governance
-- [ ] External integrations respect access controls
+- [x] External integrations respect access controls (scopes ∩ service-account RLS)
 
 ---
 
 ### R12 — Enterprise Hardening & Release Readiness
 
-**Status:** NOT STARTED
+**Status:** IN PROGRESS
 
 **Outcome:** Prepare Project Nidus for dependable production-scale operation.
 
@@ -531,6 +533,8 @@ Strategic areas:
 **v1352 contribution (resilience / observability, complete 2026-11-27):** One background-job framework: a job catalogue, a single pg_cron tick, a queue with retries, back-off and dead items, run history and alerts in Admin; reminders, digests, scheduled reports, recurring tasks, billing checks and Housekeeping (retention targets, Storage clean-up, weekly data checks) run through it (rule 80). Guide: `Documentation/Background_Jobs_v1352_Guide.md`.
 
 **v1358 contribution (data retention, complete 2026-11-27):** Organisation data export (owner self-service ZIP: CSV + JSON per table, files, data dictionary; 7-day download) and deletion (Admin approval, owner email confirmation, 30-day lock with cancel and final export, day-30 deletion in dependency order, members removed only with no other organisation or Simulator record, billing and audit logs kept, PDF deletion certificate); legal hold and Admin ownership transfer. Guide: `Documentation/Organisation_Data_Export_and_Deletion_v1358_Guide.md`.
+
+**v1356 contribution:** Hashed API/SCIM secrets, rate limits per plan, emergency revoke, SSO required with break-glass, SCIM deactivation (no hard delete of work). Deploy `api-gateway` with `--no-verify-jwt` (key auth).
 
 Completion indicators:
 

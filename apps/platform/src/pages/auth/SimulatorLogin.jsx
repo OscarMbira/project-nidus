@@ -4,6 +4,7 @@ import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { supabase, appDb, simDb } from '../../services/supabaseClient'
 import SSOLoginButton from '../../components/security/SSOLoginButton'
+import { ssoPasswordAllowed } from '@nidus/shared/services/organisationApiService'
 import PlatformSelector from '../../components/PlatformSelector'
 import { login, getRecommendedPlatform, switchPlatform, getUserPlatformAccess } from '../../services/unifiedAuthService'
 import { registerForPlatform, PLATFORMS } from '../../services/unifiedSubscriptionService'
@@ -57,6 +58,13 @@ function SimulatorLoginBody() {
     setLoading(true)
 
     try {
+      const passwordOk = await ssoPasswordAllowed(email.trim())
+      if (!passwordOk) {
+        setError('Your organisation requires single sign-on. Use Continue with SSO, or ask your break-glass account owner.')
+        setLoading(false)
+        return
+      }
+
       // Use unified auth service
       const result = await login(email, password)
 
@@ -205,7 +213,8 @@ function SimulatorLoginBody() {
 
         <div className="mt-8">
           {/* SSO Login Options */}
-          <SSOLoginButton 
+          <SSOLoginButton
+            email={email}
             onLoginStart={handleSSOLoginStart}
             onLoginComplete={handleSSOLoginComplete}
           />

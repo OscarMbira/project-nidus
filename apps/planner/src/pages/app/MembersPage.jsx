@@ -49,6 +49,12 @@ function MembersPageBody() {
     setError(null)
     setLastLink(null)
     try {
+      if (context?.account_id) {
+        const { data: blocked } = await platformDb.rpc('scim_blocks_manual_invite', { p_account_id: context.account_id })
+        if (blocked === true) {
+          throw new Error('This workspace only adds people through SCIM. Manual invitations are turned off.')
+        }
+      }
       const { data: res, error: rpcError } = await platformDb.rpc('planner_invite_member', { p_project_id: project.id, p_email: form.email, p_role_name: form.role })
       if (rpcError) throw new Error(rpcError.message.replace(/^PLANNER_[A-Z_]+:\s*/, ''))
       const link = `${window.location.origin}/app/invite/${res.token}`

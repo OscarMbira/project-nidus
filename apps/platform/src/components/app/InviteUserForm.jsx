@@ -395,6 +395,16 @@ export default function InviteUserForm({
       })
     }
 
+    if (accountId) {
+      try {
+        const { data: blocked } = await platformDb.rpc('scim_blocks_manual_invite', { p_account_id: accountId })
+        if (blocked === true) {
+          setError('This organisation only adds people through SCIM. Manual invitations are turned off.')
+          return
+        }
+      } catch { /* ignore if RPC not deployed yet */ }
+    }
+
     setLoading(true)
     // Ensure auth_user_id is linked before the invitation RPC permission check
     try { await platformDb.rpc('link_auth_account') } catch { /* ignore */ }
