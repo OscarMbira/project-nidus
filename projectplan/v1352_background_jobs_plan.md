@@ -132,8 +132,8 @@ Each job: failing SQL/Vitest test → job → Admin catalogue row → commit-rea
       column, keep period, optional status filter — so later features add rows), **3.4 data-quality report**, **3.5 Simulator housekeeping**.
 - [x] **Manual jobs** in Admin with reason + audit: re-run failed (already in slice 0), back-fills (Global
       Template sync), re-index / re-embed — built (re-embed already existed: Admin v238). Large bulk-import
-      processing and organisation data export / deletion — **not built, owner decisions** (see review); a read-only
-      footprint dry run only.
+      processing and organisation data export / deletion — **not built; owner decision 2026-11-27:** M.5 moves to its
+      own PRD, M.4 is deferred until an import outgrows the browser (see review). A read-only footprint dry run only.
 - [x] Retention / storage settings in Admin (D11 "changeable in Admin"): Background Jobs › Housekeeping.
 - [ ] Exit: owner SQL run + browser check (Admin Housekeeping pages, a report-only storage scan, the first weekly
       data check); commit done; plan review section done.
@@ -519,11 +519,17 @@ to be run by the owner.
 **Remaining gaps:** no Admin screen for `saas_job_settings` (Simulator housekeeping thresholds are SQL edits);
 Storage buckets beyond the seven listed need their reference columns confirmed before they are added.
 
+**Owner decisions (2026-11-27, recommendations accepted):**
+- **M.5** organisation data export / deletion leaves v1352 and becomes its own feature: PRD + plan under the next
+  free number, written through the decision interview (CLAUDE.md rules 56–60), covering the recommendation above.
+- **M.4** large bulk-import processing is deferred: built as an `imports.process` handler when the first import is
+  too large for the browser. Not part of v1352.
+
 ### v1352 close-out (2026-11-27)
 
 All four slices are built: framework and existing jobs (Slice 0), promised features (Slice 1), notifications and
 SaaS operations (Slice 2), data health, housekeeping and manual jobs (Slice 3) — Platform, Simulator, Planner and
 Admin jobs running through one tick from one catalogue, with run history, grouped alerts, retries, a queue with
-back-off and replay, and Admin monitoring and housekeeping. Slices 0–2 SQL has been run; Slice 3 waits for the
-owner's SQL run, worker redeploy and browser check. Open beyond v1352: the owner decisions above (M.4, M.5,
-audit-log retention, leaderboards), the `ai.embed` edge limit (v1272) and the Slice 2 Paynow items listed above.
+back-off and replay, and Admin monitoring and housekeeping. All SQL (Slices 0–3, v1599 fix, Admin v255–v263) has been run and the
+worker redeployed (2026-11-27). Left to close v1352: the four exit checks (owner browser checks and the Paynow
+test-mode payment). Open beyond v1352: M.5 (own PRD), M.4 (deferred), audit-log retention (legal), leaderboards, the `ai.embed` edge limit (v1272) and the Slice 2 Paynow items listed above.
