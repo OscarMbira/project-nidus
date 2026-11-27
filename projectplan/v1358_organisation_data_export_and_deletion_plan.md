@@ -67,16 +67,19 @@ API keys, SCIM, webhooks and jobs; cancel restores; day-30 deletion removes ever
 and leaves another untouched; kept tables keep rows; member rules (D8); certificate contents.
 - [x] 3a SQL: deletion request flow (request, admin approve / reject / open on behalf, owner confirm token, cancel),
       lock columns (`SQL/v1604`, tests `SQL/v1605`, Admin `SQL/v266`).
-- [ ] 3b SQL: `organisation_deletion_records`, deletion in dependency order in batches.
+- [x] 3b SQL: `organisation_deletion_records`, deletion in dependency order in batches (`SQL/v1606`, tests `SQL/v1607`,
+      Admin `SQL/v267`).
 - [x] 3a Lock enforcement: app gate (`OrganisationLockGate`) in Platform `ProtectedRoute` and the Planner shell;
       members signed out; API keys revoked, webhooks disabled, SCIM off (switched back on by a cancel); subscription
       cancelled at lock (D10).
 - [x] 3a Jobs: `organisation.deletion_lifecycle` (hourly: day-5 reminder with a new link, lapse after 7 days) and
       `organisation.deletion_notify` (worker: confirmation email with the link); final export at lock.
-- [ ] 3b: day-30 deletion, member clean-up (D8), certificate PDF + email (D15); kept audit / security logs.
+- [x] 3b: day-30 deletion (worker `organisation.deletion_execute`), member clean-up (D8), certificate PDF + email
+      (D15); kept audit / security logs.
 - [x] 3a Pages: owner request / confirm (emailed link) / cancel on Data export & deletion (Platform, Planner);
       Admin open on behalf / approve / reject / cancel on Organisation detail. Menu label “Data export & deletion”.
-- [ ] 3b Admin deletion record view and certificate download.
+- [x] 3b Admin deletion record view and certificate download (Organisation detail › Data & compliance; Organisation
+      Data Requests › Deletion records).
 - [ ] Guide `Documentation/Organisation_Data_Export_and_Deletion_v1358_Guide.md`; ROADMAP status; exit.
 
 ## Risks
@@ -151,16 +154,16 @@ change); Admin success messages use the Admin toast (Admin has no success modal)
 
 **Tests:** Admin `organisationDataServices.test.js` 4/4; SQL tests H1, T1–T3 written (owner runs).
 
-### Slice 3a review (2026-11-27) — code complete, SQL not run
+### Slice 3a review (2026-11-27) — code complete; SQL run and worker redeployed by the owner (2026-11-27)
 
 **Run order (owner):**
 
 | # | Repo | Step | Status |
 |---|---|---|---|
-| 0 | — | Redeploy `background-job-worker` (`--no-verify-jwt`): new handler `organisation.deletion_notify`. It needs the secret `SITE_URL` (already set for other functions); set `PLANNER_SITE_URL` too if Project Planner runs on its own address | pending |
-| 1 | monorepo | `SQL/v1604_organisation_deletion_request_and_lock.sql` (ends with a dry run of the lifecycle job) | pending |
-| 2 | Admin | `SQL/v266_organisation_deletion_admin.sql` | pending |
-| 3 | monorepo | `SQL/v1605_organisation_deletion_request_and_lock_tests.sql` (rolls back; expect "v1605: all organisation deletion (slice 3a) tests passed (rolling back)") | pending |
+| 0 | — | Redeploy `background-job-worker` (`--no-verify-jwt`): new handler `organisation.deletion_notify`. It needs the secret `SITE_URL` (already set for other functions); set `PLANNER_SITE_URL` too if Project Planner runs on its own address | done 2026-11-27 |
+| 1 | monorepo | `SQL/v1604_organisation_deletion_request_and_lock.sql` (ends with a dry run of the lifecycle job) | done 2026-11-27 |
+| 2 | Admin | `SQL/v266_organisation_deletion_admin.sql` | done 2026-11-27 |
+| 3 | monorepo | `SQL/v1605_organisation_deletion_request_and_lock_tests.sql` (rolls back; expect "v1605: all organisation deletion (slice 3a) tests passed (rolling back)") | done 2026-11-27 |
 
 No new tables (columns only), so no Planner wall re-run.
 
@@ -183,4 +186,56 @@ lifecycle: one day-5 reminder with a new link, lapse after 7 days; the app gate 
 **Tests:** worker `v1358OrganisationDeletion.test.js` 5/5; screens `OrganisationDataExportPage.test.jsx` +
 `OrganisationLockGate.test.jsx` 11/11; Admin `organisationDataServices.test.js` 5/5; Admin users module builds;
 SQL D1–D6 written (owner runs).
+
+### Slice 3b review (2026-11-27) — code complete, SQL not run
+
+**Run order (owner):**
+
+| # | Repo | Step | Status |
+|---|---|---|---|
+| 0 | — | Redeploy `background-job-worker` (`--no-verify-jwt`): new handler `organisation.deletion_execute` (and the certificate PDF writer) | pending |
+| 1 | monorepo | `SQL/v1606_organisation_deletion_execute.sql` (ends with a read-only check: tables to delete for the oldest organisation, lifecycle dry run) | pending |
+| 2 | Admin | `SQL/v267_organisation_deletion_records_admin.sql` (ID rule ODL, deletion records, certificate download policy) | pending |
+| 3 | monorepo | `SQL/v1251_planner_table_wall.sql` (re-run; one new table) | pending |
+| 4 | monorepo | `SQL/v1607_organisation_deletion_execute_tests.sql` (rolls back; expect "v1607: all organisation deletion (slice 3b) tests passed (rolling back)") | pending |
+
+**Built:**
+- Hourly `organisation.deletion_lifecycle` now starts day-30 deletions (not on legal hold) and resumes any that stopped,
+  or whose legal hold was lifted. `organisation_deletion_begin` writes the deletion record (who asked / approved /
+  confirmed, dates, delete order, Storage files, members with "other organisation" and "Simulator record" checks,
+  certificate recipients, the organisation's date format and time zone) and queues the worker.
+- Delete order from the catalogue: tables in scope minus kept tables, `accounts` and `users`, children before
+  parents (foreign keys and scope filters). Self-links and, when a pass is stuck, other nullable links to the rows
+  being deleted are cleared. Rows that stay (kept tables, people, the organisation row) are unlinked first; a
+  required link from a kept row stops the deletion with a message rather than losing it.
+- Worker `organisation.deletion_execute`: Storage files (missing files count as removed; other Storage errors retry),
+  then `organisation_deletion_step` in 15-second batches with a saved place, then `organisation_deletion_finish`
+  (checks nothing is left — tables with rows back go to the steps again; counts kept rows; D8; organisation row
+  anonymised and marked deleted), then the PDF certificate (own PDF writer, no library) stored in the private bucket
+  `organisation-deletion-certificates` and emailed to the Account Owner and the requester; their addresses are
+  cleared after sending. Continues itself when its time is up; pauses on legal hold.
+- D8: a member with no other organisation (owner, project role, last active) and no Simulator record has their
+  profile anonymised (it stays, because kept rows point at it) and their sign-in deleted (blocked if it cannot be
+  deleted). Others keep their account and are told (in-app + email).
+- Admin: Organisation detail shows the deletion record (facts, counts, kept tables, notes, errors, certificate
+  download); Organisation Data Requests lists every deletion record with the certificate.
+
+**Decisions made while building:**
+- The organisation row and the people's profiles are anonymised, not deleted: our kept billing records and audit logs
+  point at them. Status, type and edition columns stay so lists read correctly.
+- Internal job tables (queue, runs, markers) are kept, not deleted: the deletion's own queue items live there;
+  Housekeeping removes them by age.
+- D7's 7-year keep for audit and security logs uses the existing Housekeeping retention targets (already 7 years,
+  switched off by default — an owner decision in Housekeeping); nothing new removes them earlier.
+- Removed members are not emailed again at deletion (the lock email now says the sign-in is removed when they belong
+  to no other organisation).
+- A start that fails is noted on the request and retried hourly; the lifecycle run fails (Admin alert) only when
+  that undoes nothing else.
+
+**Risks:** a table whose own trigger refuses deletes (for example "approved records cannot be deleted") stops the
+deletion with that message; Admin sees it on the record and the queue alert, and the trigger needs an exception.
+Tested on a throwaway organisation only (SQL E1–E7); the first real deletion should be watched.
+
+**Tests:** worker `v1358OrganisationDeletionExecute.test.js` 14/14 (worker suite 76/76); Admin
+`organisationDataServices.test.js`; SQL E1–E7 written (owner runs).
 

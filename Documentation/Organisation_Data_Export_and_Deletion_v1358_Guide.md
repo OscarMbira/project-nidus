@@ -1,7 +1,7 @@
 # Organisation data export and deletion (v1358)
 
 **PRD:** `projectprd/v1358_organisation_data_export_and_deletion_PRD.md` · **Plan:** `projectplan/v1358_organisation_data_export_and_deletion_plan.md`
-**Status:** Export (slice 1), Admin tools (slice 2) and the deletion request up to the 30-day lock (slice 3a) built. The day-30 deletion and certificate (slice 3b) follow.
+**Status:** All slices built: export (1), Admin tools (2), deletion request and 30-day lock (3a), day-30 deletion and certificate (3b).
 
 ## For the Account Owner
 
@@ -38,7 +38,11 @@
    - API keys, webhooks and SCIM are switched off, and the subscription is cancelled (no automatic refund);
    - a final export is prepared for you on the same page.
 4. You can **Cancel deletion** at any time before the 30 days end. The organisation is unlocked and integrations come back on; choose a plan again under Subscription.
-5. On day 30 the data is deleted permanently (slice 3b).
+5. On day 30 the data is deleted permanently. You (and whoever asked, if that was someone else) get an email with a **PDF deletion certificate**: what was deleted, what we keep and why.
+
+**What we keep after a deletion:** our own billing records (subscription payments to us, for the tax period), the organisation's audit and security logs (up to 7 years, visible only to our system administrators), internal job records, and the deletion record. The organisation's name and contact details are removed from the record we keep.
+
+**Members:** a member who belongs to no other organisation and does not use the Simulator has their sign-in removed and their profile anonymised. Everyone else keeps their account and is told the organisation was deleted.
 
 ## For system admins (Admin app)
 
@@ -48,6 +52,7 @@
   - **Transfer ownership.** Use this when the Account Owner has left. Choose one of the organisation’s PMO Admins and give a reason. The new owner gets the Account Owner role, billing delegates are removed, and both the old and the new owner are emailed.
   - The organisation’s own export requests.
 - **Deletion requests** (Organisation detail › Data & compliance): **Open deletion request** when a customer asked support; **Approve** (refused while on legal hold) or **Reject** (the owner sees your reason); **Cancel** before day 30. Approval only sends the owner a confirmation link; nothing is locked until they confirm.
+- **Deletion records** (Organisation detail › Data & compliance, and Organisation Data Requests › Deletion records): who asked, approved and confirmed; dates; records and files deleted; members removed or kept; what was kept and why; any problem; **Download certificate**. A deletion that stops shows its error here; it carries on by itself after the cause is fixed (or within an hour of a legal hold being lifted).
 - Every hold, transfer and deletion decision is recorded in the Admin audit log. Permissions: `organisations.data.view`, `.hold` and `.transfer` (super admin and system admin).
 
 ## How it works
@@ -65,6 +70,7 @@
 - **Background jobs** (rule 80):
   - `organisation.export_build` builds ZIP parts of about 40 MB. It saves a checkpoint after each part, and continues in a new run when its time budget is used.
   - `organisation.export_expire` runs daily at 02:30 UTC. It removes files after 7 days, and fails any build that has made no progress for 24 hours; the owner is told.
+- **Deletion (day 30):** `organisation.deletion_lifecycle` (hourly) starts it and resumes it if it stops; the worker job `organisation.deletion_execute` removes the Storage files, deletes rows in batches (children before parents), applies the member rule, anonymises the organisation row and sends the certificate (bucket `organisation-deletion-certificates`). The record is `public.organisation_deletion_records` (references like ODL-001).
 - **Storage:** files go to the private bucket `organisation-exports` at `<account id>/<request id>/…`. Only the Account Owner can read them, and only while the export is ready and not expired. Downloads use a link that is valid for 5 minutes.
 
 ## Owner run order (slice 1)
