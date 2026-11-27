@@ -304,17 +304,17 @@ Simulator, Planner) pass.
 recurring task, reminder + digest, Admin Background Jobs list). The Planner table allow-list was already stale
 before this slice (`account_menu_settings` no longer used since b5bb0b7e) — not changed here.
 
-### Slice 2 review (2026-11-27) — code complete, SQL not yet run
+### Slice 2 review (2026-11-27) — code complete, SQL run and functions redeployed by the owner 2026-11-27
 
 **Run order (owner):**
 
 | # | Repo | Step | Status |
 |---|---|---|---|
-| 0 | — | Redeploy edge functions `background-job-worker` (new handlers `email.send`, `payments.pending_recheck`; the adapter gained `httpGet` and form posts), `paynow-webhook` and `paynow-poll` (both now use `_shared/paynow.js`). Check `PAYNOW_INTEGRATION_KEY` is set (`supabase secrets list`; secrets are shared by all functions) | pending |
-| 1 | monorepo | `SQL/v1592_background_jobs_email_outbox.sql` (outbox, retry wake-up, markers / messages / settings tables) | pending |
-| 2 | monorepo | `SQL/v1593_background_jobs_payments_invitations_allowances.sql` (ends with dry runs of the four jobs: nothing changes) | pending |
-| 3 | monorepo | `SQL/v1251_planner_table_wall.sql` (re-run, table registration rule 6 — three new tables in v1592) | pending |
-| 4 | monorepo | `SQL/v1594_background_jobs_slice2_tests.sql` (rolls back; expect "v1594: all Slice 2 background job tests passed (rolling back)") | pending |
+| 0 | — | Redeploy edge functions `background-job-worker` (new handlers `email.send`, `payments.pending_recheck`; the adapter gained `httpGet` and form posts), `paynow-webhook` and `paynow-poll` (both now use `_shared/paynow.js`). Check `PAYNOW_INTEGRATION_KEY` is set (`supabase secrets list`; secrets are shared by all functions) | done 2026-11-27 |
+| 1 | monorepo | `SQL/v1592_background_jobs_email_outbox.sql` (outbox, retry wake-up, markers / messages / settings tables) | done 2026-11-27 |
+| 2 | monorepo | `SQL/v1593_background_jobs_payments_invitations_allowances.sql` (ends with dry runs of the four jobs: nothing changes) | done 2026-11-27 |
+| 3 | monorepo | `SQL/v1251_planner_table_wall.sql` (re-run, table registration rule 6 — three new tables in v1592) | done 2026-11-27 |
+| 4 | monorepo | `SQL/v1594_background_jobs_slice2_tests.sql` (rolls back; expect "v1594: all Slice 2 background job tests passed (rolling back)") | done 2026-11-27 |
 
 No Admin SQL: the Admin Background Jobs page lists the seven new catalogue rows as they are. No new reference
 columns (no Admin ID Generation rule, rule 16.2). No UI fields were added, so no field help rows (rule 76).
