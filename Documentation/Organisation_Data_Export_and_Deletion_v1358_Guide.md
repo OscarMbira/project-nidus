@@ -1,7 +1,7 @@
 # Organisation data export and deletion (v1358)
 
 **PRD:** `projectprd/v1358_organisation_data_export_and_deletion_PRD.md` · **Plan:** `projectplan/v1358_organisation_data_export_and_deletion_plan.md`
-**Status:** Slice 1 (export) built. Admin tools (slice 2) and deletion (slice 3) follow.
+**Status:** Slice 1 (export) and slice 2 (Admin tools) built. Deletion (slice 3) follows.
 
 ## For the Account Owner
 
@@ -28,6 +28,15 @@
 - **People:** the `users` file lists the owner and everyone with a project role. It includes only name, email, job title, whether the account is active, and when it was created.
 - **Large files:** any single file over 45 MB is listed in `files-not-included.csv`. You can still download it in the app.
 - **Spreadsheet safety:** in the CSV files, text that starts with `=`, `+`, `-` or `@` begins with an apostrophe, so a spreadsheet does not run it as a formula.
+
+## For system admins (Admin app)
+
+- **Users & Organisations › Organisation Data Requests:** every organisation’s export requests (reference, status, size, who asked) and the organisations on legal hold. Select a reference or an organisation to open it.
+- **Organisation detail › Data & compliance:**
+  - **Legal hold.** Select **Place hold** or **Lift hold** and give a reason. While an organisation is on hold it cannot be deleted; exports still work. The organisation is not told.
+  - **Transfer ownership.** Use this when the Account Owner has left. Choose one of the organisation’s PMO Admins and give a reason. The new owner gets the Account Owner role, billing delegates are removed, and both the old and the new owner are emailed.
+  - The organisation’s own export requests.
+- Every hold and transfer is recorded in the Admin audit log. Permissions: `organisations.data.view`, `.hold` and `.transfer` (super admin and system admin).
 
 ## How it works
 

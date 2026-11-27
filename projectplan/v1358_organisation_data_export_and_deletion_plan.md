@@ -52,10 +52,13 @@ JSON per table, files, dictionary, display IDs); owner-only request; 7-day expir
 
 ## Slice 2 — Admin tools (D13, D14)
 
-- [ ] SQL: legal hold columns + RPCs; Admin ownership transfer RPC (to an existing PMO Admin; emails both owners).
-- [ ] Admin pages: Organisation data requests (list + detail), legal hold place / lift, transfer ownership — reason
-      required, audited, field help (Admin rule 23).
-- [ ] Exit as slice 1.
+- [x] SQL: legal hold columns on `accounts`, ownership candidates + transfer (`SQL/v1602`, tests `SQL/v1603`); Admin
+      permissions, audited RPCs, sidebar item, field help (`Admin SQL/v265`). Both owners emailed.
+- [x] Admin pages: Users & Organisations › Organisation Data Requests (all requests + organisations on hold);
+      Organisation detail › Data & compliance (legal hold place / lift, transfer ownership, this organisation’s
+      requests) — reason required, audited, field help (Admin rule 23). Organisation detail fixed for light mode
+      (rule 28.1) and its back button now returns to the previous page (rule 73).
+- [ ] Exit as slice 1 (owner SQL + Admin check).
 
 ## Slice 3 — Deletion (D1, D5–D12, D15)
 
@@ -117,3 +120,29 @@ expiry; owner-only download policy on the private bucket; shared page in Platfor
 **Known gaps / notes:** the Planner table allow-list is already stale from other work (API, SCIM, billing
 tables) — not changed by this slice, which uses RPCs only. Tables linked more than three foreign keys away
 from the organisation are not exported; E1 prints the count found.
+
+### Slice 2 review (2026-11-27) — code complete, SQL not run
+
+**Run order (owner):**
+
+| # | Repo | Step | Status |
+|---|---|---|---|
+| 1 | monorepo | `SQL/v1602_organisation_legal_hold_and_owner_transfer.sql` | pending |
+| 2 | Admin | `SQL/v265_organisation_data_admin.sql` (permissions, RPCs, sidebar item, field help) | pending |
+| 3 | monorepo | `SQL/v1603_organisation_legal_hold_and_owner_transfer_tests.sql` (rolls back; expect "v1603: all legal hold and ownership transfer tests passed (rolling back)") | pending |
+
+No edge function changes. No new tables (columns only), so no Planner wall re-run.
+
+**Built:** legal hold on `accounts` (reason, since, admin); ownership candidates = users with the PMO Admin role who
+have a role on one of the organisation’s projects or work in it now (`last_active_account_id`) — PMO Admin is a
+global role, so “PMO Admin of the organisation” needs this membership test; transfer repeats the owner’s own
+transfer (v734): PMO Admin + Account Owner roles, billing delegates revoked, billing audit row, plus in-app + email
+to both owners. Admin: list page (requests newest first — a queue; holds A→Z), detail panel with place / lift hold
+and a small transfer dialog (choose a candidate + reason).
+
+**Decisions made while building:** the organisation is not told about a legal hold (holds are usually
+confidential); requests are listed newest first rather than A→Z (rule 12.1 exception: it is a work queue — owner may
+change); Admin success messages use the Admin toast (Admin has no success modal).
+
+**Tests:** Admin `organisationDataServices.test.js` 4/4; SQL tests H1, T1–T3 written (owner runs).
+
