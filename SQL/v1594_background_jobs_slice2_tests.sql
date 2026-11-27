@@ -34,11 +34,13 @@ BEGIN
               JOIN public.users u ON u.id = a.owner_user_id
              WHERE NOT COALESCE(a.is_deleted, FALSE) AND COALESCE(a.product_edition::TEXT, 'platform') <> 'planner'
                AND u.auth_user_id IS NOT NULL AND COALESCE(btrim(u.email), '') <> '' AND NOT COALESCE(u.is_deleted, FALSE)
+               AND EXISTS (SELECT 1 FROM auth.users au WHERE au.id = u.auth_user_id)  -- subscriptions reference auth.users
                AND NOT EXISTS (SELECT 1 FROM public.platform_subscriptions ps
                                 WHERE ps.account_id = a.id AND ps.status IN ('active', 'trial', 'trialing', 'past_due'))
              ORDER BY a.created_at LIMIT 1);
   v_sim := (SELECT u.id FROM public.users u
              WHERE u.auth_user_id IS NOT NULL AND COALESCE(btrim(u.email), '') <> '' AND NOT COALESCE(u.is_deleted, FALSE)
+               AND EXISTS (SELECT 1 FROM auth.users au WHERE au.id = u.auth_user_id)  -- simulator_subscriptions.user_id references auth.users
                AND NOT EXISTS (SELECT 1 FROM sim.simulator_subscriptions ss
                                 WHERE ss.user_id = u.auth_user_id AND ss.status = 'active' AND ss.plan_type <> 'free')
              ORDER BY u.created_at LIMIT 1);
