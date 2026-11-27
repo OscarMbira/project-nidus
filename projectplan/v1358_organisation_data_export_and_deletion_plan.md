@@ -48,7 +48,7 @@ JSON per table, files, dictionary, display IDs); owner-only request; 7-day expir
       catalogue + grants + placement + taxonomy (rules 70, 75). No input fields, so no field help; not a record
       form, so no Audit tab.
 - [x] Admin: moved to Slice 2, which builds the Admin requests list (one list for exports and deletions).
-- [ ] Exit: builds, tests (done); owner SQL + a real export downloaded and opened.
+- [x] Exit: builds, tests (done); owner SQL + a real export downloaded and opened (owner, 2026-11-27).
 
 ## Slice 2 — Admin tools (D13, D14)
 
@@ -58,7 +58,7 @@ JSON per table, files, dictionary, display IDs); owner-only request; 7-day expir
       Organisation detail › Data & compliance (legal hold place / lift, transfer ownership, this organisation’s
       requests) — reason required, audited, field help (Admin rule 23). Organisation detail fixed for light mode
       (rule 28.1) and its back button now returns to the previous page (rule 73).
-- [ ] Exit as slice 1 (owner SQL + Admin check).
+- [x] Exit as slice 1 (owner SQL + Admin check, 2026-11-27).
 
 ## Slice 3 — Deletion (D1, D5–D12, D15) — built in two parts: 3a (up to the lock), 3b (day-30 deletion)
 
@@ -80,7 +80,7 @@ and leaves another untouched; kept tables keep rows; member rules (D8); certific
       Admin open on behalf / approve / reject / cancel on Organisation detail. Menu label “Data export & deletion”.
 - [x] 3b Admin deletion record view and certificate download (Organisation detail › Data & compliance; Organisation
       Data Requests › Deletion records).
-- [ ] Guide `Documentation/Organisation_Data_Export_and_Deletion_v1358_Guide.md`; ROADMAP status; exit.
+- [x] Guide `Documentation/Organisation_Data_Export_and_Deletion_v1358_Guide.md`; ROADMAP status; exit (owner browser checks passed, 2026-11-27).
 
 ## Risks
 
@@ -239,3 +239,9 @@ Tested on a throwaway organisation only (SQL E1–E7); the first real deletion s
 **Tests:** worker `v1358OrganisationDeletionExecute.test.js` 14/14 (worker suite 76/76); Admin
 `organisationDataServices.test.js`; SQL E1–E7 written (owner runs).
 
+### Close (2026-11-27)
+
+The owner ran all SQL, redeployed the worker and passed the browser checks for every slice (export downloaded and
+opened; Admin hold / transfer; deletion request → approval → email confirmation → lock → cancel; a test organisation
+deleted end to end with its certificate). v1358 is complete. Watch the first real customer deletion (a table whose
+own trigger refuses deletes would stop it, shown on the deletion record in Admin).

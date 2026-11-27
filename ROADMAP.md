@@ -528,6 +528,8 @@ Strategic areas:
 - data retention
 - release governance
 
+**v1358 contribution (data retention, complete 2026-11-27):** Organisation data export (owner self-service ZIP: CSV + JSON per table, files, data dictionary; 7-day download) and deletion (Admin approval, owner email confirmation, 30-day lock with cancel and final export, day-30 deletion in dependency order, members removed only with no other organisation or Simulator record, billing and audit logs kept, PDF deletion certificate); legal hold and Admin ownership transfer. Guide: `Documentation/Organisation_Data_Export_and_Deletion_v1358_Guide.md`.
+
 Completion indicators:
 
 - [ ] Critical security risks resolved
