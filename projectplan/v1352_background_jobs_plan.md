@@ -84,7 +84,7 @@ Build:
       except the tick; every catalogue `handler` code has a handler file (D9).
 - [x] CLAUDE.md **rule 80** + rule 34.5 narrow exception; Admin CLAUDE.md equivalent rule.
 - [x] Guide `Documentation/Background_Jobs_v1352_Guide.md`; update `Documentation/Cron_Job_Setup.md`.
-- [ ] Exit: all 8 existing jobs listed in Admin with run history; old cron entries gone; owner runs SQL +
+- [x] Exit: all 8 existing jobs listed in Admin with run history; old cron entries gone; owner runs SQL +
       browser check; commit (monorepo + Admin).
 
 ## Slice 1 — Promised features (Wave 1 + daily digest 2.2), both schemas (D8)
@@ -112,7 +112,7 @@ Each job: failing SQL/Vitest test → job → Admin catalogue row → commit-rea
 - [x] **2.2 Daily digest (pulled forward, D6):** one email per person per day with that day's reminders and
       notices, organisation time; respects the digest switch in notification preferences (add the preference
       key if missing, both schemas).
-- [ ] Exit: each job visible in Admin, unit tests green, owner SQL run + browser check (reports email, tasks
+- [x] Exit: each job visible in Admin, unit tests green, owner SQL run + browser check (reports email, tasks
       appear, reminder + digest received); commit.
 
 ## Slice 2 — Notifications and SaaS operations (Wave 2)
@@ -122,7 +122,7 @@ Each job: failing SQL/Vitest test → job → Admin catalogue row → commit-rea
 - [x] **2.3 Payment follow-up:** hourly re-check of pending Paynow payments (server-side `paynow-poll` logic,
       hash-verified), daily renewal reminders and failed-payment follow-up.
 - [x] **2.4 Invitation expiry**, **2.5 monthly allowances** (AI credits and other plan allowances).
-- [ ] Exit: owner check with a test payment in Paynow's test mode; commit.
+- [x] Exit: owner check with a test payment in Paynow's test mode; commit.
 
 ## Slice 3 — Data health, performance, manual jobs (Wave 3 + M)
 
@@ -135,7 +135,7 @@ Each job: failing SQL/Vitest test → job → Admin catalogue row → commit-rea
       processing and organisation data export / deletion — **not built; owner decision 2026-11-27:** M.5 moves to its
       own PRD, M.4 is deferred until an import outgrows the browser (see review). A read-only footprint dry run only.
 - [x] Retention / storage settings in Admin (D11 "changeable in Admin"): Background Jobs › Housekeeping.
-- [ ] Exit: owner SQL run + browser check (Admin Housekeeping pages, a report-only storage scan, the first weekly
+- [x] Exit: owner SQL run + browser check (Admin Housekeeping pages, a report-only storage scan, the first weekly
       data check); commit done; plan review section done.
 
 ---
@@ -533,3 +533,11 @@ Admin jobs running through one tick from one catalogue, with run history, groupe
 back-off and replay, and Admin monitoring and housekeeping. All SQL (Slices 0–3, v1599 fix, Admin v255–v263) has been run and the
 worker redeployed (2026-11-27). Left to close v1352: the four exit checks (owner browser checks and the Paynow
 test-mode payment). Open beyond v1352: M.5 (own PRD), M.4 (deferred), audit-log retention (legal), leaderboards, the `ai.embed` edge limit (v1272) and the Slice 2 Paynow items listed above.
+
+## Close (2026-11-27)
+
+All four slices are complete: SQL run, worker and functions deployed, and the owner passed every exit check (jobs and
+run history in Admin with the old cron entries gone; reports, recurring tasks, reminders and digest received; a Paynow
+test-mode payment; Housekeeping pages, a report-only Storage scan and the first weekly data check). v1352 is complete.
+Outside this plan by owner decision: M.5 became v1358 (complete), M.4 large bulk-import processing is deferred, and
+the `ai.embed` edge limit belongs to v1272.

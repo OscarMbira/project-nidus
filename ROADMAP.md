@@ -528,6 +528,8 @@ Strategic areas:
 - data retention
 - release governance
 
+**v1352 contribution (resilience / observability, complete 2026-11-27):** One background-job framework: a job catalogue, a single pg_cron tick, a queue with retries, back-off and dead items, run history and alerts in Admin; reminders, digests, scheduled reports, recurring tasks, billing checks and Housekeeping (retention targets, Storage clean-up, weekly data checks) run through it (rule 80). Guide: `Documentation/Background_Jobs_v1352_Guide.md`.
+
 **v1358 contribution (data retention, complete 2026-11-27):** Organisation data export (owner self-service ZIP: CSV + JSON per table, files, data dictionary; 7-day download) and deletion (Admin approval, owner email confirmation, 30-day lock with cancel and final export, day-30 deletion in dependency order, members removed only with no other organisation or Simulator record, billing and audit logs kept, PDF deletion certificate); legal hold and Admin ownership transfer. Guide: `Documentation/Organisation_Data_Export_and_Deletion_v1358_Guide.md`.
 
 Completion indicators:
