@@ -4,7 +4,7 @@
 `projectplan/v1354_resource_levelling_and_portfolio_optimisation_plan.md`,
 `projectplan/v1355_quantitative_risk_analysis_plan.md`, `projectplan/v1356_public_api_and_scim_plan.md`.
 **No new PRD:** every gap below is inside the scope the owner already approved in the v1353–v1356 PRDs; this plan
-only finishes and corrects that work. **Status:** approved 2026-11-27. Slice 1 code done and committed (ece42930, Admin f21f322); owner to run SQL v1609, re-run v1251, run check v1608, and deploy.
+only finishes and corrects that work. **Status:** approved 2026-11-27. Slice 1 complete. Slice 2 code complete (a494845d and the next commit); owner to run SQL v1611, re-run v1251, redeploy background-job-worker, then browser checks.
 
 ## 1. How the audit was done
 
@@ -58,6 +58,9 @@ still owed; **D** = documentation.
 | B6 | R | No hold / draft queue on the client form (rule 37); remove-draft-line uses `window.confirm` | `BillingScreens.jsx` 601 |
 | B7 | V | Simulator and Planner billing not checked in the browser | v1353 review |
 | B8 | D | ROADMAP R6 line lists SQL v1577–v1581 only (v1582–v1584 also exist) | ROADMAP 357 |
+| B9 | B | **Found in Slice 2:** invoice drafts ignored rate-card dates, read only the first card of each scope, and never matched role lines (the role was always blank) — wrong charge-out rates | `billingData.js` cardsFor / draftInvoice |
+| B10 | R | **Found in Slice 2:** Revenue and margin cards show raw numbers (no regional money format, rule 68) and the count cards are not clickable (rule 64) | `BillingScreens.jsx` RevenueScreen |
+| B11 | B | **Found in Slice 2:** `timeData.test.js` still expected timesheet saves without `is_billable` (v1353) — the planning suite was red | `services/__tests__/timeData.test.js` |
 
 ### v1354 — Levelling & portfolio optimisation
 
@@ -94,6 +97,8 @@ still owed; **D** = documentation.
 | A9 | B | **Found in Slice 1:** `webhooks.deliver` read and wrote tables through `ctx.admin`, which the worker adapter does not have — every delivery failed. No check stopped a webhook being sent to a private or local address | `handlers/webhooks.deliver.js`; `adapter.ts` |
 | A10 | B | **Found in Slice 1 (security, live SQL):** webhook signing secrets are stored in plain text and readable by every member of the organisation (policy only checked account access) | `SQL/v1586` webhook_endpoints policy |
 | A11 | B | **Found in Slice 1 (security, live SQL):** any member could change webhook endpoints, SCIM settings / group mappings and SSO connections (e.g. turn on "SSO required", change the break-glass user, map an IdP group to a role) | `SQL/v1586`–`v1588` `FOR ALL` policies |
+| A13 | B | **Found in Slice 2:** integrations pages picked the organisation from the first project the database returned — a PMO Admin of two organisations could configure the wrong one | `IntegrationsPanels.jsx` useAccountId |
+| A14 | B | **Found in Slice 2 (security, live SQL):** SSO domains were never checked against DNS — the browser marked them verified on save. Any organisation admin could claim another customer's email domain, require SSO and so block password sign-in platform-wide for that domain and route those sign-ins to their identity provider | `SQL/v1588`, SSO panel |
 | A12 | B | **Found in Slice 1:** Planner sign-in page called a React hook after an early return (`AuthPages.jsx`), so a signed-in visitor to the login page crashed it | `apps/planner/src/pages/public/AuthPages.jsx` |
 
 ## 4. Owner decisions needed (asked one at a time)
@@ -127,20 +132,27 @@ browser before the next slice. SQL numbers from `ls SQL` right before each file 
 
 ### Slice 2 — Safety and rule gaps (Platform + Simulator + Planner, shared screens)
 
-- [ ] L4: scenario Apply / Submit — confirmation stating what changes, error message, success modal (rule 16).
-- [ ] A4: API key Revoke / Rotate — confirmation, error handling, success modal.
-- [ ] Q3, B6: replace `window.confirm` with the shared confirm dialog in QRA inputs and invoice draft lines; error
+- [x] L4: scenario Apply / Submit — confirmation stating what changes, error message, success modal (shared `useConfirmDialog`, `@nidus/ui`).
+- [x] A4: API key Revoke / Rotate — confirmation, error handling, success modal.
+- [x] Q3, B6: `window.confirm` replaced by the shared confirm dialog in QRA inputs and invoice draft lines; error
       handling on delete.
-- [ ] B1 (G2): currency from regional settings + `currencies` picker (SelectField) on client, rate-card and
-      exchange-rate forms; Simulator reads its practice settings; remove `'USD'` literals.
-- [ ] B2 (G3): Effective from / to on rate cards; resolution already honours dates — add a test.
-- [ ] B3: people picker for the rate-card Person column (`listOptions={false}` on its help label).
-- [ ] B4: client bulk upload — proper CSV parsing, preview with per-row errors, confirm, result summary in the success
-      modal (rules 26, 71 legend kept).
-- [ ] L3: placement rows for `plat_|sim_portfolio_scoring`, `_scenarios`, `_res_levelling` (new SQL); taxonomy and
-      placement documents updated (rules 70, 75); run `SQL/v1452` audit query.
-- [ ] A3, A5, A6 (if G1 = take over): field help on SCIM switches; Audit tab on key / endpoint / SCIM / SSO records;
-      key and endpoint lists on the shared list table (sort, `#`, search, toggle, export).
+- [x] B1 (G2): `useCurrencyOptions` (`@nidus/shared`, tab cache) — client, rate-card and exchange-rate forms pick from
+      `currencies` and default to the organisation currency; drafts and Simulator use the regional settings.
+- [x] B2 (G3): Rates start / Rates end on rate cards; with B9 the dates now reach the rate engine (tests).
+- [x] B3: role and person pickers on rate-card lines (`listOptions={false}` on Person); B9 fixes in `billingData.js`.
+- [x] B4: client bulk upload — shared CSV parser, `validateClientRows` preview with per-row problems, add after
+      confirmation, summary in the success modal; rate-card line upload on the same parser.
+- [x] L3: on inspection these are Level 3/4 children of placed items (Resources, Portfolio) and inherit the placement,
+      so no rows were added; taxonomy and placement documents now list Scoring and Scenarios. Owner: run
+      `SQL/v1452_consolidated_menu_audit_query.sql` to confirm no unplaced page.
+- [x] A3, A5, A6, A13, A14 (UI): SCIM switches with help labels; Details | Audit details tabs on every panel; keys,
+      usage, endpoints, deliveries, mappings and connections on `SimpleRecordList`; current organisation via
+      `getCurrentUserAccountId`; SCIM role picker; SSO shows the server TXT token and verification, Verify domain,
+      Require SSO only when verified; SSO updates no longer blank the reference.
+- [x] A14 (server): `SQL/v1611_sso_domain_verification.sql` (guard trigger, request / context / result functions,
+      one organisation per domain, weekly real re-check, self-made verifications cleared) + worker handler
+      `sso.domain_verify` (DNS over HTTPS through `ctx.httpGet`; tests).
+- [ ] B10: Revenue and margin money format and clickable cards (moved to Slice 3).
 
 ### Slice 3 — Tests, verification, documents
 

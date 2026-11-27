@@ -18,6 +18,7 @@ import * as organisationExportExpire from './organisation.export_expire.js'
 import * as organisationDeletionNotify from './organisation.deletion_notify.js'
 import * as organisationDeletionExecute from './organisation.deletion_execute.js'
 import * as webhooksDeliver from './webhooks.deliver.js'
+import * as ssoDomainVerify from './sso.domain_verify.js'
 
 export const handlers = {
   'ai.embed': aiEmbed,
@@ -36,4 +37,5 @@ export const handlers = {
   'organisation.deletion_notify': organisationDeletionNotify,
   'organisation.deletion_execute': organisationDeletionExecute,
   'webhooks.deliver': webhooksDeliver,
+  'sso.domain_verify': ssoDomainVerify,
 }

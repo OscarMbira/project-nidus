@@ -681,7 +681,7 @@ PORTFOLIO MANAGER
 │
 ├── 3. Scope & Requirements
 │   ├── Intake & Pipeline       tabs: Ideas · Proposals · Mandates
-│   └── Prioritisation & Selection
+│   └── Prioritisation & Selection   tabs: Scoring (v1354) · Scenarios (v1354)
 │
 ├── 4. Plan & Schedule
 │   └── Portfolio Roadmap

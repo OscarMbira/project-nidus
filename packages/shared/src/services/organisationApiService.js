@@ -196,7 +196,8 @@ export async function listSsoConnections(accountId) {
 }
 
 export async function saveSsoConnection(row) {
-  const payload = { ...row, connection_reference: row.connection_reference || '' }
+  // v1359: only a new connection gets a blank reference (the ID trigger fills it); an update keeps its own.
+  const payload = row.id ? { ...row } : { ...row, connection_reference: row.connection_reference || '' }
   if (row.id) {
     const { data, error } = await platformDb.from('sso_connections').update(payload).eq('id', row.id).select('*').maybeSingle()
     if (error) throw error
@@ -268,3 +269,19 @@ export const WEBHOOK_EVENT_OPTIONS = [
   'risk.created', 'risk.status_changed', 'issue.created', 'issue.status_changed',
   'change.created', 'change.status_changed',
 ]
+
+/** v1359 (A14): ask the worker to check the SSO domains' DNS TXT record (organisation admins only). */
+export async function requestSsoDomainVerification(connectionId) {
+  const { data, error } = await platformDb.rpc('sso_request_domain_verification', { p_connection_id: connectionId })
+  if (error) throw error
+  return data
+}
+
+/** v1359: roles an IdP group can map to — the system roles and this organisation's own. */
+export async function listAssignableRoles(accountId) {
+  const { data, error } = await platformDb.from('roles').select('role_name, role_display_name, account_id')
+    .eq('is_active', true).order('role_display_name')
+  if (error) throw error
+  return (data || []).filter((r) => !r.account_id || r.account_id === accountId)
+    .map((r) => ({ value: r.role_name, label: r.role_display_name || r.role_name }))
+}

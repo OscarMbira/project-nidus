@@ -1610,6 +1610,8 @@ GENERAL PROJECT MANAGEMENT
 │   ├── PMO
 │   ├── Programme Management
 │   ├── Portfolio Management
+│   │   ├── Scoring (v1354) → Portfolio Manager §3 Scope & Requirements (Prioritisation & Selection)
+│   │   └── Scenarios (v1354) → Portfolio Manager §3 Scope & Requirements (Prioritisation & Selection)
 │   ├── Benefits Management
 │   └── Advanced Reporting
 └── Organisation Configuration

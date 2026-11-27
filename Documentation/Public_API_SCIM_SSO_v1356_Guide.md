@@ -25,6 +25,12 @@ Admin: **System › Public API** (`/system/api-usage`) for usage and emergency r
 5. `v1589_api_planner_menus_and_assertions.sql`
 6. `v1590_retire_api_webhook_sso_scaffolding.sql` (optional; drops empty v42/v43/v51 tables when the DB is quiet)
 
+**Fixes from the v1359 gap closure (run after the above):**
+
+7. `v1609_integrations_admin_only_and_webhook_worker.sql` — webhook, SCIM and SSO settings for the Account Owner
+   or a PMO Admin only; webhook delivery through worker functions.
+8. `v1611_sso_domain_verification.sql` — real DNS verification of SSO email domains (see below).
+
 **Admin (`E:\project-nidus-admin\SQL\`):**
 
 1. `v260_api_scim_admin.sql`
@@ -43,7 +49,8 @@ Admin: **System › Public API** (`/system/api-usage`) for usage and emergency r
 |------|------|
 | `webhooks.deliver` | HMAC POST to endpoint; v1352 back-off / replay |
 | `api.purge_idempotency_and_counters` | Hourly clean-up |
-| `sso.domain_recheck` | Weekly DNS age mark (does not lock users out) |
+| `sso.domain_verify` | DNS TXT check of an SSO connection's domains (DNS over HTTPS); queued by Verify domain and by the weekly re-check (v1611) |
+| `sso.domain_recheck` | Weekly: queues a real re-check of every verified domain; a failure tells the Account Owner and does not lock anyone out (v1611) |
 
 Reminders: API key expiry, SCIM token expiry, SAML certificate expiry (org admins).
 
@@ -66,6 +73,19 @@ SCIM base: `/functions/v1/api-gateway/scim/v2`
 - **Simulator** is excluded from the public API.
 - Empty v42/v43/v51 scaffolding is dropped only when row counts are zero (migrations check first).
 - Login “Continue with SSO” resolves `sso_resolve_login_domain`; password login is blocked when SSO is required except break-glass / account owner.
+
+## Verifying an SSO domain (v1611)
+
+1. In **Integrations & Security › Single sign-on**, save the connection with its email domains. The page shows a TXT
+   record, `nidus-verify=<token>`, made by the server.
+2. Publish that TXT record on every domain listed (for example on `company.example`).
+3. Select **Verify domain**. The worker looks the record up over DNS and shows *Verified* or the reason it failed
+   within a few minutes.
+4. Only then can **Require SSO** be switched on. Changing the domains clears the verification.
+5. A domain can be verified by one organisation only. The weekly re-check repeats the DNS lookup; if the record has
+   gone, the Account Owner is told and SSO keeps working.
+
+Only the Account Owner and PMO Admins can see or change webhooks, SCIM and SSO settings (v1609).
 
 ## Tests
 
