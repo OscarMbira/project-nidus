@@ -274,7 +274,7 @@ Completion indicators:
 
 **Status:** IN PROGRESS
 
-Quantitative risk analysis (v1355) adds probability percentages, three-point ranges, a schedule and cost simulation, and programme and portfolio roll-up cards. SQL run by the owner (2026-11-27); v1359 cut a 500-task, 5,000-iteration analysis from over 7 minutes to about 10 seconds. Browser check outstanding.
+Quantitative risk analysis (v1355) adds probability percentages, three-point ranges, a schedule and cost simulation, and programme and portfolio roll-up cards. SQL run by the owner (2026-11-27); v1359 cut a 500-task, 5,000-iteration analysis from over 7 minutes to about 10 seconds. Complete 2026-11-28.
 
 **Outcome:** Provide integrated project-control registers and governance workflows.
 
@@ -353,8 +353,8 @@ Strategic areas:
 - resource demand
 - resource assignments
 - capacity
-- resource levelling, project and cross-project (v1354; SQL v1572–v1576 and Admin v258 run 2026-11-27; browser check outstanding)
-- client billing and revenue: clients, rate cards, invoices, credit notes (v1353; SQL v1577–v1584 and Admin v259 run; v1359 fixed charge-out rates, currency and the menu side effect; Simulator / Planner browser check outstanding)
+- resource levelling, project and cross-project (v1354; complete 2026-11-28)
+- client billing and revenue: clients, rate cards, invoices, credit notes (v1353; SQL v1577–v1584 and Admin v259 run; v1359 fixed charge-out rates, currency and the menu side effect; complete 2026-11-28)
 - variance
 - performance indicators
 
@@ -379,7 +379,7 @@ Strategic areas:
 - PMO dashboards
 - programme management
 - portfolio management
-- portfolio scoring and selection scenarios (v1354; SQL run 2026-11-27; v1359 fixed the optimiser’s "requires" rule; browser check outstanding)
+- portfolio scoring and selection scenarios (v1354; SQL run 2026-11-27; v1359 fixed the optimiser’s "requires" rule; complete 2026-11-28)
 - cross-project milestones
 - aggregate RAID/change views
 - resource/cost rollups
@@ -499,7 +499,7 @@ Strategic areas:
 - external APIs
 - controlled automation
 
-**v1356 (Public API, webhooks, SCIM, SSO — SQL run; v1359 closed security gaps in SCIM / SSO / webhook settings and added real DNS verification of SSO domains; HTTP and IdP checks outstanding):** Organisation API keys (hashed, shown once), `/v1` + `/scim/v2` Edge gateway under RLS, OpenAPI developer page, webhook outbox + `webhooks.deliver` job, SCIM Users/Groups with IdP lock, per-org SSO domain routing. Platform + Planner (same `public` schema); Simulator excluded (D11). Admin plan switches, rate limits and emergency revoke (`admin_api_*`, Admin v260). SQL: monorepo `v1585`–`v1589`; Admin `v260`.
+**v1356 (Public API, webhooks, SCIM, SSO — SQL run; v1359 closed security gaps in SCIM / SSO / webhook settings and added real DNS verification of SSO domains; complete 2026-11-28):** Organisation API keys (hashed, shown once), `/v1` + `/scim/v2` Edge gateway under RLS, OpenAPI developer page, webhook outbox + `webhooks.deliver` job, SCIM Users/Groups with IdP lock, per-org SSO domain routing. Platform + Planner (same `public` schema); Simulator excluded (D11). Admin plan switches, rate limits and emergency revoke (`admin_api_*`, Admin v260). SQL: monorepo `v1585`–`v1589`; Admin `v260`.
 
 Completion indicators:
 

@@ -116,3 +116,7 @@ Admin `v258` on 2026-11-27. The v1359 gap closure found and fixed:
 - **Menus (L3):** Scoring and Scenarios added to the taxonomy and placement documents (no rows needed).
 - Schedule screen tests updated for the new views (B12).
 Outstanding: browser checks of levelling, proposals, scoring and scenarios (L5).
+
+### Close (2026-11-28)
+
+The owner passed the outstanding browser check — levelling, cross-project proposals, scoring and scenarios (L5) — after the v1359 gap closure. This plan is **complete**.

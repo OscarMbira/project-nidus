@@ -4,7 +4,7 @@
 `projectplan/v1354_resource_levelling_and_portfolio_optimisation_plan.md`,
 `projectplan/v1355_quantitative_risk_analysis_plan.md`, `projectplan/v1356_public_api_and_scim_plan.md`.
 **No new PRD:** every gap below is inside the scope the owner already approved in the v1353–v1356 PRDs; this plan
-only finishes and corrects that work. **Status:** approved 2026-11-27. Slices 1 and 2 complete (all SQL run). Slice 3 code complete; owner browser checks outstanding.
+only finishes and corrects that work. **Status:** COMPLETE 2026-11-28 — all slices done, all SQL run, owner browser checks passed; v1353–v1356 closed.
 
 ## 1. How the audit was done
 
@@ -173,10 +173,10 @@ browser before the next slice. SQL numbers from `ls SQL` right before each file 
       run, **9.9 s**. Speeds every schedule calculation that uses a calendar, not only QRA.
 - [x] **B12**: schedule screen tests updated to the 22 views / 5 menus and a UUID Simulator key. Whole planning
       suite green (273 passed, 4 opt-in skipped).
-- [ ] Browser checks (owner): B7 Simulator + Planner billing; L5 levelling and portfolio; Q1 risk analysis; A7 API with
+- [x] Browser checks (owner, passed 2026-11-28): B7 Simulator + Planner billing; L5 levelling and portfolio; Q1 risk analysis; A7 API with
       an HTTP client, then SCIM / SSO with a test IdP.
 - [x] B8, L6, A8: each plan's review section and the ROADMAP lines corrected (v1359 corrections added).
-- [ ] Owner sign-off: when the browser checks pass, v1353–v1356 and this plan are closed.
+- [x] Owner sign-off (2026-11-28): v1353–v1356 and this plan are closed.
 
 ## 6. Risks
 
@@ -207,4 +207,4 @@ placed items).
 **Shared pieces added:** `useConfirmDialog` (`@nidus/ui`), `useCurrencyOptions` (`@nidus/shared`), working-day index
 in the schedule engine.
 
-**Still open:** the owner's browser checks (B7, L5, Q1, A7); then v1353–v1356 can be closed.
+**Closed 2026-11-28:** the owner passed every browser check (Simulator and Planner billing; levelling, proposals, scoring and scenarios; risk analysis with live data; API key calls, revoke, SCIM and SSO domain verification). v1353, v1354, v1355, v1356 and v1359 are complete.

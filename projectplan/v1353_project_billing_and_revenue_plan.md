@@ -128,3 +128,7 @@ The v1359 gap closure (`projectplan/v1359_v1353_to_v1356_gap_closure_plan.md`) f
   format and click-through (B10); a red timesheet test (B11).
 - Admin `SQL/v259` was uncommitted (X1).
 Outstanding: Simulator and Planner billing browser checks (B7).
+
+### Close (2026-11-28)
+
+The owner passed the outstanding browser check — Simulator and Planner billing (B7) — after the v1359 gap closure. This plan is **complete**.

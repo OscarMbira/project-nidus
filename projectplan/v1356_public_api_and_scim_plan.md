@@ -164,3 +164,7 @@ committed in ece42930 / Admin f21f322; SQL `v1585`–`v1590` and Admin `v260`–
 - Rules: confirmations on Rotate / Revoke (A4), Audit tabs (A5), shared lists (A6), SCIM field help (A3); CI blockers
   (A2, X2).
 Outstanding: HTTP smoke test of `/v1/ping` and `/v1/me`, then SCIM / SSO with a test identity provider (A7).
+
+### Close (2026-11-28)
+
+The owner passed the outstanding browser check — API key calls and revoke, SCIM and SSO domain verification (A7) — after the v1359 gap closure. This plan is **complete**.

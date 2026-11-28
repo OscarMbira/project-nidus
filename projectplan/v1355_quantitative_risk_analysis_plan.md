@@ -120,3 +120,7 @@ SQL `v1566`–`v1571` and Admin `v257` were run by the owner on 2026-11-27. The 
   run brought it to **9.9 s** with identical P50 / P80.
 - **Deletes (Q3):** cost-line and group deletes use the shared confirm dialog and report errors.
 Outstanding: browser check of the risk-analysis screens with live data (Q1).
+
+### Close (2026-11-28)
+
+The owner passed the outstanding browser check — risk analysis with live data (Q1) — after the v1359 gap closure. This plan is **complete**.
