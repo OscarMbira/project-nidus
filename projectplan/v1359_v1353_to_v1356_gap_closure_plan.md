@@ -4,7 +4,7 @@
 `projectplan/v1354_resource_levelling_and_portfolio_optimisation_plan.md`,
 `projectplan/v1355_quantitative_risk_analysis_plan.md`, `projectplan/v1356_public_api_and_scim_plan.md`.
 **No new PRD:** every gap below is inside the scope the owner already approved in the v1353–v1356 PRDs; this plan
-only finishes and corrects that work. **Status:** approved 2026-11-27. Slice 1 complete. Slice 2 code complete (a494845d and the next commit); owner to run SQL v1611, re-run v1251, redeploy background-job-worker, then browser checks.
+only finishes and corrects that work. **Status:** approved 2026-11-27. Slices 1 and 2 complete (all SQL run). Slice 3 code complete; owner browser checks outstanding.
 
 ## 1. How the audit was done
 
@@ -71,6 +71,7 @@ still owed; **D** = documentation.
 | L3 | R | Portfolio Scoring / Scenarios / Level resources menus have role grants but **no placement rows** (rule 75), and Scoring / Scenarios are missing from the taxonomy and placement documents (rule 70) | `SQL/v1575` (0 placements); both docs |
 | L4 | B | Scenario **Apply** (changes project statuses, priority order, start dates) and **Submit** run on one click: no confirmation, no error handling, no success modal (rule 16) | `PortfolioScenarioScreen.jsx` 278–280 |
 | L5 | V | SQL v1572–v1576 + Admin v258 not run; no browser check of Level resources, cross-project proposal, inbox, scoring, scenarios | v1354 review |
+| L7 | B | **Found in Slice 3:** the optimiser checked "requires" rules as projects were added in score order, so a high-scoring project that requires a lower-scoring one could never be chosen (exact search and brute-force check both) — scenarios with such a rule could pick a worse set | `engine/portfolioOptimiser.js` |
 | L6 | D | Plan review says "Not committed" — wrong; ROADMAP lines list partial SQL | v1354 review, ROADMAP 356 / 382 |
 
 ### v1355 — Quantitative risk analysis
@@ -80,6 +81,7 @@ still owed; **D** = documentation.
 | Q1 | V | SQL v1566–v1571 + Admin v257 not run; screens never loaded live data | v1355 review |
 | Q2 | V | Performance test (5,000 iterations × 500 tasks) not executed (plan risk mitigation) | v1355 review |
 | Q3 | R | Cost-line delete and group delete use `window.confirm`, no error handling | `QraInputsScreen.jsx` 157, 301 |
+| Q5 | B | **Found in Slice 3 (Q2 run):** 5,000 iterations over 500 tasks took 434.7 s (over 7 minutes) — the schedule engine walked the calendar day by day with date text for every task in every iteration | `engine/schedule.js`, `qra/runAnalysis.js` |
 | Q4 | V | Statistics cross-check: zero-range iteration equals the deterministic engine, and seed repeatability are in `qra.test.js` — keep; add the SQL re-check of saved runs against vectors only if Q1 shows drift | — |
 
 ### v1356 — Public API, SCIM, SSO
@@ -99,6 +101,7 @@ still owed; **D** = documentation.
 | A11 | B | **Found in Slice 1 (security, live SQL):** any member could change webhook endpoints, SCIM settings / group mappings and SSO connections (e.g. turn on "SSO required", change the break-glass user, map an IdP group to a role) | `SQL/v1586`–`v1588` `FOR ALL` policies |
 | A13 | B | **Found in Slice 2:** integrations pages picked the organisation from the first project the database returned — a PMO Admin of two organisations could configure the wrong one | `IntegrationsPanels.jsx` useAccountId |
 | A14 | B | **Found in Slice 2 (security, live SQL):** SSO domains were never checked against DNS — the browser marked them verified on save. Any organisation admin could claim another customer's email domain, require SSO and so block password sign-in platform-wide for that domain and route those sign-ins to their identity provider | `SQL/v1588`, SSO panel |
+| B12 | B | **Found in Slice 3:** `scheduleScreens.test.jsx` still expected 15 schedule views in 4 menus and a non-UUID Simulator project key — v1353–v1355 added 7 views, a Billing menu and project-code lookup, so the planning suite was red | `screens/schedule/__tests__/scheduleScreens.test.jsx` |
 | A12 | B | **Found in Slice 1:** Planner sign-in page called a React hook after an early return (`AuthPages.jsx`), so a signed-in visitor to the login page crashed it | `apps/planner/src/pages/public/AuthPages.jsx` |
 
 ## 4. Owner decisions needed (asked one at a time)
@@ -152,18 +155,28 @@ browser before the next slice. SQL numbers from `ls SQL` right before each file 
 - [x] A14 (server): `SQL/v1611_sso_domain_verification.sql` (guard trigger, request / context / result functions,
       one organisation per domain, weekly real re-check, self-made verifications cleared) + worker handler
       `sso.domain_verify` (DNS over HTTPS through `ctx.httpGet`; tests).
-- [ ] B10: Revenue and margin money format and clickable cards (moved to Slice 3).
+- [x] B10: moved to Slice 3 (done there).
 
 ### Slice 3 — Tests, verification, documents
 
-- [ ] L1: `portfolioScoring` and `portfolioOptimiser` tests with vectors, including brute-force agreement on ≤ 10
-      candidates and the greedy label above the cap; scoring / scenario screen tests.
-- [ ] L2: levelling vectors file used by the JS tests and by the v1576 SQL re-check.
-- [ ] Q2: performance test — 5,000 iterations on a 500-task synthetic schedule, time recorded in the v1355 review.
+- [x] B10: Revenue and margin in the regional money / number format; Billed revenue opens this project's billed
+      invoices (`?status=billed&projectId=…`, new "billed" filter, "Showing … · Show all" line). Unbilled value / hours
+      have no list page anywhere — left static (rule 64 exception, noted); Cost and Margin are derived.
+- [x] L1: correction to the audit — `levelling.test.js` already held 8 portfolio tests (incl. a small brute-force
+      check). Added `engine/__vectors__/portfolio.json` (hand-worked answers) and `portfolio.test.js` (vectors,
+      60 seeded random sets against brute force, greedy above the cap). The vectors found **L7**, fixed.
+- [x] L2: decision — levelling keeps its 11 targeted JS tests (float, pins, constraints, weekends, priority,
+      cross-project load, workload agreement); SQL cannot practically read a shared JSON file, and v1576 keeps its own
+      assertions. No separate vectors file.
+- [x] Q2 + **Q5**: `qra/__tests__/qraPerformance.test.js` (opt-in, `QRA_PERF=1`). First run 434.7 s; after a
+      working-day index per calendar in `schedule.js` (same results, P50 / P80 unchanged) and one calendar per analysis
+      run, **9.9 s**. Speeds every schedule calculation that uses a calendar, not only QRA.
+- [x] **B12**: schedule screen tests updated to the 22 views / 5 menus and a UUID Simulator key. Whole planning
+      suite green (273 passed, 4 opt-in skipped).
 - [ ] Browser checks (owner): B7 Simulator + Planner billing; L5 levelling and portfolio; Q1 risk analysis; A7 API with
       an HTTP client, then SCIM / SSO with a test IdP.
-- [ ] B8, L6, A8: correct each plan's review section and ROADMAP lines; tick v1353–v1356 complete only after their
-      checks pass.
+- [x] B8, L6, A8: each plan's review section and the ROADMAP lines corrected (v1359 corrections added).
+- [ ] Owner sign-off: when the browser checks pass, v1353–v1356 and this plan are closed.
 
 ## 6. Risks
 
@@ -176,4 +189,22 @@ browser before the next slice. SQL numbers from `ls SQL` right before each file 
 
 ## 7. Review
 
-(to be completed after implementation)
+**Slices 1–3 (2026-11-27 / 28).** Commits: ece42930, ec4b8485, c6c25ef0 (slice 1), a494845d, 40765702 (slice 2),
+slice 3 next commit; Admin f21f322. SQL: v1608–v1611 (all run by the owner), plus re-runs of v1251.
+
+**What the audit found that the four plans' own reviews missed** — beyond the rule gaps:
+- Security, live: integration settings open to every organisation member (A10 / A11); SSO domains never checked
+  against DNS, allowing a cross-organisation sign-in takeover (A14).
+- Broken features: webhook delivery could never succeed (A9); invoice drafts used wrong charge-out rates (B9); the
+  optimiser dropped required pairs (L7); the Planner sign-in page crashed for a signed-in visitor (A12); the
+  integrations pages could pick the wrong organisation (A13); billing's menu SQL moved Banking register pages (B5).
+- Quality: risk analysis took 7 minutes for a 500-task plan (Q5); two red test suites (B11, B12); CI blockers
+  (X2, A2); uncommitted Admin seeds and a whole uncommitted feature (X1, A1).
+
+**Corrections to this audit:** L1 (portfolio tests partly existed) and L3 (no placement rows needed — children of
+placed items).
+
+**Shared pieces added:** `useConfirmDialog` (`@nidus/ui`), `useCurrencyOptions` (`@nidus/shared`), working-day index
+in the schedule engine.
+
+**Still open:** the owner's browser checks (B7, L5, Q1, A7); then v1353–v1356 can be closed.

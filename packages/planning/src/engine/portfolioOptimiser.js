@@ -51,6 +51,22 @@ function breaksRules(id, chosenIds, requires, exclusive) {
   return false
 }
 
+// v1359 (L7): "exclusive" can be checked as projects are added; "requires" only on the finished set, because
+// projects are tried in score order and a high-scoring project may need a lower-scoring one added after it.
+function breaksExclusive(id, chosenIds, exclusive) {
+  for (const r of exclusive) {
+    if ((r.projectId === id && chosenIds.has(r.otherId)) || (r.otherId === id && chosenIds.has(r.projectId))) return true
+  }
+  return false
+}
+
+function requiresMet(chosenIds, requires) {
+  for (const r of requires) {
+    if (chosenIds.has(r.projectId) && !chosenIds.has(r.otherId)) return false
+  }
+  return true
+}
+
 function scoreOf(chosen) {
   return Math.round(chosen.reduce((s, c) => s + c.score, 0) * 100) / 100
 }
@@ -85,6 +101,7 @@ function branchAndBound(model) {
     if (scoreOf(chosen) + (suffix[index] || 0) <= bestScore + 1e-9) return
     if (index >= projects.length) {
       for (const id of mandatory) if (!chosenIds.has(id)) return
+      if (!requiresMet(chosenIds, requires)) return
       const s = scoreOf(chosen)
       if (s > bestScore + 1e-9) { bestScore = s; best = chosen.map((c) => ({ ...c })) }
       return
@@ -93,7 +110,7 @@ function branchAndBound(model) {
     const must = mandatory.has(project.id)
     if (!must) search(index + 1)
     if (exhausted) return
-    if (!breaksRules(project.id, chosenIds, requires, exclusive)) {
+    if (!breaksExclusive(project.id, chosenIds, exclusive)) {
       for (let shift = 0; shift <= maxShift; shift++) {
         if (!fitsShift(project, shift, usedBudget, usedCapacity, periods)) continue
         usedBudget[shift] += project.cost
@@ -216,7 +233,7 @@ export function bruteForcePortfolio(input) {
         shiftCursor = Math.floor(shiftCursor / shifts)
         const project = model.projects[i]
         if (!fitsShift(project, shift, usedBudget, usedCapacity, model.periods)
-          || breaksRules(project.id, chosenIds, model.requires, model.exclusive)) { ok = false; break }
+          || breaksExclusive(project.id, chosenIds, model.exclusive)) { ok = false; break }
         usedBudget[shift] += project.cost
         usedCapacity[shift] += project.demand
         chosen.push({ ...project, shift })
@@ -224,7 +241,7 @@ export function bruteForcePortfolio(input) {
       }
       if (!ok) continue
       for (const id of model.mandatory) if (!chosenIds.has(id)) { ok = false; break }
-      if (!ok) continue
+      if (!ok || !requiresMet(chosenIds, model.requires)) continue
       const sc = scoreOf(chosen)
       if (sc > bestScore + 1e-9) { bestScore = sc; best = chosen }
     }

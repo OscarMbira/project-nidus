@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { PlanningProvider } from '../../../context/PlanningContext.jsx'
 import { ThemeProvider } from '@nidus/shared/context/ThemeContext'
 
@@ -143,20 +143,38 @@ describe('billing screens', () => {
     await waitFor(() => expect(api.draftInvoice).toHaveBeenCalledWith('p1', expect.any(String), expect.any(String)))
   })
 
-  it('opens the invoice list from billed revenue', async () => {
+  it('opens this project\'s billed invoices from billed revenue, with money in the regional format', async () => {
+    function InvoiceList() {
+      const loc = useLocation()
+      return <p>Invoice list {loc.search}</p>
+    }
     render(
       <MemoryRouter initialEntries={['/revenue']}>
         <ThemeProvider>
           <PlanningProvider mode="platform" basePath="/platform/billing">
             <Routes>
               <Route path="/revenue" element={<RevenueScreen projectId="p1" />} />
-              <Route path="/platform/billing/invoices" element={<p>Invoice list</p>} />
+              <Route path="/platform/billing/invoices" element={<InvoiceList />} />
             </Routes>
           </PlanningProvider>
         </ThemeProvider>
       </MemoryRouter>
     )
-    fireEvent.click(await screen.findByRole('button', { name: /Billed revenue/ }))
-    expect(await screen.findByText('Invoice list')).toBeTruthy()
+    const card = await screen.findByRole('button', { name: /Billed revenue/ })
+    expect(card.textContent).toMatch(/10\.00/)
+    fireEvent.click(card)
+    expect(await screen.findByText('Invoice list ?status=billed&projectId=p1')).toBeTruthy()
+  })
+
+  it('starts the invoice list on the filter in the address and offers Show all', async () => {
+    api.listInvoices.mockResolvedValue([
+      { id: 'i1', invoice_reference: 'INV-001', status: 'issued', client_id: 'c1', clients: { name: 'Example Freight Ltd' }, due_date: '2099-01-01', gross_amount: 120 },
+      { id: 'i2', invoice_reference: 'INV-002', status: 'draft', client_id: 'c1', clients: { name: 'Example Freight Ltd' }, gross_amount: 50 },
+    ])
+    renderAt('/invoices?status=billed&projectId=p1', <InvoicesScreen />)
+    expect(await screen.findByText(/Showing billed \(issued, part paid and paid\) invoices/)).toBeTruthy()
+    await waitFor(() => expect(api.listInvoices).toHaveBeenCalledWith('p1'))
+    fireEvent.click(screen.getByRole('button', { name: 'Show all' }))
+    expect(screen.queryByText(/Showing billed/)).toBeNull()
   })
 })

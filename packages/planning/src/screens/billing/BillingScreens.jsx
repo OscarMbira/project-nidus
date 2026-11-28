@@ -28,6 +28,8 @@ import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
 import RowActionButton from '@nidus/ui/RowActionButton'
 import SelectField from '@nidus/ui/SelectField'
 import { useCurrencyOptions } from '@nidus/shared/hooks/useCurrencyOptions'
+import { useRegionalFormatSettings } from '@nidus/shared/hooks/useRegionalFormatSettings'
+import { formatRegionalCurrency, formatRegionalNumber } from '@nidus/shared/utils/formatRegionalSettings'
 import PlanningTable from '../../components/PlanningTable.jsx'
 import { platformDb, simDb } from '@nidus/supabase'
 import { useScheduleProjectId } from '../../hooks/useSchedule.js'
@@ -522,13 +524,15 @@ export function ProjectBillingScreen({ projectId }) {
   )
 }
 
-export function InvoicesScreen({ projectId }) {
+export function InvoicesScreen({ projectId: projectIdProp }) {
   const api = useApi()
   const navigate = useNavigate()
   const { isSim } = usePlanning()
   const { pathname } = useLocation()
+  const [params] = useSearchParams()
+  const projectId = projectIdProp || params.get('projectId') || undefined
   const [rows, setRows] = useState([])
-  const [filter, setFilter] = useState('all')
+  const [filter, setFilter] = useState(() => params.get('status') || 'all')
   const [clientId, setClientId] = useState('')
   const [error, setError] = useState('')
   const [start, setStart] = useState(today().slice(0, 8) + '01')
@@ -589,6 +593,12 @@ export function InvoicesScreen({ projectId }) {
           <RegionalDateInput id="inv-end" data-help="exempt" value={end} onChange={(e) => setEnd(e.target.value)} className={inputClass} />
           <button type="button" onClick={draft} className="px-3 py-2 rounded-lg bg-blue-600 text-white text-sm">Draft from approved work</button>
         </div>
+      )}
+      {filter !== 'all' && (
+        <p className="mb-3 text-sm text-gray-700 dark:text-gray-200">
+          Showing {filter === 'billed' ? 'billed (issued, part paid and paid)' : filter} invoices.{' '}
+          <button type="button" className="text-blue-600 dark:text-blue-400 underline" onClick={() => setFilter('all')}>Show all</button>
+        </p>
       )}
       <div className="flex gap-2 mb-3 flex-wrap items-center">
         <select aria-label="Client" data-help="exempt" className={inputClass + ' max-w-xs'} value={clientId} onChange={(e) => setClientId(e.target.value)}>
@@ -914,6 +924,10 @@ export function RevenueScreen({ projectId: projectIdProp }) {
     api.figuresFor([projectId]).then(setRows).catch(() => {})
   }, [api, projectId])
   const row = rows[0]
+  const settings = useRegionalFormatSettings(projectId)
+  const money = (n) => formatRegionalCurrency(n ?? 0, settings)
+  // v1359 (B10, rules 64 / 68): regional money format. Billed revenue is a sum of issued invoices, so it opens them;
+  // unbilled value / hours have no list page to open (static, noted in the v1359 plan); cost and margin are derived.
   return (
     <div className={shell}>
       <h1 className="text-xl font-bold mb-4">Revenue and margin</h1>
@@ -921,11 +935,11 @@ export function RevenueScreen({ projectId: projectIdProp }) {
       {!projectId && !resolved.loading && <p>Open this page from a project to see its figures.</p>}
       {row && (
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-          <DashboardStatCard label="Billed revenue" value={row.revenue} onClick={() => navigate(`${billingRoot(pathname)}/invoices`)} />
-          <DashboardStatCard label="Unbilled value" value={row.wip} />
-          <DashboardStatCard label="Unbilled hours" value={row.unbilledHours} />
-          <DashboardStatCard label="Cost" value={row.cost} />
-          <DashboardStatCard label="Margin" value={row.margin} />
+          <DashboardStatCard label="Billed revenue" value={money(row.revenue)} onClick={() => navigate(`${billingRoot(pathname)}/invoices?status=billed&projectId=${encodeURIComponent(projectId)}`)} />
+          <DashboardStatCard label="Unbilled value" value={money(row.wip)} />
+          <DashboardStatCard label="Unbilled hours" value={formatRegionalNumber(row.unbilledHours ?? 0, settings)} />
+          <DashboardStatCard label="Cost" value={money(row.cost)} />
+          <DashboardStatCard label="Margin" value={money(row.margin)} />
         </div>
       )}
     </div>

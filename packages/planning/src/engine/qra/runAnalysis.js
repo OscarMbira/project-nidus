@@ -145,6 +145,8 @@ function emptyDriver(id, label, kind) {
  */
 export async function runAnalysis(model, { onProgress, shouldCancel, yieldEvery = 0 } = {}) {
   const cal = model.calendar || buildCalendar()
+  // v1359 (Q5): one calendar for every iteration, so its working-day index is built once.
+  if (!model.calendar) model = { ...model, calendar: cal }
   const rng = createRng(model.seed)
   const planned = deterministic(model)
   const iterations = model.iterations

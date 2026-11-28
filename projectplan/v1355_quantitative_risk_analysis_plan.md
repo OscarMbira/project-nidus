@@ -111,3 +111,12 @@ Programme and portfolio dashboards show the roll-up panel.
 
 Not verified in the browser: the database objects do not exist until the SQL is applied, so the screens cannot
 load live data yet. A 5,000 × 500 task timing run was not executed.
+
+### v1359 audit corrections (2026-11-28)
+
+SQL `v1566`–`v1571` and Admin `v257` were run by the owner on 2026-11-27. The v1359 gap closure:
+- **Performance (Q5):** the 5,000-iteration × 500-task check (`qra/__tests__/qraPerformance.test.js`, opt-in with
+  `QRA_PERF=1`) first took **434.7 s**. A working-day index per calendar in `engine/schedule.js` and one calendar per
+  run brought it to **9.9 s** with identical P50 / P80.
+- **Deletes (Q3):** cost-line and group deletes use the shared confirm dialog and report errors.
+Outstanding: browser check of the risk-analysis screens with live data (Q1).

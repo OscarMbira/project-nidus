@@ -149,3 +149,18 @@ cross-organisation isolation.
 2. Deploy Edge Functions (`api-gateway`, ensure `background-job-worker` has `webhooks.deliver`).
 3. Create a key in Integrations › API keys and call `/v1/ping` and `/v1/me`.
 4. Optional: configure a test IdP for SCIM/SSO smoke.
+
+### v1359 audit corrections (2026-11-28)
+
+The status above ("Implementation complete (100%)") was not accurate. Taken over by v1359 (owner decision G1) and
+committed in ece42930 / Admin f21f322; SQL `v1585`–`v1590` and Admin `v260`–`v261` were run by the owner. Fixed:
+- **Security (A10, A11):** webhook, SCIM and SSO settings (and webhook signing secrets) were open to every organisation
+  member — now Account Owner / PMO Admin only (`SQL/v1609`).
+- **Security (A14):** SSO domains were marked verified by the browser without any DNS check — real DNS TXT verification,
+  one organisation per domain, guard trigger (`SQL/v1611`, worker `sso.domain_verify`).
+- **Webhooks (A9):** delivery used a non-existent `ctx.admin`, so nothing was ever delivered — rewritten on worker
+  functions; private / local targets refused.
+- **Planner sign-in crash (A12); wrong organisation on integration pages (A13); SSO update blanked the reference.**
+- Rules: confirmations on Rotate / Revoke (A4), Audit tabs (A5), shared lists (A6), SCIM field help (A3); CI blockers
+  (A2, X2).
+Outstanding: HTTP smoke test of `/v1/ping` and `/v1/me`, then SCIM / SSO with a test identity provider (A7).

@@ -147,9 +147,11 @@ describe('save conflict (Slice 3.4)', () => {
 describe('Simulator mode', () => {
   it('uses the practice project from the route, not the public resolver', async () => {
     fake.api = makeApi()
-    renderAt('/simulator/practice-projects/sim-proj-1/schedule/activities', <ScheduleGridScreen />, 'simulator', '/simulator/practice-projects/:projectId/schedule/*')
+    // v1359 (B12): since v1353–v1355 a non-UUID key is looked up as a project code; use the practice project's id here.
+    const simId = '5a1b2c3d-0000-4000-8000-000000000001'
+    renderAt(`/simulator/practice-projects/${simId}/schedule/activities`, <ScheduleGridScreen />, 'simulator', '/simulator/practice-projects/:projectId/schedule/*')
     await screen.findAllByText('Pour slab')
-    expect(fake.api.listTasks).toHaveBeenCalledWith('sim-proj-1')
+    expect(fake.api.listTasks).toHaveBeenCalledWith(simId)
   })
 })
 
@@ -422,7 +424,7 @@ describe('grouped schedule menus (v1265)', () => {
     fake.api = makeApi()
     renderAt('/platform/pm/schedule/activities?projectId=PRJ-1', <ScheduleGridScreen />)
     const nav = within(await screen.findByRole('navigation', { name: 'Schedule views' }))
-    expect(nav.getAllByRole('button').map((b) => b.textContent)).toEqual(['Plan: Tasks', 'Sequence', 'Track', 'Time & people'])
+    expect(nav.getAllByRole('button').map((b) => b.textContent)).toEqual(['Plan: Tasks', 'Sequence', 'Track', 'Time & people', 'Billing'])
     expect(nav.queryAllByRole('link')).toHaveLength(0) // closed until opened
   })
 
@@ -441,9 +443,10 @@ describe('grouped schedule menus (v1265)', () => {
 
   it('every view is in exactly one group', async () => {
     const { SCHEDULE_GROUPS, SCHEDULE_TABS, isScheduleViewActive } = await import('../../../components/ScheduleLayout.jsx')
-    expect(SCHEDULE_TABS).toHaveLength(15)
-    expect(new Set(SCHEDULE_TABS.map((t) => t.sub)).size).toBe(15)
-    expect(SCHEDULE_GROUPS.map((g) => g.label)).toEqual(['Plan', 'Sequence', 'Track', 'Time & people'])
+    // v1359 (B12): v1353 added the Billing menu; v1354 / v1355 added Level resources, Levelling proposals and Risk analysis.
+    expect(SCHEDULE_TABS).toHaveLength(22)
+    expect(new Set(SCHEDULE_TABS.map((t) => t.sub)).size).toBe(22)
+    expect(SCHEDULE_GROUPS.map((g) => g.label)).toEqual(['Plan', 'Sequence', 'Track', 'Time & people', 'Billing'])
     expect(isScheduleViewActive('/x/schedule/calendar/exceptions/create', 'calendar')).toBe(true)
     expect(isScheduleViewActive('/x/schedule/critical-path', 'calendar')).toBe(false)
   })

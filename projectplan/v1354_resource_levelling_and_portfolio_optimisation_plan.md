@@ -105,3 +105,14 @@ Implemented 2026-11-23 in `packages/planning` (engine, schedule views, scoring a
 SQL is written and not applied here: `v1572`–`v1576`, Admin `v258`. The owner runs those, then checks Level resources, a cross-project proposal, scoring and a scenario in the browser. Not committed (commit only when asked).
 
 Exit note on each slice’s “commit; owner SQL + browser check”: tests were run locally; SQL and the browser check remain with the owner.
+
+### v1359 audit corrections (2026-11-28)
+
+The review above says "Not committed" — the work was committed in b4d35e9c; the owner ran `SQL/v1572`–`v1576` and
+Admin `v258` on 2026-11-27. The v1359 gap closure found and fixed:
+- **Optimiser (L7):** a project that requires a lower-scoring one could never be chosen; scenarios saved with a
+  "requires" rule should be run again. New hand-worked vectors and 60 random brute-force comparisons.
+- **Scenario Apply / Submit (L4):** now ask first, report errors and confirm success.
+- **Menus (L3):** Scoring and Scenarios added to the taxonomy and placement documents (no rows needed).
+- Schedule screen tests updated for the new views (B12).
+Outstanding: browser checks of levelling, proposals, scoring and scenarios (L5).

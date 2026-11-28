@@ -274,7 +274,7 @@ Completion indicators:
 
 **Status:** IN PROGRESS
 
-Quantitative risk analysis (v1355) adds probability percentages, three-point ranges, a schedule and cost simulation, and programme and portfolio roll-up cards. The owner still runs the SQL before it is usable.
+Quantitative risk analysis (v1355) adds probability percentages, three-point ranges, a schedule and cost simulation, and programme and portfolio roll-up cards. SQL run by the owner (2026-11-27); v1359 cut a 500-task, 5,000-iteration analysis from over 7 minutes to about 10 seconds. Browser check outstanding.
 
 **Outcome:** Provide integrated project-control registers and governance workflows.
 
@@ -353,8 +353,8 @@ Strategic areas:
 - resource demand
 - resource assignments
 - capacity
-- resource levelling, project and cross-project (v1354; owner runs SQL v1572 and Admin v258)
-- client billing and revenue: clients, rate cards, invoices, credit notes (v1353; owner runs SQL v1577–v1581 and Admin v259)
+- resource levelling, project and cross-project (v1354; SQL v1572–v1576 and Admin v258 run 2026-11-27; browser check outstanding)
+- client billing and revenue: clients, rate cards, invoices, credit notes (v1353; SQL v1577–v1584 and Admin v259 run; v1359 fixed charge-out rates, currency and the menu side effect; Simulator / Planner browser check outstanding)
 - variance
 - performance indicators
 
@@ -379,7 +379,7 @@ Strategic areas:
 - PMO dashboards
 - programme management
 - portfolio management
-- portfolio scoring and selection scenarios (v1354; owner runs SQL v1573–v1575 and Admin v258)
+- portfolio scoring and selection scenarios (v1354; SQL run 2026-11-27; v1359 fixed the optimiser’s "requires" rule; browser check outstanding)
 - cross-project milestones
 - aggregate RAID/change views
 - resource/cost rollups
@@ -499,7 +499,7 @@ Strategic areas:
 - external APIs
 - controlled automation
 
-**v1356 (Public API, webhooks, SCIM, SSO):** Organisation API keys (hashed, shown once), `/v1` + `/scim/v2` Edge gateway under RLS, OpenAPI developer page, webhook outbox + `webhooks.deliver` job, SCIM Users/Groups with IdP lock, per-org SSO domain routing. Platform + Planner (same `public` schema); Simulator excluded (D11). Admin plan switches, rate limits and emergency revoke (`admin_api_*`, Admin v260). SQL: monorepo `v1585`–`v1589`; Admin `v260`.
+**v1356 (Public API, webhooks, SCIM, SSO — SQL run; v1359 closed security gaps in SCIM / SSO / webhook settings and added real DNS verification of SSO domains; HTTP and IdP checks outstanding):** Organisation API keys (hashed, shown once), `/v1` + `/scim/v2` Edge gateway under RLS, OpenAPI developer page, webhook outbox + `webhooks.deliver` job, SCIM Users/Groups with IdP lock, per-org SSO domain routing. Platform + Planner (same `public` schema); Simulator excluded (D11). Admin plan switches, rate limits and emergency revoke (`admin_api_*`, Admin v260). SQL: monorepo `v1585`–`v1589`; Admin `v260`.
 
 Completion indicators:
 

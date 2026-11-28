@@ -93,6 +93,9 @@ describe('schedule, revenue and payments', () => {
     ]
     expect(applyInvoiceFilters(rows, { status: 'overdue', clientId: 'a' })).toHaveLength(1)
     expect(applyInvoiceFilters(rows, { status: 'all', clientId: '' })).toHaveLength(2)
+    // v1359 (B10): "billed" is what Billed revenue counts — issued, part paid and paid.
+    const mixed = [{ status: 'draft' }, { status: 'issued' }, { status: 'part_paid' }, { status: 'paid' }, { status: 'cancelled' }]
+    expect(applyInvoiceFilters(mixed, { status: 'billed' }).map((r) => r.status)).toEqual(['issued', 'part_paid', 'paid'])
   })
   it('prints payment text and invoice lines as a table', () => {
     const doc = buildInvoiceDocument({

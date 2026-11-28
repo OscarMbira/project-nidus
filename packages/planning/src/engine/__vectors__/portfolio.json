@@ -1,0 +1,84 @@
+{
+  "description": "v1359 (L1) — portfolio optimiser vectors with hand-worked answers (scores are already weighted totals).",
+  "cases": [
+    {
+      "name": "budget forces the higher-value pair over the single best project",
+      "input": {
+        "periods": [{ "id": "p1", "budget": 100, "capacity": 1000 }],
+        "maxShift": 0,
+        "projects": [
+          { "id": "A", "name": "Alpha", "score": 5, "cost": 100, "demand": 10 },
+          { "id": "B", "name": "Bravo", "score": 3.5, "cost": 50, "demand": 10 },
+          { "id": "C", "name": "Charlie", "score": 3, "cost": 50, "demand": 10 }
+        ]
+      },
+      "expect": { "chosen": ["B", "C"], "totalScore": 6.5, "method": "exact" }
+    },
+    {
+      "name": "a high-scoring project that requires a low-scoring one brings it in",
+      "input": {
+        "periods": [{ "id": "p1", "budget": 100, "capacity": 1000 }],
+        "maxShift": 0,
+        "projects": [
+          { "id": "A", "name": "Alpha", "score": 9, "cost": 40, "demand": 10 },
+          { "id": "B", "name": "Bravo", "score": 1, "cost": 40, "demand": 10 },
+          { "id": "C", "name": "Charlie", "score": 4, "cost": 60, "demand": 10 }
+        ],
+        "rules": [{ "type": "requires", "projectId": "A", "otherId": "B" }]
+      },
+      "expect": { "chosen": ["A", "B"], "totalScore": 10, "method": "exact" }
+    },
+    {
+      "name": "exclusive pair keeps only the better one",
+      "input": {
+        "periods": [{ "id": "p1", "budget": 1000, "capacity": 1000 }],
+        "maxShift": 0,
+        "projects": [
+          { "id": "A", "name": "Alpha", "score": 4, "cost": 10, "demand": 1 },
+          { "id": "B", "name": "Bravo", "score": 3, "cost": 10, "demand": 1 },
+          { "id": "C", "name": "Charlie", "score": 2, "cost": 10, "demand": 1 }
+        ],
+        "rules": [{ "type": "exclusive", "projectId": "A", "otherId": "B" }]
+      },
+      "expect": { "chosen": ["A", "C"], "totalScore": 6, "method": "exact", "leftOutReason": { "B": "Cannot be in with Alpha" } }
+    },
+    {
+      "name": "mandatory and excluded rules win over score",
+      "input": {
+        "periods": [{ "id": "p1", "budget": 100, "capacity": 1000 }],
+        "maxShift": 0,
+        "projects": [
+          { "id": "A", "name": "Alpha", "score": 5, "cost": 60, "demand": 1 },
+          { "id": "B", "name": "Bravo", "score": 1, "cost": 60, "demand": 1 },
+          { "id": "C", "name": "Charlie", "score": 4, "cost": 10, "demand": 1 }
+        ],
+        "rules": [{ "type": "mandatory", "projectId": "B" }, { "type": "excluded", "projectId": "C" }]
+      },
+      "expect": { "chosen": ["B"], "totalScore": 1, "method": "exact", "leftOutReason": { "C": "Excluded by a rule" } }
+    },
+    {
+      "name": "start shifting fits a project into the next period",
+      "input": {
+        "periods": [{ "id": "q1", "budget": 50, "capacity": 100 }, { "id": "q2", "budget": 50, "capacity": 100 }],
+        "maxShift": 1,
+        "projects": [
+          { "id": "A", "name": "Alpha", "score": 3, "cost": 50, "demand": 10 },
+          { "id": "B", "name": "Bravo", "score": 3, "cost": 50, "demand": 10 }
+        ]
+      },
+      "expect": { "chosen": ["A", "B"], "totalScore": 6, "method": "exact", "shifts": { "A": 0, "B": 1 } }
+    },
+    {
+      "name": "capacity, not budget, leaves a project out with that reason",
+      "input": {
+        "periods": [{ "id": "p1", "budget": 1000, "capacity": 15 }],
+        "maxShift": 0,
+        "projects": [
+          { "id": "A", "name": "Alpha", "score": 5, "cost": 10, "demand": 10 },
+          { "id": "B", "name": "Bravo", "score": 2, "cost": 10, "demand": 10 }
+        ]
+      },
+      "expect": { "chosen": ["A"], "totalScore": 5, "method": "exact", "leftOutReason": { "B": "Over the capacity in every period it could start" } }
+    }
+  ]
+}

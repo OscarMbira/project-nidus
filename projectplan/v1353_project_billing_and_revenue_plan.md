@@ -115,3 +115,16 @@ double-billing triggers; issue / pay / credit flows; Overdue.
 Implemented 2026-11-24. The owner has applied v1577–v1584, Admin v259, and the Planner wall. `send-email` and `background-job-worker` are deployed on project qltvojzcmzqiixuvauoj. Platform billing pages, the project billing schedule, and the programme and portfolio financial pages were checked in the browser. Simulator and Planner use the same screens; those two apps were not signed in during the check.
 
 Shared screens live in `packages/planning` and are routed for Platform (`/platform/billing`), Simulator (`/simulator/billing`), Planner (`/app/client-billing`) and on every schedule under Billing. A draft line can be added, changed, or removed. Issuing stores the invoice-date exchange rate. The invoice email attaches the PDF. The layout uses the organisation logo and colours, a line table, tax by code, and the payment text. Accounting files include invoices, credit notes, and payments. Overdue reminders can be sent from the invoice list; the daily job still sends each step once. Programme and portfolio financial pages show billed revenue, unbilled value, cost, and margin. Screen tests cover the overdue filter, draft, approval justification, payment, and the export menu. `background-job-worker` is deployed with `billing.schedule_due`, and `send-email` is deployed with PDF attachments. `SQL/v1582_billing_issue_role.sql` limits issuing to a PMO Admin or the account owner. Simulator practice invoices stay issuable by the learner and are marked Practice. The invoice header includes payment terms. Client, tax, rate-card, invoice, schedule and portal lists sort, export, and switch between card and table. A client opens read-only and is edited on its own page. `SQL/v1583_billing_assertion_tests.sql` fails the transaction if an issued invoice can be edited, deleted, or billed twice. `SQL/v1584_billing_sample_seed.sql` adds sample invoices, a tax code, a rate card and a payment on SEED334-PRJ-08.
+
+### v1359 audit corrections (2026-11-28)
+
+The v1359 gap closure (`projectplan/v1359_v1353_to_v1356_gap_closure_plan.md`) found and fixed:
+- **Wrong rates (B9):** drafts ignored rate-card dates, read only the first card per scope and never matched role lines.
+- **Menu side effect (B5):** `SQL/v1577` placed every `_fin_` menu item (Banking register pages too); undone by
+  `SQL/v1610`, and v1577 narrowed.
+- **Planner wall (X2):** `client_credit_notes` / `client_payments` were missing from the Planner allow-list.
+- **Rules:** currency from Regional & Format Settings and the currencies list (B1); rate-card dates (B2); role and
+  person pickers (B3); client upload preview and confirmation (B4); confirm dialog for draft lines (B6); Revenue money
+  format and click-through (B10); a red timesheet test (B11).
+- Admin `SQL/v259` was uncommitted (X1).
+Outstanding: Simulator and Planner billing browser checks (B7).

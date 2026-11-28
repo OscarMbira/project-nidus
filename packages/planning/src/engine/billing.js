@@ -121,7 +121,7 @@ export function exchangeRateFor({ invoiceCurrency, orgCurrency, onDate, rates = 
 
 export function applyInvoiceFilters(rows, { status = 'all', clientId = '' } = {}) {
   return rows.filter((row) => {
-    const statusOk = status === 'all' || row.shown === status || row.status === status
+    const statusOk = status === 'all' || (status === 'billed' ? ISSUED.has(row.status) : row.shown === status || row.status === status)
     const clientOk = !clientId || row.client_id === clientId
     return statusOk && clientOk
   })

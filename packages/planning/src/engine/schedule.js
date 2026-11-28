@@ -50,15 +50,127 @@ export function buildCalendar({ workingDays = [1, 2, 3, 4, 5], exceptions = [], 
   }
 }
 
-export function isWorkingDay(dateStr, calendar) {
-  const iso = String(dateStr).slice(0, 10)
+/*
+ * v1359 (Q5): answers are remembered per calendar object. The Monte Carlo simulation (v1355) schedules the same
+ * project thousands of times and asks the same "date + n working days" questions millions of times; the day-by-day
+ * walk with Date objects made 5,000 iterations of a 500-task schedule take over 7 minutes. Results are identical —
+ * only repeated work is skipped. A calendar is treated as unchanging once built (buildCalendar); the cache is
+ * dropped if it grows past CACHE_LIMIT entries.
+ */
+const CACHE_LIMIT = 500000
+const calendarCaches = new WeakMap()
+function cacheOf(calendar) {
+  let c = calendarCaches.get(calendar)
+  if (!c || c.size > CACHE_LIMIT) {
+    c = { working: new Map(), byDay: new Map(), index: null, rules: null, size: 0 }
+    calendarCaches.set(calendar, c)
+  }
+  return c
+}
+
+/** Working day by day number (UTC ms / DAY_MS): the date text is built once per day, not once per question. */
+function isWorkingMs(ms, calendar) {
+  if (!calendar || typeof calendar !== 'object') return computeIsWorkingDay(fromUtc(ms), calendar)
+  const cache = cacheOf(calendar)
+  const day = Math.round(ms / DAY_MS)
+  let hit = cache.byDay.get(day)
+  if (hit === undefined) {
+    hit = computeIsWorkingDay(fromUtc(ms), calendar)
+    cache.byDay.set(day, hit)
+    cache.size++
+  }
+  return hit
+}
+
+function computeIsWorkingDay(iso, calendar) {
   const weekday = new Date(toUtc(iso)).getUTCDay()
   if (calendar.extra?.has(iso)) return true
   return calendar.workingDays.has(weekday) && !calendar.exceptions.has(iso)
 }
 
+export function isWorkingDay(dateStr, calendar) {
+  const iso = String(dateStr).slice(0, 10)
+  if (!calendar || typeof calendar !== 'object') return computeIsWorkingDay(iso, calendar)
+  const cache = cacheOf(calendar)
+  let hit = cache.working.get(iso)
+  if (hit === undefined) {
+    hit = computeIsWorkingDay(iso, calendar)
+    cache.working.set(iso, hit)
+    cache.size++
+  }
+  return hit
+}
+
 function step(ms, dir) {
   return ms + dir * DAY_MS
+}
+
+// ── Working-day index (v1359 Q5) ──────────────────────────────────────────
+// Per calendar: the working days of a window of day numbers (UTC days since 1970), in order, and a running count.
+// "date + n working days" and "working days between" become two lookups instead of a walk over every day.
+// The window grows when a date falls outside it; the old day-by-day functions remain the fallback (and the
+// source of the "no working day" errors).
+const DAY_CACHE = new Map()
+function dayOf(dateStr) {
+  const iso = String(dateStr).slice(0, 10)
+  let d = DAY_CACHE.get(iso)
+  if (d === undefined) {
+    d = Math.round(toUtc(iso) / DAY_MS)
+    if (DAY_CACHE.size > 200000) DAY_CACHE.clear()
+    DAY_CACHE.set(iso, d)
+  }
+  return d
+}
+const ISO_CACHE = new Map()
+function isoOf(day) {
+  let iso = ISO_CACHE.get(day)
+  if (iso === undefined) {
+    iso = fromUtc(day * DAY_MS)
+    if (ISO_CACHE.size > 200000) ISO_CACHE.clear()
+    ISO_CACHE.set(day, iso)
+  }
+  return iso
+}
+
+const SPAN = 7300 // about 20 years either side of the first date asked about
+
+/** Exceptions and extra working days as day numbers (once per calendar), so the index needs no date text. */
+function dayRules(calendar) {
+  const cache = cacheOf(calendar)
+  if (!cache.rules) {
+    const toDays = (set) => new Set([...(set || [])].map((iso) => Math.round(toUtc(iso) / DAY_MS)))
+    cache.rules = { exceptions: toDays(calendar.exceptions), extra: toDays(calendar.extra) }
+  }
+  return cache.rules
+}
+/** Same answer as computeIsWorkingDay, from the day number: 1970-01-01 (day 0) was a Thursday (weekday 4). */
+function isWorkingDayNumber(day, calendar, rules) {
+  if (rules.extra.has(day)) return true
+  const weekday = (((day % 7) + 7) % 7 + 4) % 7
+  return calendar.workingDays.has(weekday) && !rules.exceptions.has(day)
+}
+
+function indexFor(calendar, lo, hi) {
+  const cache = cacheOf(calendar)
+  let idx = cache.index
+  if (idx && lo >= idx.base && hi <= idx.end) return idx
+  const base = Math.min(lo, idx ? idx.base : lo) - (idx ? SPAN : SPAN)
+  const end = Math.max(hi, idx ? idx.end : hi) + SPAN
+  const prefix = new Int32Array(end - base + 1)
+  const list = []
+  let count = 0
+  const rules = dayRules(calendar)
+  for (let d = base; d <= end; d++) {
+    if (isWorkingDayNumber(d, calendar, rules)) { list.push(d); count++ }
+    prefix[d - base] = count
+  }
+  idx = { base, end, prefix, list }
+  cache.index = idx
+  return idx
+}
+/** Working days with day number ≤ d. */
+function countTo(idx, d) {
+  return d < idx.base ? 0 : idx.prefix[Math.min(d, idx.end) - idx.base]
 }
 
 /**
@@ -66,17 +178,29 @@ function step(ms, dir) {
  * the next (n ≥ 0) or previous (n < 0) working day, which counts as day 0.
  */
 export function addWorkingDays(dateStr, n, calendar) {
+  if (!calendar || typeof calendar !== 'object' || !Number.isInteger(n)) return computeAddWorkingDays(dateStr, n, calendar)
+  const d = dayOf(dateStr)
+  if (!Number.isFinite(d)) return computeAddWorkingDays(dateStr, n, calendar)
+  const reach = Math.abs(n) * 2 + 3660
+  const idx = indexFor(calendar, d - reach, d + reach)
+  const start = n < 0 ? countTo(idx, d) - 1 : countTo(idx, d - 1)
+  const target = idx.list[start + n]
+  if (target === undefined || start < 0 || start >= idx.list.length) return computeAddWorkingDays(dateStr, n, calendar)
+  return isoOf(target)
+}
+
+function computeAddWorkingDays(dateStr, n, calendar) {
   const dir = n < 0 ? -1 : 1
   let ms = toUtc(dateStr)
   let guard = 0
-  while (!isWorkingDay(fromUtc(ms), calendar)) {
+  while (!isWorkingMs(ms, calendar)) {
     ms = step(ms, dir)
     if (++guard > 3660) throw new Error('No working day found within 10 years — check the calendar')
   }
   let remaining = Math.abs(n)
   while (remaining > 0) {
     ms = step(ms, dir)
-    if (isWorkingDay(fromUtc(ms), calendar)) remaining--
+    if (isWorkingMs(ms, calendar)) remaining--
     if (++guard > 366000) throw new Error('Working-day calculation did not finish — check the calendar')
   }
   return fromUtc(ms)
@@ -84,13 +208,24 @@ export function addWorkingDays(dateStr, n, calendar) {
 
 /** Working days from a to b, excluding a (negative when b is before a). */
 export function workingDaysBetween(a, b, calendar) {
+  if (!calendar || typeof calendar !== 'object') return computeWorkingDaysBetween(a, b, calendar)
+  const from = dayOf(a)
+  const to = dayOf(b)
+  if (!Number.isFinite(from) || !Number.isFinite(to)) return computeWorkingDaysBetween(a, b, calendar)
+  if (from === to) return 0
+  const idx = indexFor(calendar, Math.min(from, to) - 1, Math.max(from, to))
+  // (a, b] going forward; [b, a) going back, as negative.
+  return to > from ? countTo(idx, to) - countTo(idx, from) : -(countTo(idx, from - 1) - countTo(idx, to - 1))
+}
+
+function computeWorkingDaysBetween(a, b, calendar) {
   const from = toUtc(a)
   const to = toUtc(b)
   if (from === to) return 0
   const dir = to > from ? 1 : -1
   let count = 0
   for (let ms = step(from, dir); dir > 0 ? ms <= to : ms >= to; ms = step(ms, dir)) {
-    if (isWorkingDay(fromUtc(ms), calendar)) count++
+    if (isWorkingMs(ms, calendar)) count++
   }
   return dir * count
 }
